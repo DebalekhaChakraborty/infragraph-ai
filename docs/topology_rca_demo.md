@@ -77,14 +77,43 @@ bboxes using the PNG header dimensions (no PIL dependency needed).
 ```json
 {
   "diagram_id": "diagram_0373",
-  "predicted_root_cause": "FW-01",
+  "predicted_root_cause": "SW-CORE",
   "ground_truth_root_cause": "FW-01",
-  "confidence_score": 0.8,
-  "top_candidates": [{"node": "FW-01", "score": 12.5, "type": "firewall"}],
+  "confidence_score": 0.503,
+  "top_candidates": [{"node": "SW-CORE", "score": 20.86, "type": "switch"}],
   "alerting_nodes": ["FW-01", "SW-CORE"],
-  "impacted_nodes": ["SW-CORE", "SW-APP", "LB-01", "..."],
-  "impact_paths": [["FW-01", "SW-CORE", "..."]],
-  "reasoning_summary": "Node 'FW-01' ranked highest: ..."
+  "impacted_nodes": ["APP-01", "APP-02", "..."],
+  "impact_paths": {
+    "predicted_root_cause": [
+      {
+        "source": "SW-CORE",
+        "target": "FW-01",
+        "target_reason": "alerting_node",
+        "path": ["FW-01", "SW-CORE"],
+        "path_length": 2,
+        "method": "directed_target_to_root",
+        "truncated": false
+      }
+    ],
+    "ground_truth_root_cause": [
+      {
+        "source": "FW-01",
+        "target": "SW-CORE",
+        "target_reason": "alerting_node",
+        "path": ["FW-01", "SW-CORE"],
+        "path_length": 2,
+        "method": "directed_root_to_target",
+        "truncated": false
+      }
+    ]
+  },
+  "impact_path_summary": {
+    "predicted_root_cause_path_count": 10,
+    "ground_truth_root_cause_path_count": 10,
+    "shortest_predicted_path": ["FW-01", "SW-CORE"],
+    "shortest_ground_truth_path": ["FW-01", "SW-CORE"]
+  },
+  "reasoning_summary": "The heuristic selected 'SW-CORE' because ..."
 }
 ```
 
@@ -92,7 +121,9 @@ bboxes using the PNG header dimensions (no PIL dependency needed).
 
 ## RCA algorithm
 
-The heuristic scorer assigns each alerting node a weighted score:
+### Heuristic scoring
+
+Each alerting node receives a weighted score:
 
 ```
 score = severity_weight × 2
@@ -113,6 +144,56 @@ Device-type bonuses (+0.5):
 The top 5 ranked nodes are saved as `top_candidates`.  Ground-truth root cause
 (from the alert JSON) is recorded alongside the prediction so accuracy can be
 measured across the test set.
+
+### Impact paths
+
+For each of the two root candidates (predicted and ground-truth), the script
+finds paths to up to 10 target nodes, capped at 8 hops each.
+
+Target priority order:
+1. `alerting_node` — other nodes that raised alerts
+2. `expected_impacted` — nodes listed in the alert scenario (GT root only)
+3. `impacted_node` — all descendants in the directed topology graph
+
+Path discovery uses three methods in order:
+
+| Method | Description |
+|--------|-------------|
+| `directed_root_to_target` | `nx.shortest_path(G, root, target)` |
+| `directed_target_to_root` | `nx.shortest_path(G, target, root)` — used when the root is *downstream* of the target (upstream dependency) |
+| `undirected` | `nx.shortest_path(G.to_undirected(), root, target)` — fallback for cross-zone connections with no directed path |
+
+The `method` field on each path entry records which approach succeeded.  When
+a path exceeds 8 nodes it is truncated and marked `"truncated": true`.
+
+#### Why impact paths matter for RCA
+
+Impact paths provide the *evidence chain* that explains how a fault at the root
+propagates to the affected devices.  This has three uses downstream:
+
+1. **Topology visualisation** — the shortest predicted and GT paths are drawn
+   in contrasting colours (red = predicted, blue = GT) on the topology PNG so
+   that a human reviewer can immediately see whether the predicted path makes
+   topological sense.
+
+2. **Qwen explanation layer** — the LLM prompt will include the path list as
+   structured context, enabling it to generate a sentence like *"The firewall
+   FW-01 dropped packets, causing SW-CORE and the downstream app servers to
+   become unreachable via the path FW-01 → SW-CORE → SW-APP → LB-01."*
+
+3. **GNN training signal** — the propagation direction recorded in each path
+   entry (`directed_root_to_target` vs `directed_target_to_root`) surfaces
+   the ambiguity that the heuristic cannot resolve but a GNN trained on full
+   alert-propagation sequences can learn.
+
+#### Heuristic limitations and motivation for the GNN stage
+
+The heuristic may confuse a downstream aggregation node (e.g. `SW-CORE`
+receiving cascaded alerts from many children) with the true upstream origin
+(`FW-01`).  The `reasoning_summary` field in the RCA JSON explicitly
+flags this mismatch and explains it.  The GNN stage (notebook
+`05_rca_graph_demo.ipynb`) addresses this by learning propagation direction
+from graph structure and temporal alert features.
 
 ---
 
