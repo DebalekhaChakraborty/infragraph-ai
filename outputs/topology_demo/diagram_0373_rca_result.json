@@ -1,0 +1,36 @@
+{
+  "diagram_id": "diagram_0373",
+  "predicted_root_cause": "SW-CORE",
+  "ground_truth_root_cause": "FW-01",
+  "confidence_score": 0.503,
+  "top_candidates": [
+    {
+      "node": "SW-CORE",
+      "score": 20.8627,
+      "type": "switch"
+    },
+    {
+      "node": "FW-01",
+      "score": 20.6176,
+      "type": "firewall"
+    }
+  ],
+  "alerting_nodes": [
+    "FW-01",
+    "SW-CORE"
+  ],
+  "impacted_nodes": [
+    "APP-01",
+    "APP-02",
+    "APP-03",
+    "APP-04",
+    "CLOUD-01",
+    "DB-01",
+    "DB-02",
+    "LB-01",
+    "MGMT-01",
+    "SW-APP"
+  ],
+  "impact_paths": [],
+  "reasoning_summary": "Node 'SW-CORE' ranked highest: earliest alert at t=0 min, severity=critical, alert='Packet drops elevated', 10 downstream node(s) reachable. Does NOT match (GT=FW-01)."
+}
