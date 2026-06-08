@@ -3,9 +3,9 @@ Stage 3 of InfraGraph AI: GNN-based root cause ranking.
 
 Trains a 2-layer Graph Convolutional Network on the infragraph_v2 dataset.
 The GNN learns propagation direction from topology structure and temporal alert
-features — resolving the ambiguity that the heuristic scorer (Stage 2) cannot.
+features -- resolving the ambiguity that the heuristic scorer (Stage 2) cannot.
 
-Backend: torch (via EXTRA_SITE_PACKAGES env var) -> pure-numpy GCN fallback.
+Backend: torch (if installed in the active venv) -> pure-numpy GCN fallback.
 """
 
 import argparse
@@ -18,14 +18,6 @@ import time
 import numpy as np
 
 # ── Torch detection ──────────────────────────────────────────────────────────
-# Set EXTRA_SITE_PACKAGES to a site-packages dir containing torch if it is not
-# on the default Python path. E.g.:
-#   $env:EXTRA_SITE_PACKAGES = "D:\venv\torch_venv\Lib\site-packages"
-#   python scripts/train_gnn_rca.py
-_EXTRA = os.environ.get("EXTRA_SITE_PACKAGES", "")
-if _EXTRA and _EXTRA not in sys.path:
-    sys.path.insert(0, _EXTRA)
-
 USE_TORCH = False
 try:
     import torch

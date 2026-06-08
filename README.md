@@ -70,8 +70,7 @@ python scripts/train_gnn_rca.py \
     --out outputs/gnn_rca \
     --demo-diagram diagram_0373
 
-# If torch is in a separate venv, point to it without reinstalling:
-$env:EXTRA_SITE_PACKAGES = "path\to\torch_venv\Lib\site-packages"
+# Falls back to pure-numpy GCN if torch is not installed
 python scripts/train_gnn_rca.py
 ```
 

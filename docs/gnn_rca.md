@@ -34,10 +34,6 @@ correct root-cause identification.
 # Default: infragraph_v2 dataset, 80 epochs, outputs to outputs/gnn_rca/
 python scripts/train_gnn_rca.py
 
-# With torch in a separate venv (no internet install needed):
-$env:EXTRA_SITE_PACKAGES = "path\to\torch_venv\Lib\site-packages"
-python scripts/train_gnn_rca.py
-
 # Custom options
 python scripts/train_gnn_rca.py \
     --dataset-root datasets/infragraph_v2 \
@@ -51,12 +47,12 @@ python scripts/train_gnn_rca.py \
 ### Backend selection
 
 The script auto-detects torch and falls back to a **pure-numpy GCN** if torch
-is unavailable:
+is not installed in the active environment:
 
 | Backend | How to trigger | Notes |
 |---------|----------------|-------|
-| `torch` | torch importable (or `EXTRA_SITE_PACKAGES` set) | Adam + autograd, GPU-ready |
-| `numpy_gcn` | torch missing | Manual forward/backward + Adam, CPU only |
+| `torch` | `pip install torch` in the active venv | Adam + autograd, GPU-ready |
+| `numpy_gcn` | torch not installed | Manual forward/backward + Adam, CPU only |
 
 ---
 
