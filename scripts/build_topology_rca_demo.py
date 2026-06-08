@@ -22,7 +22,7 @@ import json
 import os
 import struct
 import sys
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 import matplotlib
 matplotlib.use("Agg")
@@ -83,7 +83,7 @@ def _find_json(folder: str, diagram_id: str, *extra_suffixes: str) -> Optional[s
 
 
 def _png_size(path: str) -> Tuple[int, int]:
-    """Read width/height from PNG IHDR without PIL."""
+    """Read (width, height) from PNG IHDR chunk without PIL."""
     with open(path, "rb") as f:
         f.read(16)  # 8-byte sig + 4-byte IHDR length + 4-byte "IHDR"
         w = struct.unpack(">I", f.read(4))[0]
@@ -106,7 +106,7 @@ def _severity_score(sev: str) -> int:
 
 
 def _device_type_bonus(node_type: str, alert_type: str) -> float:
-    """Return a small bonus when the device type matches the alert category."""
+    """Return a bonus when the device type matches the alert category."""
     alert_lc = alert_type.lower()
     bonuses: Dict[str, List[str]] = {
         "firewall":     ["packet", "drop", "deny", "policy", "firewall", "block"],
@@ -119,6 +119,83 @@ def _device_type_bonus(node_type: str, alert_type: str) -> float:
         if node_type == dtype and any(k in alert_lc for k in keywords):
             return 0.5
     return 0.0
+
+
+def _find_paths_for_root(
+    G: nx.DiGraph,
+    root: str,
+    targets: List[str],
+    target_reason: str,
+    max_paths: int = 10,
+    max_len: int = 8,
+    existing: Optional[List[dict]] = None,
+) -> List[dict]:
+    """
+    Find shortest path from root to each target, trying three methods:
+      1. directed root → target
+      2. directed target → root
+      3. undirected (G.to_undirected())
+    Appends to `existing` list (returning a new list), capped at max_paths.
+    """
+    results: List[dict] = list(existing) if existing else []
+    covered: Set[str] = {entry["target"] for entry in results}
+    G_und = G.to_undirected()
+
+    for target in targets:
+        if len(results) >= max_paths:
+            break
+        if target == root or target in covered:
+            continue
+        covered.add(target)
+
+        path: Optional[List[str]] = None
+        method: Optional[str] = None
+
+        # 1. directed root → target
+        try:
+            p = nx.shortest_path(G, root, target)
+            path, method = p, "directed_root_to_target"
+        except (nx.NetworkXNoPath, nx.NodeNotFound):
+            pass
+
+        # 2. directed target → root
+        if path is None:
+            try:
+                p = nx.shortest_path(G, target, root)
+                path, method = p, "directed_target_to_root"
+            except (nx.NetworkXNoPath, nx.NodeNotFound):
+                pass
+
+        # 3. undirected
+        if path is None:
+            try:
+                p = nx.shortest_path(G_und, root, target)
+                path, method = p, "undirected"
+            except (nx.NetworkXNoPath, nx.NodeNotFound):
+                pass
+
+        if path is None:
+            continue
+
+        truncated = len(path) > max_len
+        if truncated:
+            path = path[:max_len]
+
+        results.append({
+            "source":        root,
+            "target":        target,
+            "target_reason": target_reason,
+            "path":          path,
+            "path_length":   len(path),
+            "method":        method,
+            "truncated":     truncated,
+        })
+
+    return results
+
+
+def _path_to_edges(path: List[str]) -> Set[Tuple[str, str]]:
+    return {(path[i], path[i + 1]) for i in range(len(path) - 1)}
 
 
 # ── Core pipeline ─────────────────────────────────────────────────────────────
@@ -163,17 +240,18 @@ def compute_rca(G: nx.DiGraph, alert_data: dict) -> dict:
     alerts: List[dict] = alert_data.get("alerts", [])
     gt_root: Optional[str] = alert_data.get("root_cause")
     expected_impacted: List[str] = alert_data.get("expected_impacted_nodes", [])
-    alerting_nodes = {a["node"] for a in alerts}
+    alerting_nodes: Set[str] = {a["node"] for a in alerts}
 
+    # ── Heuristic scoring ────────────────────────────────────────────────────
     scores: Dict[str, float] = {}
     for alert in alerts:
         nid = alert["node"]
         if nid not in G:
             continue
-        sev_s   = _severity_score(alert.get("severity", "info"))
-        time_s  = 1.0 / (1.0 + alert.get("time_offset_min", 99))
-        dtype   = G.nodes[nid].get("type", "")
-        dtype_b = _device_type_bonus(dtype, alert.get("alert_type", ""))
+        sev_s    = _severity_score(alert.get("severity", "info"))
+        time_s   = 1.0 / (1.0 + alert.get("time_offset_min", 99))
+        dtype    = G.nodes[nid].get("type", "")
+        dtype_b  = _device_type_bonus(dtype, alert.get("alert_type", ""))
         downstream = len(nx.descendants(G, nid))
         impact_s = downstream / max(G.number_of_nodes(), 1)
         score = sev_s * 2.0 + time_s * 10.0 + impact_s * 3.0 + dtype_b
@@ -193,36 +271,75 @@ def compute_rca(G: nx.DiGraph, alert_data: dict) -> dict:
             for n, s in ranked[:5]
         ]
 
-    # Impact paths: predicted root → each expected impacted node
-    impact_paths: List[List[str]] = []
+    # ── Impacted nodes (descendants of predicted root) ────────────────────────
+    pred_descendants: List[str] = []
     if predicted_root and predicted_root in G:
-        for target in expected_impacted:
-            if target in G and target != predicted_root:
-                try:
-                    impact_paths.append(nx.shortest_path(G, predicted_root, target))
-                except nx.NetworkXNoPath:
-                    pass
+        pred_descendants = sorted(nx.descendants(G, predicted_root))
 
-    # All descendants of predicted root
-    impacted: List[str] = []
-    if predicted_root and predicted_root in G:
-        impacted = sorted(nx.descendants(G, predicted_root))
-
-    # Reasoning summary
-    first_alert = alerts[0] if alerts else {}
-    reasoning = (
-        f"Node '{predicted_root}' ranked highest: "
-        f"earliest alert at t={first_alert.get('time_offset_min', '?')} min, "
-        f"severity={first_alert.get('severity', '?')}, "
-        f"alert='{first_alert.get('alert_type', '?')}', "
-        f"{len(impacted)} downstream node(s) reachable."
+    # ── Impact paths for PREDICTED root ──────────────────────────────────────
+    pred_alerting_targets = [n for n in sorted(alerting_nodes) if n != predicted_root and n in G]
+    pred_paths = _find_paths_for_root(
+        G, predicted_root, pred_alerting_targets, "alerting_node", max_paths=10
     )
-    if gt_root:
-        match_str = "Matches" if predicted_root == gt_root else f"Does NOT match (GT={gt_root})"
-        reasoning += f" {match_str}."
+    pred_paths = _find_paths_for_root(
+        G, predicted_root, pred_descendants, "impacted_node",
+        max_paths=10, existing=pred_paths
+    )
 
+    # ── Impact paths for GROUND-TRUTH root ───────────────────────────────────
+    gt_paths: List[dict] = []
+    if gt_root and gt_root in G and gt_root != predicted_root:
+        gt_alerting_targets = [n for n in sorted(alerting_nodes) if n != gt_root and n in G]
+        gt_expected_targets  = [n for n in expected_impacted if n in G and n != gt_root]
+        gt_descendants = sorted(nx.descendants(G, gt_root))
+
+        gt_paths = _find_paths_for_root(
+            G, gt_root, gt_alerting_targets, "alerting_node", max_paths=10
+        )
+        gt_paths = _find_paths_for_root(
+            G, gt_root, gt_expected_targets, "expected_impacted",
+            max_paths=10, existing=gt_paths
+        )
+        gt_paths = _find_paths_for_root(
+            G, gt_root, gt_descendants, "impacted_node",
+            max_paths=10, existing=gt_paths
+        )
+
+    # ── Impact path summary ───────────────────────────────────────────────────
+    pred_shortest = min(pred_paths, key=lambda p: p["path_length"]) if pred_paths else None
+    gt_shortest   = min(gt_paths,   key=lambda p: p["path_length"]) if gt_paths   else None
+
+    impact_path_summary = {
+        "predicted_root_cause_path_count":    len(pred_paths),
+        "ground_truth_root_cause_path_count": len(gt_paths),
+        "shortest_predicted_path":            pred_shortest["path"] if pred_shortest else [],
+        "shortest_ground_truth_path":         gt_shortest["path"]   if gt_shortest   else [],
+    }
+
+    # ── Reasoning summary ─────────────────────────────────────────────────────
     total_score = sum(scores.values()) or 1.0
-    conf_score = round(scores.get(predicted_root, 0.0) / total_score, 4) if scores else 0.0
+    conf_score  = round(scores.get(predicted_root, 0.0) / total_score, 4) if scores else 0.0
+
+    if predicted_root == gt_root or not gt_root:
+        first_alert = alerts[0] if alerts else {}
+        downstream_count = len(pred_descendants)
+        reasoning = (
+            f"Node '{predicted_root}' was correctly identified as the root cause "
+            f"(confidence {conf_score:.0%}). "
+            f"Earliest alert: '{first_alert.get('alert_type', '?')}' "
+            f"(severity={first_alert.get('severity', '?')}, t={first_alert.get('time_offset_min', '?')} min). "
+            f"{downstream_count} downstream node(s) reachable from this node."
+        )
+    else:
+        reasoning = (
+            f"The heuristic selected '{predicted_root}' because it has multiple correlated "
+            f"downstream alerts and high topology centrality. However, the ground-truth root "
+            f"cause is '{gt_root}', which appears earlier in the alert sequence. "
+            f"This shows the limitation of rule-based scoring: the heuristic may confuse a "
+            f"downstream aggregation or correlation node with the true upstream origin. "
+            f"This motivates the GNN stage, where the model can learn propagation direction "
+            f"and root-cause patterns from topology structure and alert features."
+        )
 
     return {
         "predicted_root_cause":    predicted_root,
@@ -230,8 +347,12 @@ def compute_rca(G: nx.DiGraph, alert_data: dict) -> dict:
         "confidence_score":        conf_score,
         "top_candidates":          top5,
         "alerting_nodes":          sorted(alerting_nodes),
-        "impacted_nodes":          impacted,
-        "impact_paths":            impact_paths,
+        "impacted_nodes":          pred_descendants,
+        "impact_paths": {
+            "predicted_root_cause":    pred_paths,
+            "ground_truth_root_cause": gt_paths,
+        },
+        "impact_path_summary":     impact_path_summary,
         "reasoning_summary":       reasoning,
     }
 
@@ -239,18 +360,18 @@ def compute_rca(G: nx.DiGraph, alert_data: dict) -> dict:
 def visualize_topology(
     G: nx.DiGraph, rca: dict, diagram_id: str, out_path: str
 ) -> None:
-    alerting      = set(rca.get("alerting_nodes", []))
-    predicted_root = rca.get("predicted_root_cause")
-    gt_root        = rca.get("ground_truth_root_cause")
-    impacted       = set(rca.get("impacted_nodes", []))
-    impact_paths   = rca.get("impact_paths", [])
+    alerting        = set(rca.get("alerting_nodes", []))
+    predicted_root  = rca.get("predicted_root_cause")
+    gt_root         = rca.get("ground_truth_root_cause")
+    impacted        = set(rca.get("impacted_nodes", []))
+    summary         = rca.get("impact_path_summary", {})
 
-    impact_edges: set = set()
-    for path in impact_paths:
-        for i in range(len(path) - 1):
-            impact_edges.add((path[i], path[i + 1]))
+    pred_short_path = summary.get("shortest_predicted_path", [])
+    gt_short_path   = summary.get("shortest_ground_truth_path", [])
+    pred_path_edges = _path_to_edges(pred_short_path)
+    gt_path_edges   = _path_to_edges(gt_short_path)
 
-    # Layout: use bbox centres from graph JSON if available
+    # Layout: use bbox centres from graph JSON, flip Y for matplotlib
     pos: Dict[str, Tuple[float, float]] = {}
     for nid, data in G.nodes(data=True):
         bbox = data.get("bbox")
@@ -259,30 +380,37 @@ def visualize_topology(
     if len(pos) < G.number_of_nodes():
         pos = nx.spring_layout(G, seed=42, k=2.5)  # type: ignore[assignment]
 
-    fig, ax = plt.subplots(figsize=(18, 11))
+    fig, ax = plt.subplots(figsize=(20, 12))
     ax.set_facecolor("#F0F2F5")
     fig.patch.set_facecolor("#F0F2F5")
 
-    # Edges
-    normal_edges = [(u, v) for u, v in G.edges() if (u, v) not in impact_edges]
-    impact_edge_list = [(u, v) for u, v in G.edges() if (u, v) in impact_edges]
+    # ── Edges: categorised by which path they belong to ──────────────────────
+    both_edges  = [(u, v) for u, v in G.edges() if (u,v) in pred_path_edges and (u,v) in gt_path_edges]
+    pred_only   = [(u, v) for u, v in G.edges() if (u,v) in pred_path_edges and (u,v) not in gt_path_edges]
+    gt_only     = [(u, v) for u, v in G.edges() if (u,v) in gt_path_edges   and (u,v) not in pred_path_edges]
+    gray_edges  = [(u, v) for u, v in G.edges() if (u,v) not in pred_path_edges and (u,v) not in gt_path_edges]
 
-    draw_kw = dict(ax=ax, arrows=True, arrowsize=14,
-                   connectionstyle="arc3,rad=0.06")
-    if normal_edges:
-        nx.draw_networkx_edges(G, pos, edgelist=normal_edges,
-                               edge_color="#BBBBBB", width=1.0, alpha=0.7, **draw_kw)
-    if impact_edge_list:
-        nx.draw_networkx_edges(G, pos, edgelist=impact_edge_list,
-                               edge_color="#E74C3C", width=2.5, alpha=0.95, **draw_kw)
+    draw_kw = dict(ax=ax, arrows=True, arrowsize=14, connectionstyle="arc3,rad=0.06")
+    if gray_edges:
+        nx.draw_networkx_edges(G, pos, edgelist=gray_edges,
+                               edge_color="#BBBBBB", width=1.0, alpha=0.65, **draw_kw)
+    if pred_only:
+        nx.draw_networkx_edges(G, pos, edgelist=pred_only,
+                               edge_color="#E74C3C", width=3.0, alpha=0.95, **draw_kw)
+    if gt_only:
+        nx.draw_networkx_edges(G, pos, edgelist=gt_only,
+                               edge_color="#2980B9", width=3.0, alpha=0.95, **draw_kw)
+    if both_edges:
+        nx.draw_networkx_edges(G, pos, edgelist=both_edges,
+                               edge_color="#8E44AD", width=3.5, alpha=0.95, **draw_kw)
 
-    # Edge labels
+    # Edge labels (bandwidth / protocol)
     elabels = {(u, v): d.get("label", "") for u, v, d in G.edges(data=True) if d.get("label")}
     nx.draw_networkx_edge_labels(G, pos, edge_labels=elabels, ax=ax,
                                  font_size=6, font_color="#555555",
                                  bbox=dict(boxstyle="round,pad=0.1", fc="white", alpha=0.6))
 
-    # Nodes — drawn per device type so each type gets its own marker shape
+    # ── Nodes: per device type (different shape per type) ────────────────────
     for ntype, shape in DEVICE_MARKERS.items():
         nlist = [n for n, d in G.nodes(data=True) if d.get("type") == ntype and n in pos]
         if not nlist:
@@ -290,10 +418,13 @@ def visualize_topology(
         sizes, facecolors, edgecolors, linewidths = [], [], [], []
         for n in nlist:
             deg = G.degree(n)
-            sizes.append(max(700, deg * 200))
+            sizes.append(max(800, deg * 220))
             facecolors.append(DEVICE_COLORS.get(ntype, "#888888"))
+            # Border priority: predicted root > GT root > alerting > impacted > default
             if n == predicted_root:
-                edgecolors.append("#FFD700"); linewidths.append(4.5)
+                edgecolors.append("#FFD700"); linewidths.append(5.0)
+            elif n == gt_root and gt_root != predicted_root:
+                edgecolors.append("#00BCD4"); linewidths.append(5.0)
             elif n in alerting:
                 edgecolors.append("#FF2200"); linewidths.append(3.0)
             elif n in impacted:
@@ -309,35 +440,48 @@ def visualize_topology(
     nx.draw_networkx_labels(G, pos, ax=ax, font_size=8, font_weight="bold",
                             font_color="#111111")
 
-    # Legend
-    handles = [
+    # ── Legend ────────────────────────────────────────────────────────────────
+    device_handles = [
         mpatches.Patch(color=c, label=t.replace("_", " "))
         for t, c in DEVICE_COLORS.items()
     ]
-    handles += [
+    highlight_handles = [
         mpatches.Patch(facecolor="none", edgecolor="#FFD700", linewidth=3,
                        label="Predicted root cause (gold border)"),
+    ]
+    if gt_root and gt_root != predicted_root:
+        highlight_handles.append(
+            mpatches.Patch(facecolor="none", edgecolor="#00BCD4", linewidth=3,
+                           label="Ground-truth root cause (cyan border)")
+        )
+    highlight_handles += [
         mpatches.Patch(facecolor="none", edgecolor="#FF2200", linewidth=2,
                        label="Alerting node (red border)"),
         mpatches.Patch(facecolor="none", edgecolor="#FF8C00", linewidth=2,
                        label="Impacted node (orange border)"),
-        mpatches.Patch(color="#E74C3C", label="Impact path (red edge)"),
+        mpatches.Patch(color="#E74C3C",
+                       label="Predicted root impact path (red edge)"),
+        mpatches.Patch(color="#2980B9",
+                       label="Ground-truth root impact path (blue edge)"),
     ]
-    ax.legend(handles=handles, loc="upper left", fontsize=8,
-              framealpha=0.88, ncol=2, borderpad=0.8)
+    ax.legend(handles=device_handles + highlight_handles,
+              loc="upper left", fontsize=7.5, framealpha=0.88, ncol=2, borderpad=0.8)
 
-    title = f"InfraGraph AI  |  Topology & RCA  |  {diagram_id}"
-    if predicted_root:
-        match_tag = ""
-        if gt_root:
-            match_tag = "  [RCA correct ✓]" if predicted_root == gt_root else f"  [GT={gt_root} ✗]"
-        title += f"\nPredicted root cause: {predicted_root}{match_tag}"
-    ax.set_title(title, fontsize=12, fontweight="bold", pad=14)
+    # ── Title ─────────────────────────────────────────────────────────────────
+    match = predicted_root == gt_root
+    match_tag = "  [RCA correct ✓]" if match else (f"  [GT={gt_root}  ✗]" if gt_root else "")
+    title = (
+        f"InfraGraph AI  |  Topology & RCA  |  {diagram_id}\n"
+        f"Predicted root cause: {predicted_root}{match_tag}"
+    )
+    if pred_short_path:
+        title += f"    Shortest predicted path: {' → '.join(pred_short_path)}"
+    ax.set_title(title, fontsize=11, fontweight="bold", pad=14)
     ax.axis("off")
     plt.tight_layout()
     plt.savefig(out_path, dpi=150, bbox_inches="tight")
     plt.close()
-    print(f"Topology PNG saved: {out_path}")
+    print(f"[6] Topology PNG saved: {out_path}")
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -348,12 +492,9 @@ def main() -> None:
     )
     ap.add_argument("--diagram-id",   required=True,
                     help="Diagram ID, e.g. diagram_0373")
-    ap.add_argument("--dataset-root", default="./datasets/infragraph_v2",
-                    help="Root of the V2 dataset")
-    ap.add_argument("--pred-root",    default="./outputs/v2_test_predictions_cpu",
-                    help="Root of YOLO prediction outputs")
-    ap.add_argument("--out",          default="./outputs/topology_demo",
-                    help="Output directory for demo artifacts")
+    ap.add_argument("--dataset-root", default="./datasets/infragraph_v2")
+    ap.add_argument("--pred-root",    default="./outputs/v2_test_predictions_cpu")
+    ap.add_argument("--out",          default="./outputs/topology_demo")
     args = ap.parse_args()
 
     did  = args.diagram_id
@@ -362,10 +503,10 @@ def main() -> None:
     out  = os.path.normpath(args.out)
     os.makedirs(out, exist_ok=True)
 
-    print(f"\n{'='*55}")
+    print(f"\n{'='*60}")
     print(f"  InfraGraph AI — Topology & RCA Demo")
     print(f"  Diagram: {did}")
-    print(f"{'='*55}\n")
+    print(f"{'='*60}\n")
 
     # 1. Image size
     img_path = os.path.join(dset, "images", "test", f"{did}.png")
@@ -385,9 +526,9 @@ def main() -> None:
     with open(det_path, "w") as f:
         json.dump(det_nodes, f, indent=2)
 
-    # 3. Graph JSON → NetworkX
+    # 3. Graph JSON → NetworkX DiGraph
     graph_folder = os.path.join(dset, "graphs", "test")
-    graph_file = _find_json(graph_folder, did, "_graph")
+    graph_file   = _find_json(graph_folder, did, "_graph")
     if not graph_file:
         sys.exit(f"ERROR: graph JSON not found in {graph_folder}")
     with open(graph_file) as f:
@@ -398,7 +539,7 @@ def main() -> None:
 
     # 4. Alert JSON
     alert_folder = os.path.join(dset, "alerts", "test")
-    alert_file = _find_json(alert_folder, did, "_alerts")
+    alert_file   = _find_json(alert_folder, did, "_alerts")
     if not alert_file:
         sys.exit(f"ERROR: alert JSON not found in {alert_folder}")
     with open(alert_file) as f:
@@ -406,15 +547,17 @@ def main() -> None:
     alert_count = len(alert_data.get("alerts", []))
     print(f"[4] Alerts: {alert_count}  (scenario: {alert_data.get('scenario_id', '?')})")
 
-    # 5. RCA
+    # 5. RCA computation
     rca = compute_rca(G, alert_data)
     rca_out = {"diagram_id": did, **rca}
     rca_path = os.path.join(out, f"{did}_rca_result.json")
     with open(rca_path, "w") as f:
         json.dump(rca_out, f, indent=2)
-    print(f"[5] RCA: predicted_root={rca['predicted_root_cause']}  "
-          f"gt={rca['ground_truth_root_cause']}  "
-          f"conf={rca['confidence_score']}")
+    summary = rca["impact_path_summary"]
+    print(f"[5] RCA: predicted='{rca['predicted_root_cause']}'  "
+          f"gt='{rca['ground_truth_root_cause']}'  conf={rca['confidence_score']}")
+    print(f"     Predicted-root paths: {summary['predicted_root_cause_path_count']}")
+    print(f"     GT-root paths:        {summary['ground_truth_root_cause_path_count']}")
 
     # 6. Topology visualisation
     viz_path = os.path.join(out, f"{did}_topology.png")
@@ -426,7 +569,7 @@ def main() -> None:
         t = d.get("type", "unknown")
         type_counts[t] = type_counts.get(t, 0) + 1
 
-    summary = {
+    graph_summary = {
         "node_count":          G.number_of_nodes(),
         "edge_count":          G.number_of_edges(),
         "device_type_counts":  type_counts,
@@ -437,25 +580,31 @@ def main() -> None:
     }
     sum_path = os.path.join(out, f"{did}_graph_summary.json")
     with open(sum_path, "w") as f:
-        json.dump(summary, f, indent=2)
+        json.dump(graph_summary, f, indent=2)
 
-    # 8. Final summary
-    match = rca["predicted_root_cause"] == rca["ground_truth_root_cause"]
-    print(f"\n{'='*55}")
-    print(f"  RESULTS")
-    print(f"{'='*55}")
-    print(f"  Detected nodes (YOLO):   {len(det_nodes)}")
-    print(f"  Graph nodes:             {G.number_of_nodes()}")
-    print(f"  Graph edges:             {G.number_of_edges()}")
-    print(f"  Alert count:             {alert_count}")
-    print(f"  Predicted root cause:    {rca['predicted_root_cause']}")
-    print(f"  Ground-truth root:       {rca['ground_truth_root_cause']}")
-    print(f"  RCA correct:             {'YES' if match else 'NO'}")
-    print(f"  Impacted nodes:          {len(rca['impacted_nodes'])}")
+    # 8. Print results
+    pred_short = summary["shortest_predicted_path"]
+    gt_short   = summary["shortest_ground_truth_path"]
+    match      = rca["predicted_root_cause"] == rca["ground_truth_root_cause"]
+
+    print(f"\n{'='*60}")
+    print(f"  RESULTS — {did}")
+    print(f"{'='*60}")
+    print(f"  Detected nodes (YOLO):       {len(det_nodes)}")
+    print(f"  Graph nodes:                 {G.number_of_nodes()}")
+    print(f"  Graph edges:                 {G.number_of_edges()}")
+    print(f"  Alert count:                 {alert_count}")
+    print(f"  Predicted root cause:        {rca['predicted_root_cause']}")
+    print(f"  Ground-truth root:           {rca['ground_truth_root_cause']}")
+    print(f"  RCA correct:                 {'YES' if match else 'NO'}")
+    print(f"  Predicted-root paths:        {summary['predicted_root_cause_path_count']}")
+    print(f"  GT-root paths:               {summary['ground_truth_root_cause_path_count']}")
+    print(f"  Shortest predicted path:     {' -> '.join(pred_short) if pred_short else 'none'}")
+    print(f"  Shortest GT path:            {' -> '.join(gt_short) if gt_short else 'none'}")
     print(f"\n  Output files:")
     for p in [det_path, rca_path, viz_path, sum_path]:
         print(f"    {p}")
-    print(f"{'='*55}\n")
+    print(f"{'='*60}\n")
 
 
 if __name__ == "__main__":
