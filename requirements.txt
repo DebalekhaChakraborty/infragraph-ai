@@ -1,0 +1,26 @@
+# Image generation
+Pillow>=9.0.0
+
+# YOLO training (Ultralytics)
+ultralytics>=8.0.0
+
+# Graph / topology
+networkx>=3.0
+torch>=2.0.0
+torch-geometric>=2.3.0
+
+# OCR
+pytesseract>=0.3.10
+opencv-python>=4.7.0
+
+# Notebooks & viz
+matplotlib>=3.7.0
+numpy>=1.24.0
+pandas>=2.0.0
+tqdm>=4.65.0
+ipykernel>=6.0.0
+ipywidgets>=8.0.0
+
+# Utilities
+pyyaml>=6.0
+scikit-learn>=1.2.0
