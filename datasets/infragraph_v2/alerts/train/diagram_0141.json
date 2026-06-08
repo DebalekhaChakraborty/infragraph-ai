@@ -1,0 +1,22 @@
+{
+  "scenario_id": "diagram_0141_incident_001",
+  "root_cause": "DB-01",
+  "root_cause_type": "database",
+  "alerts": [
+    {
+      "node": "DB-01",
+      "alert_type": "High DB latency",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "SW-01",
+      "alert_type": "SQL connection timeout",
+      "severity": "major",
+      "time_offset_min": 2
+    }
+  ],
+  "expected_impacted_nodes": [
+    "SW-01"
+  ]
+}

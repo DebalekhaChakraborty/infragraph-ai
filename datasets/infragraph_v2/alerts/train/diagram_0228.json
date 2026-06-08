@@ -1,0 +1,22 @@
+{
+  "scenario_id": "diagram_0228_incident_001",
+  "root_cause": "WEB-02",
+  "root_cause_type": "server",
+  "alerts": [
+    {
+      "node": "WEB-02",
+      "alert_type": "CPU utilization > 95%",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "SW-DMZ",
+      "alert_type": "Service unavailable",
+      "severity": "major",
+      "time_offset_min": 2
+    }
+  ],
+  "expected_impacted_nodes": [
+    "SW-DMZ"
+  ]
+}

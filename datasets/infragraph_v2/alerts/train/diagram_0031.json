@@ -1,0 +1,29 @@
+{
+  "scenario_id": "diagram_0031_incident_001",
+  "root_cause": "RTR-PRI",
+  "root_cause_type": "router",
+  "alerts": [
+    {
+      "node": "RTR-PRI",
+      "alert_type": "BGP flap detected",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "FW-01",
+      "alert_type": "WAN packet loss > 5%",
+      "severity": "major",
+      "time_offset_min": 2
+    },
+    {
+      "node": "WAN-PRI",
+      "alert_type": "Site unreachable",
+      "severity": "critical",
+      "time_offset_min": 3
+    }
+  ],
+  "expected_impacted_nodes": [
+    "FW-01",
+    "WAN-PRI"
+  ]
+}

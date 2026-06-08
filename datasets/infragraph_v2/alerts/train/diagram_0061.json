@@ -1,0 +1,34 @@
+{
+  "scenario_id": "diagram_0061_incident_001",
+  "root_cause": "WAN-BAK",
+  "root_cause_type": "cloud_or_wan",
+  "alerts": [
+    {
+      "node": "WAN-BAK",
+      "alert_type": "BGP session down",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "RTR-BAK",
+      "alert_type": "WAN packet loss",
+      "severity": "major",
+      "time_offset_min": 2
+    },
+    {
+      "node": "RTR-BAK",
+      "alert_type": "Site unreachable",
+      "severity": "critical",
+      "time_offset_min": 4
+    },
+    {
+      "node": "RTR-BAK",
+      "alert_type": "Downstream degradation",
+      "severity": "minor",
+      "time_offset_min": 6
+    }
+  ],
+  "expected_impacted_nodes": [
+    "RTR-BAK"
+  ]
+}

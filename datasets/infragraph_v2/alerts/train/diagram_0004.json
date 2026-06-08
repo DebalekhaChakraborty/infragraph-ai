@@ -1,0 +1,28 @@
+{
+  "scenario_id": "diagram_0004_incident_001",
+  "root_cause": "WEB-01",
+  "root_cause_type": "server",
+  "alerts": [
+    {
+      "node": "WEB-01",
+      "alert_type": "CPU utilization > 95%",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "SW-DMZ",
+      "alert_type": "Service unavailable",
+      "severity": "major",
+      "time_offset_min": 2
+    },
+    {
+      "node": "SW-DMZ",
+      "alert_type": "API latency > 5s",
+      "severity": "major",
+      "time_offset_min": 3
+    }
+  ],
+  "expected_impacted_nodes": [
+    "SW-DMZ"
+  ]
+}
