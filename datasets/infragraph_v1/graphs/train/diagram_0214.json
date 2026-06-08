@@ -1,0 +1,128 @@
+{
+  "diagram_id": "diagram_0214",
+  "template": "cloud_extension",
+  "metadata": {
+    "branch": "BOS-BRANCH-01",
+    "region": "LATAM",
+    "site_type": "Medium Branch",
+    "version": "v0.1",
+    "difficulty": "easy"
+  },
+  "nodes": [
+    {
+      "id": "WAN-01",
+      "type": "cloud_or_wan",
+      "bbox": [
+        63,
+        276,
+        157,
+        325
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "RTR-01",
+      "type": "router",
+      "bbox": [
+        288,
+        273,
+        350,
+        335
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "FW-01",
+      "type": "firewall",
+      "bbox": [
+        497,
+        275,
+        559,
+        337
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "SW-01",
+      "type": "switch",
+      "bbox": [
+        696,
+        289,
+        774,
+        331
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "APP-01",
+      "type": "server",
+      "bbox": [
+        1018,
+        160,
+        1094,
+        222
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "CLOUD-01",
+      "type": "cloud_or_wan",
+      "bbox": [
+        950,
+        627,
+        1048,
+        678
+      ],
+      "zone": "cloud"
+    },
+    {
+      "id": "DB-01",
+      "type": "database",
+      "bbox": [
+        1193,
+        562,
+        1245,
+        616
+      ],
+      "zone": "cloud"
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-01",
+      "target": "RTR-01",
+      "label": "VLAN-200",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "RTR-01",
+      "target": "FW-01",
+      "label": "VLAN-300",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-01",
+      "target": "SW-01",
+      "label": "1G",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-01",
+      "target": "APP-01",
+      "label": "Heartbeat",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-01",
+      "target": "CLOUD-01",
+      "label": "OSPF",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "CLOUD-01",
+      "target": "DB-01",
+      "label": "VLAN-300",
+      "relationship": "connected_to"
+    }
+  ]
+}
