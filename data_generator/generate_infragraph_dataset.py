@@ -27,7 +27,7 @@ from collections import defaultdict
 
 # ─── Pillow ───────────────────────────────────────────────────────────────────
 try:
-    from PIL import Image, ImageDraw, ImageFont
+    from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 except ImportError:
     print("ERROR: Pillow not found.  Run: pip install Pillow")
     sys.exit(1)
@@ -59,6 +59,78 @@ TEMPLATES = [
     "backup_link",
     "dense_enterprise",
 ]
+
+# ─── Curriculum difficulty profiles ───────────────────────────────────────────
+
+_EASY_TEMPLATES = [
+    "simple_branch", "load_balanced_app", "dmz_internal",
+    "cloud_extension", "backup_link",
+]
+_HARD_TEMPLATES = [
+    "dense_enterprise", "multi_zone_enterprise",
+    "dual_router_branch", "load_balanced_app", "dmz_internal",
+]
+
+_DIFF_PROFILE = {
+    "easy": {
+        "templates":         _EASY_TEMPLATES,
+        "n_srv_range":       (1, 2),
+        "n_db_range":        (1, 1),
+        "n_app_range":       (1, 2),
+        "icon_scale_range":  (1.05, 1.20),
+        "label_font_size":   12,
+        "connector_elbow_p": 0.15,
+        "has_meta_p":        0.30,
+        "has_legend_p":      0.20,
+        "callout_p":         0.20,
+        "has_footer_p":      0.20,
+        "has_left_panel_p":  0.00,
+        "has_watermark_p":   0.00,
+        "extra_edges":       0,
+        "jitter":            8,
+    },
+    "medium": {
+        "templates":         TEMPLATES,
+        "n_srv_range":       (2, 4),
+        "n_db_range":        (1, 2),
+        "n_app_range":       (2, 4),
+        "icon_scale_range":  (0.88, 1.12),
+        "label_font_size":   11,
+        "connector_elbow_p": 0.45,
+        "has_meta_p":        0.60,
+        "has_legend_p":      0.40,
+        "callout_p":         0.50,
+        "has_footer_p":      0.50,
+        "has_left_panel_p":  0.00,
+        "has_watermark_p":   0.00,
+        "extra_edges":       0,
+        "jitter":            14,
+    },
+    "hard": {
+        "templates":         _HARD_TEMPLATES,
+        "n_srv_range":       (4, 6),
+        "n_db_range":        (2, 3),
+        "n_app_range":       (3, 5),
+        "icon_scale_range":  (0.78, 0.95),
+        "label_font_size":   9,
+        "connector_elbow_p": 0.70,
+        "has_meta_p":        0.80,
+        "has_legend_p":      0.70,
+        "callout_p":         0.70,
+        "has_footer_p":      0.75,
+        "has_left_panel_p":  0.40,
+        "has_watermark_p":   0.35,
+        "extra_edges":       3,
+        "jitter":            18,
+    },
+}
+
+
+def _pick_difficulty(mode: str, rng: random.Random) -> str:
+    """Return a concrete difficulty level for one diagram."""
+    if mode == "mixed":
+        return rng.choices(["easy", "medium", "hard"], weights=[30, 50, 20])[0]
+    return mode
 
 # ─── Label pools ──────────────────────────────────────────────────────────────
 _RTR  = ["RTR-EDGE-01","RTR-BR-02","RTR-WAN-01","RTR-CORE-01",
@@ -184,8 +256,12 @@ def _ed(src: str, dst: str, label=None, style="solid",
             "style": style, "color": color, "width": width, "arrow": arrow}
 
 
-def generate_topology(template: str, rng: random.Random):
+def generate_topology(template: str, rng: random.Random, diff: dict = None):
     """Return (nodes, edges) for a named topology template."""
+    dp = diff or _DIFF_PROFILE["medium"]
+    _srv_lo, _srv_hi = dp["n_srv_range"]
+    _db_lo,  _db_hi  = dp["n_db_range"]
+    _app_lo, _app_hi = dp["n_app_range"]
 
     def rc(lst):   return rng.choice(lst)
     def rlink():   return rc(_LINK)
@@ -199,8 +275,8 @@ def generate_topology(template: str, rng: random.Random):
 
     # ── Template 1 ─────────────────────────────────────────────────────────
     if template == "simple_branch":
-        n_srv  = rng.randint(1, 3)
-        n_db   = rng.randint(1, 2)
+        n_srv  = rng.randint(_srv_lo, min(_srv_hi, 3))
+        n_db   = rng.randint(_db_lo,  min(_db_hi,  2))
         use_lb = rng.random() < 0.40
         nodes  = [
             _nd("WAN-01","cloud_or_wan","isp",   rc(_WAN)),
@@ -225,7 +301,7 @@ def generate_topology(template: str, rng: random.Random):
 
     # ── Template 2 ─────────────────────────────────────────────────────────
     elif template == "dual_router_branch":
-        n_srv  = rng.randint(2, 4)
+        n_srv  = rng.randint(max(2, _srv_lo), min(_srv_hi, 6))
         use_lb = rng.random() < 0.35
         nodes  = [
             _nd("WAN-01","cloud_or_wan","isp",   _WAN[0]),
@@ -253,7 +329,7 @@ def generate_topology(template: str, rng: random.Random):
 
     # ── Template 3 ─────────────────────────────────────────────────────────
     elif template == "load_balanced_app":
-        n_srv = rng.randint(2, 4)
+        n_srv = rng.randint(max(2, _srv_lo), min(_srv_hi, 6))
         nodes = [
             _nd("WAN-01","cloud_or_wan","isp",   rc(_WAN)),
             _nd("RTR-01","router",      "edge",  rc(_RTR)),
@@ -322,7 +398,7 @@ def generate_topology(template: str, rng: random.Random):
 
     # ── Template 6 ─────────────────────────────────────────────────────────
     elif template == "multi_zone_enterprise":
-        n_app  = rng.randint(2, 4)
+        n_app  = rng.randint(max(2, _app_lo), min(_app_hi, 6))
         use_lb = rng.random() < 0.35
         nodes  = [
             _nd("WAN-01",  "cloud_or_wan","isp",   rc(_WAN)),
@@ -372,8 +448,8 @@ def generate_topology(template: str, rng: random.Random):
 
     # ── Template 8 ─────────────────────────────────────────────────────────
     else:  # dense_enterprise
-        n_srv = rng.randint(3, 5)
-        n_db  = rng.randint(1, 2)
+        n_srv = rng.randint(max(3, _srv_lo), min(_srv_hi, 7))
+        n_db  = rng.randint(max(1, _db_lo),  min(_db_hi,  3))
         nodes = [
             _nd("WAN-01",  "cloud_or_wan","isp",   "WAN/MPLS"),
             _nd("WAN-02",  "cloud_or_wan","isp",   "INTERNET"),
@@ -405,6 +481,20 @@ def generate_topology(template: str, rng: random.Random):
             nodes.append(_nd("CLOUD-01","cloud_or_wan","cloud","CLOUD/VPC"))
             edges.append(conn("SW-CORE","CLOUD-01"))
 
+    # Hard mode: redundant cross-links for visual density
+    if dp.get("extra_edges", 0) > 0 and len(nodes) >= 3:
+        seen  = {(e["source"], e["target"]) for e in edges}
+        seen |= {(e["target"], e["source"]) for e in edges}
+        nids  = [n["id"] for n in nodes]
+        added = 0
+        for _ in range(dp["extra_edges"] * 4):
+            if added >= dp["extra_edges"]: break
+            s = rng.choice(nids); d = rng.choice(nids)
+            if s != d and (s, d) not in seen:
+                edges.append(conn(s, d))
+                seen.add((s, d)); seen.add((d, s))
+                added += 1
+
     return nodes, edges
 
 
@@ -412,7 +502,7 @@ def generate_topology(template: str, rng: random.Random):
 # LAYOUT ENGINE
 # ═════════════════════════════════════════════════════════════════════════════
 
-def layout_topology(nodes, edges, template, rng, diagram_area):
+def layout_topology(nodes, edges, template, rng, diagram_area, jitter=14):
     """Assign pixel (cx,cy) to every node.  Returns {node_id: (cx,cy)}."""
     ax1, ay1, ax2, ay2 = diagram_area
     aw, ah = ax2 - ax1, ay2 - ay1
@@ -533,7 +623,7 @@ def layout_topology(nodes, edges, template, rng, diagram_area):
             pos[nid] = p(xf + rng.uniform(-0.02,0.02), (j+1)/(len(nids)+1))
 
     # ── small position jitter so diagrams aren't perfectly uniform ───────────
-    JIT = 14
+    JIT = jitter
     for nid in pos:
         cx, cy = pos[nid]
         pos[nid] = (clamp(cx + rng.randint(-JIT,JIT), ax1+52, ax2-52),
@@ -730,7 +820,7 @@ def _dashed_rect(draw, x1,y1,x2,y2, color, dash=8, gap=4):
         _dashy(draw, list(seg), color, 1, dash=dash, gap=gap)
 
 
-def draw_connector(draw, p1, p2, edge, font=None, rng=None):
+def draw_connector(draw, p1, p2, edge, font=None, rng=None, elbow_prob=0.45):
     style = edge.get("style","solid")
     color = edge.get("color","#212121")
     width = edge.get("width",2)
@@ -738,7 +828,7 @@ def draw_connector(draw, p1, p2, edge, font=None, rng=None):
     label = edge.get("label")
     x1,y1=p1; x2,y2=p2
 
-    use_elbow = rng and rng.random() > 0.55
+    use_elbow = rng and rng.random() < elbow_prob
     if use_elbow:
         mx=(x1+x2)//2
         pts=[(x1,y1),(mx,y1),(mx,y2),(x2,y2)]
@@ -784,6 +874,11 @@ def render_diagram(nodes, edges, pos, style, img_path, diagram_id, rng):
     stype      = style.get("site_type",    "Branch")
     asn        = style.get("as_number",    65001)
     tpl_lbl    = style.get("template_label", diagram_id)
+    elbow_p    = style.get("connector_elbow_p", 0.45)
+    callout_p  = style.get("callout_p", 0.32)
+    lbl_fsz    = style.get("label_font_size", 11)
+    left_w     = style.get("left_panel_w", 0)
+    apply_ns   = style.get("apply_noise", False)
 
     meta_w = 195 if has_meta else 0
     hdr_h  = 70
@@ -795,7 +890,7 @@ def render_diagram(nodes, edges, pos, style, img_path, diagram_id, rng):
     # ── fonts ─────────────────────────────────────────────────────────────────
     f_title = _font(20, bold=True)
     f_sub   = _font(9)
-    f_label = _font(11)
+    f_label = _font(lbl_fsz)
     f_small = _font(9)
     f_zone  = _font(9)
     f_meta  = _font(10)
@@ -836,7 +931,7 @@ def render_diagram(nodes, edges, pos, style, img_path, diagram_id, rng):
                   fill="#AAAAAA", font=f_small)
 
     # ── diagram boundary ──────────────────────────────────────────────────────
-    dx1=18; dy1=hdr_h+8; dx2=IMG_W-meta_w-12; dy2=IMG_H-ftr_h-8
+    dx1=18+left_w; dy1=hdr_h+8; dx2=IMG_W-meta_w-12; dy2=IMG_H-ftr_h-8
 
     # ── zones (background rectangles) ─────────────────────────────────────────
     by_zone = defaultdict(list)
@@ -859,13 +954,19 @@ def render_diagram(nodes, edges, pos, style, img_path, diagram_id, rng):
         draw.text((zx1+6,zy1+4), ZONE_LABEL.get(zone_key,zone_key.upper()),
                   fill="#888888", font=f_zone)
 
+    # ── optional hard-mode left inventory panel ───────────────────────────────
+    if left_w > 0:
+        _hard_left_panel(draw, nodes, rng,
+                         (18, dy1, 18 + left_w, dy2),
+                         {"head": _font(8, bold=True), "body": _font(8)})
+
     # ── connectors ────────────────────────────────────────────────────────────
     nmap = {n["id"]:n for n in nodes}
     for e in edges:
         src=nmap.get(e["source"]); dst=nmap.get(e["target"])
         if src and dst:
             draw_connector(draw,(src["cx"],src["cy"]),(dst["cx"],dst["cy"]),
-                           e, font=f_small, rng=rng)
+                           e, font=f_small, rng=rng, elbow_prob=elbow_p)
 
     # ── device icons + labels ─────────────────────────────────────────────────
     for n in nodes:
@@ -900,8 +1001,20 @@ def render_diagram(nodes, edges, pos, style, img_path, diagram_id, rng):
                       fill="#333333", font=f_leg)
 
     # ── optional callout annotation ───────────────────────────────────────────
-    if rng.random() > 0.68 and nodes:
+    if rng.random() < callout_p and nodes:
         _callout(draw, nodes, rng, f_small, dx2)
+
+    # ── optional watermark (hard mode) ────────────────────────────────────────
+    if style.get("has_watermark"):
+        wm_txt = "SYNTHETIC"
+        wm_fnt = _font(52, bold=True)
+        wm_w, wm_h = _tsz(draw, wm_txt, wm_fnt)
+        draw.text(((IMG_W - wm_w) // 2, (IMG_H - wm_h) // 2),
+                  wm_txt, fill="#F0F0F0", font=wm_fnt)
+
+    # ── document noise (hard mode with --augment-document-noise) ─────────────
+    if apply_ns:
+        img = apply_document_noise(img, rng)
 
     img.save(str(img_path), "PNG")
     return nodes
@@ -921,6 +1034,61 @@ def _callout(draw, nodes, rng, font, dx2):
                     fill="#FFFDE7", outline="#F9A825", width=1)
     draw.text((ox,oy), txt, fill="#333333", font=font)
     draw.line([(ox,oy+th//2),(cx,cy)], fill="#F9A825", width=1)
+
+
+def _hard_left_panel(draw, nodes, rng, bounds, fonts):
+    """Draw a dense device-inventory side panel for hard-mode diagrams."""
+    px1, py1, px2, py2 = bounds
+    f_head = fonts.get("head") or _font(8, bold=True)
+    f_body = fonts.get("body") or _font(8)
+    _ABBR  = {"router": "RTR", "switch": "SW", "firewall": "FW",
+              "server": "SRV", "database": "DB",
+              "load_balancer": "LB", "cloud_or_wan": "WAN"}
+
+    draw.rectangle([px1, py1, px2, py2], fill="#EEF2F7", outline="#BBBBBB", width=1)
+    draw.text((px1 + 4, py1 + 4), "DEVICE INVENTORY", fill="#1A237E", font=f_head)
+    draw.line([(px1 + 4, py1 + 22), (px2 - 4, py1 + 22)], fill="#AAAAAA", width=1)
+
+    y, row_h = py1 + 28, 22
+    for n in nodes:
+        if y + row_h > py2 - 4: break
+        abbr = _ABBR.get(n["type"], n["type"][:3].upper())
+        ip   = f"10.{rng.randint(1,20)}.{rng.randint(0,255)}.{rng.randint(1,254)}"
+        draw.text((px1 + 4,  y),      f"{abbr}  {n['id'][:14]}", fill="#212121", font=f_body)
+        draw.text((px1 + 8,  y + 11), ip,                         fill="#666666", font=f_body)
+        draw.line([(px1 + 4, y + row_h - 1), (px2 - 4, y + row_h - 1)],
+                  fill="#DDDDDD", width=1)
+        y += row_h
+
+
+def apply_document_noise(img: "Image.Image", rng: random.Random) -> "Image.Image":
+    """Apply mild scan/print noise to a PIL Image (hard-mode augmentation)."""
+    import io
+
+    # Slight Gaussian blur — simulates print or scan defocus
+    img = img.filter(ImageFilter.GaussianBlur(radius=rng.uniform(0.3, 0.9)))
+
+    # Brightness and contrast jitter
+    img = ImageEnhance.Brightness(img).enhance(rng.uniform(0.88, 1.08))
+    img = ImageEnhance.Contrast(img).enhance(rng.uniform(0.90, 1.10))
+
+    # Subtle horizontal scan-line texture (50 % chance)
+    if rng.random() < 0.50:
+        overlay = Image.new("RGB", img.size, (255, 255, 255))
+        d = ImageDraw.Draw(overlay)
+        step = rng.randint(6, 14)
+        for y in range(0, img.size[1], step):
+            d.line([(0, y), (img.size[0], y)], fill=(215, 215, 215), width=1)
+        img = Image.blend(img, overlay, alpha=rng.uniform(0.03, 0.08))
+
+    # JPEG compression artefact (40 % chance)
+    if rng.random() < 0.40:
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=rng.randint(68, 88))
+        buf.seek(0)
+        img = Image.open(buf).copy()
+
+    return img
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -1171,6 +1339,13 @@ def parse_args():
                    help="Generate previews/bbox_contact_sheet.png with YOLO bboxes")
     p.add_argument("--clean", action="store_true",
                    help="Delete existing dataset subfolders before generation")
+    p.add_argument("--difficulty", choices=["easy", "medium", "hard", "mixed"],
+                   default="mixed",
+                   help="Curriculum difficulty (easy/medium/hard/mixed). "
+                        "Mixed = 30%% easy / 50%% medium / 20%% hard. (default: mixed)")
+    p.add_argument("--augment-document-noise", action="store_true",
+                   help="Apply scan/print noise to hard-mode diagrams "
+                        "(blur, brightness jitter, scan lines, JPEG artefact)")
     return p.parse_args()
 
 
@@ -1185,9 +1360,13 @@ def main():
     total   = args.num
 
     print(f"\nInfraGraph AI - Synthetic Dataset Generator")
-    print(f"  Output   : {out_dir.resolve()}")
-    print(f"  Diagrams : {total}")
-    print(f"  Seed     : {args.seed}\n")
+    print(f"  Output     : {out_dir.resolve()}")
+    print(f"  Diagrams   : {total}")
+    print(f"  Seed       : {args.seed}")
+    print(f"  Difficulty : {args.difficulty}")
+    if args.augment_document_noise:
+        print(f"  Document noise augmentation: ON (hard diagrams only)")
+    print()
 
     if args.clean:
         import shutil
@@ -1203,6 +1382,7 @@ def main():
 
     class_cnt  = defaultdict(int)
     split_cnt  = defaultdict(int)
+    diff_cnt   = defaultdict(int)
     all_imgs   = []
 
     for idx in range(total):
@@ -1210,30 +1390,51 @@ def main():
         split      = get_split(idx, total)
         split_cnt[split] += 1
 
-        # Cycle through all 8 templates, with ~50 % random override
-        template = TEMPLATES[idx % len(TEMPLATES)]
+        # ── pick difficulty for this diagram ──────────────────────────────────
+        difficulty = _pick_difficulty(args.difficulty, rng)
+        dp         = _DIFF_PROFILE[difficulty]
+        diff_cnt[difficulty] += 1
+
+        # Cycle through the difficulty's template pool, with ~50 % random override
+        tmpl_pool = dp["templates"]
+        template  = tmpl_pool[idx % len(tmpl_pool)]
         if rng.random() > 0.45:
-            template = rng.choice(TEMPLATES)
+            template = rng.choice(tmpl_pool)
 
-        nodes, edges = generate_topology(template, rng)
+        nodes, edges = generate_topology(template, rng, diff=dp)
 
-        has_meta = rng.random() > 0.25
+        # ── build difficulty-driven style ─────────────────────────────────────
+        has_meta  = rng.random() < dp["has_meta_p"]
+        has_left  = rng.random() < dp["has_left_panel_p"]
+        isc_lo, isc_hi = dp["icon_scale_range"]
+
         style = {
-            "bg":             rng.choice(["#FFFFFF","#F8F9FA","#FAFAFA","#F5F5F5"]),
-            "has_metadata":   has_meta,
-            "has_legend":     rng.random() > 0.35,
-            "has_footer":     rng.random() > 0.30,
-            "icon_scale":     rng.uniform(0.88, 1.12),
-            "site_name":      rng.choice(_SITE_NAMES),
-            "region":         rng.choice(_REGIONS),
-            "site_type":      rng.choice(_SITE_TYPES),
-            "as_number":      rng.randint(64512, 65534),
-            "template_label": template.replace("_"," ").title(),
+            "bg":                rng.choice(["#FFFFFF","#F8F9FA","#FAFAFA","#F5F5F5"]),
+            "has_metadata":      has_meta,
+            "has_legend":        rng.random() < dp["has_legend_p"],
+            "has_footer":        rng.random() < dp["has_footer_p"],
+            "icon_scale":        rng.uniform(isc_lo, isc_hi),
+            "site_name":         rng.choice(_SITE_NAMES),
+            "region":            rng.choice(_REGIONS),
+            "site_type":         rng.choice(_SITE_TYPES),
+            "as_number":         rng.randint(64512, 65534),
+            "template_label":    template.replace("_"," ").title(),
+            # difficulty params
+            "difficulty":        difficulty,
+            "connector_elbow_p": dp["connector_elbow_p"],
+            "callout_p":         dp["callout_p"],
+            "label_font_size":   dp["label_font_size"],
+            "has_left_panel":    has_left,
+            "left_panel_w":      165 if has_left else 0,
+            "has_watermark":     rng.random() < dp.get("has_watermark_p", 0),
+            "apply_noise":       args.augment_document_noise and difficulty == "hard",
         }
+        left_panel_w = 165 if has_left else 0
         meta_w       = 195 if has_meta else 0
-        diagram_area = (18, 78, IMG_W-meta_w-12, IMG_H-46)
+        diagram_area = (18 + left_panel_w, 78, IMG_W - meta_w - 12, IMG_H - 46)
 
-        pos   = layout_topology(nodes, edges, template, rng, diagram_area)
+        pos   = layout_topology(nodes, edges, template, rng, diagram_area,
+                                jitter=dp["jitter"])
         img_p = out_dir/"images"/split/f"{diagram_id}.png"
         lbl_p = out_dir/"labels"/split/f"{diagram_id}.txt"
         grp_p = out_dir/"graphs"/split/f"{diagram_id}.json"
@@ -1243,7 +1444,8 @@ def main():
         save_yolo_labels(nodes, lbl_p)
 
         meta = {"branch":style["site_name"],"region":style["region"],
-                "site_type":style["site_type"],"version":"v0.1"}
+                "site_type":style["site_type"],"version":"v0.1",
+                "difficulty":difficulty}
         save_graph_json(diagram_id, template, meta, nodes, edges, grp_p)
 
         scenario = generate_alert_scenario(diagram_id, nodes, edges, rng)
@@ -1254,7 +1456,7 @@ def main():
 
         if idx == 0 or (idx+1) % 10 == 0 or (idx+1) == total:
             print(f"  [{idx+1:4d}/{total}]  {diagram_id}.png  [{split}]"
-                  f"  tpl={template}  nodes={len(nodes)}")
+                  f"  diff={difficulty:<6s}  tpl={template}  nodes={len(nodes)}")
 
     # ── Contact sheet ─────────────────────────────────────────────────────────
     if all_imgs:
@@ -1275,6 +1477,15 @@ def main():
     print(f"  Total images : {total}")
     print(f"  train / val / test : "
           f"{split_cnt['train']} / {split_cnt['val']} / {split_cnt['test']}")
+
+    # ── Difficulty summary ────────────────────────────────────────────────────
+    print(f"\n  Diagrams by difficulty ({args.difficulty} mode):")
+    for d in ("easy", "medium", "hard"):
+        cnt = diff_cnt.get(d, 0)
+        pct = cnt / total * 100 if total else 0
+        bar = "#" * max(1, round(cnt / total * 20)) if total else ""
+        print(f"    {d:<8s}  {cnt:5d}  ({pct:4.1f}%)  {bar}")
+
     print(f"\n  Object instances per class:")
     total_objs = sum(class_cnt.values()) or 1
     mx = max(class_cnt.values()) if class_cnt else 1
