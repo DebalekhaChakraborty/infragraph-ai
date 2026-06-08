@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.so
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Generated dataset — exclude binary content, keep skeleton + metadata
+data_generator/infragraph_dataset/images/**
+data_generator/infragraph_dataset/labels/**
+data_generator/infragraph_dataset/graphs/**
+data_generator/infragraph_dataset/alerts/**
+data_generator/infragraph_dataset/previews/**
+!data_generator/infragraph_dataset/**/
+!data_generator/infragraph_dataset/**/.gitkeep
+!data_generator/infragraph_dataset/dataset.yaml
+!data_generator/infragraph_dataset/classes.txt
+
+# Model weights and checkpoints
+outputs/*.pt
+outputs/*.onnx
+outputs/*.engine
+outputs/runs/
+runs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

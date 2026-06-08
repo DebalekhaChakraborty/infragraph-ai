@@ -1,0 +1,16 @@
+# InfraGraph AI - YOLO Dataset
+path: ./infragraph_dataset
+train: images/train
+val:   images/val
+test:  images/test
+
+nc: 7
+
+names:
+  0: router
+  1: switch
+  2: firewall
+  3: server
+  4: database
+  5: load_balancer
+  6: cloud_or_wan

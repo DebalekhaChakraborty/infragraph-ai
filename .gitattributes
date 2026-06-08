@@ -1,0 +1,21 @@
+# Normalise all text files to LF in the repo; let the OS decide on checkout
+* text=auto eol=lf
+
+# Explicitly text
+*.py        text eol=lf
+*.ipynb     text eol=lf
+*.yaml      text eol=lf
+*.yml       text eol=lf
+*.txt       text eol=lf
+*.md        text eol=lf
+*.json      text eol=lf
+*.cfg       text eol=lf
+*.toml      text eol=lf
+*.sh        text eol=lf
+.gitignore  text eol=lf
+
+# Binary — never touch line endings
+*.png  binary
+*.jpg  binary
+*.pt   binary
+*.onnx binary
