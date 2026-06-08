@@ -4,6 +4,20 @@ Synthetic network-diagram dataset generator and AI pipeline for **automated topo
 
 ---
 
+## Current milestone
+
+| # | Milestone | Status |
+|---|-----------|--------|
+| 1 | V1 synthetic dataset generated under `datasets/infragraph_v1` | Done |
+| 2 | YOLO V1 detector trained | Done |
+| 3 | Trained weights available under `training_runs/infragraph_yolo_v1/weights` | Done |
+| 4 | Run detector prediction on test set | Next |
+| 5 | Reconstruct topology graph from detections | Next |
+| 6 | Graph RCA / GNN demo | Next |
+| 7 | Add Qwen explanation layer | Next |
+
+---
+
 ## What it does
 
 | Stage | Description |
@@ -12,6 +26,7 @@ Synthetic network-diagram dataset generator and AI pipeline for **automated topo
 | **Detect** | Fine-tune YOLOv8 to locate network devices (router, switch, firewall, server, database, load_balancer, cloud_or_wan) |
 | **Extract** | Detect inter-device connections via line detection + OCR to rebuild the topology graph |
 | **Analyse** | Run graph-based and GNN-powered RCA to identify root-cause nodes from alert sequences |
+| **Explain** | Qwen / open LLM generates a plain-language incident explanation from the RCA output |
 
 ---
 
@@ -27,8 +42,10 @@ python data_generator/generate_infragraph_dataset.py \
     --seed 42 --annotated-preview --clean
 
 # 3. Run inference with the trained model
+#    device=cpu is used as a reliable workaround: in AMD ROCm environments
+#    TorchVision NMS may fail on the GPU backend, so CPU prediction is preferred.
 yolo detect predict \
-    model=./runs/detect/yolo_runs/infragraph_yolo_v1/weights/best.pt \
+    model=./training_runs/infragraph_yolo_v1/weights/best.pt \
     source=./datasets/infragraph_v1/images/test \
     imgsz=960 \
     conf=0.25 \
@@ -60,17 +77,20 @@ infragraph-ai/
 │       ├── dataset.yaml
 │       └── classes.txt
 │
-├── runs/
-│   └── detect/
-│       ├── yolo_runs/
-│       │   └── infragraph_yolo_v1/      # Trained YOLOv8 run
-│       │       ├── weights/
-│       │       │   ├── best.pt          # Best checkpoint
-│       │       │   └── last.pt          # Final checkpoint
-│       │       └── results.csv
-│       └── val/                         # Validation curves and confusion matrix
+├── training_runs/
+│   └── infragraph_yolo_v1/              # YOLOv8 training artifacts
+│       ├── weights/
+│       │   ├── best.pt                  # Best checkpoint (canonical model path)
+│       │   └── last.pt                  # Final checkpoint
+│       ├── results.csv                  # Training metrics per epoch
+│       └── train_batch*.jpg             # Training batch visualisations
 │
-├── outputs/                             # Inference outputs
+├── outputs/
+│   ├── v1_test_predictions_cpu/         # Detector output on test set
+│   └── val_eval/                        # Validation curves and confusion matrix
+│
+├── scripts/
+│   └── verify_repo_state.py             # Repo integrity checker
 │
 ├── notebooks/
 │   ├── 01_generate_dataset.ipynb        # Dataset generation walkthrough
@@ -113,6 +133,8 @@ python data_generator/generate_infragraph_dataset.py \
     [--num N]                   # diagrams to generate (default 20)
     [--out PATH]                # output directory (default ./infragraph_dataset)
     [--seed INT]                # random seed (default 42)
+    [--difficulty easy|medium|hard|mixed]   # curriculum difficulty (default mixed)
+    [--augment-document-noise]  # apply scan/print noise to hard diagrams
     [--yolo-path-mode relative|absolute]
     [--annotated-preview]       # save previews/bbox_contact_sheet.png
     [--clean]                   # wipe output subfolders before generating
