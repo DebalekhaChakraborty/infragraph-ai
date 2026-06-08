@@ -23,10 +23,21 @@ pip install -r requirements.txt
 
 # 2. Generate a 300-image dataset
 python data_generator/generate_infragraph_dataset.py \
-    --num 300 --out ./data_generator/infragraph_dataset \
+    --num 300 --out ./datasets/infragraph_v1 \
     --seed 42 --annotated-preview --clean
 
-# 3. Open notebooks in order
+# 3. Run inference with the trained model
+yolo detect predict \
+    model=./runs/detect/yolo_runs/infragraph_yolo_v1/weights/best.pt \
+    source=./datasets/infragraph_v1/images/test \
+    imgsz=960 \
+    conf=0.25 \
+    device=cpu \
+    save=True \
+    project=./outputs \
+    name=v1_test_predictions_cpu
+
+# 4. Open notebooks in order
 jupyter lab
 ```
 
@@ -38,6 +49,28 @@ jupyter lab
 infragraph-ai/
 ├── data_generator/
 │   └── generate_infragraph_dataset.py   # Synthetic dataset generator
+│
+├── datasets/
+│   └── infragraph_v1/                   # V1 dataset (images, labels, graphs, alerts)
+│       ├── images/{train,val,test}/
+│       ├── labels/{train,val,test}/
+│       ├── graphs/{train,val,test}/
+│       ├── alerts/{train,val,test}/
+│       ├── previews/                    # Contact sheets
+│       ├── dataset.yaml
+│       └── classes.txt
+│
+├── runs/
+│   └── detect/
+│       ├── yolo_runs/
+│       │   └── infragraph_yolo_v1/      # Trained YOLOv8 run
+│       │       ├── weights/
+│       │       │   ├── best.pt          # Best checkpoint
+│       │       │   └── last.pt          # Final checkpoint
+│       │       └── results.csv
+│       └── val/                         # Validation curves and confusion matrix
+│
+├── outputs/                             # Inference outputs
 │
 ├── notebooks/
 │   ├── 01_generate_dataset.ipynb        # Dataset generation walkthrough
@@ -67,7 +100,8 @@ infragraph-ai/
 │   ├── sample_diagrams/                 # Example generated PNGs
 │   └── sample_outputs/                  # Example detector / RCA outputs
 │
-└── outputs/                             # Training runs, weights, eval reports
+├── yolov8n.pt                           # YOLOv8n base weights
+└── requirements.txt
 ```
 
 ---
