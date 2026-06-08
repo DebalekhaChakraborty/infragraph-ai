@@ -1,0 +1,196 @@
+{
+  "diagram_id": "diagram_0358",
+  "template": "load_balanced_app",
+  "metadata": {
+    "branch": "MUM-DC-01",
+    "region": "EMEA",
+    "site_type": "Hub Site",
+    "version": "v0.1",
+    "difficulty": "medium"
+  },
+  "nodes": [
+    {
+      "id": "WAN-01",
+      "type": "cloud_or_wan",
+      "bbox": [
+        65,
+        445,
+        153,
+        491
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "RTR-01",
+      "type": "router",
+      "bbox": [
+        229,
+        436,
+        281,
+        488
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "FW-01",
+      "type": "firewall",
+      "bbox": [
+        387,
+        434,
+        449,
+        496
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "SW-01",
+      "type": "switch",
+      "bbox": [
+        535,
+        445,
+        607,
+        485
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "LB-01",
+      "type": "load_balancer",
+      "bbox": [
+        698,
+        434,
+        770,
+        484
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "DB-01",
+      "type": "database",
+      "bbox": [
+        1070,
+        439,
+        1120,
+        489
+      ],
+      "zone": "db"
+    },
+    {
+      "id": "LB-02",
+      "type": "load_balancer",
+      "bbox": [
+        723,
+        434,
+        791,
+        480
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "APP-01",
+      "type": "server",
+      "bbox": [
+        893,
+        215,
+        963,
+        271
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "APP-02",
+      "type": "server",
+      "bbox": [
+        907,
+        349,
+        977,
+        405
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "APP-03",
+      "type": "server",
+      "bbox": [
+        898,
+        513,
+        972,
+        573
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "APP-04",
+      "type": "server",
+      "bbox": [
+        896,
+        657,
+        964,
+        713
+      ],
+      "zone": "app"
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-01",
+      "target": "RTR-01",
+      "label": "VLAN-200",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "RTR-01",
+      "target": "FW-01",
+      "label": "Backup Link",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-01",
+      "target": "SW-01",
+      "label": "VLAN-300",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-01",
+      "target": "LB-01",
+      "label": "VLAN-200",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "LB-01",
+      "target": "DB-01",
+      "label": "Backup Link",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-01",
+      "target": "LB-02",
+      "label": "BGP",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "LB-01",
+      "target": "APP-01",
+      "label": "MPLS",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "LB-02",
+      "target": "APP-02",
+      "label": "VLAN-200",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "LB-01",
+      "target": "APP-03",
+      "label": "HTTPS/443",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "LB-02",
+      "target": "APP-04",
+      "label": "VLAN-300",
+      "relationship": "connected_to"
+    }
+  ]
+}

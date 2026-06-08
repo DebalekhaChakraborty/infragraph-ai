@@ -1,0 +1,270 @@
+{
+  "diagram_id": "diagram_0112",
+  "template": "dense_enterprise",
+  "metadata": {
+    "branch": "SGP-DC-01",
+    "region": "WEST",
+    "site_type": "Regional DC",
+    "version": "v0.1",
+    "difficulty": "medium"
+  },
+  "nodes": [
+    {
+      "id": "WAN-01",
+      "type": "cloud_or_wan",
+      "bbox": [
+        61,
+        236,
+        137,
+        276
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "WAN-02",
+      "type": "cloud_or_wan",
+      "bbox": [
+        64,
+        566,
+        144,
+        608
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "RTR-01",
+      "type": "router",
+      "bbox": [
+        239,
+        212,
+        283,
+        256
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "RTR-02",
+      "type": "router",
+      "bbox": [
+        242,
+        565,
+        290,
+        613
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "FW-01",
+      "type": "firewall",
+      "bbox": [
+        397,
+        345,
+        447,
+        395
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "FW-02",
+      "type": "firewall",
+      "bbox": [
+        392,
+        587,
+        444,
+        639
+      ],
+      "zone": "dmz"
+    },
+    {
+      "id": "SW-CORE",
+      "type": "switch",
+      "bbox": [
+        557,
+        347,
+        619,
+        381
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "SW-APP",
+      "type": "switch",
+      "bbox": [
+        557,
+        612,
+        623,
+        648
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "LB-01",
+      "type": "load_balancer",
+      "bbox": [
+        768,
+        473,
+        824,
+        511
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "MGMT-01",
+      "type": "server",
+      "bbox": [
+        742,
+        204,
+        802,
+        254
+      ],
+      "zone": "mgmt"
+    },
+    {
+      "id": "APP-01",
+      "type": "server",
+      "bbox": [
+        987,
+        347,
+        1041,
+        391
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "APP-02",
+      "type": "server",
+      "bbox": [
+        978,
+        478,
+        1034,
+        524
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "APP-03",
+      "type": "server",
+      "bbox": [
+        968,
+        618,
+        1026,
+        666
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "DB-01",
+      "type": "database",
+      "bbox": [
+        1211,
+        430,
+        1257,
+        476
+      ],
+      "zone": "db"
+    },
+    {
+      "id": "CLOUD-01",
+      "type": "cloud_or_wan",
+      "bbox": [
+        953,
+        220,
+        1029,
+        260
+      ],
+      "zone": "cloud"
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-01",
+      "target": "RTR-01",
+      "label": "OSPF",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "WAN-02",
+      "target": "RTR-02",
+      "label": "Backup Link",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "RTR-01",
+      "target": "FW-01",
+      "label": "100M",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "RTR-02",
+      "target": "FW-01",
+      "label": "BGP",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-01",
+      "target": "SW-CORE",
+      "label": "VPN Tunnel",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-01",
+      "target": "FW-02",
+      "label": "1G",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-02",
+      "target": "SW-APP",
+      "label": "VLAN-200",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-CORE",
+      "target": "SW-APP",
+      "label": "VLAN-100",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-APP",
+      "target": "LB-01",
+      "label": "MPLS",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-CORE",
+      "target": "MGMT-01",
+      "label": "VPN Tunnel",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "LB-01",
+      "target": "APP-01",
+      "label": "VLAN-200",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "LB-01",
+      "target": "APP-02",
+      "label": "10G",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "LB-01",
+      "target": "APP-03",
+      "label": "10G",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "APP-01",
+      "target": "DB-01",
+      "label": "VLAN-100",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-CORE",
+      "target": "CLOUD-01",
+      "label": "VLAN-200",
+      "relationship": "connected_to"
+    }
+  ]
+}

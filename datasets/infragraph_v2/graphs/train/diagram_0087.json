@@ -1,0 +1,162 @@
+{
+  "diagram_id": "diagram_0087",
+  "template": "cloud_extension",
+  "metadata": {
+    "branch": "TOR-BRANCH-01",
+    "region": "CENTRAL",
+    "site_type": "Hub Site",
+    "version": "v0.1",
+    "difficulty": "medium"
+  },
+  "nodes": [
+    {
+      "id": "WAN-01",
+      "type": "cloud_or_wan",
+      "bbox": [
+        60,
+        295,
+        150,
+        342
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "RTR-01",
+      "type": "router",
+      "bbox": [
+        263,
+        292,
+        317,
+        346
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "FW-01",
+      "type": "firewall",
+      "bbox": [
+        430,
+        280,
+        486,
+        336
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "SW-01",
+      "type": "switch",
+      "bbox": [
+        608,
+        286,
+        676,
+        322
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "LB-01",
+      "type": "load_balancer",
+      "bbox": [
+        739,
+        283,
+        805,
+        327
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "APP-01",
+      "type": "server",
+      "bbox": [
+        882,
+        172,
+        948,
+        226
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "CLOUD-01",
+      "type": "cloud_or_wan",
+      "bbox": [
+        825,
+        633,
+        903,
+        674
+      ],
+      "zone": "cloud"
+    },
+    {
+      "id": "DB-01",
+      "type": "database",
+      "bbox": [
+        1033,
+        568,
+        1079,
+        614
+      ],
+      "zone": "cloud"
+    },
+    {
+      "id": "APP-02",
+      "type": "server",
+      "bbox": [
+        874,
+        350,
+        936,
+        400
+      ],
+      "zone": "app"
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-01",
+      "target": "RTR-01",
+      "label": "HTTPS/443",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "RTR-01",
+      "target": "FW-01",
+      "label": "100M",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-01",
+      "target": "SW-01",
+      "label": "OSPF",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-01",
+      "target": "LB-01",
+      "label": "VPN Tunnel",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "LB-01",
+      "target": "APP-01",
+      "label": "HTTPS/443",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-01",
+      "target": "CLOUD-01",
+      "label": "VLAN-100",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "CLOUD-01",
+      "target": "DB-01",
+      "label": "Heartbeat",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "LB-01",
+      "target": "APP-02",
+      "label": "Heartbeat",
+      "relationship": "connected_to"
+    }
+  ]
+}

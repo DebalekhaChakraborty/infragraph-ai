@@ -1,0 +1,145 @@
+{
+  "diagram_id": "diagram_0013",
+  "template": "dmz_internal",
+  "metadata": {
+    "branch": "FRA-DC-01",
+    "region": "LATAM",
+    "site_type": "Large Branch",
+    "version": "v0.1",
+    "difficulty": "medium"
+  },
+  "nodes": [
+    {
+      "id": "WAN-01",
+      "type": "cloud_or_wan",
+      "bbox": [
+        75,
+        431,
+        145,
+        468
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "FW-EXT",
+      "type": "firewall",
+      "bbox": [
+        248,
+        442,
+        298,
+        492
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "SW-DMZ",
+      "type": "switch",
+      "bbox": [
+        425,
+        340,
+        491,
+        376
+      ],
+      "zone": "dmz"
+    },
+    {
+      "id": "WEB-01",
+      "type": "server",
+      "bbox": [
+        628,
+        212,
+        684,
+        258
+      ],
+      "zone": "dmz"
+    },
+    {
+      "id": "FW-INT",
+      "type": "firewall",
+      "bbox": [
+        442,
+        613,
+        490,
+        661
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "SW-INT",
+      "type": "switch",
+      "bbox": [
+        687,
+        621,
+        753,
+        657
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "APP-01",
+      "type": "server",
+      "bbox": [
+        948,
+        442,
+        1004,
+        486
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "DB-01",
+      "type": "database",
+      "bbox": [
+        1186,
+        459,
+        1228,
+        501
+      ],
+      "zone": "db"
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-01",
+      "target": "FW-EXT",
+      "label": "VLAN-100",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-EXT",
+      "target": "SW-DMZ",
+      "label": "VPN Tunnel",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-DMZ",
+      "target": "WEB-01",
+      "label": "100M",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-DMZ",
+      "target": "FW-INT",
+      "label": "Heartbeat",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-INT",
+      "target": "SW-INT",
+      "label": "VLAN-200",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-INT",
+      "target": "APP-01",
+      "label": "100M",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "APP-01",
+      "target": "DB-01",
+      "label": "API",
+      "relationship": "connected_to"
+    }
+  ]
+}

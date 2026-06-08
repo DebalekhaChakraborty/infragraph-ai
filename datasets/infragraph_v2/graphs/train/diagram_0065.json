@@ -1,0 +1,128 @@
+{
+  "diagram_id": "diagram_0065",
+  "template": "simple_branch",
+  "metadata": {
+    "branch": "NYC-BRANCH-01",
+    "region": "EAST",
+    "site_type": "Small Branch",
+    "version": "v0.1",
+    "difficulty": "medium"
+  },
+  "nodes": [
+    {
+      "id": "WAN-01",
+      "type": "cloud_or_wan",
+      "bbox": [
+        74,
+        430,
+        150,
+        470
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "RTR-01",
+      "type": "router",
+      "bbox": [
+        265,
+        453,
+        315,
+        503
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "FW-01",
+      "type": "firewall",
+      "bbox": [
+        463,
+        445,
+        515,
+        497
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "SW-01",
+      "type": "switch",
+      "bbox": [
+        664,
+        440,
+        730,
+        476
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "APP-01",
+      "type": "server",
+      "bbox": [
+        1029,
+        318,
+        1083,
+        362
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "APP-02",
+      "type": "server",
+      "bbox": [
+        1027,
+        562,
+        1083,
+        608
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "DB-01",
+      "type": "database",
+      "bbox": [
+        1228,
+        449,
+        1274,
+        495
+      ],
+      "zone": "db"
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-01",
+      "target": "RTR-01",
+      "label": "100M",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "RTR-01",
+      "target": "FW-01",
+      "label": "MPLS",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-01",
+      "target": "SW-01",
+      "label": "Heartbeat",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-01",
+      "target": "APP-01",
+      "label": "SQL/1521",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-01",
+      "target": "APP-02",
+      "label": "100M",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "APP-01",
+      "target": "DB-01",
+      "label": "1G",
+      "relationship": "connected_to"
+    }
+  ]
+}

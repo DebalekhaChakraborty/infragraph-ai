@@ -1,0 +1,145 @@
+{
+  "diagram_id": "diagram_0335",
+  "template": "backup_link",
+  "metadata": {
+    "branch": "SYD-BRANCH-01",
+    "region": "EMEA",
+    "site_type": "Medium Branch",
+    "version": "v0.1",
+    "difficulty": "medium"
+  },
+  "nodes": [
+    {
+      "id": "WAN-PRI",
+      "type": "cloud_or_wan",
+      "bbox": [
+        55,
+        254,
+        145,
+        301
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "WAN-BAK",
+      "type": "cloud_or_wan",
+      "bbox": [
+        44,
+        629,
+        138,
+        678
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "RTR-PRI",
+      "type": "router",
+      "bbox": [
+        248,
+        243,
+        308,
+        303
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "RTR-BAK",
+      "type": "router",
+      "bbox": [
+        245,
+        625,
+        305,
+        685
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "FW-01",
+      "type": "firewall",
+      "bbox": [
+        446,
+        451,
+        504,
+        509
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "SW-01",
+      "type": "switch",
+      "bbox": [
+        660,
+        453,
+        734,
+        493
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "APP-01",
+      "type": "server",
+      "bbox": [
+        844,
+        447,
+        916,
+        505
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "DB-01",
+      "type": "database",
+      "bbox": [
+        1038,
+        448,
+        1086,
+        498
+      ],
+      "zone": "db"
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-PRI",
+      "target": "RTR-PRI",
+      "label": "MPLS",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "WAN-BAK",
+      "target": "RTR-BAK",
+      "label": "Backup Link",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "RTR-PRI",
+      "target": "FW-01",
+      "label": "MPLS",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "RTR-BAK",
+      "target": "FW-01",
+      "label": "Backup Link",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-01",
+      "target": "SW-01",
+      "label": "HTTPS/443",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-01",
+      "target": "APP-01",
+      "label": "100M",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "APP-01",
+      "target": "DB-01",
+      "label": "VPN Tunnel",
+      "relationship": "connected_to"
+    }
+  ]
+}

@@ -1,0 +1,162 @@
+{
+  "diagram_id": "diagram_0174",
+  "template": "dual_router_branch",
+  "metadata": {
+    "branch": "AMS-DC-01",
+    "region": "WEST",
+    "site_type": "Medium Branch",
+    "version": "v0.1",
+    "difficulty": "medium"
+  },
+  "nodes": [
+    {
+      "id": "WAN-01",
+      "type": "cloud_or_wan",
+      "bbox": [
+        50,
+        280,
+        132,
+        323
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "WAN-02",
+      "type": "cloud_or_wan",
+      "bbox": [
+        58,
+        595,
+        140,
+        638
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "RTR-01",
+      "type": "router",
+      "bbox": [
+        254,
+        296,
+        300,
+        342
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "RTR-02",
+      "type": "router",
+      "bbox": [
+        241,
+        592,
+        287,
+        638
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "FW-01",
+      "type": "firewall",
+      "bbox": [
+        453,
+        438,
+        503,
+        488
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "SW-01",
+      "type": "switch",
+      "bbox": [
+        637,
+        453,
+        707,
+        491
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "DB-01",
+      "type": "database",
+      "bbox": [
+        1057,
+        449,
+        1101,
+        495
+      ],
+      "zone": "db"
+    },
+    {
+      "id": "APP-01",
+      "type": "server",
+      "bbox": [
+        912,
+        313,
+        976,
+        365
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "APP-02",
+      "type": "server",
+      "bbox": [
+        892,
+        569,
+        954,
+        619
+      ],
+      "zone": "app"
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-01",
+      "target": "RTR-01",
+      "label": "10G",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "WAN-02",
+      "target": "RTR-02",
+      "label": "VLAN-100",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "RTR-01",
+      "target": "FW-01",
+      "label": "OSPF",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "RTR-02",
+      "target": "FW-01",
+      "label": "VLAN-100",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-01",
+      "target": "SW-01",
+      "label": "VLAN-100",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-01",
+      "target": "DB-01",
+      "label": "VLAN-300",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-01",
+      "target": "APP-01",
+      "label": "VLAN-300",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-01",
+      "target": "APP-02",
+      "label": "Heartbeat",
+      "relationship": "connected_to"
+    }
+  ]
+}

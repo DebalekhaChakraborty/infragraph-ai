@@ -1,0 +1,145 @@
+{
+  "diagram_id": "diagram_0379",
+  "template": "dmz_internal",
+  "metadata": {
+    "branch": "LAX-BRANCH-02",
+    "region": "WEST",
+    "site_type": "Medium Branch",
+    "version": "v0.1",
+    "difficulty": "medium"
+  },
+  "nodes": [
+    {
+      "id": "WAN-01",
+      "type": "cloud_or_wan",
+      "bbox": [
+        56,
+        455,
+        130,
+        494
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "FW-EXT",
+      "type": "firewall",
+      "bbox": [
+        228,
+        449,
+        280,
+        501
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "SW-DMZ",
+      "type": "switch",
+      "bbox": [
+        355,
+        355,
+        427,
+        395
+      ],
+      "zone": "dmz"
+    },
+    {
+      "id": "WEB-01",
+      "type": "server",
+      "bbox": [
+        528,
+        228,
+        586,
+        274
+      ],
+      "zone": "dmz"
+    },
+    {
+      "id": "FW-INT",
+      "type": "firewall",
+      "bbox": [
+        385,
+        610,
+        435,
+        660
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "SW-INT",
+      "type": "switch",
+      "bbox": [
+        587,
+        627,
+        655,
+        665
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "APP-01",
+      "type": "server",
+      "bbox": [
+        823,
+        450,
+        883,
+        498
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "DB-01",
+      "type": "database",
+      "bbox": [
+        1013,
+        431,
+        1059,
+        477
+      ],
+      "zone": "db"
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-01",
+      "target": "FW-EXT",
+      "label": "BGP",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-EXT",
+      "target": "SW-DMZ",
+      "label": "10G",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-DMZ",
+      "target": "WEB-01",
+      "label": "HTTPS/443",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-DMZ",
+      "target": "FW-INT",
+      "label": "HTTPS/443",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-INT",
+      "target": "SW-INT",
+      "label": "HTTPS/443",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-INT",
+      "target": "APP-01",
+      "label": "VLAN-100",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "APP-01",
+      "target": "DB-01",
+      "label": "VPN Tunnel",
+      "relationship": "connected_to"
+    }
+  ]
+}

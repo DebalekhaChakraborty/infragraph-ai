@@ -1,0 +1,162 @@
+{
+  "diagram_id": "diagram_0077",
+  "template": "cloud_extension",
+  "metadata": {
+    "branch": "DXB-BRANCH-01",
+    "region": "APAC",
+    "site_type": "Medium Branch",
+    "version": "v0.1",
+    "difficulty": "medium"
+  },
+  "nodes": [
+    {
+      "id": "WAN-01",
+      "type": "cloud_or_wan",
+      "bbox": [
+        40,
+        296,
+        134,
+        345
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "RTR-01",
+      "type": "router",
+      "bbox": [
+        236,
+        292,
+        288,
+        344
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "FW-01",
+      "type": "firewall",
+      "bbox": [
+        423,
+        293,
+        477,
+        347
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "SW-01",
+      "type": "switch",
+      "bbox": [
+        586,
+        291,
+        660,
+        331
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "LB-01",
+      "type": "load_balancer",
+      "bbox": [
+        734,
+        280,
+        800,
+        326
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "APP-01",
+      "type": "server",
+      "bbox": [
+        862,
+        171,
+        932,
+        227
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "CLOUD-01",
+      "type": "cloud_or_wan",
+      "bbox": [
+        825,
+        625,
+        907,
+        668
+      ],
+      "zone": "cloud"
+    },
+    {
+      "id": "DB-01",
+      "type": "database",
+      "bbox": [
+        1021,
+        571,
+        1071,
+        621
+      ],
+      "zone": "cloud"
+    },
+    {
+      "id": "APP-02",
+      "type": "server",
+      "bbox": [
+        893,
+        343,
+        957,
+        395
+      ],
+      "zone": "app"
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-01",
+      "target": "RTR-01",
+      "label": "HTTPS/443",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "RTR-01",
+      "target": "FW-01",
+      "label": "VLAN-100",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-01",
+      "target": "SW-01",
+      "label": "Heartbeat",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-01",
+      "target": "LB-01",
+      "label": "BGP",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "LB-01",
+      "target": "APP-01",
+      "label": "MPLS",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-01",
+      "target": "CLOUD-01",
+      "label": "100M",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "CLOUD-01",
+      "target": "DB-01",
+      "label": "Heartbeat",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "LB-01",
+      "target": "APP-02",
+      "label": "Heartbeat",
+      "relationship": "connected_to"
+    }
+  ]
+}

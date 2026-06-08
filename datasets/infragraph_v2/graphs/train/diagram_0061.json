@@ -1,0 +1,162 @@
+{
+  "diagram_id": "diagram_0061",
+  "template": "backup_link",
+  "metadata": {
+    "branch": "CHI-BRANCH-02",
+    "region": "CENTRAL",
+    "site_type": "Hub Site",
+    "version": "v0.1",
+    "difficulty": "medium"
+  },
+  "nodes": [
+    {
+      "id": "WAN-PRI",
+      "type": "cloud_or_wan",
+      "bbox": [
+        78,
+        252,
+        170,
+        300
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "WAN-BAK",
+      "type": "cloud_or_wan",
+      "bbox": [
+        68,
+        606,
+        150,
+        649
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "RTR-PRI",
+      "type": "router",
+      "bbox": [
+        312,
+        253,
+        368,
+        309
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "RTR-BAK",
+      "type": "router",
+      "bbox": [
+        300,
+        620,
+        356,
+        676
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "FW-01",
+      "type": "firewall",
+      "bbox": [
+        540,
+        426,
+        594,
+        480
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "SW-01",
+      "type": "switch",
+      "bbox": [
+        762,
+        452,
+        830,
+        490
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "APP-01",
+      "type": "server",
+      "bbox": [
+        989,
+        452,
+        1059,
+        508
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "DB-01",
+      "type": "database",
+      "bbox": [
+        1216,
+        441,
+        1268,
+        493
+      ],
+      "zone": "db"
+    },
+    {
+      "id": "LB-01",
+      "type": "load_balancer",
+      "bbox": [
+        832,
+        454,
+        902,
+        502
+      ],
+      "zone": "branch"
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-PRI",
+      "target": "RTR-PRI",
+      "label": "MPLS",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "WAN-BAK",
+      "target": "RTR-BAK",
+      "label": "Backup Link",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "RTR-PRI",
+      "target": "FW-01",
+      "label": "SQL/1521",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "RTR-BAK",
+      "target": "FW-01",
+      "label": "Heartbeat",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-01",
+      "target": "SW-01",
+      "label": "MPLS",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-01",
+      "target": "LB-01",
+      "label": "BGP",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "LB-01",
+      "target": "APP-01",
+      "label": "100M",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "APP-01",
+      "target": "DB-01",
+      "label": "API",
+      "relationship": "connected_to"
+    }
+  ]
+}

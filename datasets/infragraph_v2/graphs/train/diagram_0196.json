@@ -1,0 +1,145 @@
+{
+  "diagram_id": "diagram_0196",
+  "template": "dmz_internal",
+  "metadata": {
+    "branch": "LON-HQ-01",
+    "region": "APAC",
+    "site_type": "Large Branch",
+    "version": "v0.1",
+    "difficulty": "medium"
+  },
+  "nodes": [
+    {
+      "id": "WAN-01",
+      "type": "cloud_or_wan",
+      "bbox": [
+        38,
+        439,
+        118,
+        481
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "FW-EXT",
+      "type": "firewall",
+      "bbox": [
+        228,
+        435,
+        276,
+        483
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "SW-DMZ",
+      "type": "switch",
+      "bbox": [
+        387,
+        366,
+        449,
+        400
+      ],
+      "zone": "dmz"
+    },
+    {
+      "id": "WEB-01",
+      "type": "server",
+      "bbox": [
+        539,
+        228,
+        595,
+        274
+      ],
+      "zone": "dmz"
+    },
+    {
+      "id": "FW-INT",
+      "type": "firewall",
+      "bbox": [
+        379,
+        607,
+        427,
+        655
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "SW-INT",
+      "type": "switch",
+      "bbox": [
+        596,
+        614,
+        656,
+        648
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "APP-01",
+      "type": "server",
+      "bbox": [
+        805,
+        446,
+        861,
+        492
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "DB-01",
+      "type": "database",
+      "bbox": [
+        1018,
+        434,
+        1058,
+        474
+      ],
+      "zone": "db"
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-01",
+      "target": "FW-EXT",
+      "label": "BGP",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-EXT",
+      "target": "SW-DMZ",
+      "label": "SQL/1521",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-DMZ",
+      "target": "WEB-01",
+      "label": "OSPF",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-DMZ",
+      "target": "FW-INT",
+      "label": "API",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-INT",
+      "target": "SW-INT",
+      "label": "VPN Tunnel",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-INT",
+      "target": "APP-01",
+      "label": "Heartbeat",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "APP-01",
+      "target": "DB-01",
+      "label": "Backup Link",
+      "relationship": "connected_to"
+    }
+  ]
+}

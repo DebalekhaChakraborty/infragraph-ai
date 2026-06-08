@@ -1,0 +1,196 @@
+{
+  "diagram_id": "diagram_0009",
+  "template": "multi_zone_enterprise",
+  "metadata": {
+    "branch": "SYD-BRANCH-01",
+    "region": "EAST",
+    "site_type": "Hub Site",
+    "version": "v0.1",
+    "difficulty": "medium"
+  },
+  "nodes": [
+    {
+      "id": "WAN-01",
+      "type": "cloud_or_wan",
+      "bbox": [
+        61,
+        454,
+        149,
+        500
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "RTR-01",
+      "type": "router",
+      "bbox": [
+        260,
+        434,
+        310,
+        484
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "FW-01",
+      "type": "firewall",
+      "bbox": [
+        463,
+        429,
+        519,
+        485
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "SW-CORE",
+      "type": "switch",
+      "bbox": [
+        632,
+        457,
+        700,
+        495
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "SW-APP",
+      "type": "switch",
+      "bbox": [
+        809,
+        299,
+        885,
+        341
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "SW-DB",
+      "type": "switch",
+      "bbox": [
+        796,
+        630,
+        868,
+        670
+      ],
+      "zone": "db"
+    },
+    {
+      "id": "MGMT-01",
+      "type": "server",
+      "bbox": [
+        638,
+        698,
+        700,
+        748
+      ],
+      "zone": "mgmt"
+    },
+    {
+      "id": "DB-01",
+      "type": "database",
+      "bbox": [
+        1106,
+        620,
+        1156,
+        670
+      ],
+      "zone": "db"
+    },
+    {
+      "id": "APP-01",
+      "type": "server",
+      "bbox": [
+        1148,
+        122,
+        1208,
+        170
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "APP-02",
+      "type": "server",
+      "bbox": [
+        1146,
+        273,
+        1210,
+        325
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "APP-03",
+      "type": "server",
+      "bbox": [
+        1150,
+        454,
+        1214,
+        506
+      ],
+      "zone": "app"
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-01",
+      "target": "RTR-01",
+      "label": "VLAN-200",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "RTR-01",
+      "target": "FW-01",
+      "label": "VLAN-200",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-01",
+      "target": "SW-CORE",
+      "label": "100M",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-CORE",
+      "target": "SW-APP",
+      "label": "VLAN-300",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-CORE",
+      "target": "SW-DB",
+      "label": "1G",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-CORE",
+      "target": "MGMT-01",
+      "label": "100M",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-DB",
+      "target": "DB-01",
+      "label": "SQL/1521",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-APP",
+      "target": "APP-01",
+      "label": "VPN Tunnel",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-APP",
+      "target": "APP-02",
+      "label": "MPLS",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-APP",
+      "target": "APP-03",
+      "label": "API",
+      "relationship": "connected_to"
+    }
+  ]
+}

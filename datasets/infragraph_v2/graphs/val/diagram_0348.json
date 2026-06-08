@@ -1,0 +1,162 @@
+{
+  "diagram_id": "diagram_0348",
+  "template": "dmz_internal",
+  "metadata": {
+    "branch": "AMS-DC-01",
+    "region": "CENTRAL",
+    "site_type": "Small Branch",
+    "version": "v0.1",
+    "difficulty": "medium"
+  },
+  "nodes": [
+    {
+      "id": "WAN-01",
+      "type": "cloud_or_wan",
+      "bbox": [
+        31,
+        433,
+        119,
+        479
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "FW-EXT",
+      "type": "firewall",
+      "bbox": [
+        207,
+        451,
+        261,
+        505
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "SW-DMZ",
+      "type": "switch",
+      "bbox": [
+        382,
+        358,
+        456,
+        398
+      ],
+      "zone": "dmz"
+    },
+    {
+      "id": "WEB-01",
+      "type": "server",
+      "bbox": [
+        541,
+        231,
+        599,
+        279
+      ],
+      "zone": "dmz"
+    },
+    {
+      "id": "FW-INT",
+      "type": "firewall",
+      "bbox": [
+        387,
+        604,
+        437,
+        654
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "SW-INT",
+      "type": "switch",
+      "bbox": [
+        589,
+        621,
+        661,
+        661
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "APP-01",
+      "type": "server",
+      "bbox": [
+        818,
+        443,
+        880,
+        493
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "DB-01",
+      "type": "database",
+      "bbox": [
+        1025,
+        437,
+        1073,
+        487
+      ],
+      "zone": "db"
+    },
+    {
+      "id": "WEB-02",
+      "type": "server",
+      "bbox": [
+        546,
+        505,
+        608,
+        555
+      ],
+      "zone": "dmz"
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-01",
+      "target": "FW-EXT",
+      "label": "VLAN-100",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-EXT",
+      "target": "SW-DMZ",
+      "label": "VLAN-200",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-DMZ",
+      "target": "WEB-01",
+      "label": "Heartbeat",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-DMZ",
+      "target": "FW-INT",
+      "label": "MPLS",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-INT",
+      "target": "SW-INT",
+      "label": "API",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-INT",
+      "target": "APP-01",
+      "label": "OSPF",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "APP-01",
+      "target": "DB-01",
+      "label": "VPN Tunnel",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-DMZ",
+      "target": "WEB-02",
+      "label": "100M",
+      "relationship": "connected_to"
+    }
+  ]
+}

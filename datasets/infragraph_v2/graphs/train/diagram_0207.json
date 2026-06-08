@@ -1,0 +1,145 @@
+{
+  "diagram_id": "diagram_0207",
+  "template": "backup_link",
+  "metadata": {
+    "branch": "FRA-DC-01",
+    "region": "LATAM",
+    "site_type": "Small Branch",
+    "version": "v0.1",
+    "difficulty": "medium"
+  },
+  "nodes": [
+    {
+      "id": "WAN-PRI",
+      "type": "cloud_or_wan",
+      "bbox": [
+        71,
+        262,
+        147,
+        302
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "WAN-BAK",
+      "type": "cloud_or_wan",
+      "bbox": [
+        64,
+        624,
+        138,
+        663
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "RTR-PRI",
+      "type": "router",
+      "bbox": [
+        276,
+        259,
+        326,
+        309
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "RTR-BAK",
+      "type": "router",
+      "bbox": [
+        252,
+        608,
+        300,
+        656
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "FW-01",
+      "type": "firewall",
+      "bbox": [
+        455,
+        441,
+        507,
+        493
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "SW-01",
+      "type": "switch",
+      "bbox": [
+        669,
+        447,
+        733,
+        481
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "APP-01",
+      "type": "server",
+      "bbox": [
+        833,
+        440,
+        889,
+        486
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "DB-01",
+      "type": "database",
+      "bbox": [
+        1033,
+        429,
+        1079,
+        475
+      ],
+      "zone": "db"
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-PRI",
+      "target": "RTR-PRI",
+      "label": "MPLS",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "WAN-BAK",
+      "target": "RTR-BAK",
+      "label": "Backup Link",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "RTR-PRI",
+      "target": "FW-01",
+      "label": "VLAN-300",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "RTR-BAK",
+      "target": "FW-01",
+      "label": "BGP",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-01",
+      "target": "SW-01",
+      "label": "OSPF",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-01",
+      "target": "APP-01",
+      "label": "VLAN-200",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "APP-01",
+      "target": "DB-01",
+      "label": "VLAN-200",
+      "relationship": "connected_to"
+    }
+  ]
+}

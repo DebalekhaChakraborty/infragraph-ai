@@ -1,0 +1,145 @@
+{
+  "diagram_id": "diagram_0287",
+  "template": "backup_link",
+  "metadata": {
+    "branch": "MUM-DC-01",
+    "region": "WEST",
+    "site_type": "Regional DC",
+    "version": "v0.1",
+    "difficulty": "medium"
+  },
+  "nodes": [
+    {
+      "id": "WAN-PRI",
+      "type": "cloud_or_wan",
+      "bbox": [
+        65,
+        260,
+        141,
+        300
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "WAN-BAK",
+      "type": "cloud_or_wan",
+      "bbox": [
+        74,
+        614,
+        150,
+        654
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "RTR-PRI",
+      "type": "router",
+      "bbox": [
+        253,
+        274,
+        303,
+        324
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "RTR-BAK",
+      "type": "router",
+      "bbox": [
+        277,
+        627,
+        323,
+        673
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "FW-01",
+      "type": "firewall",
+      "bbox": [
+        449,
+        443,
+        499,
+        493
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "SW-01",
+      "type": "switch",
+      "bbox": [
+        658,
+        442,
+        724,
+        478
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "APP-01",
+      "type": "server",
+      "bbox": [
+        832,
+        437,
+        892,
+        487
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "DB-01",
+      "type": "database",
+      "bbox": [
+        1052,
+        441,
+        1094,
+        485
+      ],
+      "zone": "db"
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-PRI",
+      "target": "RTR-PRI",
+      "label": "MPLS",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "WAN-BAK",
+      "target": "RTR-BAK",
+      "label": "Backup Link",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "RTR-PRI",
+      "target": "FW-01",
+      "label": "API",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "RTR-BAK",
+      "target": "FW-01",
+      "label": "HTTPS/443",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-01",
+      "target": "SW-01",
+      "label": "SQL/1521",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-01",
+      "target": "APP-01",
+      "label": "VLAN-100",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "APP-01",
+      "target": "DB-01",
+      "label": "Heartbeat",
+      "relationship": "connected_to"
+    }
+  ]
+}

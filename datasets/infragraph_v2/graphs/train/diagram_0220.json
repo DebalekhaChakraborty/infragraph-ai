@@ -1,0 +1,162 @@
+{
+  "diagram_id": "diagram_0220",
+  "template": "cloud_extension",
+  "metadata": {
+    "branch": "CHI-BRANCH-02",
+    "region": "LATAM",
+    "site_type": "Large Branch",
+    "version": "v0.1",
+    "difficulty": "medium"
+  },
+  "nodes": [
+    {
+      "id": "WAN-01",
+      "type": "cloud_or_wan",
+      "bbox": [
+        70,
+        272,
+        158,
+        318
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "RTR-01",
+      "type": "router",
+      "bbox": [
+        246,
+        286,
+        300,
+        340
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "FW-01",
+      "type": "firewall",
+      "bbox": [
+        435,
+        280,
+        495,
+        340
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "SW-01",
+      "type": "switch",
+      "bbox": [
+        596,
+        287,
+        666,
+        325
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "LB-01",
+      "type": "load_balancer",
+      "bbox": [
+        737,
+        291,
+        807,
+        339
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "APP-01",
+      "type": "server",
+      "bbox": [
+        889,
+        178,
+        951,
+        228
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "CLOUD-01",
+      "type": "cloud_or_wan",
+      "bbox": [
+        806,
+        618,
+        900,
+        667
+      ],
+      "zone": "cloud"
+    },
+    {
+      "id": "DB-01",
+      "type": "database",
+      "bbox": [
+        1039,
+        542,
+        1091,
+        596
+      ],
+      "zone": "cloud"
+    },
+    {
+      "id": "APP-02",
+      "type": "server",
+      "bbox": [
+        879,
+        330,
+        947,
+        384
+      ],
+      "zone": "app"
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-01",
+      "target": "RTR-01",
+      "label": "SQL/1521",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "RTR-01",
+      "target": "FW-01",
+      "label": "VPN Tunnel",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-01",
+      "target": "SW-01",
+      "label": "SQL/1521",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-01",
+      "target": "LB-01",
+      "label": "VLAN-100",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "LB-01",
+      "target": "APP-01",
+      "label": "VLAN-200",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-01",
+      "target": "CLOUD-01",
+      "label": "BGP",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "CLOUD-01",
+      "target": "DB-01",
+      "label": "Backup Link",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "LB-01",
+      "target": "APP-02",
+      "label": "10G",
+      "relationship": "connected_to"
+    }
+  ]
+}

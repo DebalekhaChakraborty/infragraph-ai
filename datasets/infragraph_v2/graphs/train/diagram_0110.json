@@ -1,0 +1,128 @@
+{
+  "diagram_id": "diagram_0110",
+  "template": "cloud_extension",
+  "metadata": {
+    "branch": "BOS-BRANCH-01",
+    "region": "APAC",
+    "site_type": "Regional DC",
+    "version": "v0.1",
+    "difficulty": "medium"
+  },
+  "nodes": [
+    {
+      "id": "WAN-01",
+      "type": "cloud_or_wan",
+      "bbox": [
+        68,
+        285,
+        148,
+        327
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "RTR-01",
+      "type": "router",
+      "bbox": [
+        288,
+        293,
+        332,
+        337
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "FW-01",
+      "type": "firewall",
+      "bbox": [
+        486,
+        291,
+        538,
+        343
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "SW-01",
+      "type": "switch",
+      "bbox": [
+        711,
+        294,
+        771,
+        326
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "APP-01",
+      "type": "server",
+      "bbox": [
+        1046,
+        168,
+        1098,
+        210
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "CLOUD-01",
+      "type": "cloud_or_wan",
+      "bbox": [
+        957,
+        638,
+        1033,
+        678
+      ],
+      "zone": "cloud"
+    },
+    {
+      "id": "DB-01",
+      "type": "database",
+      "bbox": [
+        1203,
+        564,
+        1247,
+        608
+      ],
+      "zone": "cloud"
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-01",
+      "target": "RTR-01",
+      "label": "SQL/1521",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "RTR-01",
+      "target": "FW-01",
+      "label": "MPLS",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-01",
+      "target": "SW-01",
+      "label": "MPLS",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-01",
+      "target": "APP-01",
+      "label": "OSPF",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-01",
+      "target": "CLOUD-01",
+      "label": "1G",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "CLOUD-01",
+      "target": "DB-01",
+      "label": "HTTPS/443",
+      "relationship": "connected_to"
+    }
+  ]
+}
