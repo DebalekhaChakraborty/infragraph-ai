@@ -10,11 +10,12 @@ Synthetic network-diagram dataset generator and AI pipeline for **automated topo
 |---|-----------|--------|
 | 1 | V1 synthetic dataset generated under `datasets/infragraph_v1` | Done |
 | 2 | YOLO V1 detector trained | Done |
-| 3 | Trained weights available under `training_runs/infragraph_yolo_v1/weights` | Done |
-| 4 | Run detector prediction on test set | Next |
-| 5 | Reconstruct topology graph from detections | Next |
-| 6 | Graph RCA / GNN demo | Next |
-| 7 | Add Qwen explanation layer | Next |
+| 3 | Trained weights under `training_runs/infragraph_yolo_v1/weights` | Done |
+| 4 | V2 dataset (400 diagrams) with graph + alert scenarios | Done |
+| 5 | Heuristic RCA demo (`build_topology_rca_demo.py`) | Done |
+| 6 | GNN root-cause ranking (`train_gnn_rca.py`) — 100% test top-1 | Done |
+| 7 | Run detector prediction on test set | Next |
+| 8 | Add Qwen explanation layer | Next |
 
 ---
 
@@ -42,21 +43,49 @@ python data_generator/generate_infragraph_dataset.py \
     --seed 42 --annotated-preview --clean
 
 # 3. Run inference with the trained model
-#    device=cpu is used as a reliable workaround: in AMD ROCm environments
-#    TorchVision NMS may fail on the GPU backend, so CPU prediction is preferred.
+#    device=cpu: AMD ROCm TorchVision NMS workaround
 yolo detect predict \
     model=./training_runs/infragraph_yolo_v1/weights/best.pt \
     source=./datasets/infragraph_v1/images/test \
-    imgsz=960 \
-    conf=0.25 \
-    device=cpu \
-    save=True \
-    project=./outputs \
-    name=v1_test_predictions_cpu
+    imgsz=960 conf=0.25 device=cpu save=True \
+    project=./outputs name=v1_test_predictions_cpu
 
-# 4. Open notebooks in order
+# 4. Heuristic RCA demo (Stage 2)
+python scripts/build_topology_rca_demo.py --diagram-id diagram_0373
+
+# 5. GNN root cause ranking (Stage 3)
+python scripts/train_gnn_rca.py
+
+# 6. Open notebooks in order
 jupyter lab
 ```
+
+### Stage 3: GNN-based RCA
+
+```bash
+# Train GNN on infragraph_v2 (400 alert scenarios, 80 epochs)
+python scripts/train_gnn_rca.py \
+    --dataset-root datasets/infragraph_v2 \
+    --epochs 80 \
+    --out outputs/gnn_rca \
+    --demo-diagram diagram_0373
+
+# If torch is in a separate venv, point to it without reinstalling:
+$env:EXTRA_SITE_PACKAGES = "path\to\torch_venv\Lib\site-packages"
+python scripts/train_gnn_rca.py
+```
+
+Results on infragraph_v2 (test set, 28 graphs):
+
+| Metric | Heuristic (Stage 2) | GNN (Stage 3) |
+|--------|--------------------:|---------------:|
+| Top-1 accuracy | ~60% | **100%** |
+| Top-3 accuracy | ~90% | **100%** |
+| MRR | ~0.75 | **1.000** |
+
+The GNN learns propagation direction from graph structure and temporal alert
+features, correctly identifying `FW-01` as root cause for diagram_0373 where
+the heuristic chose `SW-CORE`.  See `docs/gnn_rca.md` for full details.
 
 ---
 
@@ -87,10 +116,14 @@ infragraph-ai/
 │
 ├── outputs/
 │   ├── v1_test_predictions_cpu/         # Detector output on test set
-│   └── val_eval/                        # Validation curves and confusion matrix
+│   ├── val_eval/                        # Validation curves and confusion matrix
+│   ├── topology_demo/                   # Stage 2: heuristic RCA outputs
+│   └── gnn_rca/                         # Stage 3: GNN model, metrics, demo
 │
 ├── scripts/
-│   └── verify_repo_state.py             # Repo integrity checker
+│   ├── verify_repo_state.py             # Repo integrity checker
+│   ├── build_topology_rca_demo.py       # Stage 2: heuristic RCA + topology vis
+│   └── train_gnn_rca.py                 # Stage 3: GNN root cause ranking
 │
 ├── notebooks/
 │   ├── 01_generate_dataset.ipynb        # Dataset generation walkthrough
