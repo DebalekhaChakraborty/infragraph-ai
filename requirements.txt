@@ -6,8 +6,10 @@ ultralytics>=8.0.0
 
 # Graph / topology
 networkx>=3.0
+
+# PyTorch (CPU build — install with the CPU wheel index to avoid CUDA deps):
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
 torch>=2.0.0
-torch-geometric>=2.3.0
 
 # OCR
 pytesseract>=0.3.10

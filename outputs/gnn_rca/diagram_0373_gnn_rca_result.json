@@ -1,65 +1,65 @@
 {
   "diagram_id": "diagram_0373",
   "method": "gnn_rca",
-  "backend": "numpy_gcn",
+  "backend": "torch",
   "predicted_root_cause": "FW-01",
   "ground_truth_root_cause": "FW-01",
   "is_correct": true,
   "ground_truth_rank": 1,
   "mrr": 1.0,
   "node_scores": {
-    "WAN-01": 0.9294,
-    "WAN-02": 0.9294,
-    "RTR-01": 7.8115,
-    "RTR-02": 7.8115,
-    "FW-01": 21.4088,
-    "FW-02": 15.3937,
-    "SW-CORE": 8.2986,
-    "SW-APP": 10.6005,
-    "LB-01": -1.3777,
-    "MGMT-01": 6.0319,
-    "APP-01": -2.391,
-    "APP-02": -2.391,
-    "APP-03": 0.1046,
-    "APP-04": 0.1046,
-    "DB-01": -3.0572,
-    "DB-02": -3.0572,
-    "CLOUD-01": 1.5174
+    "WAN-01": -0.3616,
+    "WAN-02": -0.3616,
+    "RTR-01": 9.5359,
+    "RTR-02": 9.5359,
+    "FW-01": 30.775,
+    "FW-02": 22.6555,
+    "SW-CORE": 11.4352,
+    "SW-APP": 13.888,
+    "LB-01": -5.0374,
+    "MGMT-01": 8.237,
+    "APP-01": -5.6358,
+    "APP-02": -5.6358,
+    "APP-03": -3.5869,
+    "APP-04": -3.5869,
+    "DB-01": -5.0252,
+    "DB-02": -5.0252,
+    "CLOUD-01": 1.909
   },
   "top_candidates": [
     {
       "rank": 1,
       "node": "FW-01",
-      "score": 21.40882110595703,
+      "score": 30.775028228759766,
       "type": "firewall"
     },
     {
       "rank": 2,
       "node": "FW-02",
-      "score": 15.393726348876953,
+      "score": 22.655521392822266,
       "type": "firewall"
     },
     {
       "rank": 3,
       "node": "SW-APP",
-      "score": 10.600503921508789,
+      "score": 13.887969970703125,
       "type": "switch"
     },
     {
       "rank": 4,
       "node": "SW-CORE",
-      "score": 8.298633575439453,
+      "score": 11.435152053833008,
       "type": "switch"
     },
     {
       "rank": 5,
       "node": "RTR-01",
-      "score": 7.81146240234375,
+      "score": 9.535895347595215,
       "type": "router"
     }
   ],
   "n_nodes": 17,
-  "model_path": "outputs/gnn_rca\\gnn_rca_model.npz",
+  "model_path": "outputs/gnn_rca\\gnn_rca_model.pt",
   "test_metrics": {
     "top1": 1.0,
     "top3": 1.0,
