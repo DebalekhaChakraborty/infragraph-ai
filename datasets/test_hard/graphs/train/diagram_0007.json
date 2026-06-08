@@ -1,0 +1,163 @@
+{
+  "diagram_id": "diagram_0007",
+  "template": "dmz_internal",
+  "metadata": {
+    "branch": "MUM-DC-01",
+    "region": "APAC",
+    "site_type": "Regional DC",
+    "version": "v0.1",
+    "difficulty": "hard"
+  },
+  "nodes": [
+    {
+      "id": "WAN-01",
+      "type": "cloud_or_wan",
+      "bbox": [
+        36,
+        447,
+        106,
+        484
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "FW-EXT",
+      "type": "firewall",
+      "bbox": [
+        210,
+        454,
+        256,
+        500
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "SW-DMZ",
+      "type": "switch",
+      "bbox": [
+        380,
+        343,
+        440,
+        375
+      ],
+      "zone": "dmz"
+    },
+    {
+      "id": "WEB-01",
+      "type": "server",
+      "bbox": [
+        553,
+        215,
+        605,
+        257
+      ],
+      "zone": "dmz"
+    },
+    {
+      "id": "FW-INT",
+      "type": "firewall",
+      "bbox": [
+        379,
+        622,
+        425,
+        668
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "SW-INT",
+      "type": "switch",
+      "bbox": [
+        639,
+        633,
+        703,
+        669
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "APP-01",
+      "type": "server",
+      "bbox": [
+        801,
+        490,
+        853,
+        532
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "DB-01",
+      "type": "database",
+      "bbox": [
+        1019,
+        484,
+        1063,
+        530
+      ],
+      "zone": "db"
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-01",
+      "target": "FW-EXT",
+      "label": "VLAN-300",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-EXT",
+      "target": "SW-DMZ",
+      "label": "API",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-DMZ",
+      "target": "WEB-01",
+      "label": "100M",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-DMZ",
+      "target": "FW-INT",
+      "label": "Heartbeat",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-INT",
+      "target": "SW-INT",
+      "label": "VLAN-200",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-INT",
+      "target": "APP-01",
+      "label": "VLAN-100",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "APP-01",
+      "target": "DB-01",
+      "label": "10G",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-INT",
+      "target": "WEB-01",
+      "label": "VPN Tunnel",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "DB-01",
+      "target": "FW-INT",
+      "label": "10G",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "APP-01",
+      "target": "WEB-01",
+      "label": "SQL/1521",
+      "relationship": "connected_to"
+    }
+  ]
+}

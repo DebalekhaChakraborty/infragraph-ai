@@ -1,0 +1,248 @@
+{
+  "diagram_id": "diagram_0002",
+  "template": "multi_zone_enterprise",
+  "metadata": {
+    "branch": "DXB-BRANCH-01",
+    "region": "LATAM",
+    "site_type": "Medium Branch",
+    "version": "v0.1",
+    "difficulty": "hard"
+  },
+  "nodes": [
+    {
+      "id": "WAN-01",
+      "type": "cloud_or_wan",
+      "bbox": [
+        63,
+        449,
+        139,
+        489
+      ],
+      "zone": "isp"
+    },
+    {
+      "id": "RTR-01",
+      "type": "router",
+      "bbox": [
+        252,
+        454,
+        300,
+        502
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "FW-01",
+      "type": "firewall",
+      "bbox": [
+        453,
+        434,
+        505,
+        486
+      ],
+      "zone": "edge"
+    },
+    {
+      "id": "SW-CORE",
+      "type": "switch",
+      "bbox": [
+        653,
+        452,
+        719,
+        488
+      ],
+      "zone": "branch"
+    },
+    {
+      "id": "SW-APP",
+      "type": "switch",
+      "bbox": [
+        809,
+        289,
+        873,
+        323
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "SW-DB",
+      "type": "switch",
+      "bbox": [
+        806,
+        602,
+        866,
+        636
+      ],
+      "zone": "db"
+    },
+    {
+      "id": "MGMT-01",
+      "type": "server",
+      "bbox": [
+        640,
+        712,
+        698,
+        760
+      ],
+      "zone": "mgmt"
+    },
+    {
+      "id": "DB-01",
+      "type": "database",
+      "bbox": [
+        1123,
+        614,
+        1165,
+        656
+      ],
+      "zone": "db"
+    },
+    {
+      "id": "APP-01",
+      "type": "server",
+      "bbox": [
+        1126,
+        131,
+        1182,
+        177
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "APP-02",
+      "type": "server",
+      "bbox": [
+        1142,
+        299,
+        1202,
+        349
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "APP-03",
+      "type": "server",
+      "bbox": [
+        1145,
+        458,
+        1205,
+        506
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "APP-04",
+      "type": "server",
+      "bbox": [
+        1143,
+        582,
+        1199,
+        626
+      ],
+      "zone": "app"
+    },
+    {
+      "id": "APP-05",
+      "type": "server",
+      "bbox": [
+        1129,
+        751,
+        1185,
+        797
+      ],
+      "zone": "app"
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-01",
+      "target": "RTR-01",
+      "label": "10G",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "RTR-01",
+      "target": "FW-01",
+      "label": "BGP",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-01",
+      "target": "SW-CORE",
+      "label": "VLAN-300",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-CORE",
+      "target": "SW-APP",
+      "label": "SQL/1521",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-CORE",
+      "target": "SW-DB",
+      "label": "100M",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-CORE",
+      "target": "MGMT-01",
+      "label": "VLAN-300",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-DB",
+      "target": "DB-01",
+      "label": "Backup Link",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-APP",
+      "target": "APP-01",
+      "label": "100M",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-APP",
+      "target": "APP-02",
+      "label": "100M",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-APP",
+      "target": "APP-03",
+      "label": "VLAN-100",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-APP",
+      "target": "APP-04",
+      "label": "SQL/1521",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-APP",
+      "target": "APP-05",
+      "label": "VLAN-300",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-DB",
+      "target": "APP-02",
+      "label": "SQL/1521",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "APP-05",
+      "target": "WAN-01",
+      "label": "VLAN-300",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "APP-01",
+      "target": "MGMT-01",
+      "label": "Backup Link",
+      "relationship": "connected_to"
+    }
+  ]
+}

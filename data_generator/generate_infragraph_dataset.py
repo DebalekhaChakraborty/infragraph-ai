@@ -88,6 +88,16 @@ _DIFF_PROFILE = {
         "has_watermark_p":   0.00,
         "extra_edges":       0,
         "jitter":            8,
+        # LB presence — variable templates only (load_balanced_app always has LB)
+        "lb_probs": {
+            "simple_branch":        0.50,
+            "cloud_extension":      0.50,
+            "dual_router_branch":   0.45,
+            "multi_zone_enterprise":0.45,
+            "dmz_internal":         0.00,
+            "backup_link":          0.12,
+        },
+        "second_lb_p": 0.00,
     },
     "medium": {
         "templates":         TEMPLATES,
@@ -105,6 +115,16 @@ _DIFF_PROFILE = {
         "has_watermark_p":   0.00,
         "extra_edges":       0,
         "jitter":            14,
+        # Higher LB presence when app servers are present
+        "lb_probs": {
+            "simple_branch":        0.38,
+            "dual_router_branch":   0.38,
+            "cloud_extension":      0.38,
+            "multi_zone_enterprise":0.38,
+            "dmz_internal":         0.10,
+            "backup_link":          0.10,
+        },
+        "second_lb_p": 0.35,  # HA pair across LB-bearing templates
     },
     "hard": {
         "templates":         _HARD_TEMPLATES,
@@ -122,6 +142,16 @@ _DIFF_PROFILE = {
         "has_watermark_p":   0.35,
         "extra_edges":       3,
         "jitter":            18,
+        # Strongly prefer LB when servers are present
+        "lb_probs": {
+            "simple_branch":        0.60,
+            "dual_router_branch":   0.60,
+            "cloud_extension":      0.60,
+            "multi_zone_enterprise":0.60,
+            "dmz_internal":         0.30,
+            "backup_link":          0.30,
+        },
+        "second_lb_p": 0.80,  # HA pair across all LB-bearing templates
     },
 }
 
@@ -262,7 +292,10 @@ def generate_topology(template: str, rng: random.Random, diff: dict = None):
     _srv_lo, _srv_hi = dp["n_srv_range"]
     _db_lo,  _db_hi  = dp["n_db_range"]
     _app_lo, _app_hi = dp["n_app_range"]
+    _lb_probs        = dp.get("lb_probs", {})
+    _second_lb_p     = dp.get("second_lb_p", 0.0)
 
+    def lb_p(tmpl):  return _lb_probs.get(tmpl, 0.40)
     def rc(lst):   return rng.choice(lst)
     def rlink():   return rc(_LINK)
     def rcolor():  return rc(_CONN_COLS)
@@ -277,7 +310,7 @@ def generate_topology(template: str, rng: random.Random, diff: dict = None):
     if template == "simple_branch":
         n_srv  = rng.randint(_srv_lo, min(_srv_hi, 3))
         n_db   = rng.randint(_db_lo,  min(_db_hi,  2))
-        use_lb = rng.random() < 0.40
+        use_lb = rng.random() < lb_p(template)
         nodes  = [
             _nd("WAN-01","cloud_or_wan","isp",   rc(_WAN)),
             _nd("RTR-01","router",      "edge",  _RTR[0]),
@@ -302,7 +335,7 @@ def generate_topology(template: str, rng: random.Random, diff: dict = None):
     # ── Template 2 ─────────────────────────────────────────────────────────
     elif template == "dual_router_branch":
         n_srv  = rng.randint(max(2, _srv_lo), min(_srv_hi, 6))
-        use_lb = rng.random() < 0.35
+        use_lb = rng.random() < lb_p(template)
         nodes  = [
             _nd("WAN-01","cloud_or_wan","isp",   _WAN[0]),
             _nd("WAN-02","cloud_or_wan","isp",   _WAN[3]),
@@ -321,15 +354,23 @@ def generate_topology(template: str, rng: random.Random, diff: dict = None):
         ]
         if use_lb:
             edges.append(conn("SW-01","LB-01"))
+        # HA second LB when servers are present (medium/hard)
+        use_lb2 = use_lb and _second_lb_p > 0 and rng.random() < _second_lb_p
+        if use_lb2:
+            nodes.append(_nd("LB-02","load_balancer","branch",
+                             _LB[1] if len(_LB) > 1 else rc(_LB)))
+            edges.append(conn("SW-01","LB-02"))
         _srv_hub = "LB-01" if use_lb else "SW-01"
         for i in range(n_srv):
             nid = f"APP-0{i+1}"
             nodes.append(_nd(nid,"server","app", _SRV[i % len(_SRV)]))
-            edges.append(conn(_srv_hub, nid))
+            hub = "LB-02" if (use_lb2 and i % 2 == 1) else _srv_hub
+            edges.append(conn(hub, nid))
 
     # ── Template 3 ─────────────────────────────────────────────────────────
     elif template == "load_balanced_app":
-        n_srv = rng.randint(max(2, _srv_lo), min(_srv_hi, 6))
+        n_srv   = rng.randint(max(2, _srv_lo), min(_srv_hi, 6))
+        use_lb2 = _second_lb_p > 0 and rng.random() < _second_lb_p
         nodes = [
             _nd("WAN-01","cloud_or_wan","isp",   rc(_WAN)),
             _nd("RTR-01","router",      "edge",  rc(_RTR)),
@@ -338,18 +379,26 @@ def generate_topology(template: str, rng: random.Random, diff: dict = None):
             _nd("LB-01", "load_balancer","branch",rc(_LB)),
             _nd("DB-01", "database",    "db",    rc(_DB)),
         ]
+        if use_lb2:
+            nodes.append(_nd("LB-02","load_balancer","branch",
+                             _LB[1] if len(_LB) > 1 else rc(_LB)))
         edges = [
             conn("WAN-01","RTR-01"), conn("RTR-01","FW-01"),
             conn("FW-01","SW-01"),   conn("SW-01","LB-01"),
             conn("LB-01","DB-01"),
         ]
+        if use_lb2:
+            edges.append(conn("SW-01","LB-02"))
         for i in range(n_srv):
             nid = f"APP-0{i+1}"
             nodes.append(_nd(nid,"server","app", _SRV[i % len(_SRV)]))
-            edges.append(conn("LB-01", nid))
+            # alternate servers between LB-01 and LB-02 when present
+            hub = "LB-02" if (use_lb2 and i % 2 == 1) else "LB-01"
+            edges.append(conn(hub, nid))
 
     # ── Template 4 ─────────────────────────────────────────────────────────
     elif template == "dmz_internal":
+        use_lb = rng.random() < lb_p(template)
         nodes = [
             _nd("WAN-01", "cloud_or_wan","isp",   rc(_WAN)),
             _nd("FW-EXT", "firewall",    "edge",  _FW[0]),
@@ -360,19 +409,25 @@ def generate_topology(template: str, rng: random.Random, diff: dict = None):
             _nd("APP-01", "server",      "app",   "APP-01"),
             _nd("DB-01",  "database",    "db",    rc(_DB)),
         ]
+        if use_lb:
+            nodes.append(_nd("LB-01","load_balancer","branch",rc(_LB)))
         edges = [
             conn("WAN-01","FW-EXT"),  conn("FW-EXT","SW-DMZ"),
             conn("SW-DMZ","WEB-01"),  conn("SW-DMZ","FW-INT"),
-            conn("FW-INT","SW-INT"),  conn("SW-INT","APP-01"),
-            conn("APP-01","DB-01"),
+            conn("FW-INT","SW-INT"),
         ]
+        if use_lb:
+            edges.extend([conn("SW-INT","LB-01"), conn("LB-01","APP-01")])
+        else:
+            edges.append(conn("SW-INT","APP-01"))
+        edges.append(conn("APP-01","DB-01"))
         if rng.random() > 0.5:
             nodes.append(_nd("WEB-02","server","dmz","WEB-02"))
             edges.append(conn("SW-DMZ","WEB-02"))
 
     # ── Template 5 ─────────────────────────────────────────────────────────
     elif template == "cloud_extension":
-        use_lb = rng.random() < 0.40
+        use_lb = rng.random() < lb_p(template)
         nodes  = [
             _nd("WAN-01",   "cloud_or_wan","isp",   "WAN/MPLS"),
             _nd("RTR-01",   "router",      "edge",  rc(_RTR)),
@@ -399,7 +454,7 @@ def generate_topology(template: str, rng: random.Random, diff: dict = None):
     # ── Template 6 ─────────────────────────────────────────────────────────
     elif template == "multi_zone_enterprise":
         n_app  = rng.randint(max(2, _app_lo), min(_app_hi, 6))
-        use_lb = rng.random() < 0.35
+        use_lb = rng.random() < lb_p(template)
         nodes  = [
             _nd("WAN-01",  "cloud_or_wan","isp",   rc(_WAN)),
             _nd("RTR-01",  "router",      "edge",  rc(_RTR)),
@@ -420,14 +475,22 @@ def generate_topology(template: str, rng: random.Random, diff: dict = None):
         ]
         if use_lb:
             edges.append(conn("SW-APP","LB-01"))
+        # HA second LB when app servers are present (medium/hard)
+        use_lb2 = use_lb and _second_lb_p > 0 and rng.random() < _second_lb_p
+        if use_lb2:
+            nodes.append(_nd("LB-02","load_balancer","app",
+                             _LB[1] if len(_LB) > 1 else rc(_LB)))
+            edges.append(conn("SW-APP","LB-02"))
         _app_hub = "LB-01" if use_lb else "SW-APP"
         for i in range(n_app):
             nid = f"APP-0{i+1}"
             nodes.append(_nd(nid,"server","app", _SRV[i % len(_SRV)]))
-            edges.append(conn(_app_hub, nid))
+            hub = "LB-02" if (use_lb2 and i % 2 == 1) else _app_hub
+            edges.append(conn(hub, nid))
 
     # ── Template 7 ─────────────────────────────────────────────────────────
     elif template == "backup_link":
+        use_lb = rng.random() < lb_p(template)
         nodes = [
             _nd("WAN-PRI","cloud_or_wan","isp",   "WAN/MPLS"),
             _nd("WAN-BAK","cloud_or_wan","isp",   "INTERNET"),
@@ -438,13 +501,19 @@ def generate_topology(template: str, rng: random.Random, diff: dict = None):
             _nd("APP-01", "server",      "app",   rc(_SRV)),
             _nd("DB-01",  "database",    "db",    rc(_DB)),
         ]
+        if use_lb:
+            nodes.append(_nd("LB-01","load_balancer","branch",rc(_LB)))
         edges = [
             _ed("WAN-PRI","RTR-PRI", "MPLS",       "solid", "#1565C0", 3),
             _ed("WAN-BAK","RTR-BAK", "Backup Link", "dashed","#E65100", 2),
             conn("RTR-PRI","FW-01"), conn("RTR-BAK","FW-01"),
-            conn("FW-01","SW-01"),   conn("SW-01","APP-01"),
-            conn("APP-01","DB-01"),
+            conn("FW-01","SW-01"),
         ]
+        if use_lb:
+            edges.extend([conn("SW-01","LB-01"), conn("LB-01","APP-01")])
+        else:
+            edges.append(conn("SW-01","APP-01"))
+        edges.append(conn("APP-01","DB-01"))
 
     # ── Template 8 ─────────────────────────────────────────────────────────
     else:  # dense_enterprise
@@ -480,6 +549,13 @@ def generate_topology(template: str, rng: random.Random, diff: dict = None):
         if rng.random() > 0.45:
             nodes.append(_nd("CLOUD-01","cloud_or_wan","cloud","CLOUD/VPC"))
             edges.append(conn("SW-CORE","CLOUD-01"))
+        # HA load-balancer pair in medium/hard
+        if _second_lb_p > 0 and rng.random() < _second_lb_p:
+            nodes.append(_nd("LB-02","load_balancer","app",
+                             _LB[1] if len(_LB) > 1 else rc(_LB)))
+            edges.append(conn("SW-APP","LB-02"))
+            for i in range(1, n_srv, 2):   # alternate servers share LB-02
+                edges.append(conn("LB-02", f"APP-0{i+1}"))
 
     # Hard mode: redundant cross-links for visual density
     if dp.get("extra_edges", 0) > 0 and len(nodes) >= 3:
@@ -551,8 +627,8 @@ def layout_topology(nodes, edges, template, rng, diagram_area, jitter=14):
             "WAN-01": p(0.06,0.50), "FW-EXT": p(0.19,0.50),
             "SW-DMZ": p(0.33,0.38), "WEB-01": p(0.47,0.22),
             "WEB-02": p(0.47,0.58), "FW-INT": p(0.33,0.72),
-            "SW-INT": p(0.55,0.72), "APP-01": p(0.70,0.55),
-            "DB-01":  p(0.87,0.55),
+            "SW-INT": p(0.52,0.72), "LB-01":  p(0.65,0.72),
+            "APP-01": p(0.70,0.50), "DB-01":  p(0.87,0.50),
         }
         for n in nodes:
             if n["id"] in explicit: pos[n["id"]] = explicit[n["id"]]
