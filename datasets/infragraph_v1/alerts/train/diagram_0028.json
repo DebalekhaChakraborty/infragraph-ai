@@ -1,0 +1,30 @@
+{
+  "scenario_id": "diagram_0028_incident_001",
+  "root_cause": "SW-DMZ",
+  "root_cause_type": "switch",
+  "alerts": [
+    {
+      "node": "SW-DMZ",
+      "alert_type": "Interface down",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "WEB-01",
+      "alert_type": "VLAN unreachable",
+      "severity": "major",
+      "time_offset_min": 2
+    },
+    {
+      "node": "WEB-01",
+      "alert_type": "Multiple servers unreachable",
+      "severity": "major",
+      "time_offset_min": 3
+    }
+  ],
+  "expected_impacted_nodes": [
+    "WEB-01",
+    "FW-INT",
+    "FW-EXT"
+  ]
+}

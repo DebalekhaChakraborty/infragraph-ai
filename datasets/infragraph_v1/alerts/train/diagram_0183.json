@@ -1,0 +1,29 @@
+{
+  "scenario_id": "diagram_0183_incident_001",
+  "root_cause": "FW-INT",
+  "root_cause_type": "firewall",
+  "alerts": [
+    {
+      "node": "FW-INT",
+      "alert_type": "Packet drops elevated",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "SW-DMZ",
+      "alert_type": "Policy deny spike",
+      "severity": "major",
+      "time_offset_min": 2
+    },
+    {
+      "node": "SW-INT",
+      "alert_type": "App unreachable",
+      "severity": "major",
+      "time_offset_min": 4
+    }
+  ],
+  "expected_impacted_nodes": [
+    "SW-DMZ",
+    "SW-INT"
+  ]
+}
