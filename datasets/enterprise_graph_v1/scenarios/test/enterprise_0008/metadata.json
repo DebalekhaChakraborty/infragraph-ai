@@ -1,0 +1,20 @@
+{
+  "scenario_id": "enterprise_0008",
+  "diagram_types": [
+    "branch_topology",
+    "wan_topology",
+    "datacenter_topology"
+  ],
+  "num_diagrams": 3,
+  "num_nodes": 21,
+  "num_edges": 20,
+  "num_cross_diagram_edges": 2,
+  "num_shared_entities": 1,
+  "root_cause": "BR-RTR-01",
+  "root_cause_diagram": "branch_topology",
+  "root_cause_pattern": "branch_rtr_failure",
+  "severity": "medium",
+  "num_impacted_nodes": 7,
+  "num_impacted_diagrams": 2,
+  "split": "test"
+}

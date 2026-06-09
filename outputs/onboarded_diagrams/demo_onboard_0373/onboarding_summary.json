@@ -1,0 +1,19 @@
+{
+  "diagram_id": "demo_onboard_0373",
+  "source_image": "datasets\\infragraph_v2\\images\\test\\diagram_0373.png",
+  "onboarding_timestamp": "2026-06-09T23:02:18.532026+00:00",
+  "detection_method": "mock_fallback",
+  "node_count": 17,
+  "edge_count": 31,
+  "detected_types": {
+    "router": 2,
+    "server": 5,
+    "cloud_or_wan": 3,
+    "firewall": 2,
+    "switch": 2,
+    "load_balancer": 1,
+    "database": 2
+  },
+  "graph_memory_status": "registered",
+  "output_dir": "outputs\\onboarded_diagrams\\demo_onboard_0373"
+}

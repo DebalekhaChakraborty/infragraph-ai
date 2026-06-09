@@ -1,0 +1,22 @@
+{
+  "scenario_id": "enterprise_0014",
+  "diagram_types": [
+    "branch_topology",
+    "wan_topology",
+    "datacenter_topology",
+    "app_db_topology",
+    "shared_services_topology"
+  ],
+  "num_diagrams": 5,
+  "num_nodes": 31,
+  "num_edges": 38,
+  "num_cross_diagram_edges": 6,
+  "num_shared_entities": 2,
+  "root_cause": "DC-FW-01",
+  "root_cause_diagram": "datacenter_topology",
+  "root_cause_pattern": "dc_fw_failure",
+  "severity": "critical",
+  "num_impacted_nodes": 15,
+  "num_impacted_diagrams": 2,
+  "split": "train"
+}

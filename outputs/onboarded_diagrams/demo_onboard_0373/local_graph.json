@@ -1,0 +1,351 @@
+{
+  "diagram_id": "demo_onboard_0373",
+  "nodes": [
+    {
+      "id": "RTR-001",
+      "label": "Router RTR-001",
+      "type": "router",
+      "zone": "core",
+      "confidence": 0.9945,
+      "bbox_center": {
+        "x": 227,
+        "y": 594
+      }
+    },
+    {
+      "id": "APP-001",
+      "label": "Server APP-001",
+      "type": "server",
+      "zone": "core",
+      "confidence": 0.9933,
+      "bbox_center": {
+        "x": 876,
+        "y": 496
+      }
+    },
+    {
+      "id": "APP-002",
+      "label": "Server APP-002",
+      "type": "server",
+      "zone": "core",
+      "confidence": 0.9931,
+      "bbox_center": {
+        "x": 864,
+        "y": 643
+      }
+    },
+    {
+      "id": "RTR-002",
+      "label": "Router RTR-002",
+      "type": "router",
+      "zone": "perimeter",
+      "confidence": 0.9917,
+      "bbox_center": {
+        "x": 230,
+        "y": 262
+      }
+    },
+    {
+      "id": "WAN-001",
+      "label": "Cloud Or Wan WAN-001",
+      "type": "cloud_or_wan",
+      "zone": "perimeter",
+      "confidence": 0.9904,
+      "bbox_center": {
+        "x": 96,
+        "y": 234
+      }
+    },
+    {
+      "id": "APP-003",
+      "label": "Server APP-003",
+      "type": "server",
+      "zone": "perimeter",
+      "confidence": 0.9893,
+      "bbox_center": {
+        "x": 869,
+        "y": 362
+      }
+    },
+    {
+      "id": "APP-004",
+      "label": "Server APP-004",
+      "type": "server",
+      "zone": "perimeter",
+      "confidence": 0.9891,
+      "bbox_center": {
+        "x": 678,
+        "y": 233
+      }
+    },
+    {
+      "id": "FW-001",
+      "label": "Firewall FW-001",
+      "type": "firewall",
+      "zone": "perimeter",
+      "confidence": 0.9845,
+      "bbox_center": {
+        "x": 378,
+        "y": 384
+      }
+    },
+    {
+      "id": "SW-001",
+      "label": "Switch SW-001",
+      "type": "switch",
+      "zone": "core",
+      "confidence": 0.9844,
+      "bbox_center": {
+        "x": 509,
+        "y": 634
+      }
+    },
+    {
+      "id": "FW-002",
+      "label": "Firewall FW-002",
+      "type": "firewall",
+      "zone": "core",
+      "confidence": 0.9826,
+      "bbox_center": {
+        "x": 358,
+        "y": 606
+      }
+    },
+    {
+      "id": "LB-001",
+      "label": "Load Balancer LB-001",
+      "type": "load_balancer",
+      "zone": "core",
+      "confidence": 0.9819,
+      "bbox_center": {
+        "x": 666,
+        "y": 505
+      }
+    },
+    {
+      "id": "DB-001",
+      "label": "Database DB-001",
+      "type": "database",
+      "zone": "core",
+      "confidence": 0.9798,
+      "bbox_center": {
+        "x": 1046,
+        "y": 462
+      }
+    },
+    {
+      "id": "WAN-002",
+      "label": "Cloud Or Wan WAN-002",
+      "type": "cloud_or_wan",
+      "zone": "core",
+      "confidence": 0.9776,
+      "bbox_center": {
+        "x": 90,
+        "y": 577
+      }
+    },
+    {
+      "id": "DB-002",
+      "label": "Database DB-002",
+      "type": "database",
+      "zone": "core",
+      "confidence": 0.9751,
+      "bbox_center": {
+        "x": 1041,
+        "y": 602
+      }
+    },
+    {
+      "id": "SW-002",
+      "label": "Switch SW-002",
+      "type": "switch",
+      "zone": "perimeter",
+      "confidence": 0.9667,
+      "bbox_center": {
+        "x": 502,
+        "y": 376
+      }
+    },
+    {
+      "id": "APP-005",
+      "label": "Server APP-005",
+      "type": "server",
+      "zone": "server",
+      "confidence": 0.9588,
+      "bbox_center": {
+        "x": 869,
+        "y": 776
+      }
+    },
+    {
+      "id": "WAN-003",
+      "label": "Cloud Or Wan WAN-003",
+      "type": "cloud_or_wan",
+      "zone": "wan",
+      "confidence": 0.954,
+      "bbox_center": {
+        "x": 870,
+        "y": 222
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "RTR-001",
+      "target": "FW-002",
+      "relationship": "routes_to"
+    },
+    {
+      "source": "RTR-001",
+      "target": "FW-001",
+      "relationship": "routes_to"
+    },
+    {
+      "source": "APP-001",
+      "target": "DB-001",
+      "relationship": "depends_on"
+    },
+    {
+      "source": "APP-001",
+      "target": "DB-002",
+      "relationship": "depends_on"
+    },
+    {
+      "source": "APP-002",
+      "target": "DB-002",
+      "relationship": "depends_on"
+    },
+    {
+      "source": "APP-002",
+      "target": "DB-001",
+      "relationship": "depends_on"
+    },
+    {
+      "source": "RTR-002",
+      "target": "FW-001",
+      "relationship": "routes_to"
+    },
+    {
+      "source": "RTR-002",
+      "target": "SW-002",
+      "relationship": "routes_to"
+    },
+    {
+      "source": "WAN-001",
+      "target": "RTR-002",
+      "relationship": "routes_to"
+    },
+    {
+      "source": "WAN-001",
+      "target": "FW-001",
+      "relationship": "routes_to"
+    },
+    {
+      "source": "APP-003",
+      "target": "DB-001",
+      "relationship": "depends_on"
+    },
+    {
+      "source": "APP-003",
+      "target": "DB-002",
+      "relationship": "depends_on"
+    },
+    {
+      "source": "APP-004",
+      "target": "DB-001",
+      "relationship": "depends_on"
+    },
+    {
+      "source": "APP-004",
+      "target": "DB-002",
+      "relationship": "depends_on"
+    },
+    {
+      "source": "FW-001",
+      "target": "SW-002",
+      "relationship": "secured_by"
+    },
+    {
+      "source": "FW-001",
+      "target": "SW-001",
+      "relationship": "secured_by"
+    },
+    {
+      "source": "SW-001",
+      "target": "LB-001",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-001",
+      "target": "APP-002",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "FW-002",
+      "target": "SW-001",
+      "relationship": "secured_by"
+    },
+    {
+      "source": "FW-002",
+      "target": "SW-002",
+      "relationship": "secured_by"
+    },
+    {
+      "source": "LB-001",
+      "target": "APP-001",
+      "relationship": "serves"
+    },
+    {
+      "source": "LB-001",
+      "target": "APP-002",
+      "relationship": "serves"
+    },
+    {
+      "source": "LB-001",
+      "target": "APP-003",
+      "relationship": "serves"
+    },
+    {
+      "source": "WAN-002",
+      "target": "RTR-001",
+      "relationship": "routes_to"
+    },
+    {
+      "source": "WAN-002",
+      "target": "FW-002",
+      "relationship": "routes_to"
+    },
+    {
+      "source": "SW-002",
+      "target": "LB-001",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "SW-002",
+      "target": "APP-004",
+      "relationship": "connected_to"
+    },
+    {
+      "source": "APP-005",
+      "target": "DB-002",
+      "relationship": "depends_on"
+    },
+    {
+      "source": "APP-005",
+      "target": "DB-001",
+      "relationship": "depends_on"
+    },
+    {
+      "source": "WAN-003",
+      "target": "FW-001",
+      "relationship": "routes_to"
+    },
+    {
+      "source": "WAN-003",
+      "target": "FW-002",
+      "relationship": "routes_to"
+    }
+  ],
+  "graph_build_method": "layout_inference_v1",
+  "notes": "Edges are inferred from detected device types and spatial layout for MVP onboarding. Node names are generated during MVP onboarding unless metadata/OCR is available."
+}

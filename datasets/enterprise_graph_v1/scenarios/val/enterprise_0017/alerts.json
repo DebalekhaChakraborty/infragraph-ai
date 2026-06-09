@@ -1,0 +1,47 @@
+{
+  "scenario_id": "enterprise_0017",
+  "root_cause": "DB-MASTER",
+  "root_cause_diagram": "app_db_topology",
+  "root_cause_pattern": "db_master_failure",
+  "severity": "high",
+  "alerts": [
+    {
+      "node": "DB-MASTER",
+      "diagram_id": "app_db_topology",
+      "alert_type": "latency",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "DB-REPLICA-02",
+      "diagram_id": "app_db_topology",
+      "alert_type": "link_degradation",
+      "severity": "high",
+      "time_offset_min": 1
+    },
+    {
+      "node": "DB-REPLICA-01",
+      "diagram_id": "app_db_topology",
+      "alert_type": "cpu_spike",
+      "severity": "high",
+      "time_offset_min": 2
+    }
+  ],
+  "impacted_nodes": [
+    "DB-REPLICA-01",
+    "DB-REPLICA-02"
+  ],
+  "impacted_diagrams": [
+    "app_db_topology"
+  ],
+  "impact_paths": [
+    [
+      "DB-MASTER",
+      "DB-REPLICA-01"
+    ],
+    [
+      "DB-MASTER",
+      "DB-REPLICA-02"
+    ]
+  ]
+}

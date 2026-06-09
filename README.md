@@ -68,9 +68,40 @@ python scripts/generate_qwen_rca_explanation.py \
     --diagram-id diagram_0373 --mode vllm \
     --model Qwen/Qwen3-4B --base-url http://localhost:8000/v1
 
-# 7. Open notebooks in order
-jupyter lab
+# 8. Launch the Streamlit cockpit
+streamlit run app/streamlit_app.py
 ```
+
+### Running the Streamlit Cockpit in AMD Jupyter
+
+See: [docs/run_streamlit_in_jupyter.md](docs/run_streamlit_in_jupyter.md)
+
+### Running with live Qwen/vLLM on AMD
+
+| Service | Port | Role |
+|---------|------|------|
+| vLLM (Qwen) | 8000 | OpenAI-compatible inference endpoint |
+| Streamlit | 8501 | InfraGraph AI cockpit UI |
+
+`QWEN_BASE_URL` controls whether the cockpit uses live inference or deterministic fallback answers:
+
+```bash
+# Start vLLM on AMD
+python -m vllm.entrypoints.openai.api_server \
+  --model Qwen/Qwen2-7B-Instruct --port 8000 --host 0.0.0.0
+
+# Start Streamlit pointing at local vLLM
+QWEN_BASE_URL=http://localhost:8000/v1 \
+QWEN_MODEL=Qwen/Qwen2-7B-Instruct \
+python -m streamlit run app/streamlit_app.py \
+  --server.port 8501 --server.address 0.0.0.0 \
+  --server.headless true --server.enableCORS false \
+  --server.enableXsrfProtection false
+```
+
+When `QWEN_BASE_URL` is a localtunnel URL the cockpit automatically sends the `Bypass-Tunnel-Reminder: true` header.
+
+See: [docs/run_qwen_vllm_amd.md](docs/run_qwen_vllm_amd.md)
 
 ### RCA model architecture
 
@@ -111,6 +142,53 @@ python scripts/train_gnn_rca.py \
 ```
 
 See `docs/mlp_rca.md` and `docs/gnn_rca.md` for full details.
+
+---
+
+### Enterprise Graph Dataset
+
+This dataset demonstrates multi-diagram graph stitching, where each architecture diagram
+becomes a local graph and multiple local graphs are stitched into **enterprise graph memory**
+for cross-diagram RCA.
+
+| Component | Description |
+|-----------|-------------|
+| Local graph | One infrastructure diagram → one NetworkX sub-graph |
+| Stitch map | Declares cross-diagram edges and shared entities |
+| Enterprise graph | All local graphs merged into one unified topology |
+| Alert scenario | Root cause in one diagram, symptoms in another |
+
+Each enterprise scenario contains 3–5 local diagrams stitched into one galaxy-scale graph.
+The GNN learns to trace root causes across diagram boundaries using `cross_diagram_edges`.
+
+```bash
+python scripts/generate_enterprise_scenarios.py \
+    --num 120 --out ./datasets/enterprise_graph_v1 \
+    --seed 2026 --clean
+```
+
+See: [docs/enterprise_graph_dataset.md](docs/enterprise_graph_dataset.md)
+
+---
+
+### Diagram Onboarding
+
+Onboard any topology diagram into graph memory with a single command:
+
+```bash
+python scripts/onboard_diagram.py \
+    --image datasets/infragraph_v2/images/test/diagram_0373.png \
+    --diagram-id demo_onboard_0373 \
+    --out outputs/onboarded_diagrams
+```
+
+Outputs: `original.png`, `detected.png`, `detected_nodes.json`, `local_graph.json`,
+`graph_preview.png`, `onboarding_summary.json`, and an updated `graph_memory/index.json`.
+
+The **Diagram Intelligence** workspace in the Streamlit cockpit exposes the same flow
+via an upload button and a "Use demo diagram_0373" shortcut.
+
+See: [docs/diagram_onboarding.md](docs/diagram_onboarding.md)
 
 ---
 

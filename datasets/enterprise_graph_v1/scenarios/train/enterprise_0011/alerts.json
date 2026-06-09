@@ -1,0 +1,114 @@
+{
+  "scenario_id": "enterprise_0011",
+  "root_cause": "SVC-IDENTITY-01",
+  "root_cause_diagram": "shared_services_topology",
+  "root_cause_pattern": "identity_svc_failure",
+  "severity": "high",
+  "alerts": [
+    {
+      "node": "SVC-IDENTITY-01",
+      "diagram_id": "shared_services_topology",
+      "alert_type": "cpu_spike",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "BR-SW-01",
+      "diagram_id": "branch_topology",
+      "alert_type": "link_degradation",
+      "severity": "medium",
+      "time_offset_min": 5
+    },
+    {
+      "node": "DB-MASTER",
+      "diagram_id": "app_db_topology",
+      "alert_type": "cpu_spike",
+      "severity": "medium",
+      "time_offset_min": 6
+    },
+    {
+      "node": "SVC-DNS-01",
+      "diagram_id": "shared_services_topology",
+      "alert_type": "connection_timeout",
+      "severity": "medium",
+      "time_offset_min": 12
+    },
+    {
+      "node": "DB-REPLICA-01",
+      "diagram_id": "app_db_topology",
+      "alert_type": "connection_timeout",
+      "severity": "high",
+      "time_offset_min": 20
+    }
+  ],
+  "impacted_nodes": [
+    "SVC-DNS-01",
+    "APP-01",
+    "APP-02",
+    "BR-SW-01",
+    "DB-MASTER",
+    "DB-CACHE-01",
+    "BR-WRK-01",
+    "BR-WRK-02",
+    "DB-REPLICA-01",
+    "DB-REPLICA-02"
+  ],
+  "impacted_diagrams": [
+    "app_db_topology",
+    "branch_topology",
+    "shared_services_topology"
+  ],
+  "impact_paths": [
+    [
+      "SVC-IDENTITY-01",
+      "SVC-DNS-01"
+    ],
+    [
+      "SVC-IDENTITY-01",
+      "APP-01"
+    ],
+    [
+      "SVC-IDENTITY-01",
+      "APP-02"
+    ],
+    [
+      "SVC-IDENTITY-01",
+      "SVC-DNS-01",
+      "BR-SW-01"
+    ],
+    [
+      "SVC-IDENTITY-01",
+      "APP-01",
+      "DB-MASTER"
+    ],
+    [
+      "SVC-IDENTITY-01",
+      "APP-01",
+      "DB-CACHE-01"
+    ],
+    [
+      "SVC-IDENTITY-01",
+      "SVC-DNS-01",
+      "BR-SW-01",
+      "BR-WRK-01"
+    ],
+    [
+      "SVC-IDENTITY-01",
+      "SVC-DNS-01",
+      "BR-SW-01",
+      "BR-WRK-02"
+    ],
+    [
+      "SVC-IDENTITY-01",
+      "APP-01",
+      "DB-MASTER",
+      "DB-REPLICA-01"
+    ],
+    [
+      "SVC-IDENTITY-01",
+      "APP-01",
+      "DB-MASTER",
+      "DB-REPLICA-02"
+    ]
+  ]
+}

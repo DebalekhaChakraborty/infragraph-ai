@@ -1,0 +1,75 @@
+{
+  "scenario_id": "enterprise_0019",
+  "root_cause": "BR-RTR-01",
+  "root_cause_diagram": "branch_topology",
+  "root_cause_pattern": "branch_rtr_failure",
+  "severity": "medium",
+  "alerts": [
+    {
+      "node": "BR-RTR-01",
+      "diagram_id": "branch_topology",
+      "alert_type": "packet_drop",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "BR-SW-01",
+      "diagram_id": "branch_topology",
+      "alert_type": "cpu_spike",
+      "severity": "medium",
+      "time_offset_min": 4
+    },
+    {
+      "node": "BR-FW-01",
+      "diagram_id": "branch_topology",
+      "alert_type": "connection_timeout",
+      "severity": "high",
+      "time_offset_min": 2
+    }
+  ],
+  "impacted_nodes": [
+    "BR-FW-01",
+    "WAN-PE-01",
+    "BR-SW-01",
+    "BR-WRK-01",
+    "BR-WRK-02",
+    "BR-WRK-03"
+  ],
+  "impacted_diagrams": [
+    "branch_topology",
+    "wan_topology"
+  ],
+  "impact_paths": [
+    [
+      "BR-RTR-01",
+      "BR-FW-01"
+    ],
+    [
+      "BR-RTR-01",
+      "WAN-PE-01"
+    ],
+    [
+      "BR-RTR-01",
+      "BR-FW-01",
+      "BR-SW-01"
+    ],
+    [
+      "BR-RTR-01",
+      "BR-FW-01",
+      "BR-SW-01",
+      "BR-WRK-01"
+    ],
+    [
+      "BR-RTR-01",
+      "BR-FW-01",
+      "BR-SW-01",
+      "BR-WRK-02"
+    ],
+    [
+      "BR-RTR-01",
+      "BR-FW-01",
+      "BR-SW-01",
+      "BR-WRK-03"
+    ]
+  ]
+}
