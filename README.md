@@ -14,8 +14,8 @@ Synthetic network-diagram dataset generator and AI pipeline for **automated topo
 | 4 | V2 dataset (400 diagrams) with graph + alert scenarios | Done |
 | 5 | Heuristic RCA demo (`build_topology_rca_demo.py`) | Done |
 | 6 | GNN root-cause ranking (`train_gnn_rca.py`) — 100% test top-1 | Done |
-| 7 | Run detector prediction on test set | Next |
-| 8 | Add Qwen explanation layer | Next |
+| 7 | Qwen/vLLM explanation layer (`generate_qwen_rca_explanation.py`) | Done |
+| 8 | Run detector prediction on full test set | Next |
 
 ---
 
@@ -56,7 +56,15 @@ python scripts/build_topology_rca_demo.py --diagram-id diagram_0373
 # 5. GNN root cause ranking (Stage 3)
 python scripts/train_gnn_rca.py
 
-# 6. Open notebooks in order
+# 6. Qwen explanation layer (Stage 4) — mock mode (no LLM)
+python scripts/generate_qwen_rca_explanation.py --diagram-id diagram_0373 --mode mock
+
+# 6b. Qwen explanation layer — vLLM mode (AMD Jupyter)
+python scripts/generate_qwen_rca_explanation.py \
+    --diagram-id diagram_0373 --mode vllm \
+    --model Qwen/Qwen3-4B --base-url http://localhost:8000/v1
+
+# 7. Open notebooks in order
 jupyter lab
 ```
 
@@ -117,12 +125,14 @@ infragraph-ai/
 │   ├── v1_test_predictions_cpu/         # Detector output on test set
 │   ├── val_eval/                        # Validation curves and confusion matrix
 │   ├── topology_demo/                   # Stage 2: heuristic RCA outputs
-│   └── gnn_rca/                         # Stage 3: GNN model, metrics, demo
+│   ├── gnn_rca/                         # Stage 3: GNN model, metrics, demo
+│   └── qwen_explanation/                # Stage 4: LLM explanation reports
 │
 ├── scripts/
 │   ├── verify_repo_state.py             # Repo integrity checker
 │   ├── build_topology_rca_demo.py       # Stage 2: heuristic RCA + topology vis
-│   └── train_gnn_rca.py                 # Stage 3: GNN root cause ranking
+│   ├── train_gnn_rca.py                 # Stage 3: GNN root cause ranking
+│   └── generate_qwen_rca_explanation.py # Stage 4: LLM explanation (mock/vLLM)
 │
 ├── notebooks/
 │   ├── 01_generate_dataset.ipynb        # Dataset generation walkthrough
