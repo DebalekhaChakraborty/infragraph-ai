@@ -1,0 +1,449 @@
+{
+  "dataset": "enterprise_graph_v1",
+  "total_scenarios": 20,
+  "splits": {
+    "train": 16,
+    "val": 2,
+    "test": 2
+  },
+  "avg_diagrams_per_scenario": 4.1,
+  "avg_nodes_per_enterprise": 26.55,
+  "avg_cross_diagram_edges": 4.2,
+  "root_cause_diagram_distribution": {
+    "datacenter_topology": 10,
+    "branch_topology": 4,
+    "wan_topology": 2,
+    "app_db_topology": 2,
+    "shared_services_topology": 2
+  },
+  "impacted_diagram_count_distribution": {
+    "1": 4,
+    "2": 11,
+    "3": 4,
+    "0": 1
+  },
+  "scenarios": [
+    {
+      "scenario_id": "enterprise_0000",
+      "split": "train",
+      "diagram_types": [
+        "branch_topology",
+        "wan_topology",
+        "datacenter_topology"
+      ],
+      "num_diagrams": 3,
+      "num_nodes": 18,
+      "num_edges": 17,
+      "num_cross_diagram_edges": 2,
+      "num_shared_entities": 1,
+      "root_cause": "DC-FW-01",
+      "root_cause_diagram": "datacenter_topology",
+      "root_cause_pattern": "dc_fw_failure",
+      "severity": "critical",
+      "num_impacted_nodes": 5,
+      "num_impacted_diagrams": 1
+    },
+    {
+      "scenario_id": "enterprise_0001",
+      "split": "train",
+      "diagram_types": [
+        "branch_topology",
+        "wan_topology",
+        "datacenter_topology",
+        "shared_services_topology"
+      ],
+      "num_diagrams": 4,
+      "num_nodes": 26,
+      "num_edges": 25,
+      "num_cross_diagram_edges": 3,
+      "num_shared_entities": 1,
+      "root_cause": "DC-CORE-SW-01",
+      "root_cause_diagram": "datacenter_topology",
+      "root_cause_pattern": "dc_core_sw_failure",
+      "severity": "high",
+      "num_impacted_nodes": 5,
+      "num_impacted_diagrams": 1
+    },
+    {
+      "scenario_id": "enterprise_0002",
+      "split": "train",
+      "diagram_types": [
+        "branch_topology",
+        "datacenter_topology",
+        "app_db_topology",
+        "shared_services_topology"
+      ],
+      "num_diagrams": 4,
+      "num_nodes": 27,
+      "num_edges": 32,
+      "num_cross_diagram_edges": 5,
+      "num_shared_entities": 1,
+      "root_cause": "DC-CORE-SW-01",
+      "root_cause_diagram": "datacenter_topology",
+      "root_cause_pattern": "dc_core_sw_failure",
+      "severity": "high",
+      "num_impacted_nodes": 14,
+      "num_impacted_diagrams": 2
+    },
+    {
+      "scenario_id": "enterprise_0003",
+      "split": "train",
+      "diagram_types": [
+        "branch_topology",
+        "datacenter_topology",
+        "app_db_topology"
+      ],
+      "num_diagrams": 3,
+      "num_nodes": 25,
+      "num_edges": 30,
+      "num_cross_diagram_edges": 2,
+      "num_shared_entities": 0,
+      "root_cause": "BR-RTR-01",
+      "root_cause_diagram": "branch_topology",
+      "root_cause_pattern": "branch_rtr_failure",
+      "severity": "medium",
+      "num_impacted_nodes": 22,
+      "num_impacted_diagrams": 3
+    },
+    {
+      "scenario_id": "enterprise_0004",
+      "split": "train",
+      "diagram_types": [
+        "branch_topology",
+        "datacenter_topology",
+        "app_db_topology"
+      ],
+      "num_diagrams": 3,
+      "num_nodes": 20,
+      "num_edges": 21,
+      "num_cross_diagram_edges": 2,
+      "num_shared_entities": 0,
+      "root_cause": "DC-FW-01",
+      "root_cause_diagram": "datacenter_topology",
+      "root_cause_pattern": "dc_fw_failure",
+      "severity": "critical",
+      "num_impacted_nodes": 11,
+      "num_impacted_diagrams": 2
+    },
+    {
+      "scenario_id": "enterprise_0005",
+      "split": "train",
+      "diagram_types": [
+        "branch_topology",
+        "wan_topology",
+        "datacenter_topology",
+        "app_db_topology",
+        "shared_services_topology"
+      ],
+      "num_diagrams": 5,
+      "num_nodes": 35,
+      "num_edges": 40,
+      "num_cross_diagram_edges": 6,
+      "num_shared_entities": 2,
+      "root_cause": "WAN-PE-01",
+      "root_cause_diagram": "wan_topology",
+      "root_cause_pattern": "wan_pe_failure",
+      "severity": "high",
+      "num_impacted_nodes": 0,
+      "num_impacted_diagrams": 0
+    },
+    {
+      "scenario_id": "enterprise_0006",
+      "split": "train",
+      "diagram_types": [
+        "branch_topology",
+        "wan_topology",
+        "datacenter_topology",
+        "app_db_topology"
+      ],
+      "num_diagrams": 4,
+      "num_nodes": 24,
+      "num_edges": 25,
+      "num_cross_diagram_edges": 3,
+      "num_shared_entities": 1,
+      "root_cause": "WAN-MPLS-CORE",
+      "root_cause_diagram": "wan_topology",
+      "root_cause_pattern": "wan_mpls_failure",
+      "severity": "critical",
+      "num_impacted_nodes": 14,
+      "num_impacted_diagrams": 3
+    },
+    {
+      "scenario_id": "enterprise_0007",
+      "split": "train",
+      "diagram_types": [
+        "branch_topology",
+        "datacenter_topology",
+        "app_db_topology",
+        "shared_services_topology"
+      ],
+      "num_diagrams": 4,
+      "num_nodes": 28,
+      "num_edges": 33,
+      "num_cross_diagram_edges": 5,
+      "num_shared_entities": 1,
+      "root_cause": "DC-CORE-SW-01",
+      "root_cause_diagram": "datacenter_topology",
+      "root_cause_pattern": "dc_core_sw_failure",
+      "severity": "high",
+      "num_impacted_nodes": 14,
+      "num_impacted_diagrams": 2
+    },
+    {
+      "scenario_id": "enterprise_0008",
+      "split": "test",
+      "diagram_types": [
+        "branch_topology",
+        "wan_topology",
+        "datacenter_topology"
+      ],
+      "num_diagrams": 3,
+      "num_nodes": 21,
+      "num_edges": 20,
+      "num_cross_diagram_edges": 2,
+      "num_shared_entities": 1,
+      "root_cause": "BR-RTR-01",
+      "root_cause_diagram": "branch_topology",
+      "root_cause_pattern": "branch_rtr_failure",
+      "severity": "medium",
+      "num_impacted_nodes": 7,
+      "num_impacted_diagrams": 2
+    },
+    {
+      "scenario_id": "enterprise_0009",
+      "split": "train",
+      "diagram_types": [
+        "branch_topology",
+        "wan_topology",
+        "datacenter_topology",
+        "app_db_topology",
+        "shared_services_topology"
+      ],
+      "num_diagrams": 5,
+      "num_nodes": 31,
+      "num_edges": 38,
+      "num_cross_diagram_edges": 6,
+      "num_shared_entities": 2,
+      "root_cause": "DC-CORE-SW-01",
+      "root_cause_diagram": "datacenter_topology",
+      "root_cause_pattern": "dc_core_sw_failure",
+      "severity": "high",
+      "num_impacted_nodes": 13,
+      "num_impacted_diagrams": 2
+    },
+    {
+      "scenario_id": "enterprise_0010",
+      "split": "train",
+      "diagram_types": [
+        "wan_topology",
+        "datacenter_topology",
+        "app_db_topology"
+      ],
+      "num_diagrams": 3,
+      "num_nodes": 22,
+      "num_edges": 23,
+      "num_cross_diagram_edges": 2,
+      "num_shared_entities": 1,
+      "root_cause": "DB-MASTER",
+      "root_cause_diagram": "app_db_topology",
+      "root_cause_pattern": "db_master_failure",
+      "severity": "high",
+      "num_impacted_nodes": 2,
+      "num_impacted_diagrams": 1
+    },
+    {
+      "scenario_id": "enterprise_0011",
+      "split": "train",
+      "diagram_types": [
+        "branch_topology",
+        "datacenter_topology",
+        "app_db_topology",
+        "shared_services_topology"
+      ],
+      "num_diagrams": 4,
+      "num_nodes": 25,
+      "num_edges": 28,
+      "num_cross_diagram_edges": 5,
+      "num_shared_entities": 1,
+      "root_cause": "SVC-IDENTITY-01",
+      "root_cause_diagram": "shared_services_topology",
+      "root_cause_pattern": "identity_svc_failure",
+      "severity": "high",
+      "num_impacted_nodes": 10,
+      "num_impacted_diagrams": 3
+    },
+    {
+      "scenario_id": "enterprise_0012",
+      "split": "train",
+      "diagram_types": [
+        "branch_topology",
+        "datacenter_topology",
+        "app_db_topology",
+        "shared_services_topology"
+      ],
+      "num_diagrams": 4,
+      "num_nodes": 28,
+      "num_edges": 35,
+      "num_cross_diagram_edges": 5,
+      "num_shared_entities": 1,
+      "root_cause": "DC-CORE-SW-01",
+      "root_cause_diagram": "datacenter_topology",
+      "root_cause_pattern": "dc_core_sw_failure",
+      "severity": "high",
+      "num_impacted_nodes": 15,
+      "num_impacted_diagrams": 2
+    },
+    {
+      "scenario_id": "enterprise_0013",
+      "split": "train",
+      "diagram_types": [
+        "branch_topology",
+        "wan_topology",
+        "datacenter_topology",
+        "app_db_topology",
+        "shared_services_topology"
+      ],
+      "num_diagrams": 5,
+      "num_nodes": 29,
+      "num_edges": 32,
+      "num_cross_diagram_edges": 6,
+      "num_shared_entities": 2,
+      "root_cause": "SVC-IDENTITY-01",
+      "root_cause_diagram": "shared_services_topology",
+      "root_cause_pattern": "identity_svc_failure",
+      "severity": "high",
+      "num_impacted_nodes": 10,
+      "num_impacted_diagrams": 3
+    },
+    {
+      "scenario_id": "enterprise_0014",
+      "split": "train",
+      "diagram_types": [
+        "branch_topology",
+        "wan_topology",
+        "datacenter_topology",
+        "app_db_topology",
+        "shared_services_topology"
+      ],
+      "num_diagrams": 5,
+      "num_nodes": 31,
+      "num_edges": 38,
+      "num_cross_diagram_edges": 6,
+      "num_shared_entities": 2,
+      "root_cause": "DC-FW-01",
+      "root_cause_diagram": "datacenter_topology",
+      "root_cause_pattern": "dc_fw_failure",
+      "severity": "critical",
+      "num_impacted_nodes": 15,
+      "num_impacted_diagrams": 2
+    },
+    {
+      "scenario_id": "enterprise_0015",
+      "split": "test",
+      "diagram_types": [
+        "branch_topology",
+        "wan_topology",
+        "datacenter_topology",
+        "shared_services_topology"
+      ],
+      "num_diagrams": 4,
+      "num_nodes": 24,
+      "num_edges": 23,
+      "num_cross_diagram_edges": 3,
+      "num_shared_entities": 1,
+      "root_cause": "BR-RTR-01",
+      "root_cause_diagram": "branch_topology",
+      "root_cause_pattern": "branch_rtr_failure",
+      "severity": "high",
+      "num_impacted_nodes": 5,
+      "num_impacted_diagrams": 2
+    },
+    {
+      "scenario_id": "enterprise_0016",
+      "split": "val",
+      "diagram_types": [
+        "branch_topology",
+        "wan_topology",
+        "datacenter_topology",
+        "app_db_topology",
+        "shared_services_topology"
+      ],
+      "num_diagrams": 5,
+      "num_nodes": 30,
+      "num_edges": 35,
+      "num_cross_diagram_edges": 6,
+      "num_shared_entities": 2,
+      "root_cause": "DC-FW-01",
+      "root_cause_diagram": "datacenter_topology",
+      "root_cause_pattern": "dc_fw_failure",
+      "severity": "critical",
+      "num_impacted_nodes": 12,
+      "num_impacted_diagrams": 2
+    },
+    {
+      "scenario_id": "enterprise_0017",
+      "split": "val",
+      "diagram_types": [
+        "branch_topology",
+        "wan_topology",
+        "datacenter_topology",
+        "app_db_topology",
+        "shared_services_topology"
+      ],
+      "num_diagrams": 5,
+      "num_nodes": 32,
+      "num_edges": 39,
+      "num_cross_diagram_edges": 6,
+      "num_shared_entities": 2,
+      "root_cause": "DB-MASTER",
+      "root_cause_diagram": "app_db_topology",
+      "root_cause_pattern": "db_master_failure",
+      "severity": "high",
+      "num_impacted_nodes": 2,
+      "num_impacted_diagrams": 1
+    },
+    {
+      "scenario_id": "enterprise_0018",
+      "split": "train",
+      "diagram_types": [
+        "branch_topology",
+        "wan_topology",
+        "datacenter_topology",
+        "app_db_topology",
+        "shared_services_topology"
+      ],
+      "num_diagrams": 5,
+      "num_nodes": 30,
+      "num_edges": 35,
+      "num_cross_diagram_edges": 6,
+      "num_shared_entities": 2,
+      "root_cause": "DC-FW-01",
+      "root_cause_diagram": "datacenter_topology",
+      "root_cause_pattern": "dc_fw_failure",
+      "severity": "critical",
+      "num_impacted_nodes": 12,
+      "num_impacted_diagrams": 2
+    },
+    {
+      "scenario_id": "enterprise_0019",
+      "split": "train",
+      "diagram_types": [
+        "branch_topology",
+        "wan_topology",
+        "datacenter_topology",
+        "app_db_topology"
+      ],
+      "num_diagrams": 4,
+      "num_nodes": 25,
+      "num_edges": 26,
+      "num_cross_diagram_edges": 3,
+      "num_shared_entities": 1,
+      "root_cause": "BR-RTR-01",
+      "root_cause_diagram": "branch_topology",
+      "root_cause_pattern": "branch_rtr_failure",
+      "severity": "medium",
+      "num_impacted_nodes": 6,
+      "num_impacted_diagrams": 2
+    }
+  ]
+}

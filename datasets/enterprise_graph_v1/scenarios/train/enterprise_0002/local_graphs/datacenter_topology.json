@@ -1,0 +1,135 @@
+{
+  "diagram_id": "datacenter_topology",
+  "diagram_type": "datacenter_topology",
+  "nodes": [
+    {
+      "id": "DC-FW-01",
+      "type": "firewall",
+      "zone": "dc-edge",
+      "diagram_id": "datacenter_topology",
+      "is_shared_entity": false
+    },
+    {
+      "id": "DC-FW-02",
+      "type": "firewall",
+      "zone": "dc-edge",
+      "diagram_id": "datacenter_topology",
+      "is_shared_entity": false
+    },
+    {
+      "id": "DC-CORE-SW-01",
+      "type": "switch",
+      "zone": "dc-core",
+      "diagram_id": "datacenter_topology",
+      "is_shared_entity": false
+    },
+    {
+      "id": "DC-CORE-SW-02",
+      "type": "switch",
+      "zone": "dc-core",
+      "diagram_id": "datacenter_topology",
+      "is_shared_entity": false
+    },
+    {
+      "id": "DC-AGG-SW-01",
+      "type": "switch",
+      "zone": "dc-agg",
+      "diagram_id": "datacenter_topology",
+      "is_shared_entity": false
+    },
+    {
+      "id": "DC-SRV-01",
+      "type": "server",
+      "zone": "dc-compute",
+      "diagram_id": "datacenter_topology",
+      "is_shared_entity": false
+    },
+    {
+      "id": "DC-SRV-02",
+      "type": "server",
+      "zone": "dc-compute",
+      "diagram_id": "datacenter_topology",
+      "is_shared_entity": false
+    },
+    {
+      "id": "DC-SRV-03",
+      "type": "server",
+      "zone": "dc-compute",
+      "diagram_id": "datacenter_topology",
+      "is_shared_entity": false
+    },
+    {
+      "id": "DC-SRV-04",
+      "type": "server",
+      "zone": "dc-compute",
+      "diagram_id": "datacenter_topology",
+      "is_shared_entity": false
+    },
+    {
+      "id": "DC-SRV-05",
+      "type": "server",
+      "zone": "dc-compute",
+      "diagram_id": "datacenter_topology",
+      "is_shared_entity": false
+    },
+    {
+      "id": "DC-SRV-06",
+      "type": "server",
+      "zone": "dc-compute",
+      "diagram_id": "datacenter_topology",
+      "is_shared_entity": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "DC-FW-01",
+      "target": "DC-CORE-SW-01",
+      "relation": "secured_by"
+    },
+    {
+      "source": "DC-FW-02",
+      "target": "DC-CORE-SW-02",
+      "relation": "secured_by"
+    },
+    {
+      "source": "DC-CORE-SW-01",
+      "target": "DC-AGG-SW-01",
+      "relation": "connected_to"
+    },
+    {
+      "source": "DC-CORE-SW-02",
+      "target": "DC-AGG-SW-01",
+      "relation": "connected_to"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-01",
+      "relation": "connected_to"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-02",
+      "relation": "connected_to"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-03",
+      "relation": "connected_to"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-04",
+      "relation": "connected_to"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-05",
+      "relation": "connected_to"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-06",
+      "relation": "connected_to"
+    }
+  ]
+}

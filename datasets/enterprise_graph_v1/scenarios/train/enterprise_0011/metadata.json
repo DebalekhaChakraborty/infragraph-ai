@@ -1,0 +1,21 @@
+{
+  "scenario_id": "enterprise_0011",
+  "diagram_types": [
+    "branch_topology",
+    "datacenter_topology",
+    "app_db_topology",
+    "shared_services_topology"
+  ],
+  "num_diagrams": 4,
+  "num_nodes": 25,
+  "num_edges": 28,
+  "num_cross_diagram_edges": 5,
+  "num_shared_entities": 1,
+  "root_cause": "SVC-IDENTITY-01",
+  "root_cause_diagram": "shared_services_topology",
+  "root_cause_pattern": "identity_svc_failure",
+  "severity": "high",
+  "num_impacted_nodes": 10,
+  "num_impacted_diagrams": 3,
+  "split": "train"
+}

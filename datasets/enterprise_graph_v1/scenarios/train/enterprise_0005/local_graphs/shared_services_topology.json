@@ -1,0 +1,51 @@
+{
+  "diagram_id": "shared_services_topology",
+  "diagram_type": "shared_services_topology",
+  "nodes": [
+    {
+      "id": "SVC-IDENTITY-01",
+      "type": "service",
+      "zone": "shared-svc",
+      "diagram_id": "shared_services_topology",
+      "is_shared_entity": false
+    },
+    {
+      "id": "SVC-DNS-01",
+      "type": "server",
+      "zone": "shared-svc",
+      "diagram_id": "shared_services_topology",
+      "is_shared_entity": false
+    },
+    {
+      "id": "SVC-NTP-01",
+      "type": "server",
+      "zone": "shared-svc",
+      "diagram_id": "shared_services_topology",
+      "is_shared_entity": false
+    },
+    {
+      "id": "SVC-MONITOR-01",
+      "type": "service",
+      "zone": "shared-svc",
+      "diagram_id": "shared_services_topology",
+      "is_shared_entity": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "SVC-IDENTITY-01",
+      "target": "SVC-DNS-01",
+      "relation": "depends_on"
+    },
+    {
+      "source": "SVC-MONITOR-01",
+      "target": "SVC-IDENTITY-01",
+      "relation": "depends_on"
+    },
+    {
+      "source": "SVC-MONITOR-01",
+      "target": "SVC-NTP-01",
+      "relation": "depends_on"
+    }
+  ]
+}

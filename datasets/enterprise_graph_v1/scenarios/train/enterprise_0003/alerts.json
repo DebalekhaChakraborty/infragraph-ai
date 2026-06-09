@@ -1,0 +1,219 @@
+{
+  "scenario_id": "enterprise_0003",
+  "root_cause": "BR-RTR-01",
+  "root_cause_diagram": "branch_topology",
+  "root_cause_pattern": "branch_rtr_failure",
+  "severity": "medium",
+  "alerts": [
+    {
+      "node": "BR-RTR-01",
+      "diagram_id": "branch_topology",
+      "alert_type": "packet_drop",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "DC-CORE-SW-01",
+      "diagram_id": "datacenter_topology",
+      "alert_type": "link_degradation",
+      "severity": "medium",
+      "time_offset_min": 3
+    },
+    {
+      "node": "DC-SRV-04",
+      "diagram_id": "datacenter_topology",
+      "alert_type": "latency",
+      "severity": "high",
+      "time_offset_min": 2
+    },
+    {
+      "node": "DC-SRV-02",
+      "diagram_id": "datacenter_topology",
+      "alert_type": "latency",
+      "severity": "high",
+      "time_offset_min": 12
+    },
+    {
+      "node": "BR-WRK-01",
+      "diagram_id": "branch_topology",
+      "alert_type": "connection_timeout",
+      "severity": "high",
+      "time_offset_min": 4
+    }
+  ],
+  "impacted_nodes": [
+    "BR-FW-01",
+    "DC-FW-01",
+    "BR-SW-01",
+    "DC-CORE-SW-01",
+    "BR-WRK-01",
+    "BR-WRK-02",
+    "BR-WRK-03",
+    "BR-WRK-04",
+    "DC-AGG-SW-01",
+    "APP-LB-01",
+    "DC-SRV-01",
+    "DC-SRV-02",
+    "DC-SRV-03",
+    "DC-SRV-04",
+    "APP-01",
+    "APP-02",
+    "APP-03",
+    "APP-04",
+    "DB-MASTER",
+    "DB-CACHE-01",
+    "DB-REPLICA-01",
+    "DB-REPLICA-02"
+  ],
+  "impacted_diagrams": [
+    "app_db_topology",
+    "branch_topology",
+    "datacenter_topology"
+  ],
+  "impact_paths": [
+    [
+      "BR-RTR-01",
+      "BR-FW-01"
+    ],
+    [
+      "BR-RTR-01",
+      "DC-FW-01"
+    ],
+    [
+      "BR-RTR-01",
+      "BR-FW-01",
+      "BR-SW-01"
+    ],
+    [
+      "BR-RTR-01",
+      "DC-FW-01",
+      "DC-CORE-SW-01"
+    ],
+    [
+      "BR-RTR-01",
+      "BR-FW-01",
+      "BR-SW-01",
+      "BR-WRK-01"
+    ],
+    [
+      "BR-RTR-01",
+      "BR-FW-01",
+      "BR-SW-01",
+      "BR-WRK-02"
+    ],
+    [
+      "BR-RTR-01",
+      "BR-FW-01",
+      "BR-SW-01",
+      "BR-WRK-03"
+    ],
+    [
+      "BR-RTR-01",
+      "BR-FW-01",
+      "BR-SW-01",
+      "BR-WRK-04"
+    ],
+    [
+      "BR-RTR-01",
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "DC-AGG-SW-01"
+    ],
+    [
+      "BR-RTR-01",
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "APP-LB-01"
+    ],
+    [
+      "BR-RTR-01",
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "DC-AGG-SW-01",
+      "DC-SRV-01"
+    ],
+    [
+      "BR-RTR-01",
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "DC-AGG-SW-01",
+      "DC-SRV-02"
+    ],
+    [
+      "BR-RTR-01",
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "DC-AGG-SW-01",
+      "DC-SRV-03"
+    ],
+    [
+      "BR-RTR-01",
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "DC-AGG-SW-01",
+      "DC-SRV-04"
+    ],
+    [
+      "BR-RTR-01",
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "APP-LB-01",
+      "APP-01"
+    ],
+    [
+      "BR-RTR-01",
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "APP-LB-01",
+      "APP-02"
+    ],
+    [
+      "BR-RTR-01",
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "APP-LB-01",
+      "APP-03"
+    ],
+    [
+      "BR-RTR-01",
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "APP-LB-01",
+      "APP-04"
+    ],
+    [
+      "BR-RTR-01",
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "APP-LB-01",
+      "APP-01",
+      "DB-MASTER"
+    ],
+    [
+      "BR-RTR-01",
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "APP-LB-01",
+      "APP-01",
+      "DB-CACHE-01"
+    ],
+    [
+      "BR-RTR-01",
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "APP-LB-01",
+      "APP-01",
+      "DB-MASTER",
+      "DB-REPLICA-01"
+    ],
+    [
+      "BR-RTR-01",
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "APP-LB-01",
+      "APP-01",
+      "DB-MASTER",
+      "DB-REPLICA-02"
+    ]
+  ]
+}
