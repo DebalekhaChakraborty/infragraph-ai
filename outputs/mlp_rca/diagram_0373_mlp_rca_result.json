@@ -50,7 +50,7 @@
     }
   ],
   "n_nodes": 17,
-  "model_path": "./outputs/mlp_rca\\mlp_rca_model.pt",
+  "model_path": ".\\outputs\\mlp_rca\\mlp_rca_model.pt",
   "test_metrics": {
     "top1": 1.0,
     "top3": 1.0,
