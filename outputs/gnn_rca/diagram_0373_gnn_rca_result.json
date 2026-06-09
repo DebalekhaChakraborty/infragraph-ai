@@ -8,58 +8,58 @@
   "ground_truth_rank": 1,
   "mrr": 1.0,
   "node_scores": {
-    "WAN-01": -0.3616,
-    "WAN-02": -0.3616,
-    "RTR-01": 9.5359,
-    "RTR-02": 9.5359,
-    "FW-01": 30.775,
-    "FW-02": 22.6555,
-    "SW-CORE": 11.4352,
-    "SW-APP": 13.888,
-    "LB-01": -5.0374,
-    "MGMT-01": 8.237,
-    "APP-01": -5.6358,
-    "APP-02": -5.6358,
-    "APP-03": -3.5869,
-    "APP-04": -3.5869,
-    "DB-01": -5.0252,
-    "DB-02": -5.0252,
-    "CLOUD-01": 1.909
+    "WAN-01": -0.4041,
+    "WAN-02": -0.4041,
+    "RTR-01": 9.4934,
+    "RTR-02": 9.4934,
+    "FW-01": 30.7325,
+    "FW-02": 22.613,
+    "SW-CORE": 11.3927,
+    "SW-APP": 13.8455,
+    "LB-01": -5.0799,
+    "MGMT-01": 8.1945,
+    "APP-01": -5.6783,
+    "APP-02": -5.6783,
+    "APP-03": -3.6293,
+    "APP-04": -3.6293,
+    "DB-01": -5.0677,
+    "DB-02": -5.0677,
+    "CLOUD-01": 1.8666
   },
   "top_candidates": [
     {
       "rank": 1,
       "node": "FW-01",
-      "score": 30.775028228759766,
+      "score": 30.732532501220703,
       "type": "firewall"
     },
     {
       "rank": 2,
       "node": "FW-02",
-      "score": 22.655521392822266,
+      "score": 22.61302947998047,
       "type": "firewall"
     },
     {
       "rank": 3,
       "node": "SW-APP",
-      "score": 13.887969970703125,
+      "score": 13.845484733581543,
       "type": "switch"
     },
     {
       "rank": 4,
       "node": "SW-CORE",
-      "score": 11.435152053833008,
+      "score": 11.392664909362793,
       "type": "switch"
     },
     {
       "rank": 5,
       "node": "RTR-01",
-      "score": 9.535895347595215,
+      "score": 9.49341106414795,
       "type": "router"
     }
   ],
   "n_nodes": 17,
-  "model_path": "outputs/gnn_rca\\gnn_rca_model.pt",
+  "model_path": "./outputs/gnn_rca/gnn_rca_model.pt",
   "test_metrics": {
     "top1": 1.0,
     "top3": 1.0,
