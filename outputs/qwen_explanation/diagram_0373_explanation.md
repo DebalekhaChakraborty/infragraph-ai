@@ -1,6 +1,6 @@
 # InfraGraph AI RCA Explanation -- diagram_0373
 
-> Generated: 2026-06-09 15:24 UTC  
+> Generated: 2026-06-09 15:34 UTC  
 > Provider: mock (deterministic template)
 
 ---
