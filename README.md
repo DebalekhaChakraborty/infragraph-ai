@@ -13,9 +13,10 @@ Synthetic network-diagram dataset generator and AI pipeline for **automated topo
 | 3 | Trained weights under `training_runs/infragraph_yolo_v1/weights` | Done |
 | 4 | V2 dataset (400 diagrams) with graph + alert scenarios | Done |
 | 5 | Heuristic RCA demo (`build_topology_rca_demo.py`) | Done |
-| 6 | GNN root-cause ranking (`train_gnn_rca.py`) — 100% test top-1 | Done |
-| 7 | Qwen/vLLM explanation layer (`generate_qwen_rca_explanation.py`) | Done |
-| 8 | Run detector prediction on full test set | Next |
+| 6 | MLP node-ranker RCA (`train_mlp_rca.py`) — learned non-graph baseline | Done |
+| 7 | GNN root-cause ranking (`train_gnn_rca.py`) — 100% test top-1 | Done |
+| 8 | Qwen/vLLM explanation layer (`generate_qwen_rca_explanation.py`) | Done |
+| 9 | Run detector prediction on full test set | Next |
 
 ---
 
@@ -26,7 +27,7 @@ Synthetic network-diagram dataset generator and AI pipeline for **automated topo
 | **Generate** | Synthesise enterprise network diagrams (PNG) with paired YOLO labels, topology graphs (JSON), and alert/RCA scenarios |
 | **Detect** | Fine-tune YOLOv8 to locate network devices (router, switch, firewall, server, database, load_balancer, cloud_or_wan) |
 | **Extract** | Detect inter-device connections via line detection + OCR to rebuild the topology graph |
-| **Analyse** | Run graph-based and GNN-powered RCA to identify root-cause nodes from alert sequences |
+| **Analyse** | Heuristic graph scoring → learned MLP node-ranker → topology-aware GNN RCA — three-stage root-cause pipeline |
 | **Explain** | Qwen / open LLM generates a plain-language incident explanation from the RCA output |
 
 ---
@@ -53,10 +54,13 @@ yolo detect predict \
 # 4. Heuristic RCA demo (Stage 2)
 python scripts/build_topology_rca_demo.py --diagram-id diagram_0373
 
-# 5. GNN root cause ranking (Stage 3)
+# 5. MLP node-ranker RCA (learned non-graph baseline)
+python scripts/train_mlp_rca.py
+
+# 6. GNN root cause ranking (topology-aware learned model)
 python scripts/train_gnn_rca.py
 
-# 6. Qwen explanation layer (Stage 4) — mock mode (no LLM)
+# 7. Qwen explanation layer — mock mode (no LLM)
 python scripts/generate_qwen_rca_explanation.py --diagram-id diagram_0373 --mode mock
 
 # 6b. Qwen explanation layer — vLLM mode (AMD Jupyter)
@@ -68,31 +72,45 @@ python scripts/generate_qwen_rca_explanation.py \
 jupyter lab
 ```
 
-### Stage 3: GNN-based RCA
+### RCA model architecture
+
+| Model | Uses graph? | Learned? | Script |
+|-------|-------------|----------|--------|
+| Heuristic scorer | Yes (rules) | No | `build_topology_rca_demo.py` |
+| **MLP node-ranker** | No | Yes | `train_mlp_rca.py` |
+| **GNN** | Yes (message passing) | Yes | `train_gnn_rca.py` |
+
+The MLP RCA model is a learned non-graph baseline. It scores each node
+independently from engineered features without any graph message passing.
+The GNN RCA model is the topology-aware learned model that additionally
+aggregates neighbour information across the network graph.
+
+Results on infragraph_v2 test set (28 graphs):
+
+| Model | Top-1 | Top-3 | MRR | Convergence |
+|-------|------:|------:|----:|-------------|
+| Heuristic | ~60% | ~90% | ~0.75 | N/A |
+| MLP (no graph) | **100%** | **100%** | **1.000** | epoch 56 |
+| GNN (graph MP) | **100%** | **100%** | **1.000** | epoch 6 |
+
+The GNN converges ~9x faster than the MLP because graph message-passing
+propagates the root-cause signal through topology neighbours.
 
 ```bash
-# Train GNN on infragraph_v2 (400 alert scenarios, 80 epochs)
-python scripts/train_gnn_rca.py \
+# MLP node-ranker (learned non-graph baseline)
+python scripts/train_mlp_rca.py \
     --dataset-root datasets/infragraph_v2 \
-    --epochs 80 \
-    --out outputs/gnn_rca \
+    --out outputs/mlp_rca \
     --demo-diagram diagram_0373
 
-# Falls back to pure-numpy GCN if torch is not installed
-python scripts/train_gnn_rca.py
+# GNN (topology-aware learned model)
+python scripts/train_gnn_rca.py \
+    --dataset-root datasets/infragraph_v2 \
+    --out outputs/gnn_rca \
+    --demo-diagram diagram_0373
 ```
 
-Results on infragraph_v2 (test set, 28 graphs):
-
-| Metric | Heuristic (Stage 2) | GNN (Stage 3) |
-|--------|--------------------:|---------------:|
-| Top-1 accuracy | ~60% | **100%** |
-| Top-3 accuracy | ~90% | **100%** |
-| MRR | ~0.75 | **1.000** |
-
-The GNN learns propagation direction from graph structure and temporal alert
-features, correctly identifying `FW-01` as root cause for diagram_0373 where
-the heuristic chose `SW-CORE`.  See `docs/gnn_rca.md` for full details.
+See `docs/mlp_rca.md` and `docs/gnn_rca.md` for full details.
 
 ---
 
@@ -125,13 +143,15 @@ infragraph-ai/
 │   ├── v1_test_predictions_cpu/         # Detector output on test set
 │   ├── val_eval/                        # Validation curves and confusion matrix
 │   ├── topology_demo/                   # Stage 2: heuristic RCA outputs
-│   ├── gnn_rca/                         # Stage 3: GNN model, metrics, demo
+│   ├── mlp_rca/                         # Stage 3a: MLP model, metrics, demo
+│   ├── gnn_rca/                         # Stage 3b: GNN model, metrics, demo
 │   └── qwen_explanation/                # Stage 4: LLM explanation reports
 │
 ├── scripts/
 │   ├── verify_repo_state.py             # Repo integrity checker
 │   ├── build_topology_rca_demo.py       # Stage 2: heuristic RCA + topology vis
-│   ├── train_gnn_rca.py                 # Stage 3: GNN root cause ranking
+│   ├── train_mlp_rca.py                 # Stage 3a: MLP node-ranker (learned baseline)
+│   ├── train_gnn_rca.py                 # Stage 3b: GNN root cause ranking
 │   └── generate_qwen_rca_explanation.py # Stage 4: LLM explanation (mock/vLLM)
 │
 ├── notebooks/

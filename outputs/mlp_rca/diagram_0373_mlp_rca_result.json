@@ -1,0 +1,59 @@
+{
+  "diagram_id": "diagram_0373",
+  "backend": "torch",
+  "model_type": "MLP node ranker",
+  "predicted_root_cause": "FW-01",
+  "ground_truth_root_cause": "FW-01",
+  "is_correct": true,
+  "ground_truth_rank": 1,
+  "mrr": 1.0,
+  "top_candidates": [
+    {
+      "rank": 1,
+      "node_id": "FW-01",
+      "score": 1.8416,
+      "type": "firewall",
+      "has_alert": true,
+      "severity": "critical"
+    },
+    {
+      "rank": 2,
+      "node_id": "SW-CORE",
+      "score": 0.8064,
+      "type": "switch",
+      "has_alert": true,
+      "severity": "major"
+    },
+    {
+      "rank": 3,
+      "node_id": "DB-02",
+      "score": -0.4162,
+      "type": "database",
+      "has_alert": false,
+      "severity": null
+    },
+    {
+      "rank": 4,
+      "node_id": "DB-01",
+      "score": -0.4162,
+      "type": "database",
+      "has_alert": false,
+      "severity": null
+    },
+    {
+      "rank": 5,
+      "node_id": "RTR-02",
+      "score": -0.4807,
+      "type": "router",
+      "has_alert": false,
+      "severity": null
+    }
+  ],
+  "n_nodes": 17,
+  "model_path": "./outputs/mlp_rca\\mlp_rca_model.pt",
+  "test_metrics": {
+    "top1": 1.0,
+    "top3": 1.0,
+    "mrr": 1.0
+  }
+}
