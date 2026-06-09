@@ -9,19 +9,51 @@ OpenAI-compatible vLLM endpoint (--mode vllm) when running on AMD Jupyter.
 import argparse
 import json
 import os
+import re
 import sys
 import textwrap
 from datetime import datetime, timezone
 
 # ── Evidence builder ──────────────────────────────────────────────────────────
 
-def load_evidence(topo_rca_path, graph_summary_path, gnn_rca_path):
+def _find_alert_path(dataset_root, split, diagram_id):
+    """Return alert JSON path, searching common naming conventions."""
+    candidates = [
+        os.path.join(dataset_root, "alerts", split, f"{diagram_id}.json"),
+        os.path.join(dataset_root, "alerts", split, f"{diagram_id}_alerts.json"),
+    ]
+    for p in candidates:
+        if os.path.isfile(p):
+            return p
+    # Fallback: scan the directory for a file containing diagram_id
+    alert_dir = os.path.join(dataset_root, "alerts", split)
+    if os.path.isdir(alert_dir):
+        for fname in os.listdir(alert_dir):
+            if diagram_id in fname and fname.endswith(".json"):
+                return os.path.join(alert_dir, fname)
+    return None
+
+
+def load_evidence(topo_rca_path, graph_summary_path, gnn_rca_path,
+                  alert_path=None):
     with open(topo_rca_path) as f:
         topo = json.load(f)
     with open(graph_summary_path) as f:
         summary = json.load(f)
     with open(gnn_rca_path) as f:
         gnn = json.load(f)
+
+    alert_scenario = None
+    if alert_path and os.path.isfile(alert_path):
+        with open(alert_path) as f:
+            raw = json.load(f)
+        alert_scenario = {
+            "scenario_id": raw.get("scenario_id"),
+            "root_cause": raw.get("root_cause"),
+            "root_cause_type": raw.get("root_cause_type"),
+            "alerts": raw.get("alerts", []),
+            "expected_impacted_nodes": raw.get("expected_impacted_nodes", []),
+        }
 
     diagram_id = topo["diagram_id"]
     gt_root = topo["ground_truth_root_cause"]
@@ -82,6 +114,7 @@ def load_evidence(topo_rca_path, graph_summary_path, gnn_rca_path):
         "impact_paths": topo.get("impact_paths", {}),
         "impact_path_summary": topo.get("impact_path_summary", {}),
         "reasoning_summary": topo.get("reasoning_summary", ""),
+        "alert_scenario": alert_scenario,
     }
 
 
@@ -91,29 +124,39 @@ SYSTEM_PROMPT = (
     "You are an enterprise AIOps root cause analysis assistant. "
     "Use only the provided topology, alert, heuristic RCA, and GNN RCA evidence. "
     "Do not invent nodes, alerts, tools, or remediation actions. "
-    "Be concise, operational, and suitable for an L1/L2 incident response team."
+    "Do not convert time_offset_min values into wall-clock timestamps — "
+    "refer to them only as time offsets (e.g. 't+2 min'). "
+    "Be concise, operational, and suitable for an L1/L2 incident response team. "
+    "Output plain Markdown only — do not wrap your response in a code block."
 )
 
 
 def build_user_prompt(evidence):
     evidence_json = json.dumps(evidence, indent=2)
+    h_status = "was incorrect" if not evidence["heuristic_rca"]["is_correct"] else "was correct"
+    g_status = "improved on it" if evidence["gnn_improved_over_heuristic"] else "agreed with it"
     return textwrap.dedent(f"""\
+        /no_think
+
         You are given the following structured RCA evidence for network incident
         `{evidence["diagram_id"]}`. Produce a complete incident analysis report
         in Markdown with these sections in order:
 
         1. **Executive Summary** (2-3 sentences)
-        2. **What Happened** — list the alerts and their timing
+        2. **What Happened** — list each alert with its node, alert type,
+           severity, and time_offset_min. Do NOT convert offsets to clock times.
         3. **Root Cause Conclusion** — state the root cause and explain why
         4. **Heuristic vs GNN Comparison** — table + explanation of why the
-           heuristic {'was incorrect' if not evidence['heuristic_rca']['is_correct'] else 'was correct'}
-           and why the GNN {'improved on it' if evidence['gnn_improved_over_heuristic'] else 'agreed'}
+           heuristic {h_status} and why the GNN {g_status}
         5. **Impacted Nodes/Services** — list and propagation path
-        6. **Recommended Next Actions** — numbered, L1/L2 actionable steps only
+        6. **Recommended Next Actions** — numbered, L1/L2 actionable steps only,
+           grounded in the evidence (no invented tools or systems)
         7. **ServiceNow Incident Summary** — short-description, affected-CI,
            priority, assignment-group, symptom, root-cause, services-impacted,
            suggested-action (key:value format)
         8. **Confidence and Limitations**
+
+        Output plain Markdown. Do not wrap it in a code block.
 
         Evidence:
         ```json
@@ -196,11 +239,19 @@ def build_mock_explanation(evidence):
             f"Both RCA methods require human review — ground truth: **{gt}** ({gt_type})."
         )
 
-    # What happened: reconstruct alert list from impact_paths alerting targets
-    alert_bullets = "\n".join(
-        f"- **{node}**: alert detected (alerting node)"
-        for node in alerting
-    )
+    # What happened: use full alert details if available, else fall back to alerting nodes
+    scenario_alerts = (evidence.get("alert_scenario") or {}).get("alerts", [])
+    if scenario_alerts:
+        alert_bullets = "\n".join(
+            f"- **{al['node']}** [{al['severity'].upper()}] "
+            f"{al['alert_type']} (t+{al['time_offset_min']} min)"
+            for al in scenario_alerts
+        )
+    else:
+        alert_bullets = "\n".join(
+            f"- **{node}**: alert detected"
+            for node in alerting
+        )
 
     # Root cause
     root_section_lines = [
@@ -382,6 +433,19 @@ def build_mock_explanation(evidence):
     return "\n".join(lines)
 
 
+# ── LLM output post-processing ────────────────────────────────────────────────
+
+def clean_llm_output(text):
+    """Remove <think> blocks and surrounding markdown code fences from LLM output."""
+    # Strip <think>...</think> blocks (Qwen3 chain-of-thought, may be multiline)
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
+    text = text.strip()
+    # Strip a leading ```markdown or ``` fence and the matching closing fence
+    text = re.sub(r"^```(?:markdown)?\s*\n", "", text)
+    text = re.sub(r"\n```\s*$", "", text)
+    return text.strip()
+
+
 # ── vLLM mode ─────────────────────────────────────────────────────────────────
 
 def call_vllm(system_prompt, user_prompt, base_url, model):
@@ -404,7 +468,7 @@ def call_vllm(system_prompt, user_prompt, base_url, model):
     resp.raise_for_status()
     data = resp.json()
     text = data["choices"][0]["message"]["content"]
-    return text
+    return clean_llm_output(text)
 
 
 # ── Output writers ────────────────────────────────────────────────────────────
@@ -457,6 +521,10 @@ def main():
     parser.add_argument("--topo-dir", default="outputs/topology_demo")
     parser.add_argument("--gnn-dir", default="outputs/gnn_rca")
     parser.add_argument("--out", default="outputs/qwen_explanation")
+    parser.add_argument("--dataset-root", default="datasets/infragraph_v2",
+                        help="Root of the infragraph dataset (for loading original alert JSON)")
+    parser.add_argument("--split", default="test",
+                        help="Dataset split containing the diagram's alert JSON (default: test)")
     args = parser.parse_args()
 
     did = args.diagram_id
@@ -471,8 +539,15 @@ def main():
             print(f"ERROR: required input not found: {p}", file=sys.stderr)
             sys.exit(1)
 
+    alert_path = _find_alert_path(args.dataset_root, args.split, did)
+    if alert_path:
+        print(f"  Alert JSON: {alert_path}")
+    else:
+        print(f"  Alert JSON: not found under {args.dataset_root}/alerts/{args.split}/ — proceeding without it")
+
     # ── Build evidence ─────────────────────────────────────────────────────
-    evidence = load_evidence(topo_rca_path, graph_summary_path, gnn_rca_path)
+    evidence = load_evidence(topo_rca_path, graph_summary_path, gnn_rca_path,
+                             alert_path=alert_path)
     system_prompt, user_prompt = build_prompts(evidence)
 
     # ── Generate explanation ───────────────────────────────────────────────
