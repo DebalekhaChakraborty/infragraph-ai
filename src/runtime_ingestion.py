@@ -90,13 +90,9 @@ def normalize_bbox_for_pil(
             elif fmt == "xyxy":
                 x0, y0, x1, y1 = a, b, c, d
             else:
-                # heuristic: if c and d are small enough to be width/height treat as xywh
-                if (c <= image_w * 0.6 and d <= image_h * 0.6 and
-                        c > 0 and d > 0 and
-                        a + c <= image_w * 1.05 and b + d <= image_h * 1.05):
-                    x0, y0, x1, y1 = a, b, a + c, b + d
-                else:
-                    x0, y0, x1, y1 = a, b, c, d
+                # V3 annotation JSON uses xyxy. Treat ambiguous four-value
+                # boxes as xyxy unless bbox_format explicitly says xywh.
+                x0, y0, x1, y1 = a, b, c, d
         elif "x1" in obj and "y1" in obj and "x2" in obj and "y2" in obj:
             x0 = float(obj["x1"]); y0 = float(obj["y1"])
             x1 = float(obj["x2"]); y1 = float(obj["y2"])
@@ -135,49 +131,80 @@ _CLS_COLORS: dict[str, tuple[int, int, int]] = {
     "service":       (152, 216, 200),
 }
 _DEFAULT_COLOR: tuple[int, int, int] = (168, 168, 168)
+_OVERLAY_RENDERER_VERSION = "v3_clean_overlay_v1"
+
+
+def _overlay_meta_path(out_path: Path) -> Path:
+    return out_path.with_name(f"{out_path.stem}.meta.json")
+
+
+def _needs_clean_overlay_render(out_path: Path) -> bool:
+    meta_path = _overlay_meta_path(out_path)
+    if not out_path.exists() or not meta_path.exists():
+        return True
+    meta = _load_json(meta_path)
+    return meta.get("renderer_version") != _OVERLAY_RENDERER_VERSION
 
 
 def render_v3_annotation_preview(
     image_path: Path,
     annotation_path: Path,
     out_path: Path,
+    *,
+    overlay_mode: str = "clean",
+    draw_connectors: bool = False,
 ) -> dict:
     """
-    Draw bboxes, node labels, connector polylines, and a footer banner from
-    a V3 annotation JSON onto a copy of the source image.  Saves to out_path.
+    Draw a V3 annotation overlay onto a copy of the source image.
+
+    clean mode is intended for primary UI use: object outlines only, object ID
+    labels, no connector clutter, and no translucent fills. Debug mode can draw
+    connector polylines and class labels for inspection.
 
     Returns a metadata dict:
-        rendered, boxes_rendered, boxes_skipped, connectors_rendered,
-        connectors_skipped, out_path
+        rendered, boxes_rendered, boxes_skipped, boxes_skipped_large,
+        connectors_rendered, connectors_skipped, overlay_mode, draw_connectors,
+        renderer_version, out_path
     Uses an alternate path gracefully if Pillow is unavailable or annotation is missing.
     Never raises.
     """
+    overlay_mode = overlay_mode if overlay_mode in {"clean", "debug"} else "clean"
     meta: dict = {
         "rendered": False,
         "boxes_rendered": 0,
         "boxes_skipped": 0,
+        "boxes_skipped_large": 0,
         "connectors_rendered": 0,
         "connectors_skipped": 0,
+        "overlay_mode": overlay_mode,
+        "draw_connectors": bool(draw_connectors),
+        "renderer_version": _OVERLAY_RENDERER_VERSION,
         "out_path": str(out_path),
+        "meta_path": str(_overlay_meta_path(out_path)),
     }
 
     try:
         from PIL import Image, ImageDraw, ImageFont
     except ImportError:
         if image_path.exists():
+            out_path.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(image_path, out_path)
+            _save_json(_overlay_meta_path(out_path), meta)
         return meta
 
     try:
         annotation = _load_json(annotation_path) if annotation_path.exists() else {}
         if not annotation or not image_path.exists():
             if image_path.exists():
+                out_path.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(image_path, out_path)
+                _save_json(_overlay_meta_path(out_path), meta)
             return meta
 
         img  = Image.open(image_path).convert("RGB")
         draw = ImageDraw.Draw(img, "RGBA")
         img_w, img_h = img.size
+        image_area = max(img_w * img_h, 1)
 
         try:
             font    = ImageFont.truetype("arial.ttf", 14)
@@ -190,43 +217,47 @@ def render_v3_annotation_preview(
                 font    = ImageFont.load_default()
                 font_sm = font
 
-        # ── connector polylines (drawn under boxes) ───────────────────────────
-        for conn in annotation.get("connectors", []):
-            try:
-                pts = conn.get("points") or []
-                if len(pts) < 2:
+        # ── connector polylines (debug only by default) ───────────────────────
+        connectors = annotation.get("connectors", [])
+        if draw_connectors or overlay_mode == "debug":
+            for conn in connectors:
+                try:
+                    pts = conn.get("points") or []
+                    if len(pts) < 2:
+                        meta["connectors_skipped"] += 1
+                        continue
+                    flat = [
+                        (
+                            max(0, min(img_w - 1, int(float(p[0])))),
+                            max(0, min(img_h - 1, int(float(p[1])))),
+                        )
+                        for p in pts
+                        if len(p) >= 2
+                    ]
+                    if len(flat) < 2:
+                        meta["connectors_skipped"] += 1
+                        continue
+                    draw.line(flat, fill=(30, 144, 255, 190), width=2)
+                    x1c, y1c = flat[-2]
+                    x2c, y2c = flat[-1]
+                    ang = math.atan2(y2c - y1c, x2c - x1c)
+                    for side in (0.45, -0.45):
+                        ax = max(0, min(img_w - 1, x2c - int(9 * math.cos(ang + side))))
+                        ay = max(0, min(img_h - 1, y2c - int(9 * math.sin(ang + side))))
+                        draw.line([(x2c, y2c), (ax, ay)], fill=(30, 144, 255, 210), width=2)
+                    lbl = conn.get("label_text", conn.get("relationship", ""))
+                    if lbl and flat:
+                        mid = flat[len(flat) // 2]
+                        tx  = max(0, min(img_w - 40, mid[0] + 3))
+                        ty  = max(0, min(img_h - 14, mid[1] - 14))
+                        draw.text((tx, ty), str(lbl), fill=(20, 90, 150), font=font_sm)
+                    meta["connectors_rendered"] += 1
+                except Exception:
                     meta["connectors_skipped"] += 1
-                    continue
-                flat = [
-                    (
-                        max(0, min(img_w - 1, int(float(p[0])))),
-                        max(0, min(img_h - 1, int(float(p[1])))),
-                    )
-                    for p in pts
-                    if len(p) >= 2
-                ]
-                if len(flat) < 2:
-                    meta["connectors_skipped"] += 1
-                    continue
-                draw.line(flat, fill=(100, 200, 255, 180), width=2)
-                x1c, y1c = flat[-2]
-                x2c, y2c = flat[-1]
-                ang = math.atan2(y2c - y1c, x2c - x1c)
-                for side in (0.45, -0.45):
-                    ax = max(0, min(img_w - 1, x2c - int(9 * math.cos(ang + side))))
-                    ay = max(0, min(img_h - 1, y2c - int(9 * math.sin(ang + side))))
-                    draw.line([(x2c, y2c), (ax, ay)], fill=(100, 200, 255, 200), width=2)
-                lbl = conn.get("label_text", conn.get("relationship", ""))
-                if lbl and flat:
-                    mid = flat[len(flat) // 2]
-                    tx  = max(0, min(img_w - 40, mid[0] + 3))
-                    ty  = max(0, min(img_h - 14, mid[1] - 14))
-                    draw.text((tx, ty), str(lbl), fill=(180, 230, 255), font=font_sm)
-                meta["connectors_rendered"] += 1
-            except Exception:
-                meta["connectors_skipped"] += 1
+        else:
+            meta["connectors_skipped"] = len(connectors)
 
-        # ── bounding boxes + node id / class labels ───────────────────────────
+        # ── bounding boxes + node labels ──────────────────────────────────────
         for obj in annotation.get("objects", []):
             try:
                 box = normalize_bbox_for_pil(obj, img_w, img_h)
@@ -236,12 +267,18 @@ def render_v3_annotation_preview(
                 x0, y0, x1, y1 = box
                 cls     = obj.get("class_name", "server")
                 r, g, b = _CLS_COLORS.get(cls, _DEFAULT_COLOR)
+                area_ratio = ((x1 - x0) * (y1 - y0)) / image_area
 
-                draw.rectangle([x0, y0, x1, y1],
-                               outline=(r, g, b, 255), fill=(r, g, b, 40), width=2)
+                if overlay_mode == "clean" and area_ratio > 0.18:
+                    meta["boxes_skipped"] += 1
+                    meta["boxes_skipped_large"] += 1
+                    continue
 
-                node_id = obj.get("object_id", obj.get("label_text", ""))
-                label   = f"{node_id} [{cls}]"
+                width = 3 if overlay_mode == "clean" else 2
+                draw.rectangle([x0, y0, x1, y1], outline=(r, g, b, 255), width=width)
+
+                node_id = obj.get("object_id") or obj.get("label_text") or ""
+                label   = str(node_id) if overlay_mode == "clean" else f"{node_id} [{cls}]"
                 lh_est  = 16
                 try:
                     tb = draw.textbbox((x0, 0), label, font=font)
@@ -257,34 +294,38 @@ def render_v3_annotation_preview(
                 lx0 = max(0, x0)
                 lx1 = min(img_w - 1, x0 + lw + 6)
                 if lx1 > lx0 and label_y1 > label_y0:
-                    draw.rectangle([lx0, label_y0, lx1, label_y1], fill=(r, g, b, 210))
-                draw.text((lx0 + 3, label_y0 + 2), label, fill=(255, 255, 255), font=font)
+                    draw.rectangle([lx0, label_y0, lx1, label_y1], fill=(255, 255, 255, 235))
+                    draw.rectangle([lx0, label_y0, lx1, label_y1], outline=(r, g, b, 255), width=1)
+                draw.text((lx0 + 3, label_y0 + 2), label, fill=(20, 30, 45), font=font)
                 meta["boxes_rendered"] += 1
             except Exception:
                 meta["boxes_skipped"] += 1
 
         # ── footer banner ─────────────────────────────────────────────────────
         footer_h = 26
-        draw.rectangle([0, img_h - footer_h, img_w, img_h], fill=(15, 22, 42, 220))
+        draw.rectangle([0, img_h - footer_h, img_w, img_h], fill=(255, 255, 255, 220))
         draw.text(
             (10, img_h - footer_h + 5),
-            "Verified Annotation Overlay",
-            fill=(160, 200, 255),
+            f"Verified Annotation Overlay | {overlay_mode}",
+            fill=(37, 99, 235),
             font=font_sm,
         )
 
         out_path.parent.mkdir(parents=True, exist_ok=True)
         img.save(out_path, "PNG")
         meta["rendered"] = True
+        _save_json(_overlay_meta_path(out_path), meta)
 
     except Exception as exc:
         # last-resort: copy original so the UI still has something to show
         try:
             if image_path.exists():
+                out_path.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(image_path, out_path)
         except Exception:
             pass
         meta["error"] = str(exc)
+        _save_json(_overlay_meta_path(out_path), meta)
 
     return meta
 
@@ -384,13 +425,21 @@ def run_live_v3_ingestion(
     annotation:  dict = _load_json(ann_path) if ann_path.exists() else {}
     local_graph: dict = _load_json(lg_path)  if lg_path.exists()  else {}
 
-    # render verified annotation overlay (idempotent — skips if file already exists)
+    # render verified annotation overlay when absent or rendered by an older renderer
     _render_meta: dict = {
         "rendered": False, "boxes_rendered": 0, "boxes_skipped": 0,
-        "connectors_rendered": 0, "connectors_skipped": 0,
+        "boxes_skipped_large": 0, "connectors_rendered": 0, "connectors_skipped": 0,
+        "overlay_mode": "clean", "draw_connectors": False,
+        "renderer_version": _OVERLAY_RENDERER_VERSION,
     }
-    if detection_source == "Verified Annotation Overlay" and not detected_out.exists():
-        _render_meta = render_v3_annotation_preview(diagram_path, ann_path, detected_out)
+    if detection_source == "Verified Annotation Overlay" and _needs_clean_overlay_render(detected_out):
+        _render_meta = render_v3_annotation_preview(
+            diagram_path,
+            ann_path,
+            detected_out,
+            overlay_mode="clean",
+            draw_connectors=False,
+        )
         if not detected_out.exists():
             shutil.copy2(orig_out, detected_out)
 
@@ -711,10 +760,18 @@ def run_ingestion(
     # ── 3. Annotation overlay ─────────────────────────────────────────────────
     _render_meta: dict = {
         "rendered": False, "boxes_rendered": 0, "boxes_skipped": 0,
-        "connectors_rendered": 0, "connectors_skipped": 0,
+        "boxes_skipped_large": 0, "connectors_rendered": 0, "connectors_skipped": 0,
+        "overlay_mode": "clean", "draw_connectors": False,
+        "renderer_version": _OVERLAY_RENDERER_VERSION,
     }
-    if detection_source == "Verified Annotation Overlay" and not detected_out.exists():
-        _render_meta = render_v3_annotation_preview(image_path, ann_p, detected_out)
+    if detection_source == "Verified Annotation Overlay" and _needs_clean_overlay_render(detected_out):
+        _render_meta = render_v3_annotation_preview(
+            image_path,
+            ann_p,
+            detected_out,
+            overlay_mode="clean",
+            draw_connectors=False,
+        )
         if not detected_out.exists() and orig_out.exists():
             shutil.copy2(orig_out, detected_out)
 
