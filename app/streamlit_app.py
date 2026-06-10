@@ -56,6 +56,18 @@ except Exception:
     _ONBOARD_OK = False
     _run_onboarding = None  # type: ignore
 
+_src_dir = str(REPO_ROOT / "src")
+if _src_dir not in _sys.path:
+    _sys.path.insert(0, _src_dir)
+try:
+    from runtime_ingestion import run_live_v3_ingestion as _live_ingest  # type: ignore
+    from runtime_ingestion import run_enterprise_absorption as _live_absorb  # type: ignore
+    _RUNTIME_INGESTION = True
+except Exception:
+    _RUNTIME_INGESTION = False
+    _live_ingest = None  # type: ignore
+    _live_absorb = None  # type: ignore
+
 _PREFIX_TYPE = {
     "WAN": "cloud_or_wan", "CLOUD": "cloud_or_wan",
     "RTR": "router", "RTR01": "router",
@@ -842,6 +854,9 @@ V3_STATE_KEYS = [
     "enterprise_graph_after", "enterprise_ingestion_summary", "enterprise_rca_result",
     "allow_local_simulation", "allow_enterprise_simulation", "allow_deterministic_copilot",
     "catalog_selected_record",
+    # live runtime state
+    "live_ingestion_run_dir", "detection_source", "detected_image_path",
+    "enterprise_absorbed",
 ]
 
 
@@ -1131,9 +1146,15 @@ def _load_enterprise_context() -> dict:
 
 def _enterprise_without_diagram(enterprise_graph: dict, diagram_id: str) -> dict:
     graph    = json.loads(json.dumps(enterprise_graph))
-    clusters = {k: v for k, v in graph.get("diagram_clusters", {}).items() if k != diagram_id}
-    keep     = {nid for c in clusters.values() for nid in c.get("node_ids", [])}
-    graph["diagram_clusters"] = clusters
+    clusters = graph.get("diagram_clusters", [])
+    if isinstance(clusters, list):
+        filtered = [c for c in clusters if c.get("diagram_id") != diagram_id]
+        keep     = {nid for c in filtered for nid in c.get("node_ids", [])}
+        graph["diagram_clusters"] = filtered
+    else:
+        filtered_d = {k: v for k, v in clusters.items() if k != diagram_id}
+        keep       = {nid for c in filtered_d.values() for nid in c.get("node_ids", [])}
+        graph["diagram_clusters"] = filtered_d
     graph["nodes"] = [n for n in graph.get("nodes", []) if n.get("id") in keep]
     graph["edges"] = [
         e for e in graph.get("edges", [])
@@ -1169,16 +1190,65 @@ def _simulate_enterprise_ingestion(local_graph: dict, enterprise_graph: dict,
     return summary
 
 
+def _load_gnn_rca_result(scenario_id: str) -> dict | None:
+    """Try to load a trained enterprise GNN RCA result for this scenario."""
+    for candidate in [
+        REPO_ROOT / "outputs" / "enterprise_gnn_rca" / f"{scenario_id}_enterprise_gnn_rca_result.json",
+        REPO_ROOT / "outputs" / "enterprise_gnn_rca" / "enterprise_0000_enterprise_gnn_rca_result.json",
+    ]:
+        if candidate.exists():
+            try:
+                return json.loads(candidate.read_text(encoding="utf-8"))
+            except Exception:
+                pass
+    return None
+
+
 def _simulate_enterprise_rca(alerts: dict, enterprise_graph: dict) -> dict:
+    scenario_id = (st.session_state.get("enterprise_ingestion_summary") or {}).get(
+        "scenario_id", "enterprise_v3_0000"
+    )
+
+    # Try trained GNN result first
+    gnn = _load_gnn_rca_result(scenario_id)
+    if gnn:
+        # Normalise field names from the GNN result schema
+        root       = gnn.get("predicted_root_cause") or gnn.get("root_cause", "")
+        candidates = gnn.get("top_candidates", [])
+        ranking = [
+            {"node": c.get("node_id", ""), "score": c.get("score", 0.0),
+             "reason": f"GNN rank {c.get('rank',i+1)}, type={c.get('type','?')}"}
+            for i, c in enumerate(candidates[:6])
+        ]
+        return {
+            "mode":               "Enterprise GNN RCA",
+            "root_cause":         root,
+            "root_cause_diagram": gnn.get("root_cause_diagram", alerts.get("root_cause_diagram", "")),
+            "impacted_diagrams":  gnn.get("impacted_diagrams", alerts.get("impacted_diagrams", [])),
+            "alert_count":        gnn.get("alert_count", len(alerts.get("alerts", []))),
+            "alert_nodes":        [a.get("node", "") for a in alerts.get("alerts", [])],
+            "impacted_nodes":     alerts.get("impacted_nodes", []),
+            "impact_path":        (alerts.get("impact_paths") or [[]])[0],
+            "ranking":            ranking,
+            "enterprise_node_count": gnn.get("node_count", len(enterprise_graph.get("nodes", []))),
+            "gnn_source_file":    str(next(
+                (REPO_ROOT / "outputs" / "enterprise_gnn_rca" / f)
+                for f in [f"{scenario_id}_enterprise_gnn_rca_result.json",
+                           "enterprise_0000_enterprise_gnn_rca_result.json"]
+                if (REPO_ROOT / "outputs" / "enterprise_gnn_rca" / f).exists()
+            )),
+        }
+
+    # Scenario-grounded fallback (alerts.json ground truth)
     root       = alerts.get("root_cause", "")
     alert_nodes = [a.get("node", "") for a in alerts.get("alerts", [])]
     ranking = [{"node": root, "score": 0.97, "reason": "scenario ground truth"}] if root else []
     for n in alert_nodes:
         if n != root:
-            ranking.append({"node": n, "score": round(0.74 - len(ranking)*0.05, 3),
+            ranking.append({"node": n, "score": round(0.74 - len(ranking) * 0.05, 3),
                              "reason": "alert propagation evidence"})
     return {
-        "mode":               "scenario_ground_truth_fallback",
+        "mode":               "Scenario-grounded RCA fallback",
         "root_cause":         root,
         "root_cause_diagram": alerts.get("root_cause_diagram", ""),
         "impacted_diagrams":  alerts.get("impacted_diagrams", []),
@@ -1314,24 +1384,44 @@ def _tab_diagram_outputs_section() -> None:
     )
 
     if view_mode == "Original + Detection":
-        sel_p = st.session_state.get("selected_diagram_path", "")
-        rec   = st.session_state.get("catalog_selected_record") or {}
-        if rec:
-            _render_detection_pair(rec)
-        elif sel_p and Path(sel_p).exists():
-            c1, c2 = st.columns(2)
-            with c1:
-                st.markdown(
-                    '<div class="compare-badge original">Original</div><div class="compare-label">Source Diagram</div>',
-                    unsafe_allow_html=True)
-                st.image(sel_p, use_container_width=True)
-            with c2:
-                st.markdown(
-                    '<div class="compare-badge prepared">V3 Prepared</div><div class="compare-label">Annotation Status</div>',
-                    unsafe_allow_html=True)
-                st.info("V3 prepared annotation — live detector output pending model training.")
-        else:
-            st.warning("Selected diagram image not available.")
+        orig_p       = st.session_state.get("selected_diagram_path", "")
+        det_p        = st.session_state.get("detected_image_path", "")
+        det_source   = st.session_state.get("detection_source") or "Prepared V3 annotation fallback"
+        is_rfdetr    = det_source.startswith("RF-DETR")
+
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown(
+                '<div class="compare-badge original">Original</div>'
+                '<div class="compare-label">Source Diagram</div>',
+                unsafe_allow_html=True,
+            )
+            if orig_p and Path(orig_p).exists():
+                st.image(orig_p, use_container_width=True)
+            else:
+                st.warning("Original image not available.")
+        with c2:
+            badge_cls = "predicted" if is_rfdetr else "prepared"
+            st.markdown(
+                f'<div class="compare-badge {badge_cls}">{det_source}</div>'
+                f'<div class="compare-label">Detection Output</div>',
+                unsafe_allow_html=True,
+            )
+            if det_p and Path(det_p).exists() and det_p != orig_p:
+                st.image(det_p, use_container_width=True)
+            else:
+                if is_rfdetr:
+                    st.image(orig_p, use_container_width=True)
+                else:
+                    st.markdown(
+                        '<div class="info-card">'
+                        '<strong>Prepared V3 annotation fallback.</strong><br>'
+                        'Bounding boxes and node labels come from the scenario ground-truth annotation. '
+                        'Train RF-DETR (<code>train_rfdetr_diagram_detector.py</code>) to generate '
+                        'live detector predictions.'
+                        '</div>',
+                        unsafe_allow_html=True,
+                    )
 
     elif view_mode == "Local Graph (Interactive)":
         st.markdown('<div class="section-label">Local Graph</div>', unsafe_allow_html=True)
@@ -1410,23 +1500,74 @@ def _tab_hero_mode() -> None:
 
         if st.button("Run Diagram Intelligence", type="primary",
                      use_container_width=True, disabled=not hero_exists):
-            steps = ["Image received", "Annotation loaded", "OCR metadata loaded",
-                     "Connector annotations loaded", "Node/edge tables generated",
-                     "Local graph created", "Ready for graph memory ingestion"]
-            prog = st.progress(0)
-            for idx, step in enumerate(steps, 1):
-                st.write(f"{idx}. {step}")
-                prog.progress(idx / len(steps))
-            ok = _run_v3_diagram_intelligence(diagram_path, diagram_id, uploaded=False)
-            if ok:
-                st.session_state.catalog_selected_record = {
-                    "image_path": str(diagram_path),
+            if not _RUNTIME_INGESTION:
+                st.error("runtime_ingestion module not loaded. Check src/runtime_ingestion.py.")
+            else:
+                _LIVE_STEPS = [
+                    "Image loaded",
+                    "Detector / annotation source resolved",
+                    "OCR metadata extracted",
+                    "Connectors extracted",
+                    "Node table generated",
+                    "Edge table generated",
+                    "Graph memory packet saved",
+                    "Ready for absorption",
+                ]
+                prog       = st.progress(0)
+                steps_area = st.empty()
+                with st.spinner("Running live V3 ingestion..."):
+                    ingestion = _live_ingest(REPO_ROOT, diagram_path, diagram_id, V3_HERO_SCENARIO)
+                for idx, step in enumerate(_LIVE_STEPS, 1):
+                    steps_area.markdown(
+                        "\n".join(
+                            f'<div style="font-size:0.78rem;color:{"#10b981" if i <= idx else "#334155"};'
+                            f'padding:2px 0">'
+                            f'{"✓" if i <= idx else "○"} {s}</div>'
+                            for i, s in enumerate(_LIVE_STEPS, 1)
+                        ),
+                        unsafe_allow_html=True,
+                    )
+                    prog.progress(idx / len(_LIVE_STEPS))
+
+                # Update session state from ingestion result
+                import pandas as _pd
+                st.session_state.selected_diagram_path      = str(diagram_path)
+                st.session_state.selected_diagram_id        = diagram_id
+                st.session_state.local_graph                = ingestion["local_graph"]
+                st.session_state.node_table                 = _pd.DataFrame(ingestion["node_table_rows"])
+                st.session_state.edge_table                 = _pd.DataFrame(ingestion["edge_table_rows"])
+                st.session_state.validation_packet          = ingestion["packet"]
+                st.session_state.live_ingestion_run_dir     = str(ingestion["run_dir"])
+                st.session_state.detection_source           = ingestion["detection_source"]
+                st.session_state.detected_image_path        = str(ingestion["detected_image"])
+                st.session_state.enterprise_absorbed        = False
+                st.session_state.local_rca_result           = None
+                st.session_state.enterprise_rca_result      = None
+                st.session_state.enterprise_ingestion_summary = None
+                st.session_state.enterprise_graph_before    = None
+                st.session_state.enterprise_graph_after     = None
+                st.session_state.allow_local_simulation     = False
+                st.session_state.allow_enterprise_simulation = False
+                st.session_state.allow_deterministic_copilot = False
+                st.session_state.catalog_selected_record    = {
+                    "image_path":      str(diagram_path),
                     "prediction_path": None,
-                    "is_v3": True,
+                    "is_v3":           True,
                     "annotation_path": str(V3_HERO_SCENARIO / "annotations" / f"{diagram_id}.json"),
-                    "dataset": "v3",
+                    "dataset":         "v3",
                 }
-                st.success("Complete — local graph ready. Proceed to Tab 2 or 3.")
+
+                det_src = ingestion["detection_source"]
+                badge_cls = "badge-success" if det_src.startswith("RF-DETR") else "badge-warn"
+                st.markdown(
+                    f'<span class="badge {badge_cls}">{det_src}</span>',
+                    unsafe_allow_html=True,
+                )
+                st.success(
+                    f"Ingestion complete — {ingestion['packet']['node_count']} nodes, "
+                    f"{ingestion['packet']['edge_count']} edges. "
+                    "Proceed to Tab 2 (Local RCA) or Tab 3 (Enterprise Brain)."
+                )
 
         st.markdown('<div style="margin-top:16px"></div>', unsafe_allow_html=True)
         st.markdown('<div class="section-label">All 5 hero diagrams</div>', unsafe_allow_html=True)
@@ -1533,12 +1674,32 @@ def _tab_gallery_mode() -> None:
         if is_v3:
             if st.button("Run Diagram Intelligence (V3)", type="primary",
                          use_container_width=True):
-                with st.spinner("Processing V3 diagram..."):
-                    ok = _run_v3_diagram_intelligence(
-                        Path(record["image_path"]), record["diagram_id"], uploaded=False
-                    )
-                if ok:
-                    st.success("Local graph loaded. Go to Tab 2 or 3.")
+                if not _RUNTIME_INGESTION:
+                    st.error("runtime_ingestion module not loaded.")
+                else:
+                    scenario_p = Path(record["image_path"]).parent.parent
+                    with st.spinner("Running live V3 ingestion..."):
+                        ingestion = _live_ingest(
+                            REPO_ROOT,
+                            Path(record["image_path"]),
+                            record["diagram_id"],
+                            scenario_p,
+                        )
+                    import pandas as _pd2
+                    st.session_state.selected_diagram_path  = record["image_path"]
+                    st.session_state.selected_diagram_id    = record["diagram_id"]
+                    st.session_state.local_graph            = ingestion["local_graph"]
+                    st.session_state.node_table             = _pd2.DataFrame(ingestion["node_table_rows"])
+                    st.session_state.edge_table             = _pd2.DataFrame(ingestion["edge_table_rows"])
+                    st.session_state.validation_packet      = ingestion["packet"]
+                    st.session_state.live_ingestion_run_dir = str(ingestion["run_dir"])
+                    st.session_state.detection_source       = ingestion["detection_source"]
+                    st.session_state.detected_image_path    = str(ingestion["detected_image"])
+                    st.session_state.enterprise_absorbed    = False
+                    st.session_state.local_rca_result       = None
+                    st.session_state.enterprise_rca_result  = None
+                    det_src = ingestion["detection_source"]
+                    st.success(f"Local graph loaded ({det_src}). Go to Tab 2 or 3.")
         else:
             if record["diagram_id"] == DEMO_ID:
                 if st.button("Load Demo Graph (diagram_0373)", type="secondary",
@@ -1758,39 +1919,104 @@ def _render_absorption_steps(done: bool = True) -> None:
 def _tab_enterprise_graph_brain() -> None:
     st.markdown(
         '<div class="ws-title">Enterprise Graph Brain</div>'
-        '<div class="ws-desc">Local diagram absorbed into the galaxy graph — cross-diagram RCA across the full enterprise.</div>',
+        '<div class="ws-desc">Selected local graph is explicitly absorbed into the enterprise galaxy — '
+        'then cross-diagram RCA runs across the full topology.</div>',
         unsafe_allow_html=True,
     )
 
     local_graph = st.session_state.get("local_graph")
     if not local_graph:
         st.markdown(
-            '<div class="warn-card">Ingest a diagram first — Tab 1 → Hero Journey Mode → Run Diagram Intelligence.</div>',
+            '<div class="warn-card">Ingest a diagram first — Tab 1 → Hero Journey Mode → '
+            'Run Diagram Intelligence.</div>',
             unsafe_allow_html=True,
         )
         return
 
     diagram_id = st.session_state.get("selected_diagram_id", "unknown")
     is_hero    = diagram_id in V3_REQUIRED_DIAGRAMS
+    absorbed   = bool(st.session_state.get("enterprise_absorbed"))
 
     if not is_hero:
         st.markdown(
             f'<div class="warn-card">'
             f'Diagram <code>{diagram_id}</code> is not part of the prepared enterprise galaxy scenario.<br>'
-            f'Select a V3 hero diagram (branch_topology, wan_topology, etc.) for the full absorption demo.'
-            f'</div>',
+            f'Select a V3 hero diagram in Tab 1 for the full absorption demo.</div>',
             unsafe_allow_html=True,
         )
         _render_local_graph(local_graph)
         return
 
-    context         = _load_enterprise_context()
-    enterprise_graph = context["enterprise_graph"]
-    stitch_map      = context["stitch_map"]
-    alerts          = context["alerts"]
-    summary         = _simulate_enterprise_ingestion(local_graph, enterprise_graph, stitch_map, diagram_id)
+    # ── Step 1: Local graph ready — show absorption button ───────────────────
+    badge_c = _V3_DIAG_COLORS.get(diagram_id, "#64748b")
+    det_src = st.session_state.get("detection_source") or "Prepared V3 annotation fallback"
 
-    # ── Absorption Story (3 columns) ────────────────────────────────────────
+    st.markdown(
+        f'<div class="info-card" style="margin-bottom:14px">'
+        f'<span style="font-family:\'JetBrains Mono\',monospace;font-size:0.82rem;'
+        f'font-weight:700;color:{badge_c}">{diagram_id}</span>'
+        f'&nbsp;<span class="badge badge-info">local graph ready</span>'
+        f'&nbsp;<span class="badge {"badge-success" if det_src.startswith("RF-DETR") else "badge-warn"}">'
+        f'{det_src}</span>'
+        f'<div style="font-size:0.75rem;color:#64748b;margin-top:4px">'
+        f'{len(local_graph.get("nodes",[]))} nodes · {len(local_graph.get("edges",[]))} edges'
+        f'</div></div>',
+        unsafe_allow_html=True,
+    )
+
+    if not absorbed:
+        if not _RUNTIME_INGESTION:
+            st.error("runtime_ingestion module not loaded — cannot run live absorption.")
+            return
+
+        if st.button(
+            "Absorb This Local Graph into Enterprise Brain",
+            type="primary",
+            key="absorb_btn",
+        ):
+            _ABSORB_STEPS = [
+                "Local graph validated",
+                "Canonical IDs resolved",
+                "Shared entities matched",
+                "Cross-diagram links created",
+                "Enterprise graph memory updated",
+            ]
+            prog       = st.progress(0)
+            steps_area = st.empty()
+
+            with st.spinner("Absorbing local graph into enterprise brain..."):
+                absorb_result = _live_absorb(
+                    REPO_ROOT, V3_HERO_SCENARIO, diagram_id, local_graph
+                )
+
+            for idx, step in enumerate(_ABSORB_STEPS, 1):
+                steps_area.markdown(
+                    "\n".join(
+                        f'<div style="font-size:0.78rem;color:{"#10b981" if i<=idx else "#334155"};'
+                        f'padding:2px 0">{"✓" if i<=idx else "○"} {s}</div>'
+                        for i, s in enumerate(_ABSORB_STEPS, 1)
+                    ),
+                    unsafe_allow_html=True,
+                )
+                prog.progress(idx / len(_ABSORB_STEPS))
+
+            summary = absorb_result["summary"]
+            st.session_state.enterprise_graph_before    = absorb_result["enterprise_before"]
+            st.session_state.enterprise_graph_after     = absorb_result["enterprise_after"]
+            st.session_state.enterprise_ingestion_summary = summary
+            st.session_state.enterprise_scenario_path  = str(V3_HERO_SCENARIO)
+            st.session_state.enterprise_absorbed        = True
+            st.session_state.allow_enterprise_simulation = False
+            st.session_state.enterprise_rca_result     = None
+            st.rerun()
+        return
+
+    # ── Post-absorption view ──────────────────────────────────────────────────
+    summary         = st.session_state.enterprise_ingestion_summary or {}
+    enterprise_graph = st.session_state.enterprise_graph_after or {}
+    alerts_data     = _safe_read_json(V3_HERO_SCENARIO / "alerts.json")
+
+    # ── Absorption Story (3 columns) ─────────────────────────────────────────
     st.markdown(
         '<div class="section-label" style="margin-bottom:14px">Graph Memory Absorption</div>',
         unsafe_allow_html=True,
@@ -1799,12 +2025,11 @@ def _tab_enterprise_graph_brain() -> None:
     c_local, c_steps, c_enterprise = st.columns(3)
 
     with c_local:
-        badge_c = _V3_DIAG_COLORS.get(diagram_id, "#64748b")
-        n_local_nodes = len(local_graph.get("nodes", []))
-        n_local_edges = len(local_graph.get("edges", []))
-        shared_ids    = [n.get("id") for n in local_graph.get("nodes", [])
-                         if n.get("is_shared_entity")]
-        matched       = summary.get("matched_entities", [])
+        n_ln = len(local_graph.get("nodes", []))
+        n_le = len(local_graph.get("edges", []))
+        shared_ids = [n.get("id") for n in local_graph.get("nodes", [])
+                      if n.get("is_shared_entity")]
+        matched    = summary.get("matched_entities", [])
         st.markdown(
             f'<div class="absorb-card">'
             f'<div class="section-label">Selected Local Graph</div>'
@@ -1812,19 +2037,17 @@ def _tab_enterprise_graph_brain() -> None:
             f'font-weight:700;color:{badge_c};margin-bottom:8px">{diagram_id}</div>'
             f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
             f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Nodes</div>'
-            f'<div style="font-size:1.4rem;font-weight:800;color:#f1f5f9">{n_local_nodes}</div></div>'
+            f'<div style="font-size:1.4rem;font-weight:800;color:#f1f5f9">{n_ln}</div></div>'
             f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Edges</div>'
-            f'<div style="font-size:1.4rem;font-weight:800;color:#f1f5f9">{n_local_edges}</div></div>'
+            f'<div style="font-size:1.4rem;font-weight:800;color:#f1f5f9">{n_le}</div></div>'
             f'</div>'
-            + (f'<div style="font-size:0.73rem;color:#38bdf8;margin-top:4px">'
-               f'Shared entities:<br>'
-               + "".join(f'<code style="font-size:0.68rem;color:#67e8f9;margin-right:4px">{s}</code>'
-                         for s in shared_ids[:6])
+            + (f'<div style="font-size:0.72rem;color:#38bdf8;margin-top:4px">'
+               f'Shared entities: '
+               + " ".join(f'<code style="font-size:0.65rem;color:#67e8f9">{s}</code>' for s in shared_ids[:4])
                + "</div>" if shared_ids else "")
-            + (f'<div style="font-size:0.72rem;color:#10b981;margin-top:8px">'
-               f'Matched canonical IDs:<br>'
-               + "".join(f'<code style="font-size:0.65rem;color:#6ee7b7;margin-right:4px">{m}</code>'
-                         for m in matched[:6])
+            + (f'<div style="font-size:0.72rem;color:#10b981;margin-top:6px">'
+               f'Matched IDs: '
+               + " ".join(f'<code style="font-size:0.65rem;color:#6ee7b7">{m}</code>' for m in matched[:4])
                + "</div>" if matched else "")
             + "</div>",
             unsafe_allow_html=True,
@@ -1832,20 +2055,21 @@ def _tab_enterprise_graph_brain() -> None:
 
     with c_steps:
         st.markdown(
-            '<div class="absorb-card">'
-            '<div class="section-label">Absorption into Enterprise Brain</div>',
+            '<div class="absorb-card"><div class="section-label">Absorption Steps</div>',
             unsafe_allow_html=True,
         )
         _render_absorption_steps(done=True)
         st.markdown(
             f'<div style="margin-top:12px;padding:8px 10px;background:rgba(16,185,129,0.08);'
             f'border-radius:8px;border:1px solid rgba(16,185,129,0.2)">'
-            f'<div style="font-size:0.72rem;font-weight:700;color:#10b981">Metrics</div>'
+            f'<div style="font-size:0.72rem;font-weight:700;color:#10b981">Result</div>'
             f'<div style="font-size:0.78rem;color:#94a3b8;margin-top:4px">'
-            f'Nodes absorbed: <strong style="color:#f1f5f9">{summary["nodes_absorbed"]}</strong><br>'
-            f'Edges absorbed: <strong style="color:#f1f5f9">{summary["edges_absorbed"]}</strong><br>'
-            f'Shared matched: <strong style="color:#38bdf8">{summary["shared_entities_matched"]}</strong><br>'
-            f'Cross-diagram links: <strong style="color:#22d3ee">{summary["cross_diagram_links_created"]}</strong>'
+            f'Nodes absorbed: <strong style="color:#f1f5f9">{summary.get("nodes_absorbed",0)}</strong><br>'
+            f'Edges absorbed: <strong style="color:#f1f5f9">{summary.get("edges_absorbed",0)}</strong><br>'
+            f'Shared matched: <strong style="color:#38bdf8">{summary.get("shared_entities_matched",0)}</strong><br>'
+            f'Cross-diag links: <strong style="color:#22d3ee">{summary.get("cross_diagram_links_created",0)}</strong><br>'
+            f'Before nodes: <strong style="color:#94a3b8">{summary.get("before_node_count",0)}</strong> '
+            f'→ After: <strong style="color:#10b981">{summary.get("after_node_count",0)}</strong>'
             f'</div></div>',
             unsafe_allow_html=True,
         )
@@ -1853,8 +2077,8 @@ def _tab_enterprise_graph_brain() -> None:
 
     with c_enterprise:
         eg_stats = enterprise_graph.get("stats", {})
-        n_nodes  = eg_stats.get("num_nodes") or len(enterprise_graph.get("nodes", []))
-        n_edges  = eg_stats.get("num_edges") or len(enterprise_graph.get("edges", []))
+        n_nodes  = eg_stats.get("num_nodes")     or len(enterprise_graph.get("nodes", []))
+        n_edges  = eg_stats.get("num_edges")     or len(enterprise_graph.get("edges", []))
         n_cross  = eg_stats.get("num_cross_diagram_edges") or len(enterprise_graph.get("cross_diagram_edges", []))
         n_clust  = len(enterprise_graph.get("diagram_clusters", {}))
         n_shared = eg_stats.get("num_shared_entities") or len(enterprise_graph.get("shared_entities", []))
@@ -1866,28 +2090,60 @@ def _tab_enterprise_graph_brain() -> None:
             f'<div style="font-size:1.5rem;font-weight:800;color:#f1f5f9">{n_nodes}</div></div>'
             f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Total edges</div>'
             f'<div style="font-size:1.5rem;font-weight:800;color:#f1f5f9">{n_edges}</div></div>'
-            f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Diagram clusters</div>'
+            f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Clusters</div>'
             f'<div style="font-size:1.5rem;font-weight:800;color:#e0963a">{n_clust}</div></div>'
-            f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Cross-diag links</div>'
+            f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Cross-diag</div>'
             f'<div style="font-size:1.5rem;font-weight:800;color:#22d3ee">{n_cross}</div></div>'
-            f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Shared entities</div>'
+            f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Shared</div>'
             f'<div style="font-size:1.5rem;font-weight:800;color:#38bdf8">{n_shared}</div></div>'
-            f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Newly absorbed</div>'
-            f'<div style="font-size:1.5rem;font-weight:800;color:#10b981">{summary["nodes_absorbed"]}</div></div>'
+            f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Absorbed</div>'
+            f'<div style="font-size:1.5rem;font-weight:800;color:#10b981">{summary.get("nodes_absorbed",0)}</div></div>'
             f'</div></div>',
             unsafe_allow_html=True,
         )
 
     st.markdown('<hr class="ws-rule">', unsafe_allow_html=True)
 
-    # ── Enterprise alert simulation ──────────────────────────────────────────
-    enterprise_model = _enterprise_gnn_available()
-    if enterprise_model:
-        st.success("Enterprise RCA source: trained enterprise GNN")
+    # ── Before → After graph panels ───────────────────────────────────────────
+    before_graph = st.session_state.get("enterprise_graph_before") or {}
+    if before_graph and enterprise_graph:
+        st.markdown(
+            '<div class="section-label">Local Graph → Enterprise Brain</div>',
+            unsafe_allow_html=True,
+        )
+        st.caption(
+            f"Before absorption: {len(before_graph.get('nodes',[]))} nodes  →  "
+            f"After absorption: {len(enterprise_graph.get('nodes',[]))} nodes  "
+            f"(+{summary.get('nodes_absorbed',0)} absorbed, "
+            f"+{summary.get('cross_diagram_links_created',0)} cross-diagram links)"
+        )
+
+        ta, tb = st.tabs(["After (current)", "Before (without selected diagram)"])
+        absorbed_ids = {n.get("canonical_id", n.get("id")) for n in local_graph.get("nodes", [])}
+        with ta:
+            if _pyvis_available():
+                _render_enterprise_pyvis(enterprise_graph, absorbed_ids, None, height=500)
+            else:
+                st.info("Install pyvis for interactive graph.")
+        with tb:
+            if _pyvis_available():
+                _render_enterprise_pyvis(before_graph, set(), None, height=500)
+            else:
+                st.info("Install pyvis for interactive graph.")
+
+    st.markdown('<hr class="ws-rule">', unsafe_allow_html=True)
+
+    # ── Enterprise alert simulation ───────────────────────────────────────────
+    gnn_metrics_available = _enterprise_gnn_available()
+    if gnn_metrics_available:
+        st.success("Enterprise RCA: trained enterprise GNN metrics available")
     else:
-        st.warning("Enterprise RCA source: V3 scenario ground-truth simulation (no trained GNN output)")
+        st.warning(
+            "Enterprise RCA source: scenario-grounded fallback "
+            "(GNN metrics not found — run train_enterprise_gnn_rca.py to get trained results)"
+        )
         if _strict_mode() and not st.session_state.allow_enterprise_simulation:
-            st.error("Strict mode: run enterprise GNN training before claiming model-based RCA.")
+            st.error("Strict mode: approve before using scenario-grounded simulation.")
             if st.button("Continue with scenario simulation", key="approve_ent_sim"):
                 st.session_state.allow_enterprise_simulation = True
                 st.rerun()
@@ -1895,90 +2151,96 @@ def _tab_enterprise_graph_brain() -> None:
 
     if st.button("Simulate Enterprise Alert", type="primary", key="ent_alert_btn"):
         with st.spinner("Running enterprise RCA..."):
-            st.session_state.enterprise_rca_result = _simulate_enterprise_rca(alerts, enterprise_graph)
+            st.session_state.enterprise_rca_result = _simulate_enterprise_rca(
+                alerts_data, enterprise_graph
+            )
 
     rca = st.session_state.get("enterprise_rca_result")
 
-    # ── Primary: Interactive PyVis enterprise galaxy ─────────────────────────
+    # ── Primary: Interactive PyVis with RCA overlay ───────────────────────────
     st.markdown(
         '<div class="section-label" style="margin-top:4px">Enterprise Galaxy Graph — Interactive</div>',
         unsafe_allow_html=True,
     )
-
+    absorbed_ids = {n.get("canonical_id", n.get("id")) for n in local_graph.get("nodes", [])}
     if _pyvis_available():
         st.caption(
             "Drag nodes · zoom/pan · hover for details · "
-            + ("Root cause: red | Alert: orange | Impacted: yellow | Absorbed: cyan | Shared: ring"
-               if rca else "Select a node to inspect details")
+            + ("Root: red | Alert: orange | Impacted: yellow | Absorbed diagram: cyan | Shared: dashed ring"
+               if rca else "Absorbed nodes shown in cyan")
         )
-        absorbed_ids = {n.get("canonical_id", n.get("id")) for n in local_graph.get("nodes", [])}
-        _render_enterprise_pyvis(enterprise_graph, absorbed_ids, rca, height=780)
+        _render_enterprise_pyvis(enterprise_graph, absorbed_ids, rca, height=800)
     else:
-        st.markdown(
-            '<div class="warn-card">'
-            'Interactive galaxy graph requires <code>pyvis>=0.3.2</code>.<br>'
-            'Install: <code>pip install pyvis</code>'
-            '</div>',
-            unsafe_allow_html=True,
-        )
-        # Static fallback only if PyVis unavailable
-        preview = context["scenario"] / (
-            "preview_rca_overlay.png" if rca else "preview_enterprise_graph.png"
-        )
-        if preview.exists():
-            _img(preview, "Enterprise graph preview (static)")
-        else:
-            st.info("Static preview images not generated yet.")
+        st.warning("Install `pyvis>=0.3.2` for interactive graph.")
+        preview_p = V3_HERO_SCENARIO / ("preview_rca_overlay.png" if rca else "preview_enterprise_graph.png")
+        if preview_p.exists():
+            _img(preview_p, "Enterprise graph (static preview)")
 
-    # ── RCA result ────────────────────────────────────────────────────────────
+    # ── RCA result panel ─────────────────────────────────────────────────────
     if rca:
         st.markdown('<hr class="ws-rule">', unsafe_allow_html=True)
         st.markdown('<div class="section-label">Enterprise RCA Result</div>', unsafe_allow_html=True)
 
         r1, r2, r3, r4 = st.columns(4)
-        r1.metric("Root Cause",       rca.get("root_cause", "—"))
-        r2.metric("Root Cause Diagram", rca.get("root_cause_diagram", "—"))
-        r3.metric("Impacted Diagrams", len(rca.get("impacted_diagrams", [])))
-        r4.metric("Alert Count",       rca.get("alert_count", 0))
+        r1.metric("Root Cause",          rca.get("root_cause", "—"))
+        r2.metric("Root Cause Diagram",  rca.get("root_cause_diagram", "—"))
+        r3.metric("Impacted Diagrams",   len(rca.get("impacted_diagrams", [])))
+        r4.metric("Alert Count",         rca.get("alert_count", 0))
 
-        src_lbl = ("Trained enterprise GNN" if enterprise_model
-                   else "V3 scenario ground-truth simulation")
-        st.caption(f"Source: {src_lbl}")
+        rca_mode = rca.get("mode", "")
+        mode_badge_cls = "badge-success" if rca_mode == "Enterprise GNN RCA" else "badge-warn"
+        st.markdown(
+            f'<span class="badge {mode_badge_cls}">{rca_mode}</span>',
+            unsafe_allow_html=True,
+        )
+        if rca_mode == "Enterprise GNN RCA":
+            src_file = rca.get("gnn_source_file", "")
+            if src_file:
+                st.caption(f"GNN result loaded from: {Path(src_file).name}")
+        else:
+            st.caption("Source: scenario alerts.json ground truth (no trained GNN result found for this scenario)")
 
         path = rca.get("impact_path", [])
         if path:
-            path_html = " → ".join(
-                f'<span class="node-chip {"root" if n == rca.get("root_cause") else "alerting" if n in set(rca.get("alert_nodes",[])) else "impacted"}">{n}</span>'
-                for n in path
+            root_id   = rca.get("root_cause", "")
+            alert_set = set(rca.get("alert_nodes", []))
+            chips = []
+            for n in path:
+                cls = "root" if n == root_id else ("alerting" if n in alert_set else "impacted")
+                chips.append(f'<span class="node-chip {cls}">{n}</span>')
+            st.markdown(
+                '<div style="padding:8px 0;line-height:2.2">'
+                + ' <span style="color:#334155">→</span> '.join(chips)
+                + '</div>',
+                unsafe_allow_html=True,
             )
-            st.markdown(f'<div style="padding:8px 0;line-height:2.2">{path_html}</div>',
-                        unsafe_allow_html=True)
 
-        st.dataframe(pd.DataFrame(rca.get("ranking", [])), use_container_width=True, hide_index=True)
+        ranking = rca.get("ranking", [])
+        if ranking:
+            st.dataframe(pd.DataFrame(ranking), use_container_width=True, hide_index=True)
 
-    # ── Static previews in expanders (secondary) ─────────────────────────────
-    scenario = context["scenario"]
+    # ── Static previews (secondary) ──────────────────────────────────────────
     with st.expander("Static story preview", expanded=False):
-        for name, caption in [
+        for name, cap in [
             ("preview_stitching_story.png", "Source Diagrams → Local Graphs → Enterprise Graph"),
-            ("preview_contact_sheet.png",   "Contact sheet of all scenario diagrams"),
+            ("preview_contact_sheet.png",   "Contact sheet — all scenario diagrams"),
         ]:
-            p = scenario / name
+            p = V3_HERO_SCENARIO / name
             if p.exists():
-                _img(p, caption)
+                _img(p, cap)
             else:
-                st.caption(f"Preview not available: {name}")
+                st.caption(f"Not generated yet: {name}")
 
     with st.expander("Static RCA overlay", expanded=False):
-        for name, caption in [
-            ("preview_rca_overlay.png",       "Enterprise graph with RCA annotations"),
-            ("preview_enterprise_graph.png",  "Enterprise graph clusters"),
+        for name, cap in [
+            ("preview_rca_overlay.png",      "Enterprise graph with RCA annotations"),
+            ("preview_enterprise_graph.png", "Enterprise graph clusters"),
         ]:
-            p = scenario / name
+            p = V3_HERO_SCENARIO / name
             if p.exists():
-                _img(p, caption)
+                _img(p, cap)
             else:
-                st.caption(f"Preview not available: {name}")
+                st.caption(f"Not generated yet: {name}")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1991,76 +2253,147 @@ def _copilot_context() -> dict:
         else V3_HERO_SCENARIO
     )
     return {
-        "local_graph":                 st.session_state.local_graph,
-        "enterprise_graph_after":      st.session_state.enterprise_graph_after,
+        "selected_diagram_id":          st.session_state.selected_diagram_id,
+        "detection_source":             st.session_state.detection_source,
+        "live_ingestion_run_dir":       st.session_state.live_ingestion_run_dir,
+        "validation_packet":            st.session_state.validation_packet,
+        "local_graph":                  st.session_state.local_graph,
+        "enterprise_graph_after":       st.session_state.enterprise_graph_after,
         "enterprise_ingestion_summary": st.session_state.enterprise_ingestion_summary,
-        "local_rca_result":            st.session_state.local_rca_result,
-        "enterprise_rca_result":       st.session_state.enterprise_rca_result,
-        "stitch_map":                  _safe_read_json(scenario / "stitch_map.json"),
-        "alerts":                      _safe_read_json(scenario / "alerts.json"),
+        "local_rca_result":             st.session_state.local_rca_result,
+        "enterprise_rca_result":        st.session_state.enterprise_rca_result,
+        "stitch_map":                   _safe_read_json(scenario / "stitch_map.json"),
+        "alerts":                       _safe_read_json(scenario / "alerts.json"),
     }
 
 
 def _fallback_graph_copilot(question: str, context: dict) -> str:
-    q         = question.lower()
-    ingestion = context.get("enterprise_ingestion_summary") or {}
-    ent_rca   = context.get("enterprise_rca_result") or {}
-    lg        = context.get("local_graph") or {}
-    local_ids = [n.get("id", "") for n in lg.get("nodes", [])]
-    matched   = ingestion.get("matched_entities", [])
-    links     = ingestion.get("cross_diagram_links", [])
-    path      = ent_rca.get("impact_path", [])
+    q          = question.lower()
+    ingestion  = context.get("enterprise_ingestion_summary") or {}
+    ent_rca    = context.get("enterprise_rca_result") or {}
+    local_rca  = context.get("local_rca_result") or {}
+    lg         = context.get("local_graph") or {}
+    packet     = context.get("validation_packet") or {}
+    diagram_id = context.get("selected_diagram_id") or ingestion.get("absorbed_diagram_id", "unknown")
+    det_src    = context.get("detection_source") or "Prepared V3 annotation fallback"
+    run_dir    = context.get("live_ingestion_run_dir") or ""
 
-    if "stitched" in q or "where" in q:
+    local_ids  = [n.get("id", n.get("node_id", "")) for n in lg.get("nodes", [])]
+    matched    = ingestion.get("matched_entities", [])
+    links      = ingestion.get("cross_diagram_links", [])
+    ent_path   = ent_rca.get("impact_path", [])
+    local_path = local_rca.get("impact_path", [])
+
+    conf = packet.get("confidence_summary", {})
+
+    if "detection" in q or "source" in q or "rf-detr" in q or "yolo" in q:
         return (
-            f"Diagram `{ingestion.get('absorbed_diagram_id', 'unknown')}` was stitched into the "
-            f"enterprise graph through {ingestion.get('shared_entities_matched', 0)} matched canonical "
-            f"entities: {', '.join(matched[:8]) or 'none'}. It created "
-            f"{ingestion.get('cross_diagram_links_created', 0)} cross-diagram links from `stitch_map.json`."
+            f"Detection source for diagram `{diagram_id}`: **{det_src}**.\n\n"
+            + (f"Run dir: `{run_dir}`\n\n" if run_dir else "")
+            + f"Node detection avg confidence: {conf.get('device_detection_avg', 'N/A')}\n"
+            f"Edge extraction avg confidence: {conf.get('edge_extraction_avg', 'N/A')}\n"
+            f"Low-confidence items: {conf.get('low_confidence_items', 0)}\n\n"
+            "RF-DETR is used when `outputs/rfdetr_v3_predictions/<scenario>__<diagram>.png` exists. "
+            "Fallback uses the prepared V3 annotation ground truth."
         )
-    if "absorbed" in q or "uploaded" in q:
+    if "stitched" in q or "where" in q or "absorbed" in q or "uploaded" in q:
+        before = ingestion.get("before_node_count", "?")
+        after  = ingestion.get("after_node_count", "?")
         return (
-            f"Absorbed nodes: {', '.join(local_ids[:12]) or 'none'}. "
-            f"Count: {ingestion.get('nodes_absorbed', 0)} nodes, {ingestion.get('edges_absorbed', 0)} edges."
+            f"Diagram `{diagram_id}` was absorbed into the enterprise graph brain.\n\n"
+            f"- Nodes absorbed: **{ingestion.get('nodes_absorbed', 0)}**\n"
+            f"- Edges absorbed: **{ingestion.get('edges_absorbed', 0)}**\n"
+            f"- Shared entities matched: **{ingestion.get('shared_entities_matched', 0)}**\n"
+            f"  Matched IDs: {', '.join(matched[:8]) or 'none'}\n"
+            f"- Cross-diagram links created: **{ingestion.get('cross_diagram_links_created', 0)}**\n"
+            f"- Enterprise graph: {before} nodes → {after} nodes after absorption\n"
+            f"- Detection source: {det_src}"
         )
-    if "shared" in q or "matched" in q:
-        return f"Shared entities matched by canonical ID: {', '.join(matched) or 'none'}."
-    if "cross" in q or "links" in q:
+    if "node" in q and ("list" in q or "all" in q or "what" in q):
+        return (
+            f"Local nodes for diagram `{diagram_id}` ({len(local_ids)} total):\n\n"
+            + "\n".join(f"- `{n}`" for n in local_ids[:20])
+            + (f"\n\n... and {len(local_ids)-20} more" if len(local_ids) > 20 else "")
+        )
+    if "shared" in q or "matched" in q or "canonical" in q:
+        return (
+            f"Shared entities matched between `{diagram_id}` and the enterprise graph:\n\n"
+            + "\n".join(f"- `{m}`" for m in matched)
+            if matched else "No shared entities matched — diagram may have no shared nodes."
+        )
+    if "cross" in q or "link" in q:
         rendered = [
-            f"{e.get('source')} -> {e.get('target')} ({e.get('label', e.get('relationship',''))})"
-            for e in links[:8]
+            f"`{e.get('source_diagram','?')}:{e.get('source_node',e.get('source','?'))}` → "
+            f"`{e.get('target_diagram','?')}:{e.get('target_node',e.get('target','?'))}` "
+            f"({e.get('label', e.get('relationship',''))})"
+            for e in links[:10]
         ]
         return ("Cross-diagram stitch links:\n\n" + "\n".join(f"- {item}" for item in rendered)
-                if rendered else "No cross-diagram links were created for this selected diagram.")
-    if "root cause" in q:
+                if rendered else "No cross-diagram links for this diagram.")
+    if "local rca" in q or "local root" in q:
+        local_root = local_rca.get("root_cause", "not simulated yet")
         return (
-            f"Enterprise root cause: `{ent_rca.get('root_cause', 'unknown')}` in "
-            f"`{ent_rca.get('root_cause_diagram', 'unknown')}`. "
-            f"Source: `{ent_rca.get('mode', 'not simulated yet')}`."
+            f"Local RCA (within diagram `{diagram_id}`):\n\n"
+            f"- Root cause: **`{local_root}`**\n"
+            f"- Alert nodes: {', '.join(local_rca.get('alert_nodes', [])) or 'none'}\n"
+            f"- Impacted nodes: {', '.join(local_rca.get('impacted_nodes', [])) or 'none'}\n"
+            f"- Impact path: {' → '.join(local_path) if local_path else 'not available'}\n"
+            f"- Method: {local_rca.get('mode', 'unknown')}"
+        )
+    if "root cause" in q:
+        ent_root = ent_rca.get("root_cause", "not simulated yet")
+        mode     = ent_rca.get("mode", "unknown")
+        return (
+            f"Enterprise root cause: **`{ent_root}`** in "
+            f"`{ent_rca.get('root_cause_diagram', '?')}`\n\n"
+            f"- RCA mode: {mode}\n"
+            f"- Impacted diagrams: {', '.join(ent_rca.get('impacted_diagrams', [])) or 'none'}\n"
+            f"- Alert count: {ent_rca.get('alert_count', 0)}\n"
+            f"- Impact path: {' → '.join(ent_path) if ent_path else 'not available'}"
         )
     if "impacted" in q:
-        return f"Impacted diagrams: {', '.join(ent_rca.get('impacted_diagrams', [])) or 'none'}."
+        return (
+            f"Impacted diagrams: {', '.join(ent_rca.get('impacted_diagrams', [])) or 'none'}.\n"
+            f"Impacted nodes: {', '.join(ent_rca.get('impacted_nodes', [])) or 'none'}."
+        )
     if "path" in q:
-        return f"Impact path: {' -> '.join(path) if path else 'no path loaded'}."
-    if "servicenow" in q or "incident" in q:
+        active_path = ent_path or local_path
+        return (f"Impact path: {' → '.join(active_path)}" if active_path
+                else "No impact path loaded — run enterprise or local RCA first.")
+    if "servicenow" in q or "incident" in q or "snow" in q:
+        root = ent_rca.get("root_cause", "unknown")
         return (
             "### ServiceNow Incident Summary\n\n"
-            f"- Description: Enterprise dependency fault — root `{ent_rca.get('root_cause', 'unknown')}`\n"
-            f"- Assignment: Network / Platform Operations\n"
-            f"- Impacted diagrams: {', '.join(ent_rca.get('impacted_diagrams', [])) or 'unknown'}\n"
-            f"- Evidence path: {' -> '.join(path) if path else 'not available'}"
+            f"| Field | Value |\n|---|---|\n"
+            f"| Short description | Enterprise network fault — root `{root}` |\n"
+            f"| Affected CI | `{root}` ({ent_rca.get('root_cause_diagram','?')}) |\n"
+            f"| Priority | P1 — {len(ent_rca.get('impacted_diagrams',[]))} diagrams impacted |\n"
+            f"| Assignment group | Network Operations |\n"
+            f"| Root cause (automated) | `{root}` — {ent_rca.get('mode','unknown')} |\n"
+            f"| Selected diagram | `{diagram_id}` (detection: {det_src}) |\n"
+            f"| Evidence path | {' → '.join(ent_path) if ent_path else 'N/A'} |"
         )
     if "l1" in q or "check first" in q:
         first = ent_rca.get("root_cause", "the root-cause node")
+        second = ent_path[1] if len(ent_path) > 1 else "next hop"
         return (
-            f"L1 should check `{first}` counters/logs first, then validate: "
-            f"`{path[1] if len(path) > 1 else 'not available'}`."
+            f"L1 runbook:\n"
+            f"1. SSH to `{first}` — check interface counters, syslog, CPU/memory\n"
+            f"2. Validate `{second}` reachability\n"
+            f"3. Confirm impacted services: {', '.join(ent_rca.get('impacted_nodes', [])[:6]) or 'check alerts'}\n"
+            f"4. Escalate if packet drop rate > 5% or alerts still firing\n"
+            f"5. Activate redundant path if available"
         )
+    # Generic evidence summary
     return (
-        "Loaded evidence: "
-        f"{len(local_ids)} local nodes, "
-        f"{ingestion.get('shared_entities_matched', 0)} matched shared entities, "
-        f"enterprise RCA root `{ent_rca.get('root_cause', 'not simulated yet')}`."
+        f"**Loaded evidence for diagram `{diagram_id}`:**\n\n"
+        f"- Detection source: {det_src}\n"
+        f"- Local nodes: {len(local_ids)}\n"
+        f"- Shared entities matched: {ingestion.get('shared_entities_matched', 0)}\n"
+        f"- Cross-diagram links: {ingestion.get('cross_diagram_links_created', 0)}\n"
+        f"- Enterprise root cause: `{ent_rca.get('root_cause', 'not simulated yet')}`\n"
+        f"- RCA mode: {ent_rca.get('mode', 'not simulated yet')}\n\n"
+        "Ask: root cause | stitched | absorbed | shared | cross-diagram | path | servicenow | l1"
     )
 
 

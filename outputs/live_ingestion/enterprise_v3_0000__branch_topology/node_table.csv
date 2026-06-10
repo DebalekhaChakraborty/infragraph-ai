@@ -1,0 +1,9 @@
+node_id,type,ip_address,zone,shared,confidence,source
+BR-RTR-01,router,10.0.1.1,Branch Edge,True,0.88,Prepared V3 annotation fallback
+BR-FW-01,firewall,10.0.1.2,Branch Edge,False,0.88,Prepared V3 annotation fallback
+BR-SW-01,switch,10.0.1.3,Branch LAN,False,0.88,Prepared V3 annotation fallback
+BR-APP-01,server,10.0.1.4,Branch Apps,False,0.88,Prepared V3 annotation fallback
+BR-WRK-01,server,10.0.1.5,Branch LAN,False,0.88,Prepared V3 annotation fallback
+BR-WRK-02,server,10.0.1.6,Branch LAN,False,0.88,Prepared V3 annotation fallback
+BR-WRK-03,server,10.0.1.7,Branch LAN,False,0.88,Prepared V3 annotation fallback
+WAN-MPLS-CORE,cloud_or_wan,,WAN,True,0.88,Prepared V3 annotation fallback

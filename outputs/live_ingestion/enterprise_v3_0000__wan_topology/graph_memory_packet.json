@@ -1,0 +1,528 @@
+{
+  "diagram_id": "wan_topology",
+  "scenario_id": "enterprise_v3_0000",
+  "original_image": "outputs\\live_ingestion\\enterprise_v3_0000__wan_topology\\original.png",
+  "detected_image": "outputs\\live_ingestion\\enterprise_v3_0000__wan_topology\\original.png",
+  "detection_source": "Prepared V3 annotation fallback",
+  "annotation_path": "datasets\\diagram_v3_enterprise\\scenarios\\train\\enterprise_v3_0000\\annotations\\wan_topology.json",
+  "local_graph_path": "datasets\\diagram_v3_enterprise\\scenarios\\train\\enterprise_v3_0000\\local_graphs\\wan_topology.json",
+  "node_count": 8,
+  "edge_count": 7,
+  "ocr_text_block_count": 38,
+  "connector_count": 7,
+  "nodes": [
+    {
+      "node_id": "WAN-ISP-01",
+      "type": "cloud_or_wan",
+      "ip_address": "172.16.0.1",
+      "zone": "Internet/ISP",
+      "shared": false,
+      "confidence": 0.88,
+      "source": "Prepared V3 annotation fallback"
+    },
+    {
+      "node_id": "WAN-ISP-02",
+      "type": "cloud_or_wan",
+      "ip_address": "172.16.0.2",
+      "zone": "Internet/ISP",
+      "shared": false,
+      "confidence": 0.88,
+      "source": "Prepared V3 annotation fallback"
+    },
+    {
+      "node_id": "WAN-MPLS-CORE",
+      "type": "cloud_or_wan",
+      "ip_address": "172.16.0.3",
+      "zone": "WAN Core",
+      "shared": false,
+      "confidence": 0.88,
+      "source": "Prepared V3 annotation fallback"
+    },
+    {
+      "node_id": "WAN-PE-01",
+      "type": "router",
+      "ip_address": "172.16.0.4",
+      "zone": "WAN PE",
+      "shared": false,
+      "confidence": 0.88,
+      "source": "Prepared V3 annotation fallback"
+    },
+    {
+      "node_id": "WAN-PE-02",
+      "type": "router",
+      "ip_address": "172.16.0.5",
+      "zone": "WAN PE",
+      "shared": false,
+      "confidence": 0.88,
+      "source": "Prepared V3 annotation fallback"
+    },
+    {
+      "node_id": "BR-RTR-01",
+      "type": "router",
+      "ip_address": "",
+      "zone": "Branch",
+      "shared": true,
+      "confidence": 0.88,
+      "source": "Prepared V3 annotation fallback"
+    },
+    {
+      "node_id": "DC-RTR-01",
+      "type": "router",
+      "ip_address": "",
+      "zone": "DC Edge",
+      "shared": true,
+      "confidence": 0.88,
+      "source": "Prepared V3 annotation fallback"
+    },
+    {
+      "node_id": "DC-FW-01",
+      "type": "firewall",
+      "ip_address": "",
+      "zone": "DC Edge",
+      "shared": true,
+      "confidence": 0.88,
+      "source": "Prepared V3 annotation fallback"
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-ISP-01",
+      "target": "WAN-MPLS-CORE",
+      "relationship": "routes_to",
+      "label": "BGP",
+      "confidence": 0.82
+    },
+    {
+      "source": "WAN-ISP-02",
+      "target": "WAN-MPLS-CORE",
+      "relationship": "routes_to",
+      "label": "BGP",
+      "confidence": 0.82
+    },
+    {
+      "source": "WAN-MPLS-CORE",
+      "target": "WAN-PE-01",
+      "relationship": "routes_to",
+      "label": "MPLS",
+      "confidence": 0.82
+    },
+    {
+      "source": "WAN-MPLS-CORE",
+      "target": "WAN-PE-02",
+      "relationship": "routes_to",
+      "label": "MPLS",
+      "confidence": 0.82
+    },
+    {
+      "source": "WAN-PE-01",
+      "target": "BR-RTR-01",
+      "relationship": "connected_to",
+      "label": "L3VPN",
+      "confidence": 0.82
+    },
+    {
+      "source": "WAN-PE-02",
+      "target": "DC-RTR-01",
+      "relationship": "connected_to",
+      "label": "L3VPN",
+      "confidence": 0.82
+    },
+    {
+      "source": "DC-RTR-01",
+      "target": "DC-FW-01",
+      "relationship": "routes_to",
+      "label": "DC Edge",
+      "confidence": 0.82
+    }
+  ],
+  "confidence_summary": {
+    "device_detection_avg": 0.88,
+    "edge_extraction_avg": 0.82,
+    "ocr_text_blocks": 38,
+    "connector_count": 7,
+    "low_confidence_items": 8
+  },
+  "text_blocks": [
+    {
+      "text": "WAN-ISP-01",
+      "bbox": [
+        62,
+        349,
+        162,
+        363
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "172.16.0.1",
+      "bbox": [
+        72,
+        277,
+        152,
+        289
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "WAN-ISP-02",
+      "bbox": [
+        62,
+        656,
+        162,
+        670
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "172.16.0.2",
+      "bbox": [
+        72,
+        584,
+        152,
+        596
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "WAN-MPLS-CORE",
+      "bbox": [
+        537,
+        498,
+        667,
+        512
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "172.16.0.3",
+      "bbox": [
+        562,
+        426,
+        642,
+        438
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "WAN-PE-01",
+      "bbox": [
+        319,
+        382,
+        409,
+        396
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "172.16.0.4",
+      "bbox": [
+        324,
+        310,
+        404,
+        322
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "WAN-PE-02",
+      "bbox": [
+        823,
+        614,
+        913,
+        628
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "172.16.0.5",
+      "bbox": [
+        828,
+        542,
+        908,
+        554
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "BR-RTR-01",
+      "bbox": [
+        319,
+        697,
+        409,
+        711
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "DC-RTR-01",
+      "bbox": [
+        1047,
+        432,
+        1137,
+        446
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "DC-FW-01",
+      "bbox": [
+        1164,
+        581,
+        1244,
+        595
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "Internet/ISP",
+      "bbox": [
+        52,
+        210,
+        124,
+        226
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "Provider Edge",
+      "bbox": [
+        262,
+        227,
+        340,
+        243
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "WAN Core",
+      "bbox": [
+        514,
+        244,
+        562,
+        260
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "Enterprise Edge",
+      "bbox": [
+        989,
+        277,
+        1079,
+        293
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "BGP",
+      "bbox": [
+        333,
+        383,
+        381,
+        403
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        120,
+        323,
+        140,
+        335
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        562,
+        452,
+        594,
+        464
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "BGP",
+      "bbox": [
+        333,
+        537,
+        381,
+        557
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        120,
+        630,
+        136,
+        642
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        574,
+        452,
+        594,
+        464
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "MPLS",
+      "bbox": [
+        459,
+        400,
+        507,
+        420
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        610,
+        472,
+        642,
+        484
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        340,
+        336,
+        356,
+        348
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "MPLS",
+      "bbox": [
+        711,
+        516,
+        759,
+        536
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        610,
+        472,
+        630,
+        484
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        840,
+        568,
+        860,
+        580
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "L3VPN",
+      "bbox": [
+        339,
+        499,
+        389,
+        519
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        372,
+        356,
+        388,
+        368
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        340,
+        651,
+        356,
+        663
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "L3VPN",
+      "bbox": [
+        955,
+        483,
+        1005,
+        503
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        876,
+        588,
+        896,
+        600
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        1052,
+        386,
+        1084,
+        398
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "DC Edge",
+      "bbox": [
+        1113,
+        466,
+        1183,
+        486
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        1100,
+        406,
+        1116,
+        418
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        1176,
+        535,
+        1196,
+        547
+      ],
+      "text_type": "interface_label"
+    }
+  ],
+  "source_label": "Source: Prepared V3 annotation fallback"
+}

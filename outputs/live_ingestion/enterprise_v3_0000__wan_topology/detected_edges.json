@@ -1,0 +1,128 @@
+[
+  {
+    "source": "",
+    "target": "",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.78,
+    "connector_id": "edge_000",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "",
+    "target": "",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.78,
+    "connector_id": "edge_001",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "",
+    "target": "",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.78,
+    "connector_id": "edge_002",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "",
+    "target": "",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.78,
+    "connector_id": "edge_003",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "",
+    "target": "",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.78,
+    "connector_id": "edge_004",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "",
+    "target": "",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.78,
+    "connector_id": "edge_005",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "",
+    "target": "",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.78,
+    "connector_id": "edge_006",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "WAN-ISP-01",
+    "target": "WAN-MPLS-CORE",
+    "relationship": "routes_to",
+    "label": "BGP",
+    "confidence": 0.82,
+    "connector_id": "",
+    "source_type": "local_graph"
+  },
+  {
+    "source": "WAN-ISP-02",
+    "target": "WAN-MPLS-CORE",
+    "relationship": "routes_to",
+    "label": "BGP",
+    "confidence": 0.82,
+    "connector_id": "",
+    "source_type": "local_graph"
+  },
+  {
+    "source": "WAN-MPLS-CORE",
+    "target": "WAN-PE-01",
+    "relationship": "routes_to",
+    "label": "MPLS",
+    "confidence": 0.82,
+    "connector_id": "",
+    "source_type": "local_graph"
+  },
+  {
+    "source": "WAN-MPLS-CORE",
+    "target": "WAN-PE-02",
+    "relationship": "routes_to",
+    "label": "MPLS",
+    "confidence": 0.82,
+    "connector_id": "",
+    "source_type": "local_graph"
+  },
+  {
+    "source": "WAN-PE-01",
+    "target": "BR-RTR-01",
+    "relationship": "connected_to",
+    "label": "L3VPN",
+    "confidence": 0.82,
+    "connector_id": "",
+    "source_type": "local_graph"
+  },
+  {
+    "source": "WAN-PE-02",
+    "target": "DC-RTR-01",
+    "relationship": "connected_to",
+    "label": "L3VPN",
+    "confidence": 0.82,
+    "connector_id": "",
+    "source_type": "local_graph"
+  },
+  {
+    "source": "DC-RTR-01",
+    "target": "DC-FW-01",
+    "relationship": "routes_to",
+    "label": "DC Edge",
+    "confidence": 0.82,
+    "connector_id": "",
+    "source_type": "local_graph"
+  }
+]
