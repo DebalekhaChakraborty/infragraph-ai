@@ -4,24 +4,57 @@ Synthetic network-diagram dataset generator and AI pipeline for **automated topo
 
 ---
 
-## Live Demo Flow
+## Presentation Flow
 
 The Streamlit cockpit walks through a real-time ingestion journey:
 
 | Step | Tab | What happens |
 |------|-----|-------------|
-| 1. **Run Diagram Intelligence** | Diagram Intelligence | Loads V3 annotation + local graph, resolves detection source, writes `outputs/live_ingestion/` evidence |
+| 1. **Run Diagram Intelligence** | Diagram Intelligence | Loads the selected sample, resolves the detection source, writes `outputs/live_ingestion/` evidence |
 | 2. **Simulate Local RCA** | Local RCA | Runs deterministic BFS on the local graph to find root cause within the selected diagram |
-| 3. **Absorb into Enterprise Brain** | Enterprise Graph Brain | Explicitly absorbs the local graph into the enterprise galaxy graph, writes `outputs/live_absorption/`, shows before → after comparison |
-| 4. **Simulate Enterprise Alert** | Enterprise Graph Brain | Runs cross-diagram RCA (trained GNN result or scenario-grounded fallback); renders overlay on interactive PyVis graph |
+| 3. **Absorb into Enterprise Brain** | Enterprise Graph Brain | Absorbs the local graph into the enterprise galaxy graph, writes `outputs/live_absorption/`, shows before → after comparison |
+| 4. **Simulate Enterprise Alert** | Enterprise Graph Brain | Runs cross-diagram RCA (trained GNN result or scenario-grounded simulation); renders overlay on interactive PyVis graph |
 | 5. **Ask Graph Copilot** | Graph Copilot | Answers are grounded in the loaded graph evidence (live Qwen/vLLM when `QWEN_BASE_URL` is set) |
 
-### Detection source honesty
+### Detection source labels
 
 | Label | When shown |
 |-------|-----------|
-| `RF-DETR trained prediction` | `outputs/rfdetr_v3_predictions/<scenario>__<diagram>.png` exists |
-| `Prepared V3 annotation fallback` | No trained prediction found — uses scenario ground-truth annotation |
+| `Live RF-DETR Detector` | RF-DETR checkpoint found and inference succeeds |
+| `RF-DETR Trained Prediction` | Static prediction image found in `outputs/rfdetr_v3_predictions/` |
+| `Verified Annotation Overlay` | No trained prediction — renders bounding boxes from ground-truth annotation |
+
+---
+
+## Asset Structure
+
+The `assets/` layer provides a clean product-facing identity for datasets, decoupling the UI from raw dataset folder structure.
+
+```
+assets/
+├── gallery/
+│   └── manifest.json        # DG-0001 … DG-0250 — known diagrams in graph memory
+└── onboarding/
+    ├── manifest.json        # ONB-001 … ONB-020 — curated samples for live ingestion
+    ├── ONB-001/
+    │   ├── original.png
+    │   ├── annotation.json
+    │   ├── local_graph.json
+    │   ├── enterprise_graph.json
+    │   ├── stitch_map.json
+    │   └── alerts.json
+    └── ONB-002/ …
+```
+
+Build the asset layer from the raw datasets:
+
+```bash
+python scripts/build_presentation_assets.py \
+    --max-onboarding-samples 20 \
+    --max-gallery-items 250
+```
+
+The gallery manifest lists up to 250 records (V3 > V2 > V1 priority). Each record carries a `gallery_id` (e.g. `DG-0001`), display name, source metadata, and resolved paths. The onboarding manifest lists 20 curated samples (4 per diagram type, test > val > train) with files copied into `assets/onboarding/ONB-XXX/`.
 
 ### Runtime output folders
 
@@ -40,7 +73,7 @@ The Streamlit cockpit walks through a real-time ingestion journey:
 | 2 | YOLO V1 detector trained | Done |
 | 3 | Trained weights under `training_runs/infragraph_yolo_v1/weights` | Done |
 | 4 | V2 dataset (400 diagrams) with graph + alert scenarios | Done |
-| 5 | Heuristic RCA demo (`build_topology_rca_demo.py`) | Done |
+| 5 | Heuristic RCA (`build_topology_rca_demo.py`) | Done |
 | 6 | MLP node-ranker RCA (`train_mlp_rca.py`) — learned non-graph baseline | Done |
 | 7 | GNN root-cause ranking (`train_gnn_rca.py`) — 100% test top-1 | Done |
 | 8 | Qwen/vLLM explanation layer (`generate_qwen_rca_explanation.py`) | Done |
@@ -79,7 +112,7 @@ yolo detect predict \
     imgsz=960 conf=0.25 device=cpu save=True \
     project=./outputs name=v1_test_predictions_cpu
 
-# 4. Heuristic RCA demo (Stage 2)
+# 4. Heuristic RCA (Stage 2)
 python scripts/build_topology_rca_demo.py --diagram-id diagram_0373
 
 # 5. MLP node-ranker RCA (learned non-graph baseline)
@@ -111,7 +144,7 @@ See: [docs/run_streamlit_in_jupyter.md](docs/run_streamlit_in_jupyter.md)
 | vLLM (Qwen) | 8000 | OpenAI-compatible inference endpoint |
 | Streamlit | 8501 | InfraGraph AI cockpit UI |
 
-`QWEN_BASE_URL` controls whether the cockpit uses live inference or deterministic fallback answers:
+`QWEN_BASE_URL` controls whether the cockpit uses live inference or deterministic graph-evidence answers:
 
 ```bash
 # Start vLLM on AMD
@@ -192,7 +225,7 @@ python scripts/train_enterprise_gnn_rca.py \
 | `outputs/enterprise_gnn_rca/enterprise_gnn_model.pt` | Trained GCN checkpoint |
 | `outputs/enterprise_gnn_rca/enterprise_gnn_metrics.json` | Top-1, Top-3, MRR across splits |
 | `outputs/enterprise_gnn_rca/enterprise_gnn_training_curve.png` | Loss and ranking curves |
-| `outputs/enterprise_gnn_rca/<scenario_id>_enterprise_gnn_rca_result.json` | Demo scenario output |
+| `outputs/enterprise_gnn_rca/<scenario_id>_enterprise_gnn_rca_result.json` | Sample scenario output |
 | `outputs/enterprise_gnn_rca/<scenario_id>_enterprise_gnn_prediction.png` | Graph visualisation |
 
 See: [docs/enterprise_gnn_rca.md](docs/enterprise_gnn_rca.md)
@@ -274,7 +307,7 @@ Onboard any topology diagram into graph memory with a single command:
 ```bash
 python scripts/onboard_diagram.py \
     --image datasets/infragraph_v2/images/test/diagram_0373.png \
-    --diagram-id demo_onboard_0373 \
+    --diagram-id sample_onboard_0373 \
     --out outputs/onboarded_diagrams
 ```
 
@@ -282,7 +315,7 @@ Outputs: `original.png`, `detected.png`, `detected_nodes.json`, `local_graph.jso
 `graph_preview.png`, `onboarding_summary.json`, and an updated `graph_memory/index.json`.
 
 The **Diagram Intelligence** workspace in the Streamlit cockpit exposes the same flow
-via an upload button and a "Use demo diagram_0373" shortcut.
+via the **Onboard New Diagram** tab using manifest-selected samples.
 
 See: [docs/diagram_onboarding.md](docs/diagram_onboarding.md)
 
@@ -317,8 +350,8 @@ infragraph-ai/
 │   ├── v1_test_predictions_cpu/         # Detector output on test set
 │   ├── val_eval/                        # Validation curves and confusion matrix
 │   ├── topology_demo/                   # Stage 2: heuristic RCA outputs
-│   ├── mlp_rca/                         # Stage 3a: MLP model, metrics, demo
-│   ├── gnn_rca/                         # Stage 3b: GNN model, metrics, demo
+│   ├── mlp_rca/                         # Stage 3a: MLP model and metrics
+│   ├── gnn_rca/                         # Stage 3b: GNN model and metrics
 │   └── qwen_explanation/                # Stage 4: LLM explanation reports
 │
 ├── scripts/
@@ -333,7 +366,7 @@ infragraph-ai/
 │   ├── 02_train_yolo_amd.ipynb          # YOLOv8 training (AMD / ROCm / CUDA)
 │   ├── 03_evaluate_detector.ipynb       # mAP, confusion matrix, per-class PR curves
 │   ├── 04_extract_topology_graph.ipynb  # Line detection + OCR → graph
-│   └── 05_rca_graph_demo.ipynb          # Graph RCA & GNN RCA demo
+│   └── 05_rca_graph_demo.ipynb          # Graph RCA & GNN RCA walkthrough
 │
 ├── src/
 │   ├── topology/
