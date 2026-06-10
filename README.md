@@ -4,6 +4,34 @@ Synthetic network-diagram dataset generator and AI pipeline for **automated topo
 
 ---
 
+## Live Demo Flow
+
+The Streamlit cockpit walks through a real-time ingestion journey:
+
+| Step | Tab | What happens |
+|------|-----|-------------|
+| 1. **Run Diagram Intelligence** | Diagram Intelligence | Loads V3 annotation + local graph, resolves detection source, writes `outputs/live_ingestion/` evidence |
+| 2. **Simulate Local RCA** | Local RCA | Runs deterministic BFS on the local graph to find root cause within the selected diagram |
+| 3. **Absorb into Enterprise Brain** | Enterprise Graph Brain | Explicitly absorbs the local graph into the enterprise galaxy graph, writes `outputs/live_absorption/`, shows before → after comparison |
+| 4. **Simulate Enterprise Alert** | Enterprise Graph Brain | Runs cross-diagram RCA (trained GNN result or scenario-grounded fallback); renders overlay on interactive PyVis graph |
+| 5. **Ask Graph Copilot** | Graph Copilot | Answers are grounded in the loaded graph evidence (live Qwen/vLLM when `QWEN_BASE_URL` is set) |
+
+### Detection source honesty
+
+| Label | When shown |
+|-------|-----------|
+| `RF-DETR trained prediction` | `outputs/rfdetr_v3_predictions/<scenario>__<diagram>.png` exists |
+| `Prepared V3 annotation fallback` | No trained prediction found — uses scenario ground-truth annotation |
+
+### Runtime output folders
+
+| Folder | Contents |
+|--------|---------|
+| `outputs/live_ingestion/<scenario>__<diagram>/` | `original.png`, `detected_nodes.json`, `detected_edges.json`, `node_table.csv`, `edge_table.csv`, `graph_memory_packet.json` |
+| `outputs/live_absorption/<scenario>__<diagram>/` | `enterprise_before.json`, `enterprise_after.json`, `absorption_summary.json`, `alerts.json` |
+
+---
+
 ## Current milestone
 
 | # | Milestone | Status |
