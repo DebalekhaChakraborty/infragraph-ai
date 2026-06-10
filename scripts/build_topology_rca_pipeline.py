@@ -488,7 +488,7 @@ def visualize_topology(
 
 def main() -> None:
     ap = argparse.ArgumentParser(
-        description="Build topology graph and RCA demo from YOLO V2 prediction output."
+        description="Build topology graph and RCA Presentation from YOLO V2 prediction output."
     )
     ap.add_argument("--diagram-id",   required=True,
                     help="Diagram ID, e.g. diagram_0373")
@@ -504,7 +504,7 @@ def main() -> None:
     os.makedirs(out, exist_ok=True)
 
     print(f"\n{'='*60}")
-    print(f"  InfraGraph AI — Topology & RCA Demo")
+    print(f"  InfraGraph AI — Topology & RCA Presentation")
     print(f"  Diagram: {did}")
     print(f"{'='*60}\n")
 
@@ -609,3 +609,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

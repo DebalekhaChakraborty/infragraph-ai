@@ -130,10 +130,11 @@ Reduce the model or set `--gpu-memory-utilization 0.85` in the vLLM launch comma
 
 ### LLM call fails in the chat tab
 
-The cockpit automatically falls back to deterministic local answers and shows:
+The cockpit automatically uses deterministic local answers and shows:
 
 ```text
 ⚠ Live LLM unreachable — showing local answer.
 ```
 
 Check `vllm.log` and confirm `curl http://localhost:8000/v1/models` returns your model.
+

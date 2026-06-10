@@ -5,7 +5,7 @@ This model scores each node independently from engineered features with no
 graph message-passing.  It is a supervised learned baseline that sits between
 the rule-based heuristic scorer (Stage 2) and the topology-aware GNN (Stage 3).
 
-Backend: torch (if installed) -> pure-numpy MLP fallback.
+Backend: torch (if installed) -> pure-numpy MLP Alternate path.
 """
 
 import argparse
@@ -255,7 +255,7 @@ if USE_TORCH:
     def _model_ext():
         return ".pt"
 
-# ── Pure-numpy MLP fallback ───────────────────────────────────────────────────
+# ── Pure-numpy MLP Alternate path ───────────────────────────────────────────────────
 else:
     def _sigmoid(x):
         return np.where(x >= 0,
@@ -419,7 +419,7 @@ def plot_curve(history, out_path):
     print(f"  Saved training curve -> {out_path}")
 
 
-# ── Demo inference ────────────────────────────────────────────────────────────
+# ── Presentation inference ────────────────────────────────────────────────────────────
 
 def infer_diagram(model, dataset_root, split, diagram_id):
     gpath = os.path.join(dataset_root, "graphs", split, f"{diagram_id}.json")
@@ -472,8 +472,8 @@ def main():
     parser.add_argument("--dataset-root", default="datasets/infragraph_v2")
     parser.add_argument("--out", default="outputs/mlp_rca")
     parser.add_argument("--epochs", type=int, default=80)
-    parser.add_argument("--demo-diagram", default="diagram_0373")
-    parser.add_argument("--demo-split", default="test")
+    parser.add_argument("--Presentation-diagram", default="diagram_0373")
+    parser.add_argument("--Presentation-split", default="test")
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
@@ -624,30 +624,31 @@ def main():
     curve_path = os.path.join(args.out, "mlp_training_curve.png")
     plot_curve(history, curve_path)
 
-    # ── Demo inference ─────────────────────────────────────────────────────
-    print(f"\n[5/5] Demo inference on {args.demo_diagram} ...")
-    demo = infer_diagram(model, args.dataset_root, args.demo_split, args.demo_diagram)
-    demo["model_path"] = model_path
-    demo["test_metrics"] = {k: round(v, 4) for k, v in test_m.items() if k != "n"}
+    # ── Presentation inference ─────────────────────────────────────────────────────
+    print(f"\n[5/5] Presentation inference on {args.demo_diagram} ...")
+    Presentation = infer_diagram(model, args.dataset_root, args.demo_split, args.demo_diagram)
+    Presentation["model_path"] = model_path
+    Presentation["test_metrics"] = {k: round(v, 4) for k, v in test_m.items() if k != "n"}
     demo_path = os.path.join(args.out, f"{args.demo_diagram}_mlp_rca_result.json")
     with open(demo_path, "w") as f:
-        json.dump(demo, f, indent=2)
+        json.dump(Presentation, f, indent=2)
 
-    correct_str = "CORRECT" if demo["is_correct"] else "WRONG"
+    correct_str = "CORRECT" if Presentation["is_correct"] else "WRONG"
     print(
-        f"  Predicted: {demo['predicted_root_cause']}  "
-        f"GT: {demo['ground_truth_root_cause']}  [{correct_str}]"
+        f"  Predicted: {Presentation['predicted_root_cause']}  "
+        f"GT: {Presentation['ground_truth_root_cause']}  [{correct_str}]"
     )
-    print(f"  GT rank={demo['ground_truth_rank']}  MRR={demo['mrr']}")
-    print(f"  Saved demo result -> {demo_path}")
+    print(f"  GT rank={Presentation['ground_truth_rank']}  MRR={Presentation['mrr']}")
+    print(f"  Saved Presentation result -> {demo_path}")
 
     print(f"\n{'='*60}")
     print("  Done.")
     print(f"  Model  : {model_path}")
     print(f"  Metrics: {metrics_path}")
-    print(f"  Demo   : {demo_path}")
+    print(f"  Presentation   : {demo_path}")
     print(f"{'='*60}\n")
 
 
 if __name__ == "__main__":
     main()
+

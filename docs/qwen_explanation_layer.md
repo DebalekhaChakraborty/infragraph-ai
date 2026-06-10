@@ -64,7 +64,7 @@ python scripts/generate_qwen_rca_explanation.py \
     --base-url    http://localhost:8000/v1
 ```
 
-If the vLLM call fails for any reason the script automatically falls back to
+If the vLLM call fails for any reason the script automatically uses
 mock mode and marks `provider` as `"mock_fallback_after_vllm_error"` in the
 output JSON.
 
@@ -206,3 +206,4 @@ Priority: P1 -- 10 downstream nodes impacted
 Assignment group: Network Operations
 ...
 ```
+

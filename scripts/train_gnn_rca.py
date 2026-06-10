@@ -5,7 +5,7 @@ Trains a 2-layer Graph Convolutional Network on the infragraph_v2 dataset.
 The GNN learns propagation direction from topology structure and temporal alert
 features -- resolving the ambiguity that the heuristic scorer (Stage 2) cannot.
 
-Backend: torch (if installed in the active venv) -> pure-numpy GCN fallback.
+Backend: torch (if installed in the active venv) -> pure-numpy GCN Alternate path.
 """
 
 import argparse
@@ -210,7 +210,7 @@ if USE_TORCH:
     def _model_ext():
         return ".pt"
 
-# ── Pure-numpy GCN (no-torch fallback) ───────────────────────────────────────
+# ── Pure-numpy GCN (no-torch Alternate path) ───────────────────────────────────────
 else:
     class NpGCN:
         """
@@ -426,9 +426,9 @@ def main():
     parser.add_argument("--out", default="outputs/gnn_rca",
                         help="Output directory for model, metrics, and curve")
     parser.add_argument("--epochs", type=int, default=80)
-    parser.add_argument("--demo-diagram", default="diagram_0373",
-                        help="Diagram ID to run inference on and save demo JSON")
-    parser.add_argument("--demo-split", default="test")
+    parser.add_argument("--Presentation-diagram", default="diagram_0373",
+                        help="Diagram ID to run inference on and save Presentation JSON")
+    parser.add_argument("--Presentation-split", default="test")
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
@@ -554,8 +554,8 @@ def main():
     curve_path = os.path.join(args.out, "gnn_training_curve.png")
     plot_curve(history, curve_path)
 
-    # ── Demo inference ─────────────────────────────────────────────────────
-    print(f"\n[5/5] Demo inference on {args.demo_diagram} …")
+    # ── Presentation inference ─────────────────────────────────────────────────────
+    print(f"\n[5/5] Presentation inference on {args.demo_diagram} …")
     demo_result = infer_diagram(
         model, args.dataset_root, args.demo_split, args.demo_diagram
     )
@@ -574,15 +574,16 @@ def main():
     )
     print(f"  GT rank={demo_result['ground_truth_rank']}  "
           f"MRR={demo_result['mrr']}")
-    print(f"  Saved demo result ->{demo_path}")
+    print(f"  Saved Presentation result ->{demo_path}")
 
     print(f"\n{'='*60}")
     print("  Done.")
     print(f"  Model  : {model_path}")
     print(f"  Metrics: {metrics_path}")
-    print(f"  Demo   : {demo_path}")
+    print(f"  Presentation   : {demo_path}")
     print(f"{'='*60}\n")
 
 
 if __name__ == "__main__":
     main()
+

@@ -160,4 +160,5 @@ Use the sidebar **Workspace** radio to switch between two views:
 - **GNN RCA Findings** — GNN winner card (FW-01 ✓), candidate ranking, model comparison, Model Evidence expander
 - **GNN Propagation** — 5-step slider showing message-passing convergence from SW-CORE → FW-01
 - **Operator Report** — Qwen-generated incident report with download button
-- **Ask InfraGraph** — quick-question chips + free-text chat with deterministic fallback
+- **Ask InfraGraph** — quick-question chips + free-text chat with deterministic Alternate path
+

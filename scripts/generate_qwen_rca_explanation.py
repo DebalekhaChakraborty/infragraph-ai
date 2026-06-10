@@ -25,7 +25,7 @@ def _find_alert_path(dataset_root, split, diagram_id):
     for p in candidates:
         if os.path.isfile(p):
             return p
-    # Fallback: scan the directory for a file containing diagram_id
+    # Alternate path: scan the directory for a file containing diagram_id
     alert_dir = os.path.join(dataset_root, "alerts", split)
     if os.path.isdir(alert_dir):
         for fname in os.listdir(alert_dir):
@@ -239,7 +239,7 @@ def build_mock_explanation(evidence):
             f"Both RCA methods require human review — ground truth: **{gt}** ({gt_type})."
         )
 
-    # What happened: use full alert details if available, else fall back to alerting nodes
+    # What happened: use full alert details if available, else use alerting nodes
     scenario_alerts = (evidence.get("alert_scenario") or {}).get("alerts", [])
     if scenario_alerts:
         alert_bullets = "\n".join(
@@ -561,7 +561,7 @@ def main():
         except Exception as exc:
             print(f"WARNING: vLLM call failed ({exc}). Falling back to mock mode.")
             provider = "mock_fallback_after_vllm_error"
-            model = f"mock-fallback (attempted: {args.model})"
+            model = f"mock-Alternate path (attempted: {args.model})"
             explanation_md = build_mock_explanation(evidence)
     else:
         explanation_md = build_mock_explanation(evidence)
@@ -591,3 +591,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+

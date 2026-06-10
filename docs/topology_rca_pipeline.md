@@ -1,4 +1,4 @@
-# Topology Graph & RCA Demo
+# Topology Graph & RCA Presentation
 
 `scripts/build_topology_rca_demo.py` is the bridge between the YOLO vision
 model and the graph intelligence layer of InfraGraph AI.  Given a single
@@ -161,7 +161,7 @@ Path discovery uses three methods in order:
 |--------|-------------|
 | `directed_root_to_target` | `nx.shortest_path(G, root, target)` |
 | `directed_target_to_root` | `nx.shortest_path(G, target, root)` — used when the root is *downstream* of the target (upstream dependency) |
-| `undirected` | `nx.shortest_path(G.to_undirected(), root, target)` — fallback for cross-zone connections with no directed path |
+| `undirected` | `nx.shortest_path(G.to_undirected(), root, target)` — Alternate path for cross-zone connections with no directed path |
 
 The `method` field on each path entry records which approach succeeded.  When
 a path exceeds 8 nodes it is truncated and marked `"truncated": true`.
@@ -215,7 +215,7 @@ from graph structure and temporal alert features.
     outputs/topology_demo/<id>_*.{json,png}
         └─ _detected_nodes.json  ──► future: matcher against ground-truth graph
         └─ _rca_result.json      ──► future: GNN RCA (notebooks/05_rca_graph_demo.ipynb)
-        └─ _topology.png         ──► demo / submission visualisation
+        └─ _topology.png         ──► Presentation / submission visualisation
         └─ _graph_summary.json   ──► aggregate metrics across test set
 
 [Next: Qwen / LLM explanation layer]
@@ -229,3 +229,4 @@ from graph structure and temporal alert features.
 Only `networkx` and `matplotlib` are required beyond the standard library.
 Both are already listed in `requirements.txt`.  PNG dimensions are read from
 the file header using `struct`, so `Pillow` is not required for this script.
+

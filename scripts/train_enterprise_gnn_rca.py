@@ -9,16 +9,16 @@ containing multiple local diagram clusters unified into one graph.
 The model ranks ALL nodes across the enterprise graph and predicts the
 root-cause node that triggered cross-diagram alert propagation.
 
-Backend: PyTorch (required -- no fallback).
+Backend: PyTorch required.
 
 Usage
 -----
 python scripts/train_enterprise_gnn_rca.py \
-    --dataset-root ./datasets/enterprise_graph_v1 \
+    --dataset-root ./datasets/infragraph_v1/enterprise_graph \
     --out ./outputs/enterprise_gnn_rca \
     --epochs 80 \
-    --demo-scenario enterprise_0000 \
-    --demo-split test
+    --presentation-scenario enterprise_0000 \
+    --presentation-split test
 """
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ except ImportError:
     print(
         "[ERROR] PyTorch is not installed in the current environment.\n"
         "        Install with:  pip install torch\n"
-        "        This script requires torch and does not fall back to a heuristic."
+        "        This script requires torch and does not use a heuristic."
     )
     sys.exit(1)
 
@@ -122,6 +122,16 @@ NODE_VIZ_COLOR = {
     "service":       "#a78bfa",
     "unknown":       "#475569",
 }
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
+def get_enterprise_graph_v1_root(repo_root: Path) -> Path:
+    preferred = repo_root / "datasets" / "infragraph_v1" / "enterprise_graph"
+    legacy = repo_root / "datasets" / "enterprise_graph_v1"
+    if preferred.exists():
+        return preferred
+    return legacy
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -649,7 +659,7 @@ def _score_scenario(
     return scores, ranked
 
 
-def save_demo_result(
+def save_presentation_result(
     model: EnterpriseGCN,
     sc: dict,
     out_dir: Path,
@@ -709,7 +719,7 @@ def save_demo_result(
     path  = out_dir / fname
     path.write_text(json.dumps(result, indent=2), encoding="utf-8")
     correct = "[CORRECT]" if result["is_correct"] else "[WRONG]"
-    print(f"  Demo result saved: {path}")
+    print(f"  Presentation result saved: {path}")
     print(f"  {correct}  predicted={pred_node}  gt={rc_node}  rank={rc_rank}")
 
 
@@ -843,8 +853,8 @@ def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description="Enterprise GNN RCA -- train on stitched multi-diagram graphs"
     )
-    p.add_argument("--dataset-root", default="datasets/enterprise_graph_v1",
-                   help="Root of enterprise_graph_v1 dataset")
+    p.add_argument("--dataset-root", default=str(get_enterprise_graph_v1_root(REPO_ROOT)),
+                   help="Root of the V1 enterprise graph dataset")
     p.add_argument("--out",  default="outputs/enterprise_gnn_rca",
                    help="Output directory")
     p.add_argument("--epochs",       type=int,   default=80)
@@ -852,8 +862,8 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument("--weight-decay", type=float, default=0.0001)
     p.add_argument("--hidden1",      type=int,   default=96)
     p.add_argument("--hidden2",      type=int,   default=48)
-    p.add_argument("--demo-scenario", default="enterprise_0000")
-    p.add_argument("--demo-split",    default="test",
+    p.add_argument("--presentation-scenario", default="enterprise_0000")
+    p.add_argument("--presentation-split",    default="test",
                    choices=["train", "val", "test"])
     p.add_argument("--seed", type=int, default=2026)
     return p.parse_args()
@@ -937,28 +947,29 @@ def main() -> None:
     )
     save_training_curve(history, out_dir)
 
-    # ── Demo scenario ────────────────────────────────────────────────────────
-    print(f"\nDemo scenario: {args.demo_scenario} (split={args.demo_split})")
-    demo_pool = {"train": train_sc, "val": val_sc, "test": test_sc}[args.demo_split]
-    demo_sc   = next((s for s in demo_pool if s["scenario_id"] == args.demo_scenario), None)
+    # ── Presentation scenario ────────────────────────────────────────────────
+    print(f"\nPresentation scenario: {args.presentation_scenario} (split={args.presentation_split})")
+    presentation_pool = {"train": train_sc, "val": val_sc, "test": test_sc}[args.presentation_split]
+    presentation_sc   = next((s for s in presentation_pool if s["scenario_id"] == args.presentation_scenario), None)
 
-    if demo_sc is None:
-        # Fall back to any available scenario
+    if presentation_sc is None:
+        # Use the first available scenario when the requested one is absent.
         for pool in [test_sc, val_sc, train_sc]:
             if pool:
-                demo_sc = pool[0]
-                print(f"  [warn] '{args.demo_scenario}' not found in '{args.demo_split}' "
-                      f"-- using {demo_sc['scenario_id']}")
+                presentation_sc = pool[0]
+                print(f"  [warn] '{args.presentation_scenario}' not found in '{args.presentation_split}' "
+                      f"-- using {presentation_sc['scenario_id']}")
                 break
 
-    if demo_sc is not None:
-        save_demo_result(model, demo_sc, out_dir, device)
-        save_prediction_viz(model, demo_sc, out_dir, device)
+    if presentation_sc is not None:
+        save_presentation_result(model, presentation_sc, out_dir, device)
+        save_prediction_viz(model, presentation_sc, out_dir, device)
     else:
-        print("  [warn] No demo scenario available")
+        print("  [warn] No presentation scenario available")
 
     print("\nDone.")
 
 
 if __name__ == "__main__":
     main()
+

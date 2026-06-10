@@ -60,7 +60,7 @@ where the interstellar highways (cross-diagram edges) run.
 ## Dataset Structure
 
 ```
-datasets/enterprise_graph_v1/
+datasets/infragraph_v1/enterprise_graph/
 ├── dataset_summary.json                    # Aggregate statistics across all scenarios
 ├── previews/
 │   └── enterprise_contact_sheet.png        # Tiled preview of enterprise graphs
@@ -399,14 +399,14 @@ Label: binary `is_root_cause` per node.
 # Full 120-scenario dataset
 python scripts/generate_enterprise_scenarios.py \
     --num 120 \
-    --out ./datasets/enterprise_graph_v1 \
+    --out ./datasets/infragraph_v1/enterprise_graph \
     --seed 2026 \
     --clean
 
 # Quick 20-scenario smoke test
 python scripts/generate_enterprise_scenarios.py \
     --num 20 \
-    --out ./datasets/enterprise_graph_v1 \
+    --out ./datasets/infragraph_v1/enterprise_graph \
     --seed 2026 \
     --clean
 ```
@@ -416,7 +416,7 @@ python scripts/generate_enterprise_scenarios.py \
 | Option | Default | Description |
 |--------|---------|-------------|
 | `--num N` | 120 | Number of enterprise scenarios to generate |
-| `--out PATH` | `./datasets/enterprise_graph_v1` | Output root directory |
+| `--out PATH` | `./datasets/infragraph_v1/enterprise_graph` | Output root directory |
 | `--seed INT` | 2026 | Global random seed (reproducible) |
 | `--clean` | false | Wipe output directory before generating |
 | `--min-diagrams INT` | 3 | Minimum local diagrams per scenario |
@@ -464,3 +464,4 @@ Files generated per scenario:
 | `preview_contact_sheet.png` | Local diagrams tiled |
 
 Total file count for 120 scenarios: approximately 1,800–2,400 files.
+

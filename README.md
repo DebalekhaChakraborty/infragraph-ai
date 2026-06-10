@@ -213,7 +213,7 @@ across the unified enterprise graph to identify the root-cause node.
 
 ```bash
 python scripts/train_enterprise_gnn_rca.py \
-    --dataset-root ./datasets/enterprise_graph_v1 \
+    --dataset-root ./datasets/infragraph_v1/enterprise_graph \
     --out ./outputs/enterprise_gnn_rca \
     --epochs 80 \
     --presentation-scenario enterprise_0000 \
@@ -250,7 +250,7 @@ The GNN learns to trace root causes across diagram boundaries using `cross_diagr
 
 ```bash
 python scripts/generate_enterprise_scenarios.py \
-    --num 120 --out ./datasets/enterprise_graph_v1 \
+    --num 120 --out ./datasets/infragraph_v1/enterprise_graph \
     --seed 2026 --clean
 ```
 
@@ -398,14 +398,15 @@ infragraph-ai/
 ```
 datasets/
 ├── infragraph_v1/         baseline topology image dataset
+│   └── enterprise_graph/  legacy enterprise RCA baseline owned by V1
 ├── infragraph_v2/         improved topology image dataset and RCA experiments
-├── infragraph_v3/         scenario-native diagram intelligence + enterprise RCA dataset
-└── enterprise_graph_v1/   legacy enterprise RCA baseline
+└── infragraph_v3/         scenario-native diagram intelligence + enterprise RCA dataset
 ```
 
-InfraGraph V3 is scenario-native. Each scenario contains multiple topology
-diagrams, verified annotations, OCR/text blocks, connector metadata, local graph
-memory, enterprise graph stitching, and RCA alert ground truth.
+InfraGraph V1 contains the baseline topology dataset and the original enterprise
+graph RCA baseline under `infragraph_v1/enterprise_graph`. InfraGraph V3 is
+scenario-native and keeps diagrams, annotations, local graphs, stitch maps,
+enterprise graphs, and RCA ground truth together inside each scenario.
 
 ### Presentation Flow
 
@@ -449,5 +450,6 @@ python data_generator/generate_infragraph_dataset.py \
 ## License
 
 MIT
+
 
 

@@ -8,7 +8,7 @@ pipeline and Streamlit UI.
 Detection priority (per image):
   1. Live RF-DETR inference (V3 checkpoint, if available)
   2. YOLO prepared labels (.txt files in datasets/infragraph_{v}/labels/)
-  3. No-detection fallback (original image copied as detected.png)
+  3. No-detection Alternate path (original image copied as detected.png)
 
 Output per diagram  (mirrors V3 live_ingestion layout):
   outputs/rfdetr_{v1|v2}/{split}/{diagram_id}/
@@ -258,7 +258,7 @@ def _infer_edges_heuristic(
 
 
 # ===========================================================================
-# YOLO label fallback
+# YOLO label Alternate path
 # ===========================================================================
 
 def _load_yolo_detections(
@@ -967,7 +967,7 @@ def _build_arg_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--live", action="store_true",
         help="Flag un-processed diagrams as 'new' in gallery catalog "
-             "(demo-ready mode: UI will show Run Live Detector button)",
+             "(Presentation-ready mode: UI will show Run Live Detector button)",
     )
     p.add_argument(
         "--output-base", type=str, default=None,
@@ -1240,3 +1240,4 @@ def main() -> int:  # noqa: C901
 
 if __name__ == "__main__":
     sys.exit(main())
+

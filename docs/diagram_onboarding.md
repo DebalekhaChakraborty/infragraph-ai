@@ -9,7 +9,7 @@ Onboard a new topology diagram into InfraGraph AI graph memory with a single com
 | Step | Output |
 |------|--------|
 | 1. Receive image | `original.png` copied to output directory |
-| 2. YOLO detection | `detected.png` — annotated image; falls back to mock for `diagram_0373` |
+| 2. YOLO detection | `detected.png` — annotated image; uses mock for `diagram_0373` |
 | 3. Node table | `detected_nodes.json` — canonical names, zones, confidences |
 | 4. Graph build | `local_graph.json` — nodes + layout-inferred edges |
 | 5. Graph preview | `graph_preview.png` — NetworkX + matplotlib visualization |
@@ -31,7 +31,7 @@ python scripts/onboard_diagram.py \
 |------|---------|-------------|
 | `--image` | (required) | Path to input PNG or JPG |
 | `--diagram-id` | (required) | Unique identifier for this diagram |
-| `--model` | `training_runs/infragraph_yolo_v2/weights/best.pt` | YOLO weights; v1 used as fallback |
+| `--model` | `training_runs/infragraph_yolo_v2/weights/best.pt` | YOLO weights; v1 used as Alternate path |
 | `--out` | `outputs/onboarded_diagrams` | Root output directory |
 
 ---
@@ -172,12 +172,12 @@ Bidirectional duplicates are suppressed.
 
 ---
 
-## YOLO fallback
+## YOLO Alternate path
 
 When `ultralytics` is unavailable or the model file does not exist:
 
 1. Script tries `infragraph_yolo_v2/weights/best.pt`
-2. Falls back to `infragraph_yolo_v1/weights/best.pt`
+2. uses `infragraph_yolo_v1/weights/best.pt`
 3. If no model is found and the image is `diagram_0373`, uses the pre-existing
    `outputs/topology_demo/diagram_0373_detected_nodes.json` as `mock_fallback`
 4. For any other image without a model, the script exits with a clear error message
@@ -189,7 +189,7 @@ When `ultralytics` is unavailable or the model file does not exist:
 The **Diagram Intelligence** workspace exposes the onboarding flow at the top of the page:
 
 - **Upload new topology diagram** — file uploader for any PNG/JPG
-- **Use demo diagram_0373** — triggers onboarding on the reference diagram without upload
+- **Use Presentation diagram_0373** — triggers onboarding on the reference diagram without upload
 
 Progress is shown live via Streamlit's `st.status` widget:
 
@@ -217,3 +217,5 @@ Results displayed:
 - Node names are canonical placeholders, not extracted from diagram labels
 - Multi-page or very large diagrams may require resizing before upload
 - Graph preview requires `matplotlib` and `networkx` (installed via `requirements.txt`)
+
+

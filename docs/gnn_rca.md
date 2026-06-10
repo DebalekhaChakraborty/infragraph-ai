@@ -39,14 +39,14 @@ python scripts/train_gnn_rca.py \
     --dataset-root datasets/infragraph_v2 \
     --epochs       120 \
     --out          outputs/gnn_rca \
-    --demo-diagram diagram_0373 \
-    --demo-split   test \
+    --Presentation-diagram diagram_0373 \
+    --Presentation-split   test \
     --seed         42
 ```
 
 ### Backend selection
 
-The script auto-detects torch and falls back to a **pure-numpy GCN** if torch
+The script auto-detects torch and uses a **pure-numpy GCN** if torch
 is not installed in the active environment:
 
 | Backend | How to trigger | Notes |
@@ -136,7 +136,7 @@ is the stronger signal.
 | File | Description |
 |------|-------------|
 | `outputs/gnn_rca/gnn_rca_model.pt` | Best-epoch PyTorch state dict |
-| `outputs/gnn_rca/gnn_rca_model.npz` | Best-epoch numpy weights (fallback backend) |
+| `outputs/gnn_rca/gnn_rca_model.npz` | Best-epoch numpy weights (Alternate path backend) |
 | `outputs/gnn_rca/gnn_rca_metrics.json` | Full metrics + per-epoch training history |
 | `outputs/gnn_rca/gnn_training_curve.png` | Loss and accuracy curves (requires matplotlib) |
 | `outputs/gnn_rca/<id>_gnn_rca_result.json` | Per-diagram inference result |
@@ -190,3 +190,5 @@ is the stronger signal.
 The `node_scores` dict from the GNN result feeds directly into the Qwen prompt
 to ground the explanation in learned graph signals rather than rule-based
 scores.
+
+

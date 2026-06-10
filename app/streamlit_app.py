@@ -1049,7 +1049,7 @@ def _render_local_graph_mpl(local_graph: dict, overlay: dict | None = None,
 
 def _render_local_graph(local_graph: dict, overlay: dict | None = None,
                          height: int = 530) -> None:
-    """Try PyVis first; fall back to matplotlib."""
+    """Try PyVis first; use matplotlib."""
     if _render_local_graph_pyvis(local_graph, overlay, height):
         return
     st.caption("Interactive graph requires pyvis — showing matplotlib preview")
@@ -3234,3 +3234,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
