@@ -1,4 +1,4 @@
-path: D:\My Folders\Hackathons\infragraph-ai\datasets\diagram_v3_enterprise\yolo
+path: /workspace/shared/infragraph-ai/datasets/diagram_v3_enterprise/yolo
 train: images/train
 val:   images/val
 test:  images/test

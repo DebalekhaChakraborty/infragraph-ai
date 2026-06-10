@@ -40,9 +40,9 @@
     "APP-01"
   ],
   "impacted_diagrams": [
-    "branch_topology",
     "shared_services_topology",
-    "app_db_topology"
+    "app_db_topology",
+    "branch_topology"
   ],
   "impact_paths": [
     [

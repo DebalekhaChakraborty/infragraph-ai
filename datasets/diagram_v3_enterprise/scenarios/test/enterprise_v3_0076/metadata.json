@@ -1,0 +1,20 @@
+{
+  "scenario_id": "enterprise_v3_0076",
+  "diagram_types": [
+    "branch_topology",
+    "wan_topology",
+    "datacenter_topology"
+  ],
+  "num_diagrams": 3,
+  "num_nodes": 22,
+  "num_edges": 27,
+  "num_cross_diagram_edges": 3,
+  "num_shared_entities": 5,
+  "root_cause": "DC-FW-01",
+  "root_cause_diagram": "datacenter_topology",
+  "root_cause_pattern": "dc_fw_failure",
+  "severity": "critical",
+  "num_impacted_nodes": 2,
+  "num_impacted_diagrams": 1,
+  "split": "test"
+}

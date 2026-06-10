@@ -1,0 +1,61 @@
+{
+  "scenario_id": "enterprise_v3_0018",
+  "root_cause": "IAM-01",
+  "root_cause_diagram": "shared_services_topology",
+  "root_cause_pattern": "shared_id_failure",
+  "severity": "critical",
+  "alerts": [
+    {
+      "node": "IAM-01",
+      "diagram_id": "shared_services_topology",
+      "alert_type": "link_down",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "MON-01",
+      "diagram_id": "shared_services_topology",
+      "alert_type": "packet_loss",
+      "severity": "high",
+      "time_offset_min": 1
+    },
+    {
+      "node": "BR-WRK-01",
+      "diagram_id": "branch_topology",
+      "alert_type": "error_rate",
+      "severity": "warning",
+      "time_offset_min": 5
+    },
+    {
+      "node": "APP-01",
+      "diagram_id": "app_db_topology",
+      "alert_type": "latency",
+      "severity": "warning",
+      "time_offset_min": 7
+    }
+  ],
+  "impacted_nodes": [
+    "MON-01",
+    "BR-WRK-01",
+    "APP-01"
+  ],
+  "impacted_diagrams": [
+    "shared_services_topology",
+    "app_db_topology",
+    "branch_topology"
+  ],
+  "impact_paths": [
+    [
+      "IAM-01",
+      "MON-01"
+    ],
+    [
+      "IAM-01",
+      "BR-WRK-01"
+    ],
+    [
+      "IAM-01",
+      "APP-01"
+    ]
+  ]
+}

@@ -1,0 +1,724 @@
+{
+  "scenario_id": "enterprise_v3_0018",
+  "diagram_id": "wan_topology",
+  "diagram_type": "wan_topology",
+  "image_path": "/workspace/shared/infragraph-ai/datasets/diagram_v3_enterprise/scenarios/train/enterprise_v3_0018/diagrams/wan_topology.png",
+  "width": 1400,
+  "height": 900,
+  "objects": [
+    {
+      "object_id": "WAN-ISP-01",
+      "class_name": "cloud_or_wan",
+      "bbox": [
+        78,
+        285,
+        146,
+        353
+      ],
+      "label_text": "WAN-ISP-01",
+      "ip_address": "172.16.18.1",
+      "zone": "Internet/ISP",
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-01"
+    },
+    {
+      "object_id": "WAN-ISP-02",
+      "class_name": "cloud_or_wan",
+      "bbox": [
+        78,
+        592,
+        146,
+        660
+      ],
+      "label_text": "WAN-ISP-02",
+      "ip_address": "172.16.18.2",
+      "zone": "Internet/ISP",
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-02"
+    },
+    {
+      "object_id": "WAN-MPLS-CORE",
+      "class_name": "cloud_or_wan",
+      "bbox": [
+        568,
+        434,
+        636,
+        502
+      ],
+      "label_text": "WAN-MPLS-CORE",
+      "ip_address": "172.16.18.3",
+      "zone": "WAN Core",
+      "is_shared_entity": false,
+      "canonical_id": "WAN-MPLS-CORE"
+    },
+    {
+      "object_id": "WAN-PE-01",
+      "class_name": "router",
+      "bbox": [
+        330,
+        318,
+        398,
+        386
+      ],
+      "label_text": "WAN-PE-01",
+      "ip_address": "172.16.18.4",
+      "zone": "WAN PE",
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-01"
+    },
+    {
+      "object_id": "WAN-PE-02",
+      "class_name": "router",
+      "bbox": [
+        834,
+        550,
+        902,
+        618
+      ],
+      "label_text": "WAN-PE-02",
+      "ip_address": "172.16.18.5",
+      "zone": "WAN PE",
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-02"
+    },
+    {
+      "object_id": "BR-RTR-01",
+      "class_name": "router",
+      "bbox": [
+        330,
+        633,
+        398,
+        701
+      ],
+      "label_text": "BR-RTR-01",
+      "ip_address": "",
+      "zone": "Branch",
+      "is_shared_entity": true,
+      "canonical_id": "BR-RTR-01"
+    },
+    {
+      "object_id": "DC-RTR-01",
+      "class_name": "router",
+      "bbox": [
+        1058,
+        368,
+        1126,
+        436
+      ],
+      "label_text": "DC-RTR-01",
+      "ip_address": "",
+      "zone": "DC Edge",
+      "is_shared_entity": true,
+      "canonical_id": "DC-RTR-01"
+    },
+    {
+      "object_id": "DC-FW-01",
+      "class_name": "firewall",
+      "bbox": [
+        1170,
+        517,
+        1238,
+        585
+      ],
+      "label_text": "DC-FW-01",
+      "ip_address": "",
+      "zone": "DC Edge",
+      "is_shared_entity": true,
+      "canonical_id": "DC-FW-01"
+    }
+  ],
+  "text_blocks": [
+    {
+      "text": "WAN-ISP-01",
+      "bbox": [
+        62,
+        349,
+        162,
+        363
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "172.16.18.1",
+      "bbox": [
+        68,
+        277,
+        156,
+        289
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "WAN-ISP-02",
+      "bbox": [
+        62,
+        656,
+        162,
+        670
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "172.16.18.2",
+      "bbox": [
+        68,
+        584,
+        156,
+        596
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "WAN-MPLS-CORE",
+      "bbox": [
+        537,
+        498,
+        667,
+        512
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "172.16.18.3",
+      "bbox": [
+        558,
+        426,
+        646,
+        438
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "WAN-PE-01",
+      "bbox": [
+        319,
+        382,
+        409,
+        396
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "172.16.18.4",
+      "bbox": [
+        320,
+        310,
+        408,
+        322
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "WAN-PE-02",
+      "bbox": [
+        823,
+        614,
+        913,
+        628
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "172.16.18.5",
+      "bbox": [
+        824,
+        542,
+        912,
+        554
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "BR-RTR-01",
+      "bbox": [
+        319,
+        697,
+        409,
+        711
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "DC-RTR-01",
+      "bbox": [
+        1047,
+        432,
+        1137,
+        446
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "DC-FW-01",
+      "bbox": [
+        1164,
+        581,
+        1244,
+        595
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "Internet/ISP",
+      "bbox": [
+        52,
+        210,
+        124,
+        226
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "Provider Edge",
+      "bbox": [
+        262,
+        227,
+        340,
+        243
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "WAN Core",
+      "bbox": [
+        514,
+        244,
+        562,
+        260
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "Enterprise Edge",
+      "bbox": [
+        989,
+        277,
+        1079,
+        293
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "BGP",
+      "bbox": [
+        333,
+        383,
+        381,
+        403
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        120,
+        323,
+        140,
+        335
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        562,
+        452,
+        594,
+        464
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "BGP",
+      "bbox": [
+        333,
+        537,
+        381,
+        557
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        120,
+        630,
+        136,
+        642
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        574,
+        452,
+        594,
+        464
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "MPLS",
+      "bbox": [
+        459,
+        400,
+        507,
+        420
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        610,
+        472,
+        642,
+        484
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        340,
+        336,
+        356,
+        348
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "MPLS",
+      "bbox": [
+        711,
+        516,
+        759,
+        536
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        610,
+        472,
+        630,
+        484
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        840,
+        568,
+        860,
+        580
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "L3VPN",
+      "bbox": [
+        339,
+        499,
+        389,
+        519
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        372,
+        356,
+        388,
+        368
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        340,
+        651,
+        356,
+        663
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "L3VPN",
+      "bbox": [
+        955,
+        483,
+        1005,
+        503
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        876,
+        588,
+        896,
+        600
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        1052,
+        386,
+        1084,
+        398
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "DC Edge",
+      "bbox": [
+        1113,
+        466,
+        1183,
+        486
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        1100,
+        406,
+        1116,
+        418
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        1176,
+        535,
+        1196,
+        547
+      ],
+      "text_type": "interface_label"
+    }
+  ],
+  "connectors": [
+    {
+      "connector_id": "edge_000",
+      "source": "WAN-ISP-01",
+      "target": "WAN-MPLS-CORE",
+      "relationship": "routes_to",
+      "label_text": "BGP",
+      "source_interface": "Gi0/1",
+      "target_interface": "ge-0/0/1",
+      "points": [
+        [
+          112,
+          319
+        ],
+        [
+          357,
+          393
+        ],
+        [
+          602,
+          468
+        ]
+      ],
+      "bbox": [
+        108,
+        315,
+        606,
+        472
+      ],
+      "style": "solid"
+    },
+    {
+      "connector_id": "edge_001",
+      "source": "WAN-ISP-02",
+      "target": "WAN-MPLS-CORE",
+      "relationship": "routes_to",
+      "label_text": "BGP",
+      "source_interface": "eth0",
+      "target_interface": "Gi0/2",
+      "points": [
+        [
+          112,
+          626
+        ],
+        [
+          357,
+          547
+        ],
+        [
+          602,
+          468
+        ]
+      ],
+      "bbox": [
+        108,
+        464,
+        606,
+        630
+      ],
+      "style": "solid"
+    },
+    {
+      "connector_id": "edge_002",
+      "source": "WAN-MPLS-CORE",
+      "target": "WAN-PE-01",
+      "relationship": "routes_to",
+      "label_text": "MPLS",
+      "source_interface": "ge-0/0/1",
+      "target_interface": "eth1",
+      "points": [
+        [
+          602,
+          468
+        ],
+        [
+          483,
+          410
+        ],
+        [
+          364,
+          352
+        ]
+      ],
+      "bbox": [
+        360,
+        348,
+        606,
+        472
+      ],
+      "style": "solid"
+    },
+    {
+      "connector_id": "edge_003",
+      "source": "WAN-MPLS-CORE",
+      "target": "WAN-PE-02",
+      "relationship": "routes_to",
+      "label_text": "MPLS",
+      "source_interface": "Gi0/2",
+      "target_interface": "Gi0/1",
+      "points": [
+        [
+          602,
+          468
+        ],
+        [
+          735,
+          526
+        ],
+        [
+          868,
+          584
+        ]
+      ],
+      "bbox": [
+        598,
+        464,
+        872,
+        588
+      ],
+      "style": "solid"
+    },
+    {
+      "connector_id": "edge_004",
+      "source": "WAN-PE-01",
+      "target": "BR-RTR-01",
+      "relationship": "connected_to",
+      "label_text": "L3VPN",
+      "source_interface": "eth1",
+      "target_interface": "eth0",
+      "points": [
+        [
+          364,
+          352
+        ],
+        [
+          364,
+          509
+        ],
+        [
+          364,
+          667
+        ]
+      ],
+      "bbox": [
+        360,
+        348,
+        368,
+        671
+      ],
+      "style": "dashed"
+    },
+    {
+      "connector_id": "edge_005",
+      "source": "WAN-PE-02",
+      "target": "DC-RTR-01",
+      "relationship": "connected_to",
+      "label_text": "L3VPN",
+      "source_interface": "Gi0/1",
+      "target_interface": "ge-0/0/1",
+      "points": [
+        [
+          868,
+          584
+        ],
+        [
+          980,
+          493
+        ],
+        [
+          1092,
+          402
+        ]
+      ],
+      "bbox": [
+        864,
+        398,
+        1096,
+        588
+      ],
+      "style": "dashed"
+    },
+    {
+      "connector_id": "edge_006",
+      "source": "DC-RTR-01",
+      "target": "DC-FW-01",
+      "relationship": "routes_to",
+      "label_text": "DC Edge",
+      "source_interface": "eth0",
+      "target_interface": "Gi0/2",
+      "points": [
+        [
+          1092,
+          402
+        ],
+        [
+          1148,
+          476
+        ],
+        [
+          1204,
+          551
+        ]
+      ],
+      "bbox": [
+        1088,
+        398,
+        1208,
+        555
+      ],
+      "style": "dashed"
+    }
+  ]
+}
