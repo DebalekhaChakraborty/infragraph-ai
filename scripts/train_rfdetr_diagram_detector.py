@@ -4,7 +4,7 @@ Train an RF-DETR detector on the V3 scenario-native diagram dataset.
 
 Default:
     python scripts/train_rfdetr_diagram_detector.py \
-        --dataset-root ./datasets/diagram_v3_enterprise/rfdetr \
+        --dataset-root ./datasets/infragraph_v3/rfdetr \
         --out ./outputs/rfdetr_v3 \
         --epochs 25
 
@@ -54,7 +54,7 @@ def write_notes(out_root, status, message):
             "- `pip install rfdetr`",
             "- or follow the upstream RF-DETR installation instructions for your AMD/Jupyter environment.",
             "",
-            "This script does not train YOLO as a fallback.",
+            "This script does not train YOLO as an alternate model.",
         ]),
         encoding="utf-8",
     )
@@ -106,7 +106,7 @@ def filtered_kwargs(callable_obj, candidates):
 
 def main():
     parser = argparse.ArgumentParser(description="Train RF-DETR on Diagram Intelligence V3")
-    parser.add_argument("--dataset-root", default="./datasets/diagram_v3_enterprise/rfdetr")
+    parser.add_argument("--dataset-root", default="./datasets/infragraph_v3/rfdetr")
     parser.add_argument("--out", default="./outputs/rfdetr_v3")
     parser.add_argument("--epochs", type=int, default=25)
     parser.add_argument("--batch-size", type=int, default=2)

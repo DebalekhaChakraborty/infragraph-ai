@@ -73,7 +73,7 @@ The gallery manifest lists up to 250 records (V3 > V2 > V1 priority). Each recor
 | 2 | YOLO V1 detector trained | Done |
 | 3 | Trained weights under `training_runs/infragraph_yolo_v1/weights` | Done |
 | 4 | V2 dataset (400 diagrams) with graph + alert scenarios | Done |
-| 5 | Heuristic RCA (`build_topology_rca_demo.py`) | Done |
+| 5 | Heuristic RCA (`build_topology_rca_pipeline.py`) | Done |
 | 6 | MLP node-ranker RCA (`train_mlp_rca.py`) — learned non-graph baseline | Done |
 | 7 | GNN root-cause ranking (`train_gnn_rca.py`) — 100% test top-1 | Done |
 | 8 | Qwen/vLLM explanation layer (`generate_qwen_rca_explanation.py`) | Done |
@@ -113,7 +113,7 @@ yolo detect predict \
     project=./outputs name=v1_test_predictions_cpu
 
 # 4. Heuristic RCA (Stage 2)
-python scripts/build_topology_rca_demo.py --diagram-id diagram_0373
+python scripts/build_topology_rca_pipeline.py --diagram-id diagram_0373
 
 # 5. MLP node-ranker RCA (learned non-graph baseline)
 python scripts/train_mlp_rca.py
@@ -168,7 +168,7 @@ See: [docs/run_qwen_vllm_amd.md](docs/run_qwen_vllm_amd.md)
 
 | Model | Uses graph? | Learned? | Script |
 |-------|-------------|----------|--------|
-| Heuristic scorer | Yes (rules) | No | `build_topology_rca_demo.py` |
+| Heuristic scorer | Yes (rules) | No | `build_topology_rca_pipeline.py` |
 | **MLP node-ranker** | No | Yes | `train_mlp_rca.py` |
 | **GNN** | Yes (message passing) | Yes | `train_gnn_rca.py` |
 
@@ -193,13 +193,13 @@ propagates the root-cause signal through topology neighbours.
 python scripts/train_mlp_rca.py \
     --dataset-root datasets/infragraph_v2 \
     --out outputs/mlp_rca \
-    --demo-diagram diagram_0373
+    --presentation-diagram diagram_0373
 
 # GNN (topology-aware learned model)
 python scripts/train_gnn_rca.py \
     --dataset-root datasets/infragraph_v2 \
     --out outputs/gnn_rca \
-    --demo-diagram diagram_0373
+    --presentation-diagram diagram_0373
 ```
 
 See `docs/mlp_rca.md` and `docs/gnn_rca.md` for full details.
@@ -216,8 +216,8 @@ python scripts/train_enterprise_gnn_rca.py \
     --dataset-root ./datasets/enterprise_graph_v1 \
     --out ./outputs/enterprise_gnn_rca \
     --epochs 80 \
-    --demo-scenario enterprise_0000 \
-    --demo-split test
+    --presentation-scenario enterprise_0000 \
+    --presentation-split test
 ```
 
 | Output | Description |
@@ -234,7 +234,7 @@ See: [docs/enterprise_gnn_rca.md](docs/enterprise_gnn_rca.md)
 
 ### Enterprise Graph Dataset
 
-This dataset demonstrates multi-diagram graph stitching, where each architecture diagram
+This dataset shows multi-diagram graph stitching, where each architecture diagram
 becomes a local graph and multiple local graphs are stitched into **enterprise graph memory**
 for cross-diagram RCA.
 
@@ -267,27 +267,27 @@ creation, and the stitched enterprise "galaxy" graph used later by enterprise GN
 RCA.
 
 ```bash
-python scripts/generate_diagram_v3_enterprise_dataset.py \
+python scripts/generate_infragraph_v3_dataset.py \
     --num-scenarios 100 \
-    --out ./datasets/diagram_v3_enterprise \
+    --out ./datasets/infragraph_v3 \
     --seed 2026 \
     --clean
 
 python scripts/prepare_rfdetr_dataset.py \
-    --dataset-root ./datasets/diagram_v3_enterprise \
-    --out ./datasets/diagram_v3_enterprise/rfdetr
+    --dataset-root ./datasets/infragraph_v3 \
+    --out ./datasets/infragraph_v3/rfdetr
 
 python scripts/train_rfdetr_diagram_detector.py \
-    --dataset-root ./datasets/diagram_v3_enterprise/rfdetr \
+    --dataset-root ./datasets/infragraph_v3/rfdetr \
     --out ./outputs/rfdetr_v3 \
     --epochs 25
 ```
 
 | Output | Description |
 |--------|-------------|
-| `datasets/diagram_v3_enterprise/scenarios/` | Scenario-native source diagrams, annotations, local graphs, stitch maps, enterprise graphs, alerts, and previews |
-| `datasets/diagram_v3_enterprise/rfdetr/` | COCO-style RF-DETR export with metadata linking each image back to its scenario graphs |
-| `datasets/diagram_v3_enterprise/yolo/dataset.yaml` | YOLO-compatible export from the same annotations |
+| `datasets/infragraph_v3/scenarios/` | Scenario-native source diagrams, annotations, local graphs, stitch maps, enterprise graphs, alerts, and previews |
+| `datasets/infragraph_v3/rfdetr/` | COCO-style RF-DETR export with metadata linking each image back to its scenario graphs |
+| `datasets/infragraph_v3/yolo/dataset.yaml` | YOLO-compatible export from the same annotations |
 | `outputs/rfdetr_v3/` | RF-DETR model outputs when the external RF-DETR package is installed |
 
 RF-DETR is the advanced V3 detector path. YOLO remains the stable baseline for
@@ -349,14 +349,14 @@ infragraph-ai/
 ├── outputs/
 │   ├── v1_test_predictions_cpu/         # Detector output on test set
 │   ├── val_eval/                        # Validation curves and confusion matrix
-│   ├── topology_demo/                   # Stage 2: heuristic RCA outputs
+│   ├── topology_rca/                   # Stage 2: heuristic RCA outputs
 │   ├── mlp_rca/                         # Stage 3a: MLP model and metrics
 │   ├── gnn_rca/                         # Stage 3b: GNN model and metrics
 │   └── qwen_explanation/                # Stage 4: LLM explanation reports
 │
 ├── scripts/
 │   ├── verify_repo_state.py             # Repo integrity checker
-│   ├── build_topology_rca_demo.py       # Stage 2: heuristic RCA + topology vis
+│   ├── build_topology_rca_pipeline.py       # Stage 2: heuristic RCA + topology vis
 │   ├── train_mlp_rca.py                 # Stage 3a: MLP node-ranker (learned baseline)
 │   ├── train_gnn_rca.py                 # Stage 3b: GNN root cause ranking
 │   └── generate_qwen_rca_explanation.py # Stage 4: LLM explanation (mock/vLLM)
@@ -366,7 +366,7 @@ infragraph-ai/
 │   ├── 02_train_yolo_amd.ipynb          # YOLOv8 training (AMD / ROCm / CUDA)
 │   ├── 03_evaluate_detector.ipynb       # mAP, confusion matrix, per-class PR curves
 │   ├── 04_extract_topology_graph.ipynb  # Line detection + OCR → graph
-│   └── 05_rca_graph_demo.ipynb          # Graph RCA & GNN RCA walkthrough
+│   └── 05_rca_graph_walkthrough.ipynb          # Graph RCA & GNN RCA walkthrough
 │
 ├── src/
 │   ├── topology/
@@ -392,6 +392,29 @@ infragraph-ai/
 ├── yolov8n.pt                           # YOLOv8n base weights
 └── requirements.txt
 ```
+
+### Dataset evolution
+
+```
+datasets/
+├── infragraph_v1/         baseline topology image dataset
+├── infragraph_v2/         improved topology image dataset and RCA experiments
+├── infragraph_v3/         scenario-native diagram intelligence + enterprise RCA dataset
+└── enterprise_graph_v1/   legacy enterprise RCA baseline
+```
+
+InfraGraph V3 is scenario-native. Each scenario contains multiple topology
+diagrams, verified annotations, OCR/text blocks, connector metadata, local graph
+memory, enterprise graph stitching, and RCA alert ground truth.
+
+### Presentation Flow
+
+1. Diagram Gallery shows known diagrams available in graph memory.
+2. Onboard New Diagram selects curated samples and runs live diagram intelligence.
+3. A graph memory packet is created.
+4. The diagram is absorbed into Enterprise Graph Brain.
+5. Enterprise RCA runs on the updated graph.
+6. Graph Copilot answers using graph evidence.
 
 ---
 
@@ -426,3 +449,5 @@ python data_generator/generate_infragraph_dataset.py \
 ## License
 
 MIT
+
+

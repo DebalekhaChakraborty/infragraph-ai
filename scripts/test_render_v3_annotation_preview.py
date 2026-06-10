@@ -30,7 +30,7 @@ def main() -> int:
                         help="Directory to write rendered previews")
     args = parser.parse_args()
 
-    ann_root = REPO_ROOT / "datasets" / "diagram_v3_enterprise" / "scenarios"
+    ann_root = REPO_ROOT / "datasets" / "infragraph_v3" / "scenarios"
     out_dir  = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 

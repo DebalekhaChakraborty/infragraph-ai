@@ -1,7 +1,7 @@
 # Diagram Intelligence V3 Dataset
 
 Diagram Intelligence V3 starts the scenario-native dataset track for InfraGraph AI.
-It is designed for the demo story where separate topology diagrams are onboarded,
+It is designed for the presentation story where separate topology diagrams are onboarded,
 each diagram becomes a local graph, and those local graphs are stitched into one
 enterprise graph memory for cross-diagram RCA.
 
@@ -16,7 +16,7 @@ contains 3 to 5 related topology diagrams, and the same diagram annotations are
 used for:
 
 - RF-DETR object detection training.
-- YOLO-compatible fallback training.
+- YOLO-compatible alternate path training.
 - OCR validation for names, IPs, zones, and connector labels.
 - Connector and edge extraction validation.
 - Local graph creation.
@@ -31,13 +31,13 @@ one shared scenario.
 The dataset root is:
 
 ```bash
-datasets/diagram_v3_enterprise/
+datasets/infragraph_v3/
 ```
 
 Each scenario is written under:
 
 ```bash
-datasets/diagram_v3_enterprise/scenarios/{train,val,test}/enterprise_v3_0000/
+datasets/infragraph_v3/scenarios/{train,val,test}/enterprise_v3_0000/
 ```
 
 A scenario includes:
@@ -53,7 +53,7 @@ A scenario includes:
 
 ## Diagram Types
 
-The generator reserves `enterprise_v3_0000` as the demo hero scenario. It always
+The generator reserves `enterprise_v3_0000` as the presentation hero scenario. It always
 contains all five diagram types in one enterprise chain: Branch, WAN/MPLS,
 Datacenter, App/DB, and Shared Services. This scenario also writes
 `preview_stitching_story_hero.png`, a large three-stage visual showing the same
@@ -121,9 +121,9 @@ graph.
 Generate the dataset:
 
 ```bash
-python scripts/generate_diagram_v3_enterprise_dataset.py \
+python scripts/generate_infragraph_v3_dataset.py \
   --num-scenarios 100 \
-  --out ./datasets/diagram_v3_enterprise \
+  --out ./datasets/infragraph_v3 \
   --seed 2026 \
   --clean
 ```
@@ -132,14 +132,14 @@ Prepare the RF-DETR COCO export:
 
 ```bash
 python scripts/prepare_rfdetr_dataset.py \
-  --dataset-root ./datasets/diagram_v3_enterprise \
-  --out ./datasets/diagram_v3_enterprise/rfdetr
+  --dataset-root ./datasets/infragraph_v3 \
+  --out ./datasets/infragraph_v3/rfdetr
 ```
 
 The generator also writes a YOLO-compatible export:
 
 ```bash
-datasets/diagram_v3_enterprise/yolo/dataset.yaml
+datasets/infragraph_v3/yolo/dataset.yaml
 ```
 
 ## Limitations
@@ -149,3 +149,4 @@ datasets/diagram_v3_enterprise/yolo/dataset.yaml
 - Connector annotations are generated from known topology edges, not from a line detector.
 - RF-DETR training depends on the external RF-DETR package and local hardware setup.
 - The enterprise RCA graph is ready for future GNN work, but V3 GNN training is not part of this generator.
+

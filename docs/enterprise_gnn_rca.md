@@ -26,7 +26,7 @@ the entire enterprise in one pass.
 | Node features | 16-dim | 34-dim (adds diagram-type, shared-entity, bridge, reachability) |
 | Architecture | GCN(16-64-32-1) | GCN(34-96-48-1) |
 | Training data | infragraph_v2 per-diagram graphs | enterprise_graph_v1 stitched graphs |
-| Backend | torch or numpy fallback | torch required |
+| Backend | torch or numpy alternate path | torch required |
 
 ---
 
@@ -110,8 +110,8 @@ python scripts/train_enterprise_gnn_rca.py \
     --dataset-root ./datasets/enterprise_graph_v1 \
     --out ./outputs/enterprise_gnn_rca \
     --epochs 80 \
-    --demo-scenario enterprise_0000 \
-    --demo-split test
+    --presentation-scenario enterprise_0000 \
+    --presentation-split test
 ```
 
 ### CLI flags
@@ -125,8 +125,8 @@ python scripts/train_enterprise_gnn_rca.py \
 | `--weight-decay` | 0.0001 | Adam L2 regularisation |
 | `--hidden1` | 96 | First hidden layer width |
 | `--hidden2` | 48 | Second hidden layer width |
-| `--demo-scenario` | enterprise_0000 | Scenario ID for detailed output |
-| `--demo-split` | test | Split to find the demo scenario in |
+| `--presentation-scenario` | enterprise_0000 | Scenario ID for detailed output |
+| `--presentation-split` | test | Split to find the presentation scenario in |
 | `--seed` | 2026 | Random seed |
 
 ### Training loop
@@ -160,7 +160,7 @@ Results are averaged across all scenarios in the split.
 | `enterprise_gnn_model.pt` | PyTorch checkpoint (state_dict + feature vocab + arch metadata) |
 | `enterprise_gnn_metrics.json` | Full training metrics, feature names, split results |
 | `enterprise_gnn_training_curve.png` | Loss and ranking metric curves (requires matplotlib) |
-| `{scenario_id}_enterprise_gnn_rca_result.json` | Detailed result for the demo scenario |
+| `{scenario_id}_enterprise_gnn_rca_result.json` | Detailed result for the presentation scenario |
 | `{scenario_id}_enterprise_gnn_prediction.png` | Enterprise graph visualisation (requires matplotlib + networkx) |
 
 ### rca_result.json schema
@@ -231,3 +231,4 @@ will require a much larger labelled dataset for production deployment.
 **No line detection or OCR.** Cross-diagram edges in the training data are generated
 from a stitch map, not extracted from diagram images. A production system would need
 an automated pipeline to detect cables, labels, and CMDB references across diagram boundaries.
+

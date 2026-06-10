@@ -1,7 +1,7 @@
 """
 live_detector.py
 
-YOLO inference helpers for the InfraGraph AI Streamlit demo.
+YOLO inference helpers for the InfraGraph AI Streamlit app.
 
 Public API:
     find_best_yolo_checkpoint(repo_root) -> Path | None
@@ -25,7 +25,7 @@ _CHECKPOINT_PRIORITY: list[str] = [
 def find_best_yolo_checkpoint(repo_root: Path) -> "Path | None":
     """
     Return the first existing YOLO checkpoint from the priority list.
-    Falls back to any best.pt found under training_runs/**/weights/.
+    Uses any best.pt found under training_runs/**/weights/ if priority paths are absent.
     Returns None if nothing exists.
     """
     for rel in _CHECKPOINT_PRIORITY:
