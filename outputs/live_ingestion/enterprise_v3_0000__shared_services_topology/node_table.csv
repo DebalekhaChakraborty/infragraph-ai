@@ -1,0 +1,9 @@
+node_id,type,ip_address,zone,shared,confidence,source
+AD-01,service,10.255.0.1,Identity,False,0.88,Prepared V3 annotation fallback
+IAM-01,service,10.255.0.2,Identity,False,0.88,Prepared V3 annotation fallback
+DNS-01,service,10.255.0.3,DNS/NTP,False,0.88,Prepared V3 annotation fallback
+NTP-01,service,10.255.0.4,DNS/NTP,False,0.88,Prepared V3 annotation fallback
+MON-01,service,10.255.0.5,Monitoring,False,0.88,Prepared V3 annotation fallback
+SYSLOG-01,server,10.255.0.6,Logging,False,0.88,Prepared V3 annotation fallback
+APP-01,server,,Consumers,True,0.88,Prepared V3 annotation fallback
+BR-APP-01,server,,Consumers,True,0.88,Prepared V3 annotation fallback

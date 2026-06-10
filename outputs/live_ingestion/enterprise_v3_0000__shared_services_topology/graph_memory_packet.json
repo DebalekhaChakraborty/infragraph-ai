@@ -1,0 +1,501 @@
+{
+  "diagram_id": "shared_services_topology",
+  "scenario_id": "enterprise_v3_0000",
+  "original_image": "D:\\My Folders\\Hackathons\\infragraph-ai\\outputs\\live_ingestion\\enterprise_v3_0000__shared_services_topology\\original.png",
+  "detected_image": "D:\\My Folders\\Hackathons\\infragraph-ai\\outputs\\live_ingestion\\enterprise_v3_0000__shared_services_topology\\original.png",
+  "detection_source": "Prepared V3 annotation fallback",
+  "annotation_path": "D:\\My Folders\\Hackathons\\infragraph-ai\\datasets\\diagram_v3_enterprise\\scenarios\\train\\enterprise_v3_0000\\annotations\\shared_services_topology.json",
+  "local_graph_path": "D:\\My Folders\\Hackathons\\infragraph-ai\\datasets\\diagram_v3_enterprise\\scenarios\\train\\enterprise_v3_0000\\local_graphs\\shared_services_topology.json",
+  "node_count": 8,
+  "edge_count": 6,
+  "ocr_text_block_count": 36,
+  "connector_count": 6,
+  "nodes": [
+    {
+      "node_id": "AD-01",
+      "type": "service",
+      "ip_address": "10.255.0.1",
+      "zone": "Identity",
+      "shared": false,
+      "confidence": 0.88,
+      "source": "Prepared V3 annotation fallback"
+    },
+    {
+      "node_id": "IAM-01",
+      "type": "service",
+      "ip_address": "10.255.0.2",
+      "zone": "Identity",
+      "shared": false,
+      "confidence": 0.88,
+      "source": "Prepared V3 annotation fallback"
+    },
+    {
+      "node_id": "DNS-01",
+      "type": "service",
+      "ip_address": "10.255.0.3",
+      "zone": "DNS/NTP",
+      "shared": false,
+      "confidence": 0.88,
+      "source": "Prepared V3 annotation fallback"
+    },
+    {
+      "node_id": "NTP-01",
+      "type": "service",
+      "ip_address": "10.255.0.4",
+      "zone": "DNS/NTP",
+      "shared": false,
+      "confidence": 0.88,
+      "source": "Prepared V3 annotation fallback"
+    },
+    {
+      "node_id": "MON-01",
+      "type": "service",
+      "ip_address": "10.255.0.5",
+      "zone": "Monitoring",
+      "shared": false,
+      "confidence": 0.88,
+      "source": "Prepared V3 annotation fallback"
+    },
+    {
+      "node_id": "SYSLOG-01",
+      "type": "server",
+      "ip_address": "10.255.0.6",
+      "zone": "Logging",
+      "shared": false,
+      "confidence": 0.88,
+      "source": "Prepared V3 annotation fallback"
+    },
+    {
+      "node_id": "APP-01",
+      "type": "server",
+      "ip_address": "",
+      "zone": "Consumers",
+      "shared": true,
+      "confidence": 0.88,
+      "source": "Prepared V3 annotation fallback"
+    },
+    {
+      "node_id": "BR-APP-01",
+      "type": "server",
+      "ip_address": "",
+      "zone": "Consumers",
+      "shared": true,
+      "confidence": 0.88,
+      "source": "Prepared V3 annotation fallback"
+    }
+  ],
+  "edges": [
+    {
+      "source": "AD-01",
+      "target": "IAM-01",
+      "relationship": "connected_to",
+      "label": "LDAP",
+      "confidence": 0.82
+    },
+    {
+      "source": "IAM-01",
+      "target": "MON-01",
+      "relationship": "monitored_by",
+      "label": "API",
+      "confidence": 0.82
+    },
+    {
+      "source": "DNS-01",
+      "target": "NTP-01",
+      "relationship": "connected_to",
+      "label": "NTP",
+      "confidence": 0.82
+    },
+    {
+      "source": "MON-01",
+      "target": "SYSLOG-01",
+      "relationship": "depends_on",
+      "label": "Syslog",
+      "confidence": 0.82
+    },
+    {
+      "source": "APP-01",
+      "target": "IAM-01",
+      "relationship": "depends_on",
+      "label": "OAuth",
+      "confidence": 0.82
+    },
+    {
+      "source": "BR-APP-01",
+      "target": "DNS-01",
+      "relationship": "depends_on",
+      "label": "DNS",
+      "confidence": 0.82
+    }
+  ],
+  "confidence_summary": {
+    "device_detection_avg": 0.88,
+    "edge_extraction_avg": 0.82,
+    "ocr_text_blocks": 36,
+    "connector_count": 6,
+    "low_confidence_items": 8
+  },
+  "text_blocks": [
+    {
+      "text": "AD-01",
+      "bbox": [
+        227,
+        448,
+        277,
+        462
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.255.0.1",
+      "bbox": [
+        212,
+        376,
+        292,
+        388
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "IAM-01",
+      "bbox": [
+        474,
+        448,
+        534,
+        462
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.255.0.2",
+      "bbox": [
+        464,
+        376,
+        544,
+        388
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "DNS-01",
+      "bbox": [
+        754,
+        349,
+        814,
+        363
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.255.0.3",
+      "bbox": [
+        744,
+        277,
+        824,
+        289
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "NTP-01",
+      "bbox": [
+        754,
+        614,
+        814,
+        628
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.255.0.4",
+      "bbox": [
+        744,
+        542,
+        824,
+        554
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "MON-01",
+      "bbox": [
+        1034,
+        415,
+        1094,
+        429
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.255.0.5",
+      "bbox": [
+        1024,
+        343,
+        1104,
+        355
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "SYSLOG-01",
+      "bbox": [
+        1019,
+        647,
+        1109,
+        661
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.255.0.6",
+      "bbox": [
+        1024,
+        575,
+        1104,
+        587
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "APP-01",
+      "bbox": [
+        1258,
+        332,
+        1318,
+        346
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "BR-APP-01",
+      "bbox": [
+        1243,
+        614,
+        1333,
+        628
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "Identity",
+      "bbox": [
+        94,
+        260,
+        142,
+        276
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "DNS/NTP",
+      "bbox": [
+        654,
+        227,
+        696,
+        243
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "Monitoring",
+      "bbox": [
+        962,
+        260,
+        1022,
+        276
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "Consumers",
+      "bbox": [
+        1214,
+        210,
+        1268,
+        226
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "LDAP",
+      "bbox": [
+        354,
+        408,
+        402,
+        428
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        260,
+        422,
+        280,
+        434
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        464,
+        402,
+        496,
+        414
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "API",
+      "bbox": [
+        760,
+        391,
+        808,
+        411
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        512,
+        422,
+        528,
+        434
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        1036,
+        369,
+        1056,
+        381
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "NTP",
+      "bbox": [
+        760,
+        441,
+        808,
+        461
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        792,
+        323,
+        824,
+        335
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        760,
+        568,
+        776,
+        580
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Syslog",
+      "bbox": [
+        1034,
+        491,
+        1094,
+        511
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        1072,
+        389,
+        1092,
+        401
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        1036,
+        601,
+        1056,
+        613
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "OAuth",
+      "bbox": [
+        871,
+        350,
+        921,
+        370
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        1296,
+        306,
+        1312,
+        318
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        480,
+        402,
+        496,
+        414
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "DNS",
+      "bbox": [
+        1012,
+        441,
+        1060,
+        461
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        1296,
+        588,
+        1316,
+        600
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        744,
+        303,
+        776,
+        315
+      ],
+      "text_type": "interface_label"
+    }
+  ],
+  "source_label": "Source: Prepared V3 annotation fallback"
+}

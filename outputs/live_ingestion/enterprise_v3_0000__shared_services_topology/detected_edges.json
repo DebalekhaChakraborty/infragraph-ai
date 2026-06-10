@@ -1,0 +1,110 @@
+[
+  {
+    "source": "",
+    "target": "",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.78,
+    "connector_id": "edge_000",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "",
+    "target": "",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.78,
+    "connector_id": "edge_001",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "",
+    "target": "",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.78,
+    "connector_id": "edge_002",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "",
+    "target": "",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.78,
+    "connector_id": "edge_003",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "",
+    "target": "",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.78,
+    "connector_id": "edge_004",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "",
+    "target": "",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.78,
+    "connector_id": "edge_005",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "AD-01",
+    "target": "IAM-01",
+    "relationship": "connected_to",
+    "label": "LDAP",
+    "confidence": 0.82,
+    "connector_id": "",
+    "source_type": "local_graph"
+  },
+  {
+    "source": "IAM-01",
+    "target": "MON-01",
+    "relationship": "monitored_by",
+    "label": "API",
+    "confidence": 0.82,
+    "connector_id": "",
+    "source_type": "local_graph"
+  },
+  {
+    "source": "DNS-01",
+    "target": "NTP-01",
+    "relationship": "connected_to",
+    "label": "NTP",
+    "confidence": 0.82,
+    "connector_id": "",
+    "source_type": "local_graph"
+  },
+  {
+    "source": "MON-01",
+    "target": "SYSLOG-01",
+    "relationship": "depends_on",
+    "label": "Syslog",
+    "confidence": 0.82,
+    "connector_id": "",
+    "source_type": "local_graph"
+  },
+  {
+    "source": "APP-01",
+    "target": "IAM-01",
+    "relationship": "depends_on",
+    "label": "OAuth",
+    "confidence": 0.82,
+    "connector_id": "",
+    "source_type": "local_graph"
+  },
+  {
+    "source": "BR-APP-01",
+    "target": "DNS-01",
+    "relationship": "depends_on",
+    "label": "DNS",
+    "confidence": 0.82,
+    "connector_id": "",
+    "source_type": "local_graph"
+  }
+]

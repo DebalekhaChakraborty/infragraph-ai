@@ -1,7 +1,7 @@
 [
   {
-    "source": "",
-    "target": "",
+    "source": "WAN-MPLS-CORE",
+    "target": "BR-RTR-01",
     "relationship": "connected_to",
     "label": "",
     "confidence": 0.78,
@@ -9,8 +9,8 @@
     "source_type": "annotation_connector"
   },
   {
-    "source": "",
-    "target": "",
+    "source": "BR-RTR-01",
+    "target": "BR-FW-01",
     "relationship": "connected_to",
     "label": "",
     "confidence": 0.78,
@@ -18,8 +18,8 @@
     "source_type": "annotation_connector"
   },
   {
-    "source": "",
-    "target": "",
+    "source": "BR-FW-01",
+    "target": "BR-SW-01",
     "relationship": "connected_to",
     "label": "",
     "confidence": 0.78,
@@ -27,8 +27,8 @@
     "source_type": "annotation_connector"
   },
   {
-    "source": "",
-    "target": "",
+    "source": "BR-SW-01",
+    "target": "BR-APP-01",
     "relationship": "connected_to",
     "label": "",
     "confidence": 0.78,
@@ -36,8 +36,8 @@
     "source_type": "annotation_connector"
   },
   {
-    "source": "",
-    "target": "",
+    "source": "BR-SW-01",
+    "target": "BR-WRK-01",
     "relationship": "connected_to",
     "label": "",
     "confidence": 0.78,
@@ -45,8 +45,8 @@
     "source_type": "annotation_connector"
   },
   {
-    "source": "",
-    "target": "",
+    "source": "BR-SW-01",
+    "target": "BR-WRK-02",
     "relationship": "connected_to",
     "label": "",
     "confidence": 0.78,
@@ -54,75 +54,12 @@
     "source_type": "annotation_connector"
   },
   {
-    "source": "",
-    "target": "",
+    "source": "BR-SW-01",
+    "target": "BR-WRK-03",
     "relationship": "connected_to",
     "label": "",
     "confidence": 0.78,
     "connector_id": "edge_006",
     "source_type": "annotation_connector"
-  },
-  {
-    "source": "WAN-MPLS-CORE",
-    "target": "BR-RTR-01",
-    "relationship": "wan_dependency",
-    "label": "MPLS",
-    "confidence": 0.82,
-    "connector_id": "",
-    "source_type": "local_graph"
-  },
-  {
-    "source": "BR-RTR-01",
-    "target": "BR-FW-01",
-    "relationship": "routes_to",
-    "label": "VPN",
-    "confidence": 0.82,
-    "connector_id": "",
-    "source_type": "local_graph"
-  },
-  {
-    "source": "BR-FW-01",
-    "target": "BR-SW-01",
-    "relationship": "secured_by",
-    "label": "LAN",
-    "confidence": 0.82,
-    "connector_id": "",
-    "source_type": "local_graph"
-  },
-  {
-    "source": "BR-SW-01",
-    "target": "BR-APP-01",
-    "relationship": "serves",
-    "label": "HTTPS",
-    "confidence": 0.82,
-    "connector_id": "",
-    "source_type": "local_graph"
-  },
-  {
-    "source": "BR-SW-01",
-    "target": "BR-WRK-01",
-    "relationship": "connected_to",
-    "label": "Access",
-    "confidence": 0.82,
-    "connector_id": "",
-    "source_type": "local_graph"
-  },
-  {
-    "source": "BR-SW-01",
-    "target": "BR-WRK-02",
-    "relationship": "connected_to",
-    "label": "Access",
-    "confidence": 0.82,
-    "connector_id": "",
-    "source_type": "local_graph"
-  },
-  {
-    "source": "BR-SW-01",
-    "target": "BR-WRK-03",
-    "relationship": "connected_to",
-    "label": "Access",
-    "confidence": 0.82,
-    "connector_id": "",
-    "source_type": "local_graph"
   }
 ]

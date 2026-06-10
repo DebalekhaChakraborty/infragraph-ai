@@ -16,6 +16,7 @@ from __future__ import annotations
 import copy
 import csv
 import json
+import math
 import shutil
 from pathlib import Path
 from typing import Any
@@ -50,6 +51,113 @@ def _save_csv(path: Path, rows: list[dict]) -> None:
         writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
         writer.writeheader()
         writer.writerows(rows)
+
+
+# ── annotation preview renderer ───────────────────────────────────────────────
+def render_v3_annotation_preview(
+    image_path: Path,
+    annotation_path: Path,
+    out_path: Path,
+) -> Path:
+    """
+    Draw bboxes, node labels, connector polylines, and a footer banner from
+    a V3 annotation JSON onto a copy of the source image.  Saves to out_path.
+    Falls back to copying the original if Pillow is unavailable.
+    """
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+    except ImportError:
+        if image_path.exists():
+            shutil.copy2(image_path, out_path)
+        return out_path
+
+    annotation = _load_json(annotation_path) if annotation_path.exists() else {}
+    if not annotation or not image_path.exists():
+        if image_path.exists():
+            shutil.copy2(image_path, out_path)
+        return out_path
+
+    img  = Image.open(image_path).convert("RGB")
+    draw = ImageDraw.Draw(img, "RGBA")
+    img_w, img_h = img.size
+
+    _CLS_COLORS: dict[str, tuple[int, int, int]] = {
+        "router":        (255, 107,  53),
+        "switch":        ( 78, 205, 196),
+        "firewall":      (255,  78,  80),
+        "server":        ( 69, 183, 209),
+        "database":      (150, 206, 180),
+        "load_balancer": (255, 234, 167),
+        "cloud_or_wan":  (221, 160, 221),
+        "service":       (152, 216, 200),
+    }
+    _DEFAULT_COLOR = (168, 168, 168)
+
+    try:
+        font    = ImageFont.truetype("arial.ttf", 14)
+        font_sm = ImageFont.truetype("arial.ttf", 11)
+    except Exception:
+        try:
+            font    = ImageFont.load_default(size=14)
+            font_sm = ImageFont.load_default(size=11)
+        except Exception:
+            font    = ImageFont.load_default()
+            font_sm = font
+
+    # connector polylines — drawn under boxes
+    for conn in annotation.get("connectors", []):
+        pts = conn.get("points", [])
+        if len(pts) < 2:
+            continue
+        flat = [(int(p[0]), int(p[1])) for p in pts]
+        draw.line(flat, fill=(100, 200, 255, 180), width=2)
+        x1c, y1c = flat[-2]
+        x2c, y2c = flat[-1]
+        ang = math.atan2(y2c - y1c, x2c - x1c)
+        for side in (0.45, -0.45):
+            ax = x2c - int(9 * math.cos(ang + side))
+            ay = y2c - int(9 * math.sin(ang + side))
+            draw.line([(x2c, y2c), (ax, ay)], fill=(100, 200, 255, 200), width=2)
+        lbl = conn.get("label_text", conn.get("relationship", ""))
+        if lbl and pts:
+            mid = pts[len(pts) // 2]
+            draw.text((int(mid[0]) + 3, int(mid[1]) - 14), str(lbl),
+                      fill=(180, 230, 255), font=font_sm)
+
+    # bounding boxes + node id / class labels
+    for obj in annotation.get("objects", []):
+        bbox = obj.get("bbox", [])
+        if len(bbox) < 4:
+            continue
+        x1, y1, x2, y2 = int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])
+        cls   = obj.get("class_name", "server")
+        r, g, b = _CLS_COLORS.get(cls, _DEFAULT_COLOR)
+
+        draw.rectangle([x1, y1, x2, y2],
+                       outline=(r, g, b, 255), fill=(r, g, b, 40), width=2)
+
+        node_id = obj.get("object_id", obj.get("label_text", ""))
+        label   = f"{node_id} [{cls}]"
+        label_y = max(0, y1 - 18)
+        try:
+            tb = draw.textbbox((x1, label_y), label, font=font)
+            lw, lh = tb[2] - tb[0], tb[3] - tb[1]
+        except AttributeError:
+            lw, lh = len(label) * 8, 16
+        draw.rectangle([x1, label_y, x1 + lw + 6, label_y + lh + 4],
+                       fill=(r, g, b, 210))
+        draw.text((x1 + 3, label_y + 2), label, fill=(255, 255, 255), font=font)
+
+    # footer banner
+    footer_h = 26
+    draw.rectangle([0, img_h - footer_h, img_w, img_h], fill=(15, 22, 42, 220))
+    draw.text((10, img_h - footer_h + 5),
+              "Prepared V3 annotation fallback — rendered as detection overlay",
+              fill=(160, 200, 255), font=font_sm)
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    img.save(out_path, "PNG")
+    return out_path
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -98,7 +206,7 @@ def run_live_v3_ingestion(
             shutil.copy2(rfdetr_pred, detected_out)
         detection_source = "RF-DETR trained prediction"
     else:
-        detected_out = orig_out
+        detected_out = run_dir / "detected.png"
         detection_source = "Prepared V3 annotation fallback"
 
     # ── load annotation & local graph ─────────────────────────────────────────
@@ -106,6 +214,12 @@ def run_live_v3_ingestion(
     lg_path  = scenario_path / "local_graphs"  / f"{diagram_id}.json"
     annotation:  dict = _load_json(ann_path) if ann_path.exists() else {}
     local_graph: dict = _load_json(lg_path)  if lg_path.exists()  else {}
+
+    # render fallback bbox preview (idempotent — skips if file already exists)
+    if detection_source == "Prepared V3 annotation fallback" and not detected_out.exists():
+        render_v3_annotation_preview(diagram_path, ann_path, detected_out)
+        if not detected_out.exists():
+            shutil.copy2(orig_out, detected_out)
 
     # ── detected_nodes from annotation objects ────────────────────────────────
     is_rfdetr = detection_source.startswith("RF-DETR")
@@ -128,7 +242,10 @@ def run_live_v3_ingestion(
     detected_edges: list[dict] = []
     seen_pairs: set[tuple[str, str]] = set()
     for conn in annotation.get("connectors", []):
-        pair = (conn.get("from_node", ""), conn.get("to_node", ""))
+        pair = (
+            conn.get("source", conn.get("from_node", "")),
+            conn.get("target", conn.get("to_node", "")),
+        )
         seen_pairs.add(pair)
         detected_edges.append({
             "source":       pair[0],
