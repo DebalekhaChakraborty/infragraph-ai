@@ -53,111 +53,236 @@ def _save_csv(path: Path, rows: list[dict]) -> None:
         writer.writerows(rows)
 
 
+# ── bbox normalization helper ──────────────────────────────────────────────────
+def normalize_bbox_for_pil(
+    obj: dict,
+    image_w: int,
+    image_h: int,
+) -> "tuple[int, int, int, int] | None":
+    """
+    Convert an annotation object's bounding-box to PIL-safe (x0, y0, x1, y1).
+
+    Accepted input formats:
+      a) obj["bbox"] = [x1, y1, x2, y2]   (xyxy, possibly unordered or out-of-bounds)
+      b) obj["bbox"] = [x, y, w, h]        (COCO xywh — detected via bbox_format)
+      c) obj["x"], obj["y"], obj["width"], obj["height"]
+      d) obj["x1"], obj["y1"], obj["x2"], obj["y2"]
+
+    Always:
+      - Sorts x and y so x0 <= x1, y0 <= y1.
+      - Clamps to [0, image_w-1] / [0, image_h-1].
+      - Returns None for degenerate boxes (< 2 px wide or tall) or malformed data.
+      - Never raises.
+    """
+    try:
+        fmt = obj.get("bbox_format", "").lower()
+
+        # resolve raw values
+        bbox = obj.get("bbox")
+        if bbox is not None and len(bbox) >= 4:
+            a, b, c, d = float(bbox[0]), float(bbox[1]), float(bbox[2]), float(bbox[3])
+            if fmt == "xywh":
+                x0, y0, x1, y1 = a, b, a + c, b + d
+            elif fmt == "xyxy":
+                x0, y0, x1, y1 = a, b, c, d
+            else:
+                # heuristic: if c and d are small enough to be width/height treat as xywh
+                if (c <= image_w * 0.6 and d <= image_h * 0.6 and
+                        c > 0 and d > 0 and
+                        a + c <= image_w * 1.05 and b + d <= image_h * 1.05):
+                    x0, y0, x1, y1 = a, b, a + c, b + d
+                else:
+                    x0, y0, x1, y1 = a, b, c, d
+        elif "x1" in obj and "y1" in obj and "x2" in obj and "y2" in obj:
+            x0 = float(obj["x1"]); y0 = float(obj["y1"])
+            x1 = float(obj["x2"]); y1 = float(obj["y2"])
+        elif "x" in obj and "y" in obj and "width" in obj and "height" in obj:
+            x0 = float(obj["x"]);   y0 = float(obj["y"])
+            x1 = x0 + float(obj["width"]); y1 = y0 + float(obj["height"])
+        else:
+            return None
+
+        # sort so x0 <= x1, y0 <= y1
+        x0, x1 = (min(x0, x1), max(x0, x1))
+        y0, y1 = (min(y0, y1), max(y0, y1))
+
+        # clamp to image
+        x0 = max(0, min(image_w - 1, int(x0)))
+        y0 = max(0, min(image_h - 1, int(y0)))
+        x1 = max(0, min(image_w - 1, int(x1)))
+        y1 = max(0, min(image_h - 1, int(y1)))
+
+        if (x1 - x0) < 2 or (y1 - y0) < 2:
+            return None
+        return (x0, y0, x1, y1)
+    except Exception:
+        return None
+
+
 # ── annotation preview renderer ───────────────────────────────────────────────
+_CLS_COLORS: dict[str, tuple[int, int, int]] = {
+    "router":        (255, 107,  53),
+    "switch":        ( 78, 205, 196),
+    "firewall":      (255,  78,  80),
+    "server":        ( 69, 183, 209),
+    "database":      (150, 206, 180),
+    "load_balancer": (255, 234, 167),
+    "cloud_or_wan":  (221, 160, 221),
+    "service":       (152, 216, 200),
+}
+_DEFAULT_COLOR: tuple[int, int, int] = (168, 168, 168)
+
+
 def render_v3_annotation_preview(
     image_path: Path,
     annotation_path: Path,
     out_path: Path,
-) -> Path:
+) -> dict:
     """
     Draw bboxes, node labels, connector polylines, and a footer banner from
     a V3 annotation JSON onto a copy of the source image.  Saves to out_path.
-    Falls back to copying the original if Pillow is unavailable.
+
+    Returns a metadata dict:
+        rendered, boxes_rendered, boxes_skipped, connectors_rendered,
+        connectors_skipped, out_path
+    Falls back gracefully if Pillow is unavailable or annotation is missing.
+    Never raises.
     """
+    meta: dict = {
+        "rendered": False,
+        "boxes_rendered": 0,
+        "boxes_skipped": 0,
+        "connectors_rendered": 0,
+        "connectors_skipped": 0,
+        "out_path": str(out_path),
+    }
+
     try:
         from PIL import Image, ImageDraw, ImageFont
     except ImportError:
         if image_path.exists():
             shutil.copy2(image_path, out_path)
-        return out_path
-
-    annotation = _load_json(annotation_path) if annotation_path.exists() else {}
-    if not annotation or not image_path.exists():
-        if image_path.exists():
-            shutil.copy2(image_path, out_path)
-        return out_path
-
-    img  = Image.open(image_path).convert("RGB")
-    draw = ImageDraw.Draw(img, "RGBA")
-    img_w, img_h = img.size
-
-    _CLS_COLORS: dict[str, tuple[int, int, int]] = {
-        "router":        (255, 107,  53),
-        "switch":        ( 78, 205, 196),
-        "firewall":      (255,  78,  80),
-        "server":        ( 69, 183, 209),
-        "database":      (150, 206, 180),
-        "load_balancer": (255, 234, 167),
-        "cloud_or_wan":  (221, 160, 221),
-        "service":       (152, 216, 200),
-    }
-    _DEFAULT_COLOR = (168, 168, 168)
+        return meta
 
     try:
-        font    = ImageFont.truetype("arial.ttf", 14)
-        font_sm = ImageFont.truetype("arial.ttf", 11)
-    except Exception:
+        annotation = _load_json(annotation_path) if annotation_path.exists() else {}
+        if not annotation or not image_path.exists():
+            if image_path.exists():
+                shutil.copy2(image_path, out_path)
+            return meta
+
+        img  = Image.open(image_path).convert("RGB")
+        draw = ImageDraw.Draw(img, "RGBA")
+        img_w, img_h = img.size
+
         try:
-            font    = ImageFont.load_default(size=14)
-            font_sm = ImageFont.load_default(size=11)
+            font    = ImageFont.truetype("arial.ttf", 14)
+            font_sm = ImageFont.truetype("arial.ttf", 11)
         except Exception:
-            font    = ImageFont.load_default()
-            font_sm = font
+            try:
+                font    = ImageFont.load_default(size=14)
+                font_sm = ImageFont.load_default(size=11)
+            except Exception:
+                font    = ImageFont.load_default()
+                font_sm = font
 
-    # connector polylines — drawn under boxes
-    for conn in annotation.get("connectors", []):
-        pts = conn.get("points", [])
-        if len(pts) < 2:
-            continue
-        flat = [(int(p[0]), int(p[1])) for p in pts]
-        draw.line(flat, fill=(100, 200, 255, 180), width=2)
-        x1c, y1c = flat[-2]
-        x2c, y2c = flat[-1]
-        ang = math.atan2(y2c - y1c, x2c - x1c)
-        for side in (0.45, -0.45):
-            ax = x2c - int(9 * math.cos(ang + side))
-            ay = y2c - int(9 * math.sin(ang + side))
-            draw.line([(x2c, y2c), (ax, ay)], fill=(100, 200, 255, 200), width=2)
-        lbl = conn.get("label_text", conn.get("relationship", ""))
-        if lbl and pts:
-            mid = pts[len(pts) // 2]
-            draw.text((int(mid[0]) + 3, int(mid[1]) - 14), str(lbl),
-                      fill=(180, 230, 255), font=font_sm)
+        # ── connector polylines (drawn under boxes) ───────────────────────────
+        for conn in annotation.get("connectors", []):
+            try:
+                pts = conn.get("points") or []
+                if len(pts) < 2:
+                    meta["connectors_skipped"] += 1
+                    continue
+                flat = [
+                    (
+                        max(0, min(img_w - 1, int(float(p[0])))),
+                        max(0, min(img_h - 1, int(float(p[1])))),
+                    )
+                    for p in pts
+                    if len(p) >= 2
+                ]
+                if len(flat) < 2:
+                    meta["connectors_skipped"] += 1
+                    continue
+                draw.line(flat, fill=(100, 200, 255, 180), width=2)
+                x1c, y1c = flat[-2]
+                x2c, y2c = flat[-1]
+                ang = math.atan2(y2c - y1c, x2c - x1c)
+                for side in (0.45, -0.45):
+                    ax = max(0, min(img_w - 1, x2c - int(9 * math.cos(ang + side))))
+                    ay = max(0, min(img_h - 1, y2c - int(9 * math.sin(ang + side))))
+                    draw.line([(x2c, y2c), (ax, ay)], fill=(100, 200, 255, 200), width=2)
+                lbl = conn.get("label_text", conn.get("relationship", ""))
+                if lbl and flat:
+                    mid = flat[len(flat) // 2]
+                    tx  = max(0, min(img_w - 40, mid[0] + 3))
+                    ty  = max(0, min(img_h - 14, mid[1] - 14))
+                    draw.text((tx, ty), str(lbl), fill=(180, 230, 255), font=font_sm)
+                meta["connectors_rendered"] += 1
+            except Exception:
+                meta["connectors_skipped"] += 1
 
-    # bounding boxes + node id / class labels
-    for obj in annotation.get("objects", []):
-        bbox = obj.get("bbox", [])
-        if len(bbox) < 4:
-            continue
-        x1, y1, x2, y2 = int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])
-        cls   = obj.get("class_name", "server")
-        r, g, b = _CLS_COLORS.get(cls, _DEFAULT_COLOR)
+        # ── bounding boxes + node id / class labels ───────────────────────────
+        for obj in annotation.get("objects", []):
+            try:
+                box = normalize_bbox_for_pil(obj, img_w, img_h)
+                if box is None:
+                    meta["boxes_skipped"] += 1
+                    continue
+                x0, y0, x1, y1 = box
+                cls     = obj.get("class_name", "server")
+                r, g, b = _CLS_COLORS.get(cls, _DEFAULT_COLOR)
 
-        draw.rectangle([x1, y1, x2, y2],
-                       outline=(r, g, b, 255), fill=(r, g, b, 40), width=2)
+                draw.rectangle([x0, y0, x1, y1],
+                               outline=(r, g, b, 255), fill=(r, g, b, 40), width=2)
 
-        node_id = obj.get("object_id", obj.get("label_text", ""))
-        label   = f"{node_id} [{cls}]"
-        label_y = max(0, y1 - 18)
+                node_id = obj.get("object_id", obj.get("label_text", ""))
+                label   = f"{node_id} [{cls}]"
+                lh_est  = 16
+                try:
+                    tb = draw.textbbox((x0, 0), label, font=font)
+                    lw, lh_est = tb[2] - tb[0], tb[3] - tb[1]
+                except AttributeError:
+                    lw = len(label) * 8
+                # place label above box; clamp so it never goes off-image
+                label_y0 = max(0, y0 - lh_est - 6)
+                label_y1 = label_y0 + lh_est + 4
+                if label_y1 > img_h - 1:
+                    label_y1 = min(img_h - 1, y0 + lh_est + 4)
+                    label_y0 = max(0, label_y1 - lh_est - 4)
+                lx0 = max(0, x0)
+                lx1 = min(img_w - 1, x0 + lw + 6)
+                if lx1 > lx0 and label_y1 > label_y0:
+                    draw.rectangle([lx0, label_y0, lx1, label_y1], fill=(r, g, b, 210))
+                draw.text((lx0 + 3, label_y0 + 2), label, fill=(255, 255, 255), font=font)
+                meta["boxes_rendered"] += 1
+            except Exception:
+                meta["boxes_skipped"] += 1
+
+        # ── footer banner ─────────────────────────────────────────────────────
+        footer_h = 26
+        draw.rectangle([0, img_h - footer_h, img_w, img_h], fill=(15, 22, 42, 220))
+        draw.text(
+            (10, img_h - footer_h + 5),
+            "Prepared V3 annotation fallback — rendered as detection overlay",
+            fill=(160, 200, 255),
+            font=font_sm,
+        )
+
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        img.save(out_path, "PNG")
+        meta["rendered"] = True
+
+    except Exception as exc:
+        # last-resort: copy original so the UI still has something to show
         try:
-            tb = draw.textbbox((x1, label_y), label, font=font)
-            lw, lh = tb[2] - tb[0], tb[3] - tb[1]
-        except AttributeError:
-            lw, lh = len(label) * 8, 16
-        draw.rectangle([x1, label_y, x1 + lw + 6, label_y + lh + 4],
-                       fill=(r, g, b, 210))
-        draw.text((x1 + 3, label_y + 2), label, fill=(255, 255, 255), font=font)
+            if image_path.exists():
+                shutil.copy2(image_path, out_path)
+        except Exception:
+            pass
+        meta["error"] = str(exc)
 
-    # footer banner
-    footer_h = 26
-    draw.rectangle([0, img_h - footer_h, img_w, img_h], fill=(15, 22, 42, 220))
-    draw.text((10, img_h - footer_h + 5),
-              "Prepared V3 annotation fallback — rendered as detection overlay",
-              fill=(160, 200, 255), font=font_sm)
-
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    img.save(out_path, "PNG")
-    return out_path
+    return meta
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -216,8 +341,12 @@ def run_live_v3_ingestion(
     local_graph: dict = _load_json(lg_path)  if lg_path.exists()  else {}
 
     # render fallback bbox preview (idempotent — skips if file already exists)
+    _render_meta: dict = {
+        "rendered": False, "boxes_rendered": 0, "boxes_skipped": 0,
+        "connectors_rendered": 0, "connectors_skipped": 0,
+    }
     if detection_source == "Prepared V3 annotation fallback" and not detected_out.exists():
-        render_v3_annotation_preview(diagram_path, ann_path, detected_out)
+        _render_meta = render_v3_annotation_preview(diagram_path, ann_path, detected_out)
         if not detected_out.exists():
             shutil.copy2(orig_out, detected_out)
 
@@ -324,6 +453,7 @@ def run_live_v3_ingestion(
         "confidence_summary":   confidence_summary,
         "text_blocks":          annotation.get("text_blocks", []),
         "source_label":         f"Source: {detection_source}",
+        "annotation_preview":   _render_meta,
     }
 
     # ── persist artifacts ─────────────────────────────────────────────────────
@@ -332,6 +462,12 @@ def run_live_v3_ingestion(
     _save_json(run_dir / "graph_memory_packet.json", packet)
     _save_csv(run_dir  / "node_table.csv",           node_table_rows)
     _save_csv(run_dir  / "edge_table.csv",           edge_table_rows)
+    _save_json(run_dir / "ingestion_summary.json",   {
+        "diagram_id": diagram_id, "scenario_id": scenario_id,
+        "detection_source": detection_source,
+        "node_count": len(node_table_rows), "edge_count": len(edge_table_rows),
+        "annotation_preview": _render_meta,
+    })
 
     return {
         "run_dir":            run_dir,

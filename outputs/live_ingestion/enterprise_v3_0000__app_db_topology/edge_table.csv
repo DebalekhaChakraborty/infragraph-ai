@@ -1,0 +1,19 @@
+source,target,relationship,label,confidence
+DC-CORE-SW-01,APP-LB-01,routes_to,HTTPS,0.82
+DC-AGG-SW-01,APP-LB-01,routes_to,10G,0.82
+APP-LB-01,APP-01,serves,HTTPS,0.82
+APP-01,DB-MASTER,depends_on,JDBC,0.82
+APP-01,DB-CACHE-01,depends_on,API,0.82
+APP-01,SERVICE-API-01,depends_on,API,0.82
+APP-LB-01,APP-02,serves,HTTPS,0.82
+APP-02,DB-MASTER,depends_on,JDBC,0.82
+APP-02,DB-CACHE-01,depends_on,API,0.82
+APP-02,SERVICE-API-01,depends_on,API,0.82
+APP-LB-01,APP-03,serves,HTTPS,0.82
+APP-03,DB-MASTER,depends_on,JDBC,0.82
+APP-03,DB-CACHE-01,depends_on,API,0.82
+APP-03,SERVICE-API-01,depends_on,API,0.82
+SERVICE-API-01,IAM-01,depends_on,LDAP/IAM,0.82
+APP-01,DNS-01,depends_on,DNS,0.82
+DB-MASTER,DB-REPLICA-01,connected_to,DB Link,0.82
+DB-MASTER,DB-REPLICA-02,connected_to,DB Link,0.82
