@@ -64,7 +64,6 @@ try:
     from runtime_ingestion import run_enterprise_absorption as _live_absorb                # type: ignore
     from runtime_ingestion import run_ingestion as _run_ingestion                          # type: ignore
     from runtime_ingestion import run_absorption as _run_absorption                        # type: ignore
-    from runtime_ingestion import render_v3_annotation_preview as _render_ann_preview      # type: ignore
     _RUNTIME_INGESTION = True
 except Exception:
     _RUNTIME_INGESTION = False
@@ -72,7 +71,15 @@ except Exception:
     _live_absorb         = None  # type: ignore
     _run_ingestion       = None  # type: ignore
     _run_absorption      = None  # type: ignore
-    _render_ann_preview  = None  # type: ignore
+
+# render_v3_annotation_preview is a lightweight drawing helper that only requires
+# stdlib + Pillow — import it separately so a missing heavy dep never blocks it.
+try:
+    from runtime_ingestion import render_v3_annotation_preview as _render_ann_preview      # type: ignore
+    _RENDER_ANN_IMPORT_ERR = ""
+except Exception as _e:
+    _render_ann_preview       = None  # type: ignore
+    _RENDER_ANN_IMPORT_ERR    = str(_e)
 
 try:
     from live_detector import find_best_yolo_checkpoint as _find_ckpt  # type: ignore
@@ -1147,45 +1154,74 @@ def _repair_path(raw: str, repo_root: Path) -> Path:
     return p
 
 
-def _ensure_annotation_overlay(record: dict, repo_root: Path) -> tuple[str, dict]:
+def _ensure_annotation_overlay(
+    record: dict,
+    repo_root: Path,
+    img_p: "Path | None" = None,
+    ann_p: "Path | None" = None,
+) -> tuple[str, dict]:
     """
-    Render a Verified Annotation Overlay for a gallery record and cache the result.
+    Render a Verified Annotation Overlay for a gallery record and cache to disk.
 
-    Returns (overlay_path_str, render_meta).
-    overlay_path_str is "" on failure.
+    Accepts optional pre-resolved img_p / ann_p so the caller's already-repaired
+    paths are used directly (avoids double path-repair).
+
+    Returns (overlay_path_str, render_meta).  overlay_path_str is "" on failure.
     Never raises.
     """
-    if _render_ann_preview is None:
-        return "", {"error": "render_v3_annotation_preview not imported"}
+    # ── resolve the renderer (module-level may be None if import raced) ────────
+    renderer = _render_ann_preview
+    if renderer is None:
+        # local recovery import — renderer is a pure stdlib+Pillow helper
+        try:
+            import sys as _sys2
+            _sd = str(repo_root / "src")
+            if _sd not in _sys2.path:
+                _sys2.path.insert(0, _sd)
+            from runtime_ingestion import render_v3_annotation_preview as renderer  # type: ignore
+        except Exception as _ie:
+            return "", {"error": f"render_v3_annotation_preview not available: {_ie}",
+                        "renderer_imported": False}
 
-    img_raw = record.get("image_path", "")
-    ann_raw = record.get("annotation_path", "")
-    if not img_raw or not ann_raw:
-        return "", {"error": "image_path or annotation_path missing from record"}
+    # ── resolve paths ──────────────────────────────────────────────────────────
+    if img_p is None:
+        img_raw = record.get("image_path", "")
+        if not img_raw:
+            return "", {"error": "image_path missing from record"}
+        img_p = _repair_path(img_raw, repo_root)
 
-    img_p = _repair_path(img_raw, repo_root)
-    ann_p = _repair_path(ann_raw, repo_root)
+    if ann_p is None:
+        ann_raw = record.get("annotation_path", "")
+        if not ann_raw:
+            return "", {"error": "annotation_path missing from record"}
+        ann_p = _repair_path(ann_raw, repo_root)
 
     if not img_p.exists():
-        return "", {"error": f"image not found: {img_p}"}
+        return "", {"error": f"image not found: {img_p}", "renderer_imported": True}
     if not ann_p.exists():
-        return "", {"error": f"annotation not found: {ann_p}"}
+        return "", {"error": f"annotation not found: {ann_p}", "renderer_imported": True}
 
-    # Build a stable output path so repeated gallery selections reuse the file
+    # ── stable output path (reused across renders) ─────────────────────────────
     gid = record.get("gallery_id", "")
     if not gid:
         scen = record.get("source_scenario_id", "unknown")
         did  = record.get("source_diagram_id",  "unknown")
         gid  = f"{scen}__{did}"
-    out_dir = repo_root / "outputs" / "annotation_overlays" / gid
+    out_dir  = repo_root / "outputs" / "annotation_overlays" / gid
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / "detected.png"
 
-    try:
-        meta = _render_ann_preview(img_p, ann_p, out_path)
-    except Exception as exc:
-        return "", {"error": str(exc)}
+    # ── skip re-render if already on disk ─────────────────────────────────────
+    if out_path.exists():
+        return str(out_path), {"rendered": True, "cached": True,
+                               "boxes_rendered": 0, "connectors_rendered": 0}
 
+    try:
+        meta = renderer(img_p, ann_p, out_path)
+    except Exception as exc:
+        return "", {"error": str(exc), "renderer_imported": True}
+
+    meta.setdefault("renderer_imported", True)
     if out_path.exists():
         return str(out_path), meta
     return "", meta
@@ -2119,14 +2155,20 @@ def _tab_diagram_gallery() -> None:
             st.image(det_p, use_container_width=True)
         elif is_v3 and img_exists and ann_exists:
             with st.spinner("Rendering annotation overlay…"):
-                _overlay_path, _overlay_meta = _ensure_annotation_overlay(record, REPO_ROOT)
+                _overlay_path, _overlay_meta = _ensure_annotation_overlay(
+                    record, REPO_ROOT,
+                    img_p=Path(img_p),
+                    ann_p=Path(ann_p),
+                )
             _render_err = _overlay_meta.get("error", "")
             if _overlay_path and Path(_overlay_path).exists():
                 n_obj = _overlay_meta.get("boxes_rendered", 0)
                 n_con = _overlay_meta.get("connectors_rendered", 0)
+                _cached = _overlay_meta.get("cached", False)
+                _sub = "graph-ready annotation bboxes" if _cached else f"{n_obj} objects, {n_con} connectors"
                 st.markdown(
                     '<div class="compare-badge prepared">Verified Annotation Overlay</div>'
-                    f'<div class="compare-label">{n_obj} objects, {n_con} connectors</div>',
+                    f'<div class="compare-label">{_sub}</div>',
                     unsafe_allow_html=True,
                 )
                 st.image(_overlay_path, use_container_width=True)
@@ -2152,12 +2194,14 @@ def _tab_diagram_gallery() -> None:
     # ── Overlay diagnostics (under Source details expander further below) ─────
     # Store for use in the expander; keyed by gallery_id so it survives re-render
     st.session_state[f"_diag_{record.get('gallery_id','')}"] = {
-        "image_path":    img_p,
-        "img_exists":    img_exists,
-        "annotation_path": ann_p,
-        "ann_exists":    ann_exists,
-        "overlay_path":  _overlay_path,
-        "render_error":  _render_err,
+        "image_path":       img_p,
+        "img_exists":       img_exists,
+        "annotation_path":  ann_p,
+        "ann_exists":       ann_exists,
+        "overlay_path":     _overlay_path,
+        "render_error":     _render_err,
+        "renderer_imported": _render_ann_preview is not None,
+        "render_meta":      _overlay_meta,
     }
 
     # ── Badges ────────────────────────────────────────────────────────────────
@@ -2227,14 +2271,18 @@ def _tab_diagram_gallery() -> None:
 
         # Overlay diagnostics
         _diag = st.session_state.get(f"_diag_{record.get('gallery_id','')}", {})
-        if _diag:
-            st.markdown("**Overlay diagnostics**")
-            st.caption(f"image_path exists: `{_diag.get('img_exists', '?')}`")
-            st.caption(f"annotation_path exists: `{_diag.get('ann_exists', '?')}`")
-            if _diag.get("overlay_path"):
-                st.caption(f"overlay_path: `{_diag['overlay_path']}`")
-            if _diag.get("render_error"):
-                st.caption(f"render error: `{_diag['render_error']}`")
+        st.markdown("**Overlay diagnostics**")
+        st.caption(f"image_path exists: `{_diag.get('img_exists', img_exists)}`")
+        st.caption(f"annotation_path exists: `{_diag.get('ann_exists', ann_exists)}`")
+        st.caption(f"renderer imported: `{_render_ann_preview is not None}`")
+        if _RENDER_ANN_IMPORT_ERR:
+            st.caption(f"renderer import error: `{_RENDER_ANN_IMPORT_ERR}`")
+        if _diag.get("overlay_path"):
+            st.caption(f"overlay_path: `{_diag['overlay_path']}`")
+        elif _overlay_path:
+            st.caption(f"overlay_path: `{_overlay_path}`")
+        if _diag.get("render_error") or _render_err:
+            st.caption(f"render error: `{_diag.get('render_error') or _render_err}`")
     # Gallery does not include a live ingestion button — use Onboard New Diagram for that
 
 
