@@ -43,7 +43,15 @@ st.set_page_config(
 )
 
 REPO_ROOT = Path(__file__).parent.parent
-_GALLERY_FALLBACK_ID = "diagram_0373"
+_GALLERY_REFERENCE_ID = "diagram_0373"
+
+
+def get_infragraph_v3_root(repo_root: Path) -> Path:
+    preferred = repo_root / "datasets" / "infragraph_v3"
+    legacy = repo_root / "datasets" / "diagram_v3_enterprise"
+    if preferred.exists():
+        return preferred
+    return legacy
 
 import sys as _sys
 _scripts_dir = str(REPO_ROOT / "scripts")
@@ -594,7 +602,7 @@ def _build_diagram_catalog(repo_root_str: str) -> list[dict]:
                     "is_v3":               False,
                 })
 
-    v3_scen = root / "datasets" / "diagram_v3_enterprise" / "scenarios"
+    v3_scen = get_infragraph_v3_root(root) / "scenarios"
     if v3_scen.exists():
         for split_dir in sorted(v3_scen.iterdir()):
             if not split_dir.is_dir():
@@ -639,7 +647,7 @@ def build_onboarding_sample_catalog(repo_root_str: str, max_samples: int = 20) -
     Prefers test/ > val/ > train/. Selects diverse diagram types per scenario.
     """
     root = Path(repo_root_str)
-    v3_scen = root / "datasets" / "diagram_v3_enterprise" / "scenarios"
+    v3_scen = get_infragraph_v3_root(root) / "scenarios"
     if not v3_scen.exists():
         return []
 
@@ -1051,7 +1059,7 @@ def _render_local_graph(local_graph: dict, overlay: dict | None = None,
 # ══════════════════════════════════════════════════════════════════════════════
 # V3 CONSTANTS
 # ══════════════════════════════════════════════════════════════════════════════
-V3_DATASET_ROOT  = REPO_ROOT / "datasets" / "diagram_v3_enterprise"
+V3_DATASET_ROOT  = get_infragraph_v3_root(REPO_ROOT)
 V3_HERO_SCENARIO = V3_DATASET_ROOT / "scenarios" / "train" / "enterprise_v3_0000"
 V3_DIAGRAM_IDS = {
     "Branch Office Topology":       "branch_topology",
@@ -1154,6 +1162,36 @@ def _repair_path(raw: str, repo_root: Path) -> Path:
     return p
 
 
+def _load_renderer(repo_root: Path) -> "tuple[object | None, str]":
+    """
+    Return (render_v3_annotation_preview_fn, error_str).
+
+    Tries in order:
+    1. Module-level _render_ann_preview (works when import succeeded at startup).
+    2. importlib.util.spec_from_file_location — loads from the known absolute path,
+       completely bypassing sys.modules.  This is immune to Streamlit's hot-reload
+       leaving a stale cached module that predates the function being added.
+    """
+    if _render_ann_preview is not None:
+        return _render_ann_preview, ""
+
+    ri_path = repo_root / "src" / "runtime_ingestion.py"
+    if not ri_path.exists():
+        return None, f"runtime_ingestion.py not found at {ri_path}"
+
+    try:
+        import importlib.util as _ilu
+        _spec = _ilu.spec_from_file_location("_ri_fresh", str(ri_path))
+        _mod  = _ilu.module_from_spec(_spec)
+        _spec.loader.exec_module(_mod)           # type: ignore[union-attr]
+        fn = getattr(_mod, "render_v3_annotation_preview", None)
+        if fn is None:
+            return None, "render_v3_annotation_preview not found in module"
+        return fn, ""
+    except Exception as exc:
+        return None, str(exc)
+
+
 def _ensure_annotation_overlay(
     record: dict,
     repo_root: Path,
@@ -1169,19 +1207,9 @@ def _ensure_annotation_overlay(
     Returns (overlay_path_str, render_meta).  overlay_path_str is "" on failure.
     Never raises.
     """
-    # ── resolve the renderer (module-level may be None if import raced) ────────
-    renderer = _render_ann_preview
+    renderer, load_err = _load_renderer(repo_root)
     if renderer is None:
-        # local recovery import — renderer is a pure stdlib+Pillow helper
-        try:
-            import sys as _sys2
-            _sd = str(repo_root / "src")
-            if _sd not in _sys2.path:
-                _sys2.path.insert(0, _sd)
-            from runtime_ingestion import render_v3_annotation_preview as renderer  # type: ignore
-        except Exception as _ie:
-            return "", {"error": f"render_v3_annotation_preview not available: {_ie}",
-                        "renderer_imported": False}
+        return "", {"error": load_err, "renderer_imported": False}
 
     # ── resolve paths ──────────────────────────────────────────────────────────
     if img_p is None:
@@ -1214,7 +1242,8 @@ def _ensure_annotation_overlay(
     # ── skip re-render if already on disk ─────────────────────────────────────
     if out_path.exists():
         return str(out_path), {"rendered": True, "cached": True,
-                               "boxes_rendered": 0, "connectors_rendered": 0}
+                               "boxes_rendered": 0, "connectors_rendered": 0,
+                               "renderer_imported": True}
 
     try:
         meta = renderer(img_p, ann_p, out_path)
@@ -1385,8 +1414,8 @@ def _run_v3_diagram_intelligence(diagram_path: Path, diagram_id: str,
     if not packet["annotation"] or not packet["local_graph"]:
         st.error(
             "V3 metadata is missing. Generate the dataset first:\n"
-            "`python scripts/generate_diagram_v3_enterprise_dataset.py --num-scenarios 10 "
-            "--out ./datasets/diagram_v3_enterprise --seed 2026 --clean`"
+            "`python scripts/generate_infragraph_v3_dataset.py --num-scenarios 10 "
+            "--out ./datasets/infragraph_v3 --seed 2026 --clean`"
         )
         return False
 
@@ -2274,9 +2303,12 @@ def _tab_diagram_gallery() -> None:
         st.markdown("**Overlay diagnostics**")
         st.caption(f"image_path exists: `{_diag.get('img_exists', img_exists)}`")
         st.caption(f"annotation_path exists: `{_diag.get('ann_exists', ann_exists)}`")
-        st.caption(f"renderer imported: `{_render_ann_preview is not None}`")
-        if _RENDER_ANN_IMPORT_ERR:
-            st.caption(f"renderer import error: `{_RENDER_ANN_IMPORT_ERR}`")
+        _diag_rend, _diag_rend_err = _load_renderer(REPO_ROOT)
+        st.caption(f"renderer available: `{_diag_rend is not None}`")
+        if _diag_rend_err:
+            st.caption(f"renderer load error: `{_diag_rend_err}`")
+        elif _RENDER_ANN_IMPORT_ERR:
+            st.caption(f"module-level import note: `{_RENDER_ANN_IMPORT_ERR}`")
         if _diag.get("overlay_path"):
             st.caption(f"overlay_path: `{_diag['overlay_path']}`")
         elif _overlay_path:

@@ -1,0 +1,8 @@
+path: /workspace/shared/infragraph-ai/datasets/infragraph_v3/yolo
+train: images/train
+val:   images/val
+test:  images/test
+
+nc: 8
+names: ['router', 'switch', 'firewall', 'server', 'database', 'load_balancer', 'cloud_or_wan', 'service']
+

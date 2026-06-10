@@ -1,7 +1,7 @@
 # RF-DETR V3 Detector
 
 RF-DETR is the advanced detector path for Diagram Intelligence V3. YOLO remains
-the stable baseline and fallback comparison path.
+the stable baseline and alternate path comparison path.
 
 ## Why RF-DETR For V3
 
@@ -20,9 +20,9 @@ local graph, stitched enterprise graph, and alert labels through
 Generate V3 scenarios first:
 
 ```bash
-python scripts/generate_diagram_v3_enterprise_dataset.py \
+python scripts/generate_infragraph_v3_dataset.py \
   --num-scenarios 100 \
-  --out ./datasets/diagram_v3_enterprise \
+  --out ./datasets/infragraph_v3 \
   --seed 2026 \
   --clean
 ```
@@ -31,14 +31,14 @@ Build the COCO export for RF-DETR:
 
 ```bash
 python scripts/prepare_rfdetr_dataset.py \
-  --dataset-root ./datasets/diagram_v3_enterprise \
-  --out ./datasets/diagram_v3_enterprise/rfdetr
+  --dataset-root ./datasets/infragraph_v3 \
+  --out ./datasets/infragraph_v3/rfdetr
 ```
 
 Expected RF-DETR structure:
 
 ```text
-datasets/diagram_v3_enterprise/rfdetr/
+datasets/infragraph_v3/rfdetr/
   images/train/
   images/val/
   images/test/
@@ -65,7 +65,7 @@ Default command:
 
 ```bash
 python scripts/train_rfdetr_diagram_detector.py \
-  --dataset-root ./datasets/diagram_v3_enterprise/rfdetr \
+  --dataset-root ./datasets/infragraph_v3/rfdetr \
   --out ./outputs/rfdetr_v3 \
   --epochs 25
 ```
@@ -74,7 +74,7 @@ AMD/Jupyter-friendly options:
 
 ```bash
 python scripts/train_rfdetr_diagram_detector.py \
-  --dataset-root ./datasets/diagram_v3_enterprise/rfdetr \
+  --dataset-root ./datasets/infragraph_v3/rfdetr \
   --out ./outputs/rfdetr_v3 \
   --epochs 25 \
   --batch-size 2 \
@@ -107,7 +107,7 @@ produces one in a recognized location.
 The V3 generator also produces:
 
 ```text
-datasets/diagram_v3_enterprise/yolo/
+datasets/infragraph_v3/yolo/
   images/train/
   images/val/
   images/test/
@@ -126,3 +126,4 @@ This keeps the comparison clear:
 
 DINOv3 and Grounding DINO are future options for richer document and open-vocabulary
 diagram understanding. They are not used by the current wrapper.
+

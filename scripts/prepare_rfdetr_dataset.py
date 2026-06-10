@@ -7,8 +7,8 @@ full traceability back to local graphs and enterprise graphs.
 
 Usage:
     python scripts/prepare_rfdetr_dataset.py \
-        --dataset-root ./datasets/diagram_v3_enterprise \
-        --out ./datasets/diagram_v3_enterprise/rfdetr
+        --dataset-root ./datasets/infragraph_v3 \
+        --out ./datasets/infragraph_v3/rfdetr
 """
 
 import argparse
@@ -27,6 +27,14 @@ COCO_CATS = [
     {"id": 8, "name": "service",       "supercategory": "network_device"},
 ]
 CAT_ID = {c["name"]: c["id"] for c in COCO_CATS}
+
+
+def get_infragraph_v3_root(repo_root: Path) -> Path:
+    preferred = repo_root / "datasets" / "infragraph_v3"
+    legacy = repo_root / "datasets" / "diagram_v3_enterprise"
+    if preferred.exists():
+        return preferred
+    return legacy
 
 
 def _coco_info():
@@ -149,8 +157,9 @@ def build_coco_split(dataset_root, split, out_images_dir, image_id_start, ann_id
 
 def main():
     p = argparse.ArgumentParser(description="Prepare RF-DETR COCO dataset from V3 scenarios")
-    p.add_argument("--dataset-root", type=str, default="./datasets/diagram_v3_enterprise")
-    p.add_argument("--out",          type=str, default="./datasets/diagram_v3_enterprise/rfdetr")
+    default_root = get_infragraph_v3_root(Path.cwd())
+    p.add_argument("--dataset-root", type=str, default=str(default_root))
+    p.add_argument("--out",          type=str, default=str(default_root / "rfdetr"))
     args = p.parse_args()
 
     dataset_root = Path(args.dataset_root).resolve()
@@ -158,7 +167,7 @@ def main():
 
     if not dataset_root.exists():
         print(f"[FAIL] dataset-root not found: {dataset_root}")
-        print("       Run generate_diagram_v3_enterprise_dataset.py first.")
+        print("       Run generate_infragraph_v3_dataset.py first.")
         return 1
 
     for split in ["train", "val", "test"]:

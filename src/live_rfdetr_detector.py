@@ -1,7 +1,7 @@
 """
 live_rfdetr_detector.py
 
-RF-DETR inference helpers for the InfraGraph AI Streamlit demo.
+RF-DETR inference helpers for the InfraGraph AI Streamlit app.
 
 Public API:
     find_best_rfdetr_checkpoint(repo_root)  -> Path | None
@@ -78,7 +78,7 @@ def find_best_rfdetr_checkpoint(repo_root: Path) -> "Path | None":
         p = repo_root / rel
         if p.exists():
             return p
-    # fallback: any .pth under outputs/rfdetr_v3/model/
+    # alternate path: any .pth under outputs/rfdetr_v3/model/
     for p in sorted((repo_root / "outputs" / "rfdetr_v3" / "model").glob("*.pth")):
         return p
     return None

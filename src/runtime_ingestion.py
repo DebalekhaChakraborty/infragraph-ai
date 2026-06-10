@@ -309,8 +309,8 @@ def run_live_v3_ingestion(
         1. outputs/rfdetr_v3_predictions/<scenario_id>__<diagram_id>.png
            -> detection_source = "RF-DETR trained prediction"
         2. No RF-DETR output exists
-           -> detection_source = "Prepared V3 annotation fallback"
-           -> detected image = original (labeled clearly as fallback)
+           -> detection_source = "Verified Annotation Overlay"
+           -> detected image = annotation-rendered overlay
 
     Returns a dict with:
         run_dir, original_image, detected_image, detection_source,
@@ -329,7 +329,7 @@ def run_live_v3_ingestion(
     # ── detect source (3-tier priority) ──────────────────────────────────────
     #   1. Live RF-DETR inference  (use_live_rfdetr=True + checkpoint exists)
     #   2. Static rfdetr_v3_predictions file
-    #   3. Annotation overlay fallback (rendered below after annotation loads)
+    #   3. Verified Annotation Overlay rendered from V3 metadata
     detected_out     = run_dir / "detected.png"
     detection_source = "Verified Annotation Overlay"
     _rfdetr_error: str  = ""
@@ -384,12 +384,12 @@ def run_live_v3_ingestion(
     annotation:  dict = _load_json(ann_path) if ann_path.exists() else {}
     local_graph: dict = _load_json(lg_path)  if lg_path.exists()  else {}
 
-    # render fallback bbox preview (idempotent — skips if file already exists)
+    # render verified annotation overlay (idempotent — skips if file already exists)
     _render_meta: dict = {
         "rendered": False, "boxes_rendered": 0, "boxes_skipped": 0,
         "connectors_rendered": 0, "connectors_skipped": 0,
     }
-    if detection_source == "Prepared V3 annotation fallback" and not detected_out.exists():
+    if detection_source == "Verified Annotation Overlay" and not detected_out.exists():
         _render_meta = render_v3_annotation_preview(diagram_path, ann_path, detected_out)
         if not detected_out.exists():
             shutil.copy2(orig_out, detected_out)

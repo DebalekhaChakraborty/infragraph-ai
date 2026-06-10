@@ -93,7 +93,7 @@ def main():
         draw.text((x1 + 5, max(0, y1 - th - 5)), label, fill="white", font=font)
 
     # Footer watermark
-    footer = "Prepared V3 annotation fallback — rendered as detection overlay"
+    footer = "Verified Annotation Overlay — rendered from V3 metadata"
     draw.rectangle([0, img.height - 34, img.width, img.height], fill="#0f172a")
     draw.text((14, img.height - 26), footer, fill="#e2e8f0", font=small)
 

@@ -5,7 +5,7 @@ Smoke test for live RF-DETR inference.
 
 Usage:
     python scripts/test_live_rfdetr_inference.py \
-        --image datasets/diagram_v3_enterprise/scenarios/train/enterprise_v3_0000/diagrams/branch_topology.png \
+        --image datasets/infragraph_v3/scenarios/train/enterprise_v3_0000/diagrams/branch_topology.png \
         --scenario-id enterprise_v3_0000 \
         --diagram-id branch_topology
 
@@ -31,7 +31,7 @@ def main() -> int:
         "--image",
         default=str(
             REPO_ROOT
-            / "datasets/diagram_v3_enterprise/scenarios/train"
+            / "datasets/infragraph_v3/scenarios/train"
             / "enterprise_v3_0000/diagrams/branch_topology.png"
         ),
     )

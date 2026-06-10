@@ -32,6 +32,14 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
+
+def get_infragraph_v3_root(repo_root: Path) -> Path:
+    preferred = repo_root / "datasets" / "infragraph_v3"
+    legacy = repo_root / "datasets" / "diagram_v3_enterprise"
+    if preferred.exists():
+        return preferred
+    return legacy
+
 # ---------------------------------------------------------------------------
 # Display name tables
 # ---------------------------------------------------------------------------
@@ -419,7 +427,7 @@ def build_gallery_manifest(
     log: logging.Logger | None = None,
 ) -> list[dict]:
     """Build and write assets/gallery/manifest.json. Returns records list."""
-    v3_scen_root = repo_root / "datasets" / "diagram_v3_enterprise" / "scenarios"
+    v3_scen_root = get_infragraph_v3_root(repo_root) / "scenarios"
 
     v3_records = _v3_gallery_records(v3_scen_root, max_items=max_items, counter_start=1)
     remain     = max(0, max_items - len(v3_records))
@@ -489,12 +497,12 @@ def main() -> int:
     log.info(f"  Max gallery items:       {args.max_gallery_items}")
     log.info(f"  Dry run:                 {args.dry_run}")
 
-    v3_scen_root = REPO_ROOT / "datasets" / "diagram_v3_enterprise" / "scenarios"
+    v3_scen_root = get_infragraph_v3_root(REPO_ROOT) / "scenarios"
     if not v3_scen_root.exists():
         log.error(
             f"V3 scenarios root not found: {v3_scen_root}\n"
             "Generate the dataset first:\n"
-            "  python scripts/generate_diagram_v3_enterprise_dataset.py"
+            "  python scripts/generate_infragraph_v3_dataset.py"
         )
         return 1
 
