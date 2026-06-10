@@ -1,8 +1,0 @@
-source,target,relationship,label,confidence
-WAN-ISP-01,WAN-MPLS-CORE,routes_to,BGP,0.82
-WAN-ISP-02,WAN-MPLS-CORE,routes_to,BGP,0.82
-WAN-MPLS-CORE,WAN-PE-01,routes_to,MPLS,0.82
-WAN-MPLS-CORE,WAN-PE-02,routes_to,MPLS,0.82
-WAN-PE-01,BR-RTR-01,connected_to,L3VPN,0.82
-WAN-PE-02,DC-RTR-01,connected_to,L3VPN,0.82
-DC-RTR-01,DC-FW-01,routes_to,DC Edge,0.82

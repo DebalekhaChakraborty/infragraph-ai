@@ -1,9 +1,0 @@
-node_id,type,ip_address,zone,shared,confidence,source
-WAN-ISP-01,cloud_or_wan,172.16.0.1,Internet/ISP,False,0.88,Prepared V3 annotation fallback
-WAN-ISP-02,cloud_or_wan,172.16.0.2,Internet/ISP,False,0.88,Prepared V3 annotation fallback
-WAN-MPLS-CORE,cloud_or_wan,172.16.0.3,WAN Core,False,0.88,Prepared V3 annotation fallback
-WAN-PE-01,router,172.16.0.4,WAN PE,False,0.88,Prepared V3 annotation fallback
-WAN-PE-02,router,172.16.0.5,WAN PE,False,0.88,Prepared V3 annotation fallback
-BR-RTR-01,router,,Branch,True,0.88,Prepared V3 annotation fallback
-DC-RTR-01,router,,DC Edge,True,0.88,Prepared V3 annotation fallback
-DC-FW-01,firewall,,DC Edge,True,0.88,Prepared V3 annotation fallback

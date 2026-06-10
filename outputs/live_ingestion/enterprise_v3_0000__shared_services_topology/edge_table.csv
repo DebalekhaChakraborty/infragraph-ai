@@ -1,7 +1,0 @@
-source,target,relationship,label,confidence
-AD-01,IAM-01,connected_to,LDAP,0.82
-IAM-01,MON-01,monitored_by,API,0.82
-DNS-01,NTP-01,connected_to,NTP,0.82
-MON-01,SYSLOG-01,depends_on,Syslog,0.82
-APP-01,IAM-01,depends_on,OAuth,0.82
-BR-APP-01,DNS-01,depends_on,DNS,0.82

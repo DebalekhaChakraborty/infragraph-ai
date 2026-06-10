@@ -1247,6 +1247,8 @@ def _ensure_annotation_overlay(
         out_path.exists()
         and isinstance(cached_meta, dict)
         and cached_meta.get("renderer_version") == _OVERLAY_RENDERER_VERSION
+        and cached_meta.get("overlay_mode") == "clean"
+        and not bool(cached_meta.get("draw_connectors", False))
     ):
         return str(out_path), {"rendered": True, "cached": True,
                                "boxes_rendered": cached_meta.get("boxes_rendered", 0),
@@ -1254,6 +1256,7 @@ def _ensure_annotation_overlay(
                                "boxes_skipped_large": cached_meta.get("boxes_skipped_large", 0),
                                "connectors_rendered": cached_meta.get("connectors_rendered", 0),
                                "connectors_skipped": cached_meta.get("connectors_skipped", 0),
+                               "connectors_skipped_long": cached_meta.get("connectors_skipped_long", 0),
                                "overlay_mode": cached_meta.get("overlay_mode", "clean"),
                                "draw_connectors": cached_meta.get("draw_connectors", False),
                                "renderer_version": cached_meta.get("renderer_version"),

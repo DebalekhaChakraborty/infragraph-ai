@@ -143,7 +143,11 @@ def _needs_clean_overlay_render(out_path: Path) -> bool:
     if not out_path.exists() or not meta_path.exists():
         return True
     meta = _load_json(meta_path)
-    return meta.get("renderer_version") != _OVERLAY_RENDERER_VERSION
+    return (
+        meta.get("renderer_version") != _OVERLAY_RENDERER_VERSION
+        or meta.get("overlay_mode") != "clean"
+        or bool(meta.get("draw_connectors", False))
+    )
 
 
 def render_v3_annotation_preview(
@@ -176,6 +180,7 @@ def render_v3_annotation_preview(
         "boxes_skipped_large": 0,
         "connectors_rendered": 0,
         "connectors_skipped": 0,
+        "connectors_skipped_long": 0,
         "overlay_mode": overlay_mode,
         "draw_connectors": bool(draw_connectors),
         "renderer_version": _OVERLAY_RENDERER_VERSION,
@@ -205,6 +210,7 @@ def render_v3_annotation_preview(
         draw = ImageDraw.Draw(img, "RGBA")
         img_w, img_h = img.size
         image_area = max(img_w * img_h, 1)
+        image_diagonal = max(math.hypot(img_w, img_h), 1.0)
 
         try:
             font    = ImageFont.truetype("arial.ttf", 14)
@@ -236,6 +242,14 @@ def render_v3_annotation_preview(
                     ]
                     if len(flat) < 2:
                         meta["connectors_skipped"] += 1
+                        continue
+                    connector_length = sum(
+                        math.hypot(x2 - x1, y2 - y1)
+                        for (x1, y1), (x2, y2) in zip(flat, flat[1:])
+                    )
+                    if connector_length > image_diagonal * 0.65:
+                        meta["connectors_skipped"] += 1
+                        meta["connectors_skipped_long"] += 1
                         continue
                     draw.line(flat, fill=(30, 144, 255, 190), width=2)
                     x1c, y1c = flat[-2]
@@ -294,9 +308,9 @@ def render_v3_annotation_preview(
                 lx0 = max(0, x0)
                 lx1 = min(img_w - 1, x0 + lw + 6)
                 if lx1 > lx0 and label_y1 > label_y0:
-                    draw.rectangle([lx0, label_y0, lx1, label_y1], fill=(255, 255, 255, 235))
+                    draw.rectangle([lx0, label_y0, lx1, label_y1], fill=(r, g, b, 220))
                     draw.rectangle([lx0, label_y0, lx1, label_y1], outline=(r, g, b, 255), width=1)
-                draw.text((lx0 + 3, label_y0 + 2), label, fill=(20, 30, 45), font=font)
+                draw.text((lx0 + 3, label_y0 + 2), label, fill=(255, 255, 255), font=font)
                 meta["boxes_rendered"] += 1
             except Exception:
                 meta["boxes_skipped"] += 1
@@ -429,6 +443,7 @@ def run_live_v3_ingestion(
     _render_meta: dict = {
         "rendered": False, "boxes_rendered": 0, "boxes_skipped": 0,
         "boxes_skipped_large": 0, "connectors_rendered": 0, "connectors_skipped": 0,
+        "connectors_skipped_long": 0,
         "overlay_mode": "clean", "draw_connectors": False,
         "renderer_version": _OVERLAY_RENDERER_VERSION,
     }
@@ -761,6 +776,7 @@ def run_ingestion(
     _render_meta: dict = {
         "rendered": False, "boxes_rendered": 0, "boxes_skipped": 0,
         "boxes_skipped_large": 0, "connectors_rendered": 0, "connectors_skipped": 0,
+        "connectors_skipped_long": 0,
         "overlay_mode": "clean", "draw_connectors": False,
         "renderer_version": _OVERLAY_RENDERER_VERSION,
     }

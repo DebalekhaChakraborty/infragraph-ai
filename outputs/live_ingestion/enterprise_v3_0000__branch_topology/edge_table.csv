@@ -1,8 +1,0 @@
-source,target,relationship,label,confidence
-WAN-MPLS-CORE,BR-RTR-01,wan_dependency,MPLS,0.82
-BR-RTR-01,BR-FW-01,routes_to,VPN,0.82
-BR-FW-01,BR-SW-01,secured_by,LAN,0.82
-BR-SW-01,BR-APP-01,serves,HTTPS,0.82
-BR-SW-01,BR-WRK-01,connected_to,Access,0.82
-BR-SW-01,BR-WRK-02,connected_to,Access,0.82
-BR-SW-01,BR-WRK-03,connected_to,Access,0.82
