@@ -1046,10 +1046,17 @@ V3_STATE_KEYS = [
 ]
 
 
+_V3_DICT_KEYS = {
+    "validation_packet", "local_rca_result", "enterprise_rca_result",
+    "enterprise_ingestion_summary", "local_graph", "enterprise_graph_before",
+    "enterprise_graph_after", "catalog_selected_record", "live_detection_result",
+}
+
+
 def _init_v3_state() -> None:
     for key in V3_STATE_KEYS:
         if key not in st.session_state:
-            st.session_state[key] = None
+            st.session_state[key] = {} if key in _V3_DICT_KEYS else None
     if "v3_chat_messages" not in st.session_state:
         st.session_state.v3_chat_messages = []
     if "diagram_mode" not in st.session_state:
@@ -1057,9 +1064,15 @@ def _init_v3_state() -> None:
     if "onboard_status" not in st.session_state:
         st.session_state.onboard_status = "not_started"
     if "onboard_sample_record" not in st.session_state:
-        st.session_state.onboard_sample_record = None
+        st.session_state.onboard_sample_record = {}
     if "use_live_rfdetr" not in st.session_state:
         st.session_state.use_live_rfdetr = True
+
+
+def _ss_dict(key: str) -> dict:
+    """Return a session-state value as a dict, guarding against None."""
+    value = st.session_state.get(key)
+    return value if isinstance(value, dict) else {}
 
 
 def _safe_read_json(path: Path) -> dict | list:
@@ -1250,9 +1263,9 @@ def _run_v3_diagram_intelligence(diagram_path: Path, diagram_id: str,
         "text_blocks":       packet["annotation"].get("text_blocks", []),
         "confidence_summary": conf_summary,
     }
-    st.session_state.local_rca_result           = None
-    st.session_state.enterprise_rca_result      = None
-    st.session_state.enterprise_ingestion_summary = None
+    st.session_state.local_rca_result           = {}
+    st.session_state.enterprise_rca_result      = {}
+    st.session_state.enterprise_ingestion_summary = {}
     st.session_state.enterprise_graph_before    = None
     st.session_state.enterprise_graph_after     = None
     st.session_state.allow_local_simulation     = False
@@ -1724,7 +1737,7 @@ def _tab_onboard_new_diagram() -> None:
         # status card
         onboard_status = st.session_state.get("onboard_status", "not_started")
         onboarded_sid  = (
-            st.session_state.get("onboard_sample_record", {}).get("sample_id", "")
+            _ss_dict("onboard_sample_record").get("sample_id", "")
             if onboard_status != "not_started" else ""
         )
         is_this_sample_active = onboarded_sid == sample.get("sample_id", "")
@@ -1814,14 +1827,14 @@ def _tab_onboard_new_diagram() -> None:
                 st.session_state.local_graph                = ingestion.get("local_graph")
                 st.session_state.node_table                 = _pd.DataFrame(ingestion.get("node_table_rows", []))
                 st.session_state.edge_table                 = _pd.DataFrame(ingestion.get("edge_table_rows", []))
-                st.session_state.validation_packet          = ingestion.get("packet")
+                st.session_state.validation_packet          = ingestion.get("packet") or {}
                 st.session_state.live_ingestion_run_dir     = str(ingestion.get("run_dir", ""))
                 st.session_state.detection_source           = ingestion.get("detection_source", "")
                 st.session_state.detected_image_path        = str(ingestion.get("detected_image", ""))
                 st.session_state.enterprise_absorbed        = False
-                st.session_state.local_rca_result           = None
-                st.session_state.enterprise_rca_result      = None
-                st.session_state.enterprise_ingestion_summary = None
+                st.session_state.local_rca_result           = {}
+                st.session_state.enterprise_rca_result      = {}
+                st.session_state.enterprise_ingestion_summary = {}
                 st.session_state.enterprise_graph_before    = None
                 st.session_state.enterprise_graph_after     = None
                 st.session_state.allow_local_simulation     = False
@@ -1856,7 +1869,7 @@ def _tab_onboard_new_diagram() -> None:
     with right:
         if img_path.exists():
             det_img = st.session_state.get("detected_image_path", "")
-            active_sid = st.session_state.get("onboard_sample_record", {}).get("sample_id", "")
+            active_sid = _ss_dict("onboard_sample_record").get("sample_id", "")
             if det_img and Path(det_img).exists() and active_sid == sample.get("sample_id", ""):
                 det_src = st.session_state.get("detection_source", "")
                 badge_cls = "predicted" if det_src.startswith("Live RF-DETR") else "prepared"
@@ -2353,7 +2366,7 @@ def _tab_enterprise_graph_brain() -> None:
             st.session_state.enterprise_scenario_path  = _src_scen
             st.session_state.enterprise_absorbed        = True
             st.session_state.allow_enterprise_simulation = False
-            st.session_state.enterprise_rca_result     = None
+            st.session_state.enterprise_rca_result     = {}
             st.rerun()
         return
 
@@ -2602,12 +2615,12 @@ def _copilot_context() -> dict:
         "selected_diagram_id":          st.session_state.selected_diagram_id,
         "detection_source":             st.session_state.detection_source,
         "live_ingestion_run_dir":       st.session_state.live_ingestion_run_dir,
-        "validation_packet":            st.session_state.validation_packet,
-        "local_graph":                  st.session_state.local_graph,
-        "enterprise_graph_after":       st.session_state.enterprise_graph_after,
-        "enterprise_ingestion_summary": st.session_state.enterprise_ingestion_summary,
-        "local_rca_result":             st.session_state.local_rca_result,
-        "enterprise_rca_result":        st.session_state.enterprise_rca_result,
+        "validation_packet":            _ss_dict("validation_packet"),
+        "local_graph":                  st.session_state.local_graph or {},
+        "enterprise_graph_after":       st.session_state.enterprise_graph_after or {},
+        "enterprise_ingestion_summary": _ss_dict("enterprise_ingestion_summary"),
+        "local_rca_result":             _ss_dict("local_rca_result"),
+        "enterprise_rca_result":        _ss_dict("enterprise_rca_result"),
         "stitch_map":                   _safe_read_json(scenario / "stitch_map.json"),
         "alerts":                       _safe_read_json(scenario / "alerts.json"),
     }
