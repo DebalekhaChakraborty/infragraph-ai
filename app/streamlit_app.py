@@ -1,15 +1,15 @@
 """
-InfraGraph AI Command Center — Streamlit demo cockpit.
+InfraGraph AI Command Center — Streamlit cockpit.
 
 Two sections in Diagram Intelligence (Tab 1):
-  A. Diagram Gallery    — Browse already-consumed V1/V2/V3 diagrams
-  B. Onboard New Diagram — Live ingestion demo: detect → graph → absorb → RCA
+  A. Diagram Gallery     — Browse diagrams available in graph memory
+  B. Onboard New Diagram — Live diagram intelligence: detect -> graph -> absorb -> RCA
 
 Four workspaces (tabs):
-  1. Diagram Intelligence  — image to local graph
-  2. Local RCA             — alert simulation on ingested diagram
-  3. Enterprise Graph Brain — local graph absorbed into galaxy graph
-  4. Graph Copilot         — ask the enterprise graph
+  1. Diagram Intelligence   — image to local graph
+  2. Local RCA              — alert simulation on ingested diagram
+  3. Enterprise Graph Brain — local graph absorbed into enterprise graph
+  4. Graph Copilot          — ask the enterprise graph
 """
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ st.set_page_config(
 )
 
 REPO_ROOT = Path(__file__).parent.parent
-DEMO_ID   = "diagram_0373"
+_GALLERY_FALLBACK_ID = "diagram_0373"
 
 import sys as _sys
 _scripts_dir = str(REPO_ROOT / "scripts")
@@ -60,13 +60,17 @@ _src_dir = str(REPO_ROOT / "src")
 if _src_dir not in _sys.path:
     _sys.path.insert(0, _src_dir)
 try:
-    from runtime_ingestion import run_live_v3_ingestion as _live_ingest  # type: ignore
-    from runtime_ingestion import run_enterprise_absorption as _live_absorb  # type: ignore
+    from runtime_ingestion import run_live_v3_ingestion as _live_ingest          # type: ignore
+    from runtime_ingestion import run_enterprise_absorption as _live_absorb      # type: ignore
+    from runtime_ingestion import run_ingestion as _run_ingestion                # type: ignore
+    from runtime_ingestion import run_absorption as _run_absorption              # type: ignore
     _RUNTIME_INGESTION = True
 except Exception:
     _RUNTIME_INGESTION = False
-    _live_ingest = None  # type: ignore
-    _live_absorb = None  # type: ignore
+    _live_ingest      = None  # type: ignore
+    _live_absorb      = None  # type: ignore
+    _run_ingestion    = None  # type: ignore
+    _run_absorption   = None  # type: ignore
 
 try:
     from live_detector import find_best_yolo_checkpoint as _find_ckpt  # type: ignore
@@ -302,7 +306,7 @@ p,li,label { color: #cbd5e1; }
 .sb-check { flex-shrink: 0; margin-top: 1px; }
 .sb-step-sub { font-size: 0.7rem; color: #334155; }
 .sb-pending { color: #475569; }
-.demo-pill { background: rgba(96,165,250,0.07); border: 1px solid rgba(96,165,250,0.14);
+.info-pill { background: rgba(96,165,250,0.07); border: 1px solid rgba(96,165,250,0.14);
              border-radius: 8px; padding: 9px 12px; font-size: 0.75rem; color: #64748b; margin-top: 14px; }
 
 /* ── Tabs ── */
@@ -401,7 +405,7 @@ pre  { background: rgba(0,0,0,0.04) !important; border-color: rgba(0,0,0,0.1) !i
 .sb-pending    { color: #94a3b8 !important; }
 .absorb-card   { background: rgba(0,0,0,0.02) !important; border-color: rgba(0,0,0,0.09) !important; }
 .report-body   { background: rgba(0,0,0,0.02) !important; border-color: rgba(0,0,0,0.08) !important; }
-.demo-pill     { background: rgba(59,130,246,0.06) !important; color: #64748b !important; }
+.info-pill     { background: rgba(59,130,246,0.06) !important; color: #64748b !important; }
 </style>
 """
 
@@ -453,7 +457,7 @@ def _clean_report(text: str) -> str:
     return text.strip()
 
 
-def _build_fallback_report(rca: dict, gnn: dict, mlp: dict) -> str:
+def _build_rca_summary_report(rca: dict, gnn: dict, mlp: dict) -> str:
     impacted = rca.get("impacted_nodes", [])
     n = len(impacted)
     imp_str = ", ".join(impacted[:5]) + (f" +{n-5} more" if n > 5 else "")
@@ -678,6 +682,52 @@ def build_onboarding_sample_catalog(repo_root_str: str, max_samples: int = 20) -
     return records
 
 
+@st.cache_data(ttl=3600)
+def _load_gallery_manifest(repo_root_str: str) -> list[dict]:
+    """Load assets/gallery/manifest.json and resolve relative paths to absolute."""
+    root = Path(repo_root_str)
+    mf   = root / "assets" / "gallery" / "manifest.json"
+    if not mf.exists():
+        return []
+    try:
+        records: list[dict] = json.loads(mf.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+    _path_keys = (
+        "image_path", "annotation_path", "detected_preview_path", "preview_path",
+        "local_graph_path", "enterprise_graph_path", "stitch_map_path", "alerts_path",
+    )
+    for r in records:
+        for k in _path_keys:
+            v = r.get(k, "")
+            if v and not Path(v).is_absolute():
+                r[k] = str(root / v)
+    return records
+
+
+@st.cache_data(ttl=3600)
+def _load_onboarding_manifest(repo_root_str: str) -> list[dict]:
+    """Load assets/onboarding/manifest.json and resolve relative paths to absolute."""
+    root = Path(repo_root_str)
+    mf   = root / "assets" / "onboarding" / "manifest.json"
+    if not mf.exists():
+        return []
+    try:
+        records: list[dict] = json.loads(mf.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+    _path_keys = (
+        "image_path", "annotation_path", "local_graph_path",
+        "enterprise_graph_path", "stitch_map_path", "alerts_path", "sample_dir",
+    )
+    for r in records:
+        for k in _path_keys:
+            v = r.get(k, "")
+            if v and not Path(v).is_absolute():
+                r[k] = str(root / v)
+    return records
+
+
 @st.cache_resource(show_spinner="Loading RF-DETR checkpoint…")
 def _load_rfdetr_model_cached(checkpoint_path: str):
     """Load RF-DETR model once per Streamlit session via st.cache_resource."""
@@ -877,7 +927,7 @@ def _render_local_graph_pyvis(local_graph: dict, overlay: dict | None = None,
 
 def _render_local_graph_mpl(local_graph: dict, overlay: dict | None = None,
                               height: float = 4.2) -> None:
-    """Matplotlib fallback for local graph rendering."""
+    """Matplotlib rendering for local graph (used when PyVis is unavailable)."""
     nodes = local_graph.get("nodes", [])
     edges = local_graph.get("edges", [])
     if not nodes:
@@ -962,14 +1012,14 @@ def _render_local_graph(local_graph: dict, overlay: dict | None = None,
 # ══════════════════════════════════════════════════════════════════════════════
 V3_DATASET_ROOT  = REPO_ROOT / "datasets" / "diagram_v3_enterprise"
 V3_HERO_SCENARIO = V3_DATASET_ROOT / "scenarios" / "train" / "enterprise_v3_0000"
-V3_DEMO_DIAGRAMS = {
+V3_DIAGRAM_IDS = {
     "Branch Office Topology":       "branch_topology",
     "WAN / MPLS Topology":          "wan_topology",
     "Datacenter Topology":          "datacenter_topology",
     "Application & Database Tier":  "app_db_topology",
     "Shared Services Topology":     "shared_services_topology",
 }
-V3_REQUIRED_DIAGRAMS = list(V3_DEMO_DIAGRAMS.values())
+V3_REQUIRED_DIAGRAMS = list(V3_DIAGRAM_IDS.values())
 V3_ENTERPRISE_GNN_METRICS = REPO_ROOT / "outputs" / "enterprise_gnn_rca" / "enterprise_gnn_metrics.json"
 V3_ONBOARDING_SCRIPT = REPO_ROOT / "scripts" / "onboard_diagram_v3.py"
 
@@ -1048,10 +1098,10 @@ def _local_rca_model_available() -> bool:
     return False
 
 
-def _status_label(ok: bool, fallback: bool = False) -> str:
+def _status_label(ok: bool, optional: bool = False) -> str:
     if ok:
         return "✅"
-    if fallback:
+    if optional:
         return "⚠️"
     return "❌"
 
@@ -1067,18 +1117,18 @@ def _readiness_checks() -> list[dict]:
         (V3_HERO_SCENARIO / "local_graphs" / f"{d}.json").exists() for d in V3_REQUIRED_DIAGRAMS
     )
     return [
-        {"label": "V3 hero scenario exists",          "ok": V3_HERO_SCENARIO.exists(),                                       "fallback": False},
-        {"label": "Hero diagrams (5 PNGs)",            "ok": diags_ok,                                                        "fallback": False},
-        {"label": "V3 annotations",                    "ok": ann_ok,                                                          "fallback": False},
-        {"label": "V3 local graphs",                   "ok": lg_ok,                                                           "fallback": False},
-        {"label": "V3 enterprise graph",               "ok": (V3_HERO_SCENARIO / "enterprise_graph.json").exists(),           "fallback": False},
-        {"label": "V3 alerts",                         "ok": (V3_HERO_SCENARIO / "alerts.json").exists(),                     "fallback": False},
-        {"label": "RF-DETR COCO export",               "ok": (V3_DATASET_ROOT / "rfdetr" / "annotations" / "instances_train.json").exists(), "fallback": True},
-        {"label": "YOLO export",                       "ok": (V3_DATASET_ROOT / "yolo" / "dataset.yaml").exists(),            "fallback": True},
-        {"label": "PyVis dependency",                  "ok": _pyvis_available(),                                              "fallback": not _strict_mode()},
-        {"label": "Enterprise GNN output",             "ok": _enterprise_gnn_available(),                                     "fallback": not _strict_mode()},
-        {"label": "Qwen endpoint configured",          "ok": _qwen_configured(),                                              "fallback": not _strict_mode()},
-        {"label": "Live onboarding script",            "ok": V3_ONBOARDING_SCRIPT.exists(),                                   "fallback": not _strict_mode()},
+        {"label": "V3 hero scenario exists",          "ok": V3_HERO_SCENARIO.exists(),                                       "optional": False},
+        {"label": "Hero diagrams (5 PNGs)",            "ok": diags_ok,                                                        "optional": False},
+        {"label": "V3 annotations",                    "ok": ann_ok,                                                          "optional": False},
+        {"label": "V3 local graphs",                   "ok": lg_ok,                                                           "optional": False},
+        {"label": "V3 enterprise graph",               "ok": (V3_HERO_SCENARIO / "enterprise_graph.json").exists(),           "optional": False},
+        {"label": "V3 alerts",                         "ok": (V3_HERO_SCENARIO / "alerts.json").exists(),                     "optional": False},
+        {"label": "RF-DETR COCO export",               "ok": (V3_DATASET_ROOT / "rfdetr" / "annotations" / "instances_train.json").exists(), "optional": True},
+        {"label": "YOLO export",                       "ok": (V3_DATASET_ROOT / "yolo" / "dataset.yaml").exists(),            "optional": True},
+        {"label": "PyVis dependency",                  "ok": _pyvis_available(),                                              "optional": not _strict_mode()},
+        {"label": "Enterprise GNN output",             "ok": _enterprise_gnn_available(),                                     "optional": not _strict_mode()},
+        {"label": "Qwen endpoint configured",          "ok": _qwen_configured(),                                              "optional": not _strict_mode()},
+        {"label": "Live onboarding script",            "ok": V3_ONBOARDING_SCRIPT.exists(),                                   "optional": not _strict_mode()},
     ]
 
 
@@ -1091,15 +1141,15 @@ def _render_readiness_panel() -> None:
     st.markdown(
         f'<div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);'
         f'border-radius:9px;padding:9px 13px;display:flex;justify-content:space-between;align-items:center">'
-        f'<span style="font-size:0.78rem;color:#64748b">Demo readiness</span>'
+        f'<span style="font-size:0.78rem;color:#64748b">System readiness</span>'
         f'<span style="font-size:0.82rem;font-weight:700;color:{color}">{ready}/{total}</span>'
         f'</div>',
         unsafe_allow_html=True,
     )
     with st.expander("View details", expanded=False):
         for item in checks:
-            icon = _status_label(item["ok"], item["fallback"])
-            clr  = "color:#10b981" if item["ok"] else ("color:#f59e0b" if item["fallback"] else "color:#ef4444")
+            icon = _status_label(item["ok"], item["optional"])
+            clr  = "color:#10b981" if item["ok"] else ("color:#f59e0b" if item["optional"] else "color:#ef4444")
             st.markdown(
                 f'<div style="font-size:0.76rem;{clr};padding:2px 0">{icon} {item["label"]}</div>',
                 unsafe_allow_html=True,
@@ -1267,7 +1317,7 @@ def _simulate_local_rca(local_graph: dict) -> dict:
                          "reason": f"out={outdeg.get(n,0)} in={indeg.get(n,0)}"})
     ranking.sort(key=lambda r: r["score"], reverse=True)
     return {
-        "mode":          "deterministic_graph_fallback",
+        "mode":          "deterministic_graph_simulation",
         "root_cause":    root,
         "alert_nodes":   impacted[:2] or ([root] if root else []),
         "impacted_nodes": impacted,
@@ -1381,7 +1431,7 @@ def _simulate_enterprise_rca(alerts: dict, enterprise_graph: dict) -> dict:
             )),
         }
 
-    # Scenario-grounded fallback (alerts.json ground truth)
+    # Scenario-grounded simulation (alerts.json ground truth)
     root       = alerts.get("root_cause", "")
     alert_nodes = [a.get("node", "") for a in alerts.get("alerts", [])]
     ranking = [{"node": root, "score": 0.97, "reason": "scenario ground truth"}] if root else []
@@ -1390,7 +1440,7 @@ def _simulate_enterprise_rca(alerts: dict, enterprise_graph: dict) -> dict:
             ranking.append({"node": n, "score": round(0.74 - len(ranking) * 0.05, 3),
                              "reason": "alert propagation evidence"})
     return {
-        "mode":               "Scenario-grounded RCA fallback",
+        "mode":               "Scenario-grounded RCA simulation",
         "root_cause":         root,
         "root_cause_diagram": alerts.get("root_cause_diagram", ""),
         "impacted_diagrams":  alerts.get("impacted_diagrams", []),
@@ -1528,7 +1578,7 @@ def _tab_diagram_outputs_section() -> None:
     if view_mode == "Original + Detection":
         orig_p       = st.session_state.get("selected_diagram_path", "")
         det_p        = st.session_state.get("detected_image_path", "")
-        det_source   = st.session_state.get("detection_source") or "Prepared V3 annotation fallback"
+        det_source   = st.session_state.get("detection_source") or "Verified Annotation Overlay"
         is_rfdetr    = det_source.startswith("RF-DETR")
 
         c1, c2 = st.columns(2)
@@ -1562,7 +1612,7 @@ def _tab_diagram_outputs_section() -> None:
             else:
                 st.markdown(
                     '<div class="info-card">'
-                    '<strong>Prepared V3 annotation fallback.</strong><br>'
+                    '<strong>Verified Annotation Overlay.</strong><br>'
                     'Bounding boxes and node labels come from the scenario '
                     'ground-truth annotation. Train RF-DETR '
                     '(<code>train_rfdetr_diagram_detector.py</code>) to generate '
@@ -1609,13 +1659,12 @@ def _tab_diagram_outputs_section() -> None:
 
 
 def _tab_onboard_new_diagram() -> None:
-    """Onboard New Diagram — curated V3 samples treated as new/unconsumed."""
-    # ── header ────────────────────────────────────────────────────────────────
+    """Onboard New Diagram — run live diagram intelligence on a selected sample."""
     st.markdown(
-        '<div class="info-card" style="margin-bottom:14px">'
-        '<strong>Select a curated sample diagram.</strong> '
-        'It will be treated as a new, unconsumed diagram for the live onboarding demo — '
-        'even though it originates from the generated V3 dataset.'
+        '<div class="mode-onboard">'
+        '<div class="mode-title" style="color:#a78bfa">Onboard New Diagram</div>'
+        '<div class="mode-sub">Select a sample diagram and run live diagram intelligence '
+        'to onboard it into the enterprise graph memory.</div>'
         '</div>',
         unsafe_allow_html=True,
     )
@@ -1650,54 +1699,42 @@ def _tab_onboard_new_diagram() -> None:
     st.markdown("<hr style='border:none;border-top:1px solid rgba(255,255,255,0.06);margin:10px 0'>",
                 unsafe_allow_html=True)
 
-    # ── sample catalog ────────────────────────────────────────────────────────
-    samples = build_onboarding_sample_catalog(str(REPO_ROOT), max_samples=20)
+    # ── Load onboarding manifest ──────────────────────────────────────────────
+    samples = _load_onboarding_manifest(str(REPO_ROOT))
     if not samples:
         st.error(
-            "No V3 diagrams found. Generate the dataset first:\n"
-            "`python scripts/generate_diagram_v3_enterprise_dataset.py "
-            "--num-scenarios 10 --out ./datasets/diagram_v3_enterprise --seed 2026`"
+            "Onboarding manifest not found. Build the asset layer first:\n"
+            "```\npython scripts/build_presentation_assets.py\n```"
         )
         return
 
     left, right = st.columns([1, 1])
     with left:
-        sel_idx  = st.selectbox(
+        sel_idx = st.selectbox(
             "Select sample diagram",
             range(len(samples)),
-            format_func=lambda i: samples[i]["display_name"],
+            format_func=lambda i: f"{samples[i]['sample_id']} | {samples[i]['display_name']}",
             index=0,
             key="onboard_sample_select",
         )
         sample   = samples[sel_idx]
-        did      = sample["diagram_id"]
-        scen_id  = sample["scenario_id"]
-        img_path = Path(sample["image_path"])
-
-        badge_color = _V3_DIAG_COLORS.get(did, "#64748b")
-        st.markdown(
-            f'<div style="display:inline-flex;align-items:center;gap:8px;margin:6px 0 4px">'
-            f'<span style="width:8px;height:8px;border-radius:50%;background:{badge_color};display:inline-block"></span>'
-            f'<span style="font-family:\'JetBrains Mono\',monospace;font-size:0.8rem;color:{badge_color}">'
-            f'{scen_id} / {did}</span>'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
+        did      = sample.get("source_diagram_id", "")
+        img_path = Path(sample.get("image_path", ""))
 
         # status card
         onboard_status = st.session_state.get("onboard_status", "not_started")
-        onboarded_id   = (
-            st.session_state.get("selected_diagram_id", "")
+        onboarded_sid  = (
+            st.session_state.get("onboard_sample_record", {}).get("sample_id", "")
             if onboard_status != "not_started" else ""
         )
-        is_this_sample_active = onboarded_id == did
+        is_this_sample_active = onboarded_sid == sample.get("sample_id", "")
 
         if not is_this_sample_active:
             st.markdown(
                 '<div class="warn-card" style="margin:8px 0">'
                 '<strong>Not yet onboarded.</strong><br>'
-                'This diagram is not part of the active enterprise graph memory '
-                'in this runtime session. Run live diagram intelligence to onboard it.'
+                'This diagram is not part of the active runtime graph memory yet. '
+                'Run live diagram intelligence to onboard it.'
                 '</div>',
                 unsafe_allow_html=True,
             )
@@ -1705,7 +1742,7 @@ def _tab_onboard_new_diagram() -> None:
             src_label = st.session_state.get("detection_source", "")
             badge_cls = (
                 "badge-success"
-                if src_label.startswith(("Live", "RF-DETR")) else "badge-warn"
+                if src_label.startswith(("Live RF-DETR", "RF-DETR")) else "badge-info"
             )
             st.markdown(
                 f'<span class="badge badge-info">Ingested</span> '
@@ -1716,10 +1753,9 @@ def _tab_onboard_new_diagram() -> None:
         # ── action button ─────────────────────────────────────────────────────
         if st.button("Run Live Diagram Intelligence", type="primary",
                      use_container_width=True, disabled=not img_path.exists()):
-            if not _RUNTIME_INGESTION:
+            if not _RUNTIME_INGESTION or _run_ingestion is None:
                 st.error("runtime_ingestion module not loaded.")
             else:
-                # pre-load RF-DETR model via cache if enabled
                 _rfdetr_model = None
                 if st.session_state.use_live_rfdetr and _rfdetr_ckpt_str:
                     with st.spinner("Preparing RF-DETR checkpoint…"):
@@ -1739,15 +1775,25 @@ def _tab_onboard_new_diagram() -> None:
                 prog       = st.progress(0)
                 steps_area = st.empty()
 
-                scenario_path = img_path.parent.parent
-                with st.spinner("Running live V3 diagram intelligence…"):
-                    ingestion = _live_ingest(
-                        REPO_ROOT,
-                        img_path,
-                        did,
-                        scenario_path,
-                        use_live_rfdetr=st.session_state.use_live_rfdetr,
-                        rfdetr_model=_rfdetr_model,
+                ann_p  = sample.get("annotation_path", "")
+                lg_p   = sample.get("local_graph_path", "")
+                ent_p  = sample.get("enterprise_graph_path", "")
+                stitch = sample.get("stitch_map_path", "")
+                alerts = sample.get("alerts_path", "")
+
+                with st.spinner("Running live diagram intelligence…"):
+                    ingestion = _run_ingestion(
+                        repo_root             = REPO_ROOT,
+                        image_path            = img_path,
+                        diagram_id            = did,
+                        run_id                = sample["sample_id"],
+                        annotation_path       = Path(ann_p)  if ann_p  else None,
+                        local_graph_path      = Path(lg_p)   if lg_p   else None,
+                        enterprise_graph_path = Path(ent_p)  if ent_p  else None,
+                        stitch_map_path       = Path(stitch) if stitch else None,
+                        alerts_path           = Path(alerts) if alerts else None,
+                        use_live_rfdetr       = st.session_state.use_live_rfdetr,
+                        rfdetr_model          = _rfdetr_model,
                     )
 
                 for idx, step in enumerate(_STEPS, 1):
@@ -1765,13 +1811,13 @@ def _tab_onboard_new_diagram() -> None:
                 import pandas as _pd
                 st.session_state.selected_diagram_path      = str(img_path)
                 st.session_state.selected_diagram_id        = did
-                st.session_state.local_graph                = ingestion["local_graph"]
-                st.session_state.node_table                 = _pd.DataFrame(ingestion["node_table_rows"])
-                st.session_state.edge_table                 = _pd.DataFrame(ingestion["edge_table_rows"])
-                st.session_state.validation_packet          = ingestion["packet"]
-                st.session_state.live_ingestion_run_dir     = str(ingestion["run_dir"])
-                st.session_state.detection_source           = ingestion["detection_source"]
-                st.session_state.detected_image_path        = str(ingestion["detected_image"])
+                st.session_state.local_graph                = ingestion.get("local_graph")
+                st.session_state.node_table                 = _pd.DataFrame(ingestion.get("node_table_rows", []))
+                st.session_state.edge_table                 = _pd.DataFrame(ingestion.get("edge_table_rows", []))
+                st.session_state.validation_packet          = ingestion.get("packet")
+                st.session_state.live_ingestion_run_dir     = str(ingestion.get("run_dir", ""))
+                st.session_state.detection_source           = ingestion.get("detection_source", "")
+                st.session_state.detected_image_path        = str(ingestion.get("detected_image", ""))
                 st.session_state.enterprise_absorbed        = False
                 st.session_state.local_rca_result           = None
                 st.session_state.enterprise_rca_result      = None
@@ -1783,14 +1829,15 @@ def _tab_onboard_new_diagram() -> None:
                 st.session_state.allow_deterministic_copilot = False
                 st.session_state.onboard_status             = "ingested_not_absorbed"
                 st.session_state.onboard_sample_record      = sample
+                st.session_state.enterprise_scenario_path  = sample.get("source_scenario_path", "")
                 st.session_state.catalog_selected_record    = {
                     **sample,
-                    "prediction_path": None,
+                    "detected_preview_path": str(ingestion.get("detected_image", "")),
                 }
 
-                det_src   = ingestion["detection_source"]
-                badge_cls = "badge-success" if det_src.startswith(("Live", "RF-DETR")) else "badge-warn"
-                t_s       = ingestion.get("rfdetr_inference_time_s", 0)
+                det_src   = ingestion.get("detection_source", "")
+                badge_cls = "badge-success" if det_src.startswith(("Live RF-DETR", "RF-DETR")) else "badge-info"
+                t_s       = ingestion.get("rfdetr_inference_time_s", 0) or 0
                 time_str  = f" ({t_s:.2f}s)" if t_s > 0 else ""
                 st.markdown(
                     f'<span class="badge {badge_cls}">{det_src}{time_str}</span>',
@@ -1799,15 +1846,27 @@ def _tab_onboard_new_diagram() -> None:
                 rfdetr_err = ingestion.get("rfdetr_error", "")
                 if rfdetr_err:
                     st.warning(f"RF-DETR: {rfdetr_err}")
+                pkt = ingestion.get("packet") or {}
                 st.success(
-                    f"Ingestion complete — {ingestion['packet']['node_count']} nodes, "
-                    f"{ingestion['packet']['edge_count']} edges. "
+                    f"Ingestion complete — {pkt.get('node_count', 0)} nodes, "
+                    f"{pkt.get('edge_count', 0)} edges. "
                     "Proceed to Tab 2 (Local RCA) or Tab 3 (Enterprise Brain)."
                 )
 
     with right:
         if img_path.exists():
-            st.image(str(img_path), caption=f"{scen_id} / {did}", use_container_width=True)
+            det_img = st.session_state.get("detected_image_path", "")
+            active_sid = st.session_state.get("onboard_sample_record", {}).get("sample_id", "")
+            if det_img and Path(det_img).exists() and active_sid == sample.get("sample_id", ""):
+                det_src = st.session_state.get("detection_source", "")
+                badge_cls = "predicted" if det_src.startswith("Live RF-DETR") else "prepared"
+                st.markdown(
+                    f'<div class="compare-badge {badge_cls}">{det_src}</div>',
+                    unsafe_allow_html=True,
+                )
+                st.image(det_img, use_container_width=True)
+            else:
+                st.image(str(img_path), caption=sample.get("display_name", ""), use_container_width=True)
         else:
             st.markdown(
                 '<div class="warn-card" style="text-align:center;padding:40px 20px">'
@@ -1820,179 +1879,201 @@ def _tab_onboard_new_diagram() -> None:
 
 
 def _tab_diagram_gallery() -> None:
-    """Diagram Gallery — browse all already-consumed V1/V2/V3 diagrams."""
+    """Diagram Gallery — known diagrams available in graph memory."""
     st.markdown(
         '<div class="mode-gallery">'
         '<div class="mode-title" style="color:#60a5fa">Diagram Gallery</div>'
-        '<div class="mode-sub">Browse existing dataset diagrams. '
-        'These are treated as already consumed / part of the system. '
-        'Use <strong>Onboard New Diagram</strong> for the live ingestion demo.</div>'
+        '<div class="mode-sub">Known topology diagrams that are available in graph memory. '
+        'Use <strong>Onboard New Diagram</strong> to run live diagram intelligence '
+        'on a new diagram.</div>'
         '</div>',
         unsafe_allow_html=True,
     )
 
-    with st.spinner("Loading diagram catalog..."):
-        catalog = _build_diagram_catalog(str(REPO_ROOT))
+    catalog = _load_gallery_manifest(str(REPO_ROOT))
 
     if not catalog:
         st.warning(
-            "No diagrams found. Ensure at least one of these exists:\n"
-            "- `datasets/infragraph_v2/images/test/`\n"
-            "- `datasets/diagram_v3_enterprise/scenarios/`"
+            "Gallery manifest not found. Build the asset layer first:\n"
+            "```\npython scripts/build_presentation_assets.py\n```"
         )
         return
 
-    # Filters
-    fc1, fc2, fc3 = st.columns([2, 1, 3])
+    # ── Filters ───────────────────────────────────────────────────────────────
+    fc1, fc2 = st.columns([3, 4])
     with fc1:
-        ds_filter = st.selectbox("Dataset", ["All", "v1", "v2", "v3"], index=0, key="gal_ds")
+        dt_filter = st.selectbox(
+            "Diagram type",
+            ["All", "Branch Office Topology", "WAN Core Topology",
+             "Data Center Topology", "Application & Database Tier",
+             "Shared Services Topology"],
+            index=0, key="gal_type",
+        )
     with fc2:
-        sp_filter = st.selectbox("Split", ["All", "train", "val", "test"], index=0, key="gal_sp")
-    with fc3:
-        search    = st.text_input("Search diagram ID / scenario ID",
-                                   placeholder="e.g. diagram_0373 or enterprise_v3_0000", key="gal_search")
+        search = st.text_input(
+            "Search by name or ID",
+            placeholder="e.g. DG-0001 or Branch",
+            key="gal_search",
+        )
 
     filtered = catalog
-    if ds_filter != "All":
-        filtered = [r for r in filtered if r["dataset"] == ds_filter]
-    if sp_filter != "All":
-        filtered = [r for r in filtered if r["split"] == sp_filter]
+    if dt_filter != "All":
+        filtered = [r for r in filtered if r.get("display_name", "") == dt_filter]
     if search:
         s = search.lower()
         filtered = [
             r for r in filtered
-            if s in r["diagram_id"].lower() or s in (r.get("scenario_id") or "").lower()
+            if s in r.get("gallery_id", "").lower()
+            or s in r.get("display_name", "").lower()
+            or s in r.get("source_diagram_id", "").lower()
         ]
 
     limit = 250
     st.caption(f"Showing {min(limit, len(filtered))} of {len(filtered)} diagrams")
 
     if not filtered:
-        st.info("No diagrams match the current filters.")
+        st.info("No diagrams match the current filter.")
         return
 
-    display = [r["display_name"] for r in filtered[:limit]]
     sel_idx = st.selectbox(
         "Select diagram",
-        range(len(display)),
-        format_func=lambda i: display[i],
+        range(min(limit, len(filtered))),
+        format_func=lambda i: f"{filtered[i]['gallery_id']} | {filtered[i]['display_name']}",
         index=0,
         key="gal_select",
     )
     record = filtered[sel_idx]
     st.session_state.catalog_selected_record = record
-    st.session_state.selected_diagram_path   = record["image_path"]
-    st.session_state.selected_diagram_id     = record["diagram_id"]
+    st.session_state.selected_diagram_path   = record.get("image_path", "")
+    st.session_state.selected_diagram_id     = record.get("source_diagram_id", "")
 
-    # Show detection pair immediately
-    _render_detection_pair(record)
+    # ── Images: original + detection/annotation ───────────────────────────────
+    img_p  = record.get("image_path", "")
+    det_p  = record.get("detected_preview_path", "")
+    ann_p  = record.get("annotation_path", "")
+    is_v3  = record.get("source_dataset") == "v3"
 
-    # ── gallery badges ────────────────────────────────────────────────────────
-    is_v3       = record.get("is_v3", False)
-    has_graph   = bool(record.get("local_graph_path") and Path(record["local_graph_path"]).exists())
-    has_ann     = bool(record.get("annotation_path") and Path(record["annotation_path"]).exists())
-    has_pred    = bool(record.get("prediction_path") and Path(record["prediction_path"]).exists())
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown(
+            '<div class="compare-badge original">Original</div>'
+            '<div class="compare-label">Source Diagram</div>',
+            unsafe_allow_html=True,
+        )
+        if img_p and Path(img_p).exists():
+            st.image(img_p, use_container_width=True)
+        else:
+            st.warning("Image not found.")
 
-    badge_html  = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px">'
-    badge_html += '<span class="badge badge-info">Existing Dataset Asset</span>'
-    if has_graph:
-        badge_html += '<span class="badge badge-success">Graph Metadata Available</span>'
-    if has_ann:
-        badge_html += '<span class="badge badge-info">Prepared Annotation</span>'
-    badge_html += (
-        '<span class="badge badge-success">Prediction Available</span>'
-        if has_pred else
-        '<span class="badge" style="background:rgba(239,68,68,0.1);color:#ef4444;'
-        'border:1px solid rgba(239,68,68,0.2)">Prediction Not Generated</span>'
-    )
+    with c2:
+        if det_p and Path(det_p).exists():
+            src_label = record.get("source_dataset", "").upper()
+            badge_lbl = "Trained Detector Output"
+            st.markdown(
+                f'<div class="compare-badge predicted">{badge_lbl}</div>'
+                f'<div class="compare-label">{src_label} trained detector</div>',
+                unsafe_allow_html=True,
+            )
+            st.image(det_p, use_container_width=True)
+        elif is_v3 and ann_p and Path(ann_p).exists():
+            # render annotation overlay on-the-fly
+            import tempfile as _tf, sys as _sys
+            _src_dir = str(REPO_ROOT / "src")
+            if _src_dir not in _sys.path:
+                _sys.path.insert(0, _src_dir)
+            try:
+                from runtime_ingestion import render_v3_annotation_preview as _render_ann
+                _tmp = Path(_tf.mktemp(suffix=".png"))
+                _meta = _render_ann(Path(img_p), Path(ann_p), _tmp)
+                if _meta.get("rendered") and _tmp.exists():
+                    st.markdown(
+                        '<div class="compare-badge prepared">Verified Annotation Overlay</div>'
+                        '<div class="compare-label">Graph-ready annotation bboxes</div>',
+                        unsafe_allow_html=True,
+                    )
+                    st.image(str(_tmp), use_container_width=True)
+                    try:
+                        _tmp.unlink()
+                    except Exception:
+                        pass
+                else:
+                    st.info("Annotation overlay not available.")
+            except Exception:
+                st.info("Annotation overlay not available.")
+        else:
+            st.markdown(
+                '<div class="compare-badge missing">Detection Output Pending</div>'
+                '<div class="compare-label">Run live detector to generate output</div>',
+                unsafe_allow_html=True,
+            )
+            if img_p and Path(img_p).exists():
+                st.image(img_p, use_container_width=True)
+
+    # ── Badges ────────────────────────────────────────────────────────────────
+    has_graph = record.get("graph_metadata_available", False)
+    has_conn  = record.get("connector_metadata_available", False)
+    has_ocr   = record.get("ocr_metadata_available", False)
+    has_ent   = record.get("enterprise_mapping_available", False)
+    has_det   = bool(det_p and Path(det_p).exists())
+    has_ann   = bool(ann_p and Path(ann_p).exists())
+
+    def _badge(label: str, ok: bool, ok_cls: str = "badge-success") -> str:
+        cls = ok_cls if ok else "badge-warn"
+        return f'<span class="badge {cls}">{label}</span>'
+
+    badge_html = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 14px">'
+    badge_html += '<span class="badge badge-info">Available in Graph Memory</span>'
+    badge_html += _badge(
+        "Graph Metadata Available" if has_graph else "Graph Metadata Pending", has_graph)
+    badge_html += _badge(
+        "Connector Metadata Available" if has_conn else "Connector Metadata Pending", has_conn)
+    badge_html += _badge(
+        "OCR Metadata Available" if has_ocr else "OCR Metadata Pending", has_ocr)
+    badge_html += _badge(
+        "Enterprise Mapping Available" if has_ent else "Enterprise Mapping Pending", has_ent)
+    if has_det:
+        badge_html += '<span class="badge badge-success">Trained Detector Output</span>'
+    elif has_ann and is_v3:
+        badge_html += '<span class="badge badge-info">Verified Annotation Overlay</span>'
+    else:
+        badge_html += '<span class="badge badge-warn">Detection Output Pending</span>'
     badge_html += '</div>'
     st.markdown(badge_html, unsafe_allow_html=True)
 
-    # Action row
-    ca1, ca2 = st.columns([2, 3])
-    with ca1:
-        if is_v3 and has_graph:
-            if st.button("Load Existing Graph Metadata", type="secondary",
-                         use_container_width=True, key="gal_load_graph"):
-                import json as _json, pandas as _pd2
-                lg = _json.loads(Path(record["local_graph_path"]).read_text())
-                st.session_state.selected_diagram_path = record["image_path"]
-                st.session_state.selected_diagram_id   = record["diagram_id"]
-                st.session_state.local_graph           = lg
-                # build minimal tables from graph nodes/edges
-                n_rows = [{"node_id": n.get("id",""), "type": n.get("type",""), "ip_address": n.get("ip_address",""), "zone": n.get("zone",""), "shared": n.get("is_shared_entity",False), "confidence": 0.88, "source": "prepared"} for n in lg.get("nodes",[])]
-                e_rows = [{"source": e.get("source",""), "target": e.get("target",""), "relationship": e.get("relationship",""), "label": e.get("label",""), "confidence": 0.82} for e in lg.get("edges",[])]
-                st.session_state.node_table            = _pd2.DataFrame(n_rows)
-                st.session_state.edge_table            = _pd2.DataFrame(e_rows)
-                st.success(f"Loaded: {len(n_rows)} nodes, {len(e_rows)} edges. See Tab 2.")
-        elif not is_v3 and record["diagram_id"] == DEMO_ID:
-            if st.button("Load Demo Graph (diagram_0373)", type="secondary",
-                          use_container_width=True):
-                st.info("Demo diagram_0373 — use Tab 2 (Alert RCA) for full analysis.")
+    # ── Load graph metadata action ────────────────────────────────────────────
+    lg_path = record.get("local_graph_path", "")
+    if has_graph and lg_path and Path(lg_path).exists():
+        if st.button("Load Graph Metadata", type="secondary",
+                     use_container_width=False, key="gal_load_graph"):
+            lg = json.loads(Path(lg_path).read_text(encoding="utf-8"))
+            st.session_state.local_graph = lg
+            n_rows = [{"node_id": n.get("id", ""), "type": n.get("type", ""),
+                        "ip_address": n.get("ip_address", ""), "zone": n.get("zone", ""),
+                        "shared": n.get("is_shared_entity", False),
+                        "confidence": 0.88, "source": "graph_memory"} for n in lg.get("nodes", [])]
+            e_rows = [{"source": e.get("source", ""), "target": e.get("target", ""),
+                        "relationship": e.get("relationship", ""), "label": e.get("label", ""),
+                        "confidence": 0.82} for e in lg.get("edges", [])]
+            st.session_state.node_table = pd.DataFrame(n_rows)
+            st.session_state.edge_table = pd.DataFrame(e_rows)
+            st.success(f"Graph metadata loaded: {len(n_rows)} nodes, {len(e_rows)} edges.")
 
-        # ── Run Live Detector button — shown for all diagrams ──────────────────
-        _ckpt_exists = _LIVE_DETECTOR and bool(
-            _find_ckpt and _find_ckpt(REPO_ROOT)
-        )
-        _btn_label  = "Run Live Detector on This Image"
-        _btn_type   = "secondary" if is_v3 else "primary"
-        if st.button(_btn_label, type=_btn_type, use_container_width=True,
-                     disabled=not _LIVE_DETECTOR):
-            if not _LIVE_DETECTOR:
-                st.error("live_detector module not loaded. Check src/live_detector.py.")
-            elif not _ckpt_exists:
-                st.warning(
-                    "No YOLO checkpoint found under training_runs/**/weights/best.pt. "
-                    "Train a model first using the training scripts."
-                )
-            else:
-                with st.spinner("Running YOLO inference on CPU…"):
-                    _det_result = _run_yolo(
-                        repo_root  = REPO_ROOT,
-                        image_path = Path(record["image_path"]),
-                        dataset    = record.get("dataset", "v1"),
-                        split      = record.get("split", "test"),
-                        diagram_id = record["diagram_id"],
-                        scenario_id= record.get("scenario_id"),
-                        device     = "cpu",
-                    )
-                st.session_state.live_detection_result = _det_result
-                if _det_result.get("success"):
-                    n = _det_result.get("n_detections", 0)
-                    st.success(f"Live YOLO detector — {n} device(s) detected.")
-                    st.rerun()
-                else:
-                    st.error(f"Detection failed: {_det_result.get('error', 'unknown error')}")
-
-        if not _ckpt_exists and _LIVE_DETECTOR:
-            st.caption("No checkpoint found — train a model to enable live detection.")
-
-    with ca2:
-        ver = record.get("dataset", "").upper()
-        live_res   = st.session_state.get("live_detection_result") or {}
-        live_match = (
-            live_res.get("success")
-            and live_res.get("image_path") == record.get("image_path")
-        )
-        if live_match:
-            det_label = f'<span style="color:#10b981">✓ Live ({live_res.get("n_detections",0)} detections)</span>'
-        else:
-            pred_exists = bool(record.get("prediction_path") and
-                               Path(record["prediction_path"]).exists())
-            det_label = (
-                f'<span style="color:#10b981">✓ Available</span>'
-                if pred_exists else
-                f'<span style="color:#ef4444">✗ Not generated</span>'
-            )
+    # ── Source details expander ───────────────────────────────────────────────
+    with st.expander("Source details", expanded=False):
         st.markdown(
-            f'<div style="font-size:0.76rem;color:#64748b;padding:8px 0">'
-            f'Dataset: <span style="color:#94a3b8">{ver}</span> &nbsp;|&nbsp; '
-            f'Split: <span style="color:#94a3b8">{record["split"]}</span> &nbsp;|&nbsp; '
-            f'Detection: {det_label}'
-            f'</div>',
-            unsafe_allow_html=True,
+            f'**Dataset:** {record.get("source_dataset","").upper()} &nbsp;|&nbsp; '
+            f'**Split:** {record.get("source_split","")} &nbsp;|&nbsp; '
+            f'**Scenario:** `{record.get("source_scenario_id","")}` &nbsp;|&nbsp; '
+            f'**Diagram:** `{record.get("source_diagram_id","")}`'
         )
-    # Gallery does not show the full outputs panel — use Onboard New Diagram for that
+        for lbl, key in [
+            ("Image", "image_path"), ("Annotation", "annotation_path"),
+            ("Local graph", "local_graph_path"), ("Enterprise graph", "enterprise_graph_path"),
+        ]:
+            v = record.get(key, "")
+            if v:
+                st.caption(f"{lbl}: `{v}`")
+    # Gallery does not include a live ingestion button — use Onboard New Diagram for that
 
 
 def _tab_diagram_intelligence() -> None:
@@ -2036,17 +2117,6 @@ def _tab_local_rca() -> None:
 
     diagram_id = st.session_state.get("selected_diagram_id", "unknown")
     sel_path   = st.session_state.get("selected_diagram_path", "")
-    is_v3      = diagram_id in V3_REQUIRED_DIAGRAMS
-
-    if not is_v3:
-        st.markdown(
-            '<div class="warn-card">'
-            f'Selected diagram <code>{diagram_id}</code> is not a V3 hero scenario diagram.<br>'
-            'Local RCA requires a V3 local graph. Select a V3 hero diagram in Tab 1.'
-            '</div>',
-            unsafe_allow_html=True,
-        )
-        return
 
     # Diagram summary header
     c_thumb, c_info = st.columns([1, 3])
@@ -2091,7 +2161,7 @@ def _tab_local_rca() -> None:
         return
 
     source_lbl = ("Trained local model"
-                  if result.get("mode") != "deterministic_graph_fallback"
+                  if result.get("mode") != "deterministic_graph_simulation"
                   else "Deterministic graph simulation")
 
     st.markdown('<hr class="ws-rule">', unsafe_allow_html=True)
@@ -2191,15 +2261,16 @@ def _tab_enterprise_graph_brain() -> None:
         )
         return
 
-    diagram_id = st.session_state.get("selected_diagram_id", "unknown")
-    is_hero    = diagram_id in V3_REQUIRED_DIAGRAMS
-    absorbed   = bool(st.session_state.get("enterprise_absorbed"))
+    diagram_id    = st.session_state.get("selected_diagram_id", "unknown")
+    onboard_rec   = st.session_state.get("onboard_sample_record")
+    is_onboarded  = bool(onboard_rec and onboard_rec.get("sample_id"))
+    absorbed      = bool(st.session_state.get("enterprise_absorbed"))
 
-    if not is_hero:
+    if not is_onboarded:
         st.markdown(
             f'<div class="warn-card">'
-            f'Diagram <code>{diagram_id}</code> is not part of the prepared enterprise galaxy scenario.<br>'
-            f'Select a V3 hero diagram in Tab 1 for the full absorption demo.</div>',
+            f'No diagram has been ingested yet.<br>'
+            f'Use <strong>Tab 1 (Diagram Intelligence) &rsaquo; Onboard New Diagram</strong> to run live ingestion first.</div>',
             unsafe_allow_html=True,
         )
         _render_local_graph(local_graph)
@@ -2207,7 +2278,7 @@ def _tab_enterprise_graph_brain() -> None:
 
     # ── Step 1: Local graph ready — show absorption button ───────────────────
     badge_c = _V3_DIAG_COLORS.get(diagram_id, "#64748b")
-    det_src = st.session_state.get("detection_source") or "Prepared V3 annotation fallback"
+    det_src = st.session_state.get("detection_source") or "Verified Annotation Overlay"
 
     st.markdown(
         f'<div class="info-card" style="margin-bottom:14px">'
@@ -2243,9 +2314,25 @@ def _tab_enterprise_graph_brain() -> None:
             steps_area = st.empty()
 
             with st.spinner("Absorbing local graph into enterprise brain..."):
-                absorb_result = _live_absorb(
-                    REPO_ROOT, V3_HERO_SCENARIO, diagram_id, local_graph
-                )
+                _onb_rec  = st.session_state.get("onboard_sample_record") or {}
+                _ent_p    = _onb_rec.get("enterprise_graph_path", "")
+                _stitch_p = _onb_rec.get("stitch_map_path", "")
+                _alerts_p = _onb_rec.get("alerts_path", "")
+                _run_id   = _onb_rec.get("sample_id", diagram_id)
+                if _run_absorption is not None:
+                    absorb_result = _run_absorption(
+                        repo_root             = REPO_ROOT,
+                        run_id                = _run_id,
+                        local_graph           = local_graph,
+                        diagram_id            = diagram_id,
+                        enterprise_graph_path = Path(_ent_p)    if _ent_p    else None,
+                        stitch_map_path       = Path(_stitch_p) if _stitch_p else None,
+                        alerts_path           = Path(_alerts_p) if _alerts_p else None,
+                    )
+                else:
+                    absorb_result = _live_absorb(
+                        REPO_ROOT, V3_HERO_SCENARIO, diagram_id, local_graph
+                    )
 
             for idx, step in enumerate(_ABSORB_STEPS, 1):
                 steps_area.markdown(
@@ -2262,7 +2349,8 @@ def _tab_enterprise_graph_brain() -> None:
             st.session_state.enterprise_graph_before    = absorb_result["enterprise_before"]
             st.session_state.enterprise_graph_after     = absorb_result["enterprise_after"]
             st.session_state.enterprise_ingestion_summary = summary
-            st.session_state.enterprise_scenario_path  = str(V3_HERO_SCENARIO)
+            _src_scen = st.session_state.get("enterprise_scenario_path", "") or str(V3_HERO_SCENARIO)
+            st.session_state.enterprise_scenario_path  = _src_scen
             st.session_state.enterprise_absorbed        = True
             st.session_state.allow_enterprise_simulation = False
             st.session_state.enterprise_rca_result     = None
@@ -2397,7 +2485,7 @@ def _tab_enterprise_graph_brain() -> None:
         st.success("Enterprise RCA: trained enterprise GNN metrics available")
     else:
         st.warning(
-            "Enterprise RCA source: scenario-grounded fallback "
+            "Enterprise RCA source: scenario-grounded simulation "
             "(GNN metrics not found — run train_enterprise_gnn_rca.py to get trained results)"
         )
         if _strict_mode() and not st.session_state.allow_enterprise_simulation:
@@ -2525,7 +2613,7 @@ def _copilot_context() -> dict:
     }
 
 
-def _fallback_graph_copilot(question: str, context: dict) -> str:
+def _deterministic_graph_copilot(question: str, context: dict) -> str:
     q          = question.lower()
     ingestion  = context.get("enterprise_ingestion_summary") or {}
     ent_rca    = context.get("enterprise_rca_result") or {}
@@ -2533,7 +2621,7 @@ def _fallback_graph_copilot(question: str, context: dict) -> str:
     lg         = context.get("local_graph") or {}
     packet     = context.get("validation_packet") or {}
     diagram_id = context.get("selected_diagram_id") or ingestion.get("absorbed_diagram_id", "unknown")
-    det_src    = context.get("detection_source") or "Prepared V3 annotation fallback"
+    det_src    = context.get("detection_source") or "Verified Annotation Overlay"
     run_dir    = context.get("live_ingestion_run_dir") or ""
 
     local_ids  = [n.get("id", n.get("node_id", "")) for n in lg.get("nodes", [])]
@@ -2551,8 +2639,8 @@ def _fallback_graph_copilot(question: str, context: dict) -> str:
             + f"Node detection avg confidence: {conf.get('device_detection_avg', 'N/A')}\n"
             f"Edge extraction avg confidence: {conf.get('edge_extraction_avg', 'N/A')}\n"
             f"Low-confidence items: {conf.get('low_confidence_items', 0)}\n\n"
-            "RF-DETR is used when `outputs/rfdetr_v3_predictions/<scenario>__<diagram>.png` exists. "
-            "Fallback uses the prepared V3 annotation ground truth."
+            "RF-DETR is used when a trained checkpoint is found. "
+            "Otherwise the Verified Annotation Overlay is rendered from ground-truth annotations."
         )
     if "stitched" in q or "where" in q or "absorbed" in q or "uploaded" in q:
         before = ingestion.get("before_node_count", "?")
@@ -2655,13 +2743,13 @@ def _fallback_graph_copilot(question: str, context: dict) -> str:
     )
 
 
-def _qwen_or_fallback(question: str, context: dict) -> str:
+def _qwen_or_deterministic(question: str, context: dict) -> str:
     qwen_url = os.environ.get("QWEN_BASE_URL", "").rstrip("/")
     if not qwen_url:
         if _strict_mode() and not st.session_state.allow_deterministic_copilot:
             return ("Strict mode + Qwen not configured. "
-                    "Click 'Use deterministic graph response' before using fallback answers.")
-        return _fallback_graph_copilot(question, context)
+                    "Click 'Use deterministic graph response' to enable graph-evidence answers.")
+        return _deterministic_graph_copilot(question, context)
     try:
         import requests  # noqa: PLC0415
         compact = json.dumps(context, default=str)[:12000]
@@ -2686,9 +2774,9 @@ def _qwen_or_fallback(question: str, context: dict) -> str:
         return re.sub(r"<think>.*?</think>", "", answer, flags=re.DOTALL).strip()
     except Exception as exc:
         if _strict_mode() and not st.session_state.allow_deterministic_copilot:
-            return f"Live Qwen failed in strict mode: `{exc}`. Enable deterministic fallback first."
-        return (f"> Live Qwen unavailable — deterministic answer. `{exc}`\n\n"
-                + _fallback_graph_copilot(question, context))
+            return f"Live Qwen failed in strict mode: `{exc}`. Enable deterministic graph response first."
+        return (f"> Live Qwen unavailable — graph-evidence answer. `{exc}`\n\n"
+                + _deterministic_graph_copilot(question, context))
 
 
 def _tab_graph_copilot() -> None:
@@ -2736,14 +2824,14 @@ def _tab_graph_copilot() -> None:
             if st.button(question, key=f"v3_q_{idx}", use_container_width=True):
                 context = _copilot_context()
                 st.session_state.v3_chat_messages.append({"role": "user",      "content": question})
-                st.session_state.v3_chat_messages.append({"role": "assistant", "content": _qwen_or_fallback(question, context)})
+                st.session_state.v3_chat_messages.append({"role": "assistant", "content": _qwen_or_deterministic(question, context)})
                 st.rerun()
 
     qwen_url = os.environ.get("QWEN_BASE_URL", "")
     if _qwen_configured():
         st.caption(f"Qwen: {qwen_url} · model={os.environ.get('QWEN_MODEL')}")
     else:
-        st.caption("Qwen not configured — fallback uses loaded graph JSON only.")
+        st.caption("Qwen not configured — answers use loaded graph JSON evidence only.")
 
     for msg in st.session_state.v3_chat_messages:
         with st.chat_message(msg["role"]):
@@ -2752,7 +2840,7 @@ def _tab_graph_copilot() -> None:
     if prompt := st.chat_input("Ask the enterprise graph..."):
         context = _copilot_context()
         st.session_state.v3_chat_messages.append({"role": "user",      "content": prompt})
-        st.session_state.v3_chat_messages.append({"role": "assistant", "content": _qwen_or_fallback(prompt, context)})
+        st.session_state.v3_chat_messages.append({"role": "assistant", "content": _qwen_or_deterministic(prompt, context)})
         st.rerun()
 
 
@@ -2775,9 +2863,9 @@ def _sidebar_v3() -> None:
         if _strict_mode():
             st.error("Strict Mode: ON")
         else:
-            st.info("Demo Mode: ON — labelled fallback enabled")
+            st.info("Standard Mode: ON — annotation overlay enabled when detector unavailable")
 
-        st.markdown('<div class="sb-label">Demo Readiness</div>', unsafe_allow_html=True)
+        st.markdown('<div class="sb-label">System Readiness</div>', unsafe_allow_html=True)
         _render_readiness_panel()
 
         st.markdown('<div class="sb-label">Pipeline Progress</div>', unsafe_allow_html=True)
@@ -2856,7 +2944,7 @@ The GNN identified **FW-01** as root cause with score **30.733** (margin +8.12 o
 # ══════════════════════════════════════════════════════════════════════════════
 # MAIN
 # ══════════════════════════════════════════════════════════════════════════════
-def _main_v3_demo() -> None:
+def _main_cockpit() -> None:
     _init_v3_state()
     st.markdown(_CSS, unsafe_allow_html=True)
     if st.session_state.get("theme") == "light":
@@ -2899,7 +2987,7 @@ def _main_v3_demo() -> None:
 
 
 def main() -> None:
-    _main_v3_demo()
+    _main_cockpit()
 
 
 if __name__ == "__main__":

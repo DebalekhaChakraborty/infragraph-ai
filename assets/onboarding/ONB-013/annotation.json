@@ -1,0 +1,839 @@
+{
+  "scenario_id": "enterprise_v3_0075",
+  "diagram_id": "branch_topology",
+  "diagram_type": "branch_topology",
+  "image_path": "/workspace/shared/infragraph-ai/datasets/diagram_v3_enterprise/scenarios/test/enterprise_v3_0075/diagrams/branch_topology.png",
+  "width": 1400,
+  "height": 900,
+  "objects": [
+    {
+      "object_id": "BR-RTR-01",
+      "class_name": "router",
+      "bbox": [
+        246,
+        434,
+        314,
+        502
+      ],
+      "label_text": "BR-RTR-01",
+      "ip_address": "10.75.1.1",
+      "zone": "Branch Edge",
+      "is_shared_entity": true,
+      "canonical_id": "BR-RTR-01"
+    },
+    {
+      "object_id": "BR-FW-01",
+      "class_name": "firewall",
+      "bbox": [
+        455,
+        434,
+        523,
+        502
+      ],
+      "label_text": "BR-FW-01",
+      "ip_address": "10.75.1.2",
+      "zone": "Branch Edge",
+      "is_shared_entity": false,
+      "canonical_id": "BR-FW-01"
+    },
+    {
+      "object_id": "BR-SW-01",
+      "class_name": "switch",
+      "bbox": [
+        694,
+        434,
+        762,
+        502
+      ],
+      "label_text": "BR-SW-01",
+      "ip_address": "10.75.1.3",
+      "zone": "Branch LAN",
+      "is_shared_entity": false,
+      "canonical_id": "BR-SW-01"
+    },
+    {
+      "object_id": "BR-APP-01",
+      "class_name": "server",
+      "bbox": [
+        974,
+        318,
+        1042,
+        386
+      ],
+      "label_text": "BR-APP-01",
+      "ip_address": "10.75.1.4",
+      "zone": "Branch Apps",
+      "is_shared_entity": false,
+      "canonical_id": "BR-APP-01"
+    },
+    {
+      "object_id": "BR-WRK-01",
+      "class_name": "server",
+      "bbox": [
+        1170,
+        567,
+        1238,
+        635
+      ],
+      "label_text": "BR-WRK-01",
+      "ip_address": "10.75.1.5",
+      "zone": "Branch LAN",
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-01"
+    },
+    {
+      "object_id": "BR-WRK-02",
+      "class_name": "server",
+      "bbox": [
+        974,
+        683,
+        1042,
+        751
+      ],
+      "label_text": "BR-WRK-02",
+      "ip_address": "10.75.1.6",
+      "zone": "Branch LAN",
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-02"
+    },
+    {
+      "object_id": "BR-WRK-03",
+      "class_name": "server",
+      "bbox": [
+        1170,
+        451,
+        1238,
+        519
+      ],
+      "label_text": "BR-WRK-03",
+      "ip_address": "10.75.1.7",
+      "zone": "Branch LAN",
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-03"
+    },
+    {
+      "object_id": "BR-WRK-04",
+      "class_name": "server",
+      "bbox": [
+        974,
+        268,
+        1042,
+        336
+      ],
+      "label_text": "BR-WRK-04",
+      "ip_address": "10.75.1.8",
+      "zone": "Branch LAN",
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-04"
+    },
+    {
+      "object_id": "WAN-MPLS-CORE",
+      "class_name": "cloud_or_wan",
+      "bbox": [
+        78,
+        434,
+        146,
+        502
+      ],
+      "label_text": "WAN-MPLS-CORE",
+      "ip_address": "",
+      "zone": "WAN",
+      "is_shared_entity": true,
+      "canonical_id": "WAN-MPLS-CORE"
+    }
+  ],
+  "text_blocks": [
+    {
+      "text": "BR-RTR-01",
+      "bbox": [
+        235,
+        498,
+        325,
+        512
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.75.1.1",
+      "bbox": [
+        244,
+        426,
+        316,
+        438
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "BR-FW-01",
+      "bbox": [
+        449,
+        498,
+        529,
+        512
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.75.1.2",
+      "bbox": [
+        453,
+        426,
+        525,
+        438
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "BR-SW-01",
+      "bbox": [
+        688,
+        498,
+        768,
+        512
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.75.1.3",
+      "bbox": [
+        692,
+        426,
+        764,
+        438
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "BR-APP-01",
+      "bbox": [
+        963,
+        382,
+        1053,
+        396
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.75.1.4",
+      "bbox": [
+        972,
+        310,
+        1044,
+        322
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "BR-WRK-01",
+      "bbox": [
+        1159,
+        631,
+        1249,
+        645
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.75.1.5",
+      "bbox": [
+        1168,
+        559,
+        1240,
+        571
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "BR-WRK-02",
+      "bbox": [
+        963,
+        747,
+        1053,
+        761
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.75.1.6",
+      "bbox": [
+        972,
+        675,
+        1044,
+        687
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "BR-WRK-03",
+      "bbox": [
+        1159,
+        515,
+        1249,
+        529
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.75.1.7",
+      "bbox": [
+        1168,
+        443,
+        1240,
+        455
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "BR-WRK-04",
+      "bbox": [
+        963,
+        332,
+        1053,
+        346
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.75.1.8",
+      "bbox": [
+        972,
+        260,
+        1044,
+        272
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "WAN-MPLS-CORE",
+      "bbox": [
+        47,
+        498,
+        177,
+        512
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "WAN Handoff",
+      "bbox": [
+        52,
+        268,
+        118,
+        284
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "Branch Edge",
+      "bbox": [
+        234,
+        260,
+        300,
+        276
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "Branch LAN",
+      "bbox": [
+        654,
+        260,
+        714,
+        276
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "Branch Apps",
+      "bbox": [
+        906,
+        210,
+        972,
+        226
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "MPLS",
+      "bbox": [
+        172,
+        458,
+        220,
+        478
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        120,
+        472,
+        140,
+        484
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        240,
+        452,
+        272,
+        464
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "VPN",
+      "bbox": [
+        360,
+        458,
+        408,
+        478
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        288,
+        472,
+        304,
+        484
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        461,
+        452,
+        481,
+        464
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "LAN",
+      "bbox": [
+        584,
+        458,
+        632,
+        478
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        497,
+        472,
+        529,
+        484
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        704,
+        452,
+        720,
+        464
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "HTTPS",
+      "bbox": [
+        843,
+        400,
+        893,
+        420
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        736,
+        472,
+        756,
+        484
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        980,
+        336,
+        1000,
+        348
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Access",
+      "bbox": [
+        936,
+        524,
+        996,
+        544
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        736,
+        472,
+        752,
+        484
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        1180,
+        585,
+        1196,
+        597
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Access",
+      "bbox": [
+        838,
+        582,
+        898,
+        602
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        736,
+        472,
+        756,
+        484
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        968,
+        701,
+        1000,
+        713
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Access",
+      "bbox": [
+        936,
+        466,
+        996,
+        486
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        736,
+        472,
+        752,
+        484
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        1176,
+        469,
+        1196,
+        481
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Access",
+      "bbox": [
+        838,
+        375,
+        898,
+        395
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        736,
+        472,
+        768,
+        484
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        984,
+        286,
+        1000,
+        298
+      ],
+      "text_type": "interface_label"
+    }
+  ],
+  "connectors": [
+    {
+      "connector_id": "edge_000",
+      "source": "WAN-MPLS-CORE",
+      "target": "BR-RTR-01",
+      "relationship": "wan_dependency",
+      "label_text": "MPLS",
+      "source_interface": "Gi0/1",
+      "target_interface": "ge-0/0/1",
+      "points": [
+        [
+          112,
+          468
+        ],
+        [
+          196,
+          468
+        ],
+        [
+          280,
+          468
+        ]
+      ],
+      "bbox": [
+        108,
+        464,
+        284,
+        472
+      ],
+      "style": "dashed"
+    },
+    {
+      "connector_id": "edge_001",
+      "source": "BR-RTR-01",
+      "target": "BR-FW-01",
+      "relationship": "routes_to",
+      "label_text": "VPN",
+      "source_interface": "eth0",
+      "target_interface": "Gi0/2",
+      "points": [
+        [
+          280,
+          468
+        ],
+        [
+          384,
+          468
+        ],
+        [
+          489,
+          468
+        ]
+      ],
+      "bbox": [
+        276,
+        464,
+        493,
+        472
+      ],
+      "style": "solid"
+    },
+    {
+      "connector_id": "edge_002",
+      "source": "BR-FW-01",
+      "target": "BR-SW-01",
+      "relationship": "secured_by",
+      "label_text": "LAN",
+      "source_interface": "ge-0/0/1",
+      "target_interface": "eth1",
+      "points": [
+        [
+          489,
+          468
+        ],
+        [
+          608,
+          468
+        ],
+        [
+          728,
+          468
+        ]
+      ],
+      "bbox": [
+        485,
+        464,
+        732,
+        472
+      ],
+      "style": "solid"
+    },
+    {
+      "connector_id": "edge_003",
+      "source": "BR-SW-01",
+      "target": "BR-APP-01",
+      "relationship": "serves",
+      "label_text": "HTTPS",
+      "source_interface": "Gi0/2",
+      "target_interface": "Gi0/1",
+      "points": [
+        [
+          728,
+          468
+        ],
+        [
+          868,
+          410
+        ],
+        [
+          1008,
+          352
+        ]
+      ],
+      "bbox": [
+        724,
+        348,
+        1012,
+        472
+      ],
+      "style": "solid"
+    },
+    {
+      "connector_id": "edge_004",
+      "source": "BR-SW-01",
+      "target": "BR-WRK-01",
+      "relationship": "connected_to",
+      "label_text": "Access",
+      "source_interface": "eth1",
+      "target_interface": "eth0",
+      "points": [
+        [
+          728,
+          468
+        ],
+        [
+          966,
+          534
+        ],
+        [
+          1204,
+          601
+        ]
+      ],
+      "bbox": [
+        724,
+        464,
+        1208,
+        605
+      ],
+      "style": "solid"
+    },
+    {
+      "connector_id": "edge_005",
+      "source": "BR-SW-01",
+      "target": "BR-WRK-02",
+      "relationship": "connected_to",
+      "label_text": "Access",
+      "source_interface": "Gi0/1",
+      "target_interface": "ge-0/0/1",
+      "points": [
+        [
+          728,
+          468
+        ],
+        [
+          868,
+          592
+        ],
+        [
+          1008,
+          717
+        ]
+      ],
+      "bbox": [
+        724,
+        464,
+        1012,
+        721
+      ],
+      "style": "solid"
+    },
+    {
+      "connector_id": "edge_006",
+      "source": "BR-SW-01",
+      "target": "BR-WRK-03",
+      "relationship": "connected_to",
+      "label_text": "Access",
+      "source_interface": "eth0",
+      "target_interface": "Gi0/2",
+      "points": [
+        [
+          728,
+          468
+        ],
+        [
+          966,
+          476
+        ],
+        [
+          1204,
+          485
+        ]
+      ],
+      "bbox": [
+        724,
+        464,
+        1208,
+        489
+      ],
+      "style": "solid"
+    },
+    {
+      "connector_id": "edge_007",
+      "source": "BR-SW-01",
+      "target": "BR-WRK-04",
+      "relationship": "connected_to",
+      "label_text": "Access",
+      "source_interface": "ge-0/0/1",
+      "target_interface": "eth1",
+      "points": [
+        [
+          728,
+          468
+        ],
+        [
+          868,
+          385
+        ],
+        [
+          1008,
+          302
+        ]
+      ],
+      "bbox": [
+        724,
+        298,
+        1012,
+        472
+      ],
+      "style": "solid"
+    }
+  ]
+}
