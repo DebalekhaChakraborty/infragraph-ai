@@ -1,0 +1,168 @@
+{
+  "scenario_id": "enterprise_v3_0056",
+  "diagram_id": "shared_services_topology",
+  "diagram_type": "shared_services_topology",
+  "nodes": [
+    {
+      "id": "AD-01",
+      "label": "AD-01",
+      "type": "service",
+      "ip_address": "10.255.0.1",
+      "zone": "Identity",
+      "diagram_id": "shared_services_topology",
+      "diagram_type": "shared_services_topology",
+      "is_shared_entity": false,
+      "canonical_id": "AD-01",
+      "bbox": [
+        226,
+        392,
+        278,
+        444
+      ]
+    },
+    {
+      "id": "IAM-01",
+      "label": "IAM-01",
+      "type": "service",
+      "ip_address": "10.255.0.2",
+      "zone": "Identity",
+      "diagram_id": "shared_services_topology",
+      "diagram_type": "shared_services_topology",
+      "is_shared_entity": false,
+      "canonical_id": "IAM-01",
+      "bbox": [
+        478,
+        392,
+        530,
+        444
+      ]
+    },
+    {
+      "id": "DNS-01",
+      "label": "DNS-01",
+      "type": "service",
+      "ip_address": "10.255.0.3",
+      "zone": "DNS/NTP",
+      "diagram_id": "shared_services_topology",
+      "diagram_type": "shared_services_topology",
+      "is_shared_entity": false,
+      "canonical_id": "DNS-01",
+      "bbox": [
+        758,
+        293,
+        810,
+        345
+      ]
+    },
+    {
+      "id": "NTP-01",
+      "label": "NTP-01",
+      "type": "service",
+      "ip_address": "10.255.0.4",
+      "zone": "DNS/NTP",
+      "diagram_id": "shared_services_topology",
+      "diagram_type": "shared_services_topology",
+      "is_shared_entity": false,
+      "canonical_id": "NTP-01",
+      "bbox": [
+        758,
+        558,
+        810,
+        610
+      ]
+    },
+    {
+      "id": "MON-01",
+      "label": "MON-01",
+      "type": "service",
+      "ip_address": "10.255.0.5",
+      "zone": "Monitoring",
+      "diagram_id": "shared_services_topology",
+      "diagram_type": "shared_services_topology",
+      "is_shared_entity": false,
+      "canonical_id": "MON-01",
+      "bbox": [
+        1038,
+        359,
+        1090,
+        411
+      ]
+    },
+    {
+      "id": "SYSLOG-01",
+      "label": "SYSLOG-01",
+      "type": "server",
+      "ip_address": "10.255.0.6",
+      "zone": "Logging",
+      "diagram_id": "shared_services_topology",
+      "diagram_type": "shared_services_topology",
+      "is_shared_entity": false,
+      "canonical_id": "SYSLOG-01",
+      "bbox": [
+        1038,
+        591,
+        1090,
+        643
+      ]
+    },
+    {
+      "id": "BR-APP-01",
+      "label": "BR-APP-01",
+      "type": "server",
+      "ip_address": "",
+      "zone": "Consumers",
+      "diagram_id": "shared_services_topology",
+      "diagram_type": "shared_services_topology",
+      "is_shared_entity": true,
+      "canonical_id": "BR-APP-01",
+      "bbox": [
+        1262,
+        558,
+        1314,
+        610
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "AD-01",
+      "target": "IAM-01",
+      "relationship": "connected_to",
+      "label": "LDAP",
+      "edge_scope": "local",
+      "connector_id": "edge_000"
+    },
+    {
+      "source": "IAM-01",
+      "target": "MON-01",
+      "relationship": "monitored_by",
+      "label": "API",
+      "edge_scope": "local",
+      "connector_id": "edge_001"
+    },
+    {
+      "source": "DNS-01",
+      "target": "NTP-01",
+      "relationship": "connected_to",
+      "label": "NTP",
+      "edge_scope": "local",
+      "connector_id": "edge_002"
+    },
+    {
+      "source": "MON-01",
+      "target": "SYSLOG-01",
+      "relationship": "depends_on",
+      "label": "Syslog",
+      "edge_scope": "local",
+      "connector_id": "edge_003"
+    },
+    {
+      "source": "BR-APP-01",
+      "target": "DNS-01",
+      "relationship": "depends_on",
+      "label": "DNS",
+      "edge_scope": "local",
+      "connector_id": "edge_005"
+    }
+  ]
+}

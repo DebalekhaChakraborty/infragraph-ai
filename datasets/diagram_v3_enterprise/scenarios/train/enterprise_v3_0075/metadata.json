@@ -1,0 +1,21 @@
+{
+  "scenario_id": "enterprise_v3_0075",
+  "diagram_types": [
+    "branch_topology",
+    "wan_topology",
+    "datacenter_topology",
+    "shared_services_topology"
+  ],
+  "num_diagrams": 4,
+  "num_nodes": 28,
+  "num_edges": 33,
+  "num_cross_diagram_edges": 4,
+  "num_shared_entities": 6,
+  "root_cause": "WAN-PE-01",
+  "root_cause_diagram": "wan_topology",
+  "root_cause_pattern": "wan_failure",
+  "severity": "critical",
+  "num_impacted_nodes": 3,
+  "num_impacted_diagrams": 2,
+  "split": "train"
+}

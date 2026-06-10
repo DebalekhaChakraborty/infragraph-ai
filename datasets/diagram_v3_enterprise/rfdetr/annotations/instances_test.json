@@ -1,0 +1,6939 @@
+{
+  "info": {
+    "description": "InfraGraph AI V3 Diagram Intelligence Dataset",
+    "url": "",
+    "version": "3.0",
+    "year": 2026,
+    "contributor": "InfraGraph AI",
+    "date_created": "2026-06-10"
+  },
+  "licenses": [],
+  "images": [
+    {
+      "id": 234,
+      "file_name": "enterprise_v3_0009__app_db_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0009",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology"
+    },
+    {
+      "id": 235,
+      "file_name": "enterprise_v3_0009__branch_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0009",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology"
+    },
+    {
+      "id": 236,
+      "file_name": "enterprise_v3_0009__datacenter_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0009",
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology"
+    },
+    {
+      "id": 237,
+      "file_name": "enterprise_v3_0009__shared_services_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0009",
+      "diagram_id": "shared_services_topology",
+      "diagram_type": "shared_services_topology"
+    },
+    {
+      "id": 238,
+      "file_name": "enterprise_v3_0009__wan_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0009",
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology"
+    },
+    {
+      "id": 239,
+      "file_name": "enterprise_v3_0090__branch_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0090",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology"
+    },
+    {
+      "id": 240,
+      "file_name": "enterprise_v3_0090__datacenter_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0090",
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology"
+    },
+    {
+      "id": 241,
+      "file_name": "enterprise_v3_0090__wan_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0090",
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology"
+    },
+    {
+      "id": 242,
+      "file_name": "enterprise_v3_0091__app_db_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0091",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology"
+    },
+    {
+      "id": 243,
+      "file_name": "enterprise_v3_0091__branch_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0091",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology"
+    },
+    {
+      "id": 244,
+      "file_name": "enterprise_v3_0091__datacenter_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0091",
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology"
+    },
+    {
+      "id": 245,
+      "file_name": "enterprise_v3_0091__shared_services_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0091",
+      "diagram_id": "shared_services_topology",
+      "diagram_type": "shared_services_topology"
+    },
+    {
+      "id": 246,
+      "file_name": "enterprise_v3_0091__wan_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0091",
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology"
+    },
+    {
+      "id": 247,
+      "file_name": "enterprise_v3_0092__app_db_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0092",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology"
+    },
+    {
+      "id": 248,
+      "file_name": "enterprise_v3_0092__branch_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0092",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology"
+    },
+    {
+      "id": 249,
+      "file_name": "enterprise_v3_0092__datacenter_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0092",
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology"
+    },
+    {
+      "id": 250,
+      "file_name": "enterprise_v3_0092__shared_services_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0092",
+      "diagram_id": "shared_services_topology",
+      "diagram_type": "shared_services_topology"
+    },
+    {
+      "id": 251,
+      "file_name": "enterprise_v3_0092__wan_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0092",
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology"
+    },
+    {
+      "id": 252,
+      "file_name": "enterprise_v3_0093__app_db_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0093",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology"
+    },
+    {
+      "id": 253,
+      "file_name": "enterprise_v3_0093__branch_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0093",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology"
+    },
+    {
+      "id": 254,
+      "file_name": "enterprise_v3_0093__datacenter_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0093",
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology"
+    },
+    {
+      "id": 255,
+      "file_name": "enterprise_v3_0093__shared_services_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0093",
+      "diagram_id": "shared_services_topology",
+      "diagram_type": "shared_services_topology"
+    },
+    {
+      "id": 256,
+      "file_name": "enterprise_v3_0093__wan_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0093",
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology"
+    },
+    {
+      "id": 257,
+      "file_name": "enterprise_v3_0094__branch_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0094",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology"
+    },
+    {
+      "id": 258,
+      "file_name": "enterprise_v3_0094__datacenter_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0094",
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology"
+    },
+    {
+      "id": 259,
+      "file_name": "enterprise_v3_0094__wan_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0094",
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology"
+    },
+    {
+      "id": 260,
+      "file_name": "enterprise_v3_0095__app_db_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0095",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology"
+    },
+    {
+      "id": 261,
+      "file_name": "enterprise_v3_0095__branch_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0095",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology"
+    },
+    {
+      "id": 262,
+      "file_name": "enterprise_v3_0095__datacenter_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0095",
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology"
+    },
+    {
+      "id": 263,
+      "file_name": "enterprise_v3_0095__wan_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0095",
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology"
+    },
+    {
+      "id": 264,
+      "file_name": "enterprise_v3_0096__app_db_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0096",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology"
+    },
+    {
+      "id": 265,
+      "file_name": "enterprise_v3_0096__branch_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0096",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology"
+    },
+    {
+      "id": 266,
+      "file_name": "enterprise_v3_0096__datacenter_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0096",
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology"
+    },
+    {
+      "id": 267,
+      "file_name": "enterprise_v3_0096__shared_services_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0096",
+      "diagram_id": "shared_services_topology",
+      "diagram_type": "shared_services_topology"
+    },
+    {
+      "id": 268,
+      "file_name": "enterprise_v3_0096__wan_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0096",
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology"
+    },
+    {
+      "id": 269,
+      "file_name": "enterprise_v3_0097__app_db_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0097",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology"
+    },
+    {
+      "id": 270,
+      "file_name": "enterprise_v3_0097__datacenter_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0097",
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology"
+    },
+    {
+      "id": 271,
+      "file_name": "enterprise_v3_0097__wan_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0097",
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology"
+    },
+    {
+      "id": 272,
+      "file_name": "enterprise_v3_0098__app_db_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0098",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology"
+    },
+    {
+      "id": 273,
+      "file_name": "enterprise_v3_0098__branch_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0098",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology"
+    },
+    {
+      "id": 274,
+      "file_name": "enterprise_v3_0098__datacenter_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0098",
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology"
+    },
+    {
+      "id": 275,
+      "file_name": "enterprise_v3_0098__shared_services_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0098",
+      "diagram_id": "shared_services_topology",
+      "diagram_type": "shared_services_topology"
+    },
+    {
+      "id": 276,
+      "file_name": "enterprise_v3_0098__wan_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0098",
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology"
+    },
+    {
+      "id": 277,
+      "file_name": "enterprise_v3_0099__app_db_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0099",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology"
+    },
+    {
+      "id": 278,
+      "file_name": "enterprise_v3_0099__branch_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0099",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology"
+    },
+    {
+      "id": 279,
+      "file_name": "enterprise_v3_0099__datacenter_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0099",
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology"
+    },
+    {
+      "id": 280,
+      "file_name": "enterprise_v3_0099__shared_services_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0099",
+      "diagram_id": "shared_services_topology",
+      "diagram_type": "shared_services_topology"
+    },
+    {
+      "id": 281,
+      "file_name": "enterprise_v3_0099__wan_topology.png",
+      "width": 1400,
+      "height": 900,
+      "scenario_id": "enterprise_v3_0099",
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology"
+    }
+  ],
+  "annotations": [
+    {
+      "id": 2101,
+      "image_id": 234,
+      "category_id": 6,
+      "bbox": [
+        414.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-LB-01"
+    },
+    {
+      "id": 2102,
+      "image_id": 234,
+      "category_id": 4,
+      "bbox": [
+        736.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-01"
+    },
+    {
+      "id": 2103,
+      "image_id": 234,
+      "category_id": 4,
+      "bbox": [
+        736.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-02"
+    },
+    {
+      "id": 2104,
+      "image_id": 234,
+      "category_id": 8,
+      "bbox": [
+        736.0,
+        617.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "SERVICE-API-01"
+    },
+    {
+      "id": 2105,
+      "image_id": 234,
+      "category_id": 5,
+      "bbox": [
+        1058.0,
+        384.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-MASTER"
+    },
+    {
+      "id": 2106,
+      "image_id": 234,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        583.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-CACHE-01"
+    },
+    {
+      "id": 2107,
+      "image_id": 234,
+      "category_id": 5,
+      "bbox": [
+        1240.0,
+        683.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-REPLICA-01"
+    },
+    {
+      "id": 2108,
+      "image_id": 234,
+      "category_id": 2,
+      "bbox": [
+        106.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-CORE-SW-01"
+    },
+    {
+      "id": 2109,
+      "image_id": 234,
+      "category_id": 2,
+      "bbox": [
+        106.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-AGG-SW-01"
+    },
+    {
+      "id": 2110,
+      "image_id": 234,
+      "category_id": 8,
+      "bbox": [
+        1282.0,
+        268.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "IAM-01"
+    },
+    {
+      "id": 2111,
+      "image_id": 234,
+      "category_id": 8,
+      "bbox": [
+        1282.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DNS-01"
+    },
+    {
+      "id": 2112,
+      "image_id": 235,
+      "category_id": 1,
+      "bbox": [
+        246.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-RTR-01"
+    },
+    {
+      "id": 2113,
+      "image_id": 235,
+      "category_id": 3,
+      "bbox": [
+        455.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-FW-01"
+    },
+    {
+      "id": 2114,
+      "image_id": 235,
+      "category_id": 2,
+      "bbox": [
+        694.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-SW-01"
+    },
+    {
+      "id": 2115,
+      "image_id": 235,
+      "category_id": 4,
+      "bbox": [
+        974.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-APP-01"
+    },
+    {
+      "id": 2116,
+      "image_id": 235,
+      "category_id": 4,
+      "bbox": [
+        1170.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-01"
+    },
+    {
+      "id": 2117,
+      "image_id": 235,
+      "category_id": 4,
+      "bbox": [
+        974.0,
+        683.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-02"
+    },
+    {
+      "id": 2118,
+      "image_id": 235,
+      "category_id": 4,
+      "bbox": [
+        1170.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-03"
+    },
+    {
+      "id": 2119,
+      "image_id": 235,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "WAN-MPLS-CORE"
+    },
+    {
+      "id": 2120,
+      "image_id": 236,
+      "category_id": 3,
+      "bbox": [
+        246.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-FW-01"
+    },
+    {
+      "id": 2121,
+      "image_id": 236,
+      "category_id": 3,
+      "bbox": [
+        246.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-FW-02"
+    },
+    {
+      "id": 2122,
+      "image_id": 236,
+      "category_id": 1,
+      "bbox": [
+        78.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-RTR-01"
+    },
+    {
+      "id": 2123,
+      "image_id": 236,
+      "category_id": 2,
+      "bbox": [
+        526.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-CORE-SW-01"
+    },
+    {
+      "id": 2124,
+      "image_id": 236,
+      "category_id": 2,
+      "bbox": [
+        526.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-CORE-SW-02"
+    },
+    {
+      "id": 2125,
+      "image_id": 236,
+      "category_id": 2,
+      "bbox": [
+        778.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-AGG-SW-01"
+    },
+    {
+      "id": 2126,
+      "image_id": 236,
+      "category_id": 4,
+      "bbox": [
+        1198.0,
+        218.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-01"
+    },
+    {
+      "id": 2127,
+      "image_id": 236,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-02"
+    },
+    {
+      "id": 2128,
+      "image_id": 236,
+      "category_id": 4,
+      "bbox": [
+        1198.0,
+        484.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-03"
+    },
+    {
+      "id": 2129,
+      "image_id": 237,
+      "category_id": 8,
+      "bbox": [
+        218.0,
+        384.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "AD-01"
+    },
+    {
+      "id": 2130,
+      "image_id": 237,
+      "category_id": 8,
+      "bbox": [
+        470.0,
+        384.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "IAM-01"
+    },
+    {
+      "id": 2131,
+      "image_id": 237,
+      "category_id": 8,
+      "bbox": [
+        750.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DNS-01"
+    },
+    {
+      "id": 2132,
+      "image_id": 237,
+      "category_id": 8,
+      "bbox": [
+        750.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "NTP-01"
+    },
+    {
+      "id": 2133,
+      "image_id": 237,
+      "category_id": 8,
+      "bbox": [
+        1030.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "MON-01"
+    },
+    {
+      "id": 2134,
+      "image_id": 237,
+      "category_id": 4,
+      "bbox": [
+        1030.0,
+        583.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "SYSLOG-01"
+    },
+    {
+      "id": 2135,
+      "image_id": 237,
+      "category_id": 4,
+      "bbox": [
+        1254.0,
+        268.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "APP-01"
+    },
+    {
+      "id": 2136,
+      "image_id": 237,
+      "category_id": 4,
+      "bbox": [
+        1254.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-APP-01"
+    },
+    {
+      "id": 2137,
+      "image_id": 238,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-01"
+    },
+    {
+      "id": 2138,
+      "image_id": 238,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        592.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-02"
+    },
+    {
+      "id": 2139,
+      "image_id": 238,
+      "category_id": 7,
+      "bbox": [
+        568.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-MPLS-CORE"
+    },
+    {
+      "id": 2140,
+      "image_id": 238,
+      "category_id": 1,
+      "bbox": [
+        330.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-01"
+    },
+    {
+      "id": 2141,
+      "image_id": 238,
+      "category_id": 1,
+      "bbox": [
+        834.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-02"
+    },
+    {
+      "id": 2142,
+      "image_id": 238,
+      "category_id": 1,
+      "bbox": [
+        330.0,
+        633.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-RTR-01"
+    },
+    {
+      "id": 2143,
+      "image_id": 238,
+      "category_id": 1,
+      "bbox": [
+        1058.0,
+        368.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-RTR-01"
+    },
+    {
+      "id": 2144,
+      "image_id": 238,
+      "category_id": 3,
+      "bbox": [
+        1170.0,
+        517.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-FW-01"
+    },
+    {
+      "id": 2145,
+      "image_id": 239,
+      "category_id": 1,
+      "bbox": [
+        246.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-RTR-01"
+    },
+    {
+      "id": 2146,
+      "image_id": 239,
+      "category_id": 3,
+      "bbox": [
+        455.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-FW-01"
+    },
+    {
+      "id": 2147,
+      "image_id": 239,
+      "category_id": 2,
+      "bbox": [
+        694.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-SW-01"
+    },
+    {
+      "id": 2148,
+      "image_id": 239,
+      "category_id": 4,
+      "bbox": [
+        974.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-APP-01"
+    },
+    {
+      "id": 2149,
+      "image_id": 239,
+      "category_id": 4,
+      "bbox": [
+        1170.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-01"
+    },
+    {
+      "id": 2150,
+      "image_id": 239,
+      "category_id": 4,
+      "bbox": [
+        974.0,
+        683.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-02"
+    },
+    {
+      "id": 2151,
+      "image_id": 239,
+      "category_id": 4,
+      "bbox": [
+        1170.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-03"
+    },
+    {
+      "id": 2152,
+      "image_id": 239,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "WAN-MPLS-CORE"
+    },
+    {
+      "id": 2153,
+      "image_id": 240,
+      "category_id": 3,
+      "bbox": [
+        246.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-FW-01"
+    },
+    {
+      "id": 2154,
+      "image_id": 240,
+      "category_id": 3,
+      "bbox": [
+        246.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-FW-02"
+    },
+    {
+      "id": 2155,
+      "image_id": 240,
+      "category_id": 1,
+      "bbox": [
+        78.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-RTR-01"
+    },
+    {
+      "id": 2156,
+      "image_id": 240,
+      "category_id": 2,
+      "bbox": [
+        526.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-CORE-SW-01"
+    },
+    {
+      "id": 2157,
+      "image_id": 240,
+      "category_id": 2,
+      "bbox": [
+        526.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-CORE-SW-02"
+    },
+    {
+      "id": 2158,
+      "image_id": 240,
+      "category_id": 2,
+      "bbox": [
+        778.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-AGG-SW-01"
+    },
+    {
+      "id": 2159,
+      "image_id": 240,
+      "category_id": 4,
+      "bbox": [
+        1198.0,
+        218.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-01"
+    },
+    {
+      "id": 2160,
+      "image_id": 240,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-02"
+    },
+    {
+      "id": 2161,
+      "image_id": 240,
+      "category_id": 4,
+      "bbox": [
+        1198.0,
+        484.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-03"
+    },
+    {
+      "id": 2162,
+      "image_id": 241,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-01"
+    },
+    {
+      "id": 2163,
+      "image_id": 241,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        592.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-02"
+    },
+    {
+      "id": 2164,
+      "image_id": 241,
+      "category_id": 7,
+      "bbox": [
+        568.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-MPLS-CORE"
+    },
+    {
+      "id": 2165,
+      "image_id": 241,
+      "category_id": 1,
+      "bbox": [
+        330.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-01"
+    },
+    {
+      "id": 2166,
+      "image_id": 241,
+      "category_id": 1,
+      "bbox": [
+        834.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-02"
+    },
+    {
+      "id": 2167,
+      "image_id": 241,
+      "category_id": 1,
+      "bbox": [
+        330.0,
+        633.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-RTR-01"
+    },
+    {
+      "id": 2168,
+      "image_id": 241,
+      "category_id": 1,
+      "bbox": [
+        1058.0,
+        368.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-RTR-01"
+    },
+    {
+      "id": 2169,
+      "image_id": 241,
+      "category_id": 3,
+      "bbox": [
+        1170.0,
+        517.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-FW-01"
+    },
+    {
+      "id": 2170,
+      "image_id": 242,
+      "category_id": 6,
+      "bbox": [
+        414.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-LB-01"
+    },
+    {
+      "id": 2171,
+      "image_id": 242,
+      "category_id": 4,
+      "bbox": [
+        736.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-01"
+    },
+    {
+      "id": 2172,
+      "image_id": 242,
+      "category_id": 4,
+      "bbox": [
+        736.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-02"
+    },
+    {
+      "id": 2173,
+      "image_id": 242,
+      "category_id": 8,
+      "bbox": [
+        736.0,
+        617.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "SERVICE-API-01"
+    },
+    {
+      "id": 2174,
+      "image_id": 242,
+      "category_id": 5,
+      "bbox": [
+        1058.0,
+        384.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-MASTER"
+    },
+    {
+      "id": 2175,
+      "image_id": 242,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        583.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-CACHE-01"
+    },
+    {
+      "id": 2176,
+      "image_id": 242,
+      "category_id": 5,
+      "bbox": [
+        1240.0,
+        683.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-REPLICA-01"
+    },
+    {
+      "id": 2177,
+      "image_id": 242,
+      "category_id": 2,
+      "bbox": [
+        106.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-CORE-SW-01"
+    },
+    {
+      "id": 2178,
+      "image_id": 242,
+      "category_id": 2,
+      "bbox": [
+        106.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-AGG-SW-01"
+    },
+    {
+      "id": 2179,
+      "image_id": 242,
+      "category_id": 8,
+      "bbox": [
+        1282.0,
+        268.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "IAM-01"
+    },
+    {
+      "id": 2180,
+      "image_id": 242,
+      "category_id": 8,
+      "bbox": [
+        1282.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DNS-01"
+    },
+    {
+      "id": 2181,
+      "image_id": 243,
+      "category_id": 1,
+      "bbox": [
+        246.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-RTR-01"
+    },
+    {
+      "id": 2182,
+      "image_id": 243,
+      "category_id": 3,
+      "bbox": [
+        455.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-FW-01"
+    },
+    {
+      "id": 2183,
+      "image_id": 243,
+      "category_id": 2,
+      "bbox": [
+        694.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-SW-01"
+    },
+    {
+      "id": 2184,
+      "image_id": 243,
+      "category_id": 4,
+      "bbox": [
+        974.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-APP-01"
+    },
+    {
+      "id": 2185,
+      "image_id": 243,
+      "category_id": 4,
+      "bbox": [
+        1170.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-01"
+    },
+    {
+      "id": 2186,
+      "image_id": 243,
+      "category_id": 4,
+      "bbox": [
+        974.0,
+        683.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-02"
+    },
+    {
+      "id": 2187,
+      "image_id": 243,
+      "category_id": 4,
+      "bbox": [
+        1170.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-03"
+    },
+    {
+      "id": 2188,
+      "image_id": 243,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "WAN-MPLS-CORE"
+    },
+    {
+      "id": 2189,
+      "image_id": 244,
+      "category_id": 3,
+      "bbox": [
+        246.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-FW-01"
+    },
+    {
+      "id": 2190,
+      "image_id": 244,
+      "category_id": 3,
+      "bbox": [
+        246.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-FW-02"
+    },
+    {
+      "id": 2191,
+      "image_id": 244,
+      "category_id": 1,
+      "bbox": [
+        78.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-RTR-01"
+    },
+    {
+      "id": 2192,
+      "image_id": 244,
+      "category_id": 2,
+      "bbox": [
+        526.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-CORE-SW-01"
+    },
+    {
+      "id": 2193,
+      "image_id": 244,
+      "category_id": 2,
+      "bbox": [
+        526.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-CORE-SW-02"
+    },
+    {
+      "id": 2194,
+      "image_id": 244,
+      "category_id": 2,
+      "bbox": [
+        778.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-AGG-SW-01"
+    },
+    {
+      "id": 2195,
+      "image_id": 244,
+      "category_id": 4,
+      "bbox": [
+        1198.0,
+        218.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-01"
+    },
+    {
+      "id": 2196,
+      "image_id": 244,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-02"
+    },
+    {
+      "id": 2197,
+      "image_id": 244,
+      "category_id": 4,
+      "bbox": [
+        1198.0,
+        484.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-03"
+    },
+    {
+      "id": 2198,
+      "image_id": 245,
+      "category_id": 8,
+      "bbox": [
+        218.0,
+        384.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "AD-01"
+    },
+    {
+      "id": 2199,
+      "image_id": 245,
+      "category_id": 8,
+      "bbox": [
+        470.0,
+        384.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "IAM-01"
+    },
+    {
+      "id": 2200,
+      "image_id": 245,
+      "category_id": 8,
+      "bbox": [
+        750.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DNS-01"
+    },
+    {
+      "id": 2201,
+      "image_id": 245,
+      "category_id": 8,
+      "bbox": [
+        750.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "NTP-01"
+    },
+    {
+      "id": 2202,
+      "image_id": 245,
+      "category_id": 8,
+      "bbox": [
+        1030.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "MON-01"
+    },
+    {
+      "id": 2203,
+      "image_id": 245,
+      "category_id": 4,
+      "bbox": [
+        1030.0,
+        583.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "SYSLOG-01"
+    },
+    {
+      "id": 2204,
+      "image_id": 245,
+      "category_id": 4,
+      "bbox": [
+        1254.0,
+        268.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "APP-01"
+    },
+    {
+      "id": 2205,
+      "image_id": 245,
+      "category_id": 4,
+      "bbox": [
+        1254.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-APP-01"
+    },
+    {
+      "id": 2206,
+      "image_id": 246,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-01"
+    },
+    {
+      "id": 2207,
+      "image_id": 246,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        592.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-02"
+    },
+    {
+      "id": 2208,
+      "image_id": 246,
+      "category_id": 7,
+      "bbox": [
+        568.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-MPLS-CORE"
+    },
+    {
+      "id": 2209,
+      "image_id": 246,
+      "category_id": 1,
+      "bbox": [
+        330.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-01"
+    },
+    {
+      "id": 2210,
+      "image_id": 246,
+      "category_id": 1,
+      "bbox": [
+        834.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-02"
+    },
+    {
+      "id": 2211,
+      "image_id": 246,
+      "category_id": 1,
+      "bbox": [
+        330.0,
+        633.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-RTR-01"
+    },
+    {
+      "id": 2212,
+      "image_id": 246,
+      "category_id": 1,
+      "bbox": [
+        1058.0,
+        368.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-RTR-01"
+    },
+    {
+      "id": 2213,
+      "image_id": 246,
+      "category_id": 3,
+      "bbox": [
+        1170.0,
+        517.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-FW-01"
+    },
+    {
+      "id": 2214,
+      "image_id": 247,
+      "category_id": 6,
+      "bbox": [
+        414.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-LB-01"
+    },
+    {
+      "id": 2215,
+      "image_id": 247,
+      "category_id": 4,
+      "bbox": [
+        736.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-01"
+    },
+    {
+      "id": 2216,
+      "image_id": 247,
+      "category_id": 4,
+      "bbox": [
+        736.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-02"
+    },
+    {
+      "id": 2217,
+      "image_id": 247,
+      "category_id": 4,
+      "bbox": [
+        736.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-03"
+    },
+    {
+      "id": 2218,
+      "image_id": 247,
+      "category_id": 8,
+      "bbox": [
+        736.0,
+        617.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "SERVICE-API-01"
+    },
+    {
+      "id": 2219,
+      "image_id": 247,
+      "category_id": 5,
+      "bbox": [
+        1058.0,
+        384.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-MASTER"
+    },
+    {
+      "id": 2220,
+      "image_id": 247,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        583.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-CACHE-01"
+    },
+    {
+      "id": 2221,
+      "image_id": 247,
+      "category_id": 5,
+      "bbox": [
+        1240.0,
+        683.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-REPLICA-01"
+    },
+    {
+      "id": 2222,
+      "image_id": 247,
+      "category_id": 2,
+      "bbox": [
+        106.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-CORE-SW-01"
+    },
+    {
+      "id": 2223,
+      "image_id": 247,
+      "category_id": 2,
+      "bbox": [
+        106.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-AGG-SW-01"
+    },
+    {
+      "id": 2224,
+      "image_id": 247,
+      "category_id": 8,
+      "bbox": [
+        1282.0,
+        268.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "IAM-01"
+    },
+    {
+      "id": 2225,
+      "image_id": 247,
+      "category_id": 8,
+      "bbox": [
+        1282.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DNS-01"
+    },
+    {
+      "id": 2226,
+      "image_id": 248,
+      "category_id": 1,
+      "bbox": [
+        246.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-RTR-01"
+    },
+    {
+      "id": 2227,
+      "image_id": 248,
+      "category_id": 3,
+      "bbox": [
+        455.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-FW-01"
+    },
+    {
+      "id": 2228,
+      "image_id": 248,
+      "category_id": 2,
+      "bbox": [
+        694.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-SW-01"
+    },
+    {
+      "id": 2229,
+      "image_id": 248,
+      "category_id": 4,
+      "bbox": [
+        974.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-APP-01"
+    },
+    {
+      "id": 2230,
+      "image_id": 248,
+      "category_id": 4,
+      "bbox": [
+        1170.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-01"
+    },
+    {
+      "id": 2231,
+      "image_id": 248,
+      "category_id": 4,
+      "bbox": [
+        974.0,
+        683.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-02"
+    },
+    {
+      "id": 2232,
+      "image_id": 248,
+      "category_id": 4,
+      "bbox": [
+        1170.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-03"
+    },
+    {
+      "id": 2233,
+      "image_id": 248,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "WAN-MPLS-CORE"
+    },
+    {
+      "id": 2234,
+      "image_id": 249,
+      "category_id": 3,
+      "bbox": [
+        246.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-FW-01"
+    },
+    {
+      "id": 2235,
+      "image_id": 249,
+      "category_id": 3,
+      "bbox": [
+        246.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-FW-02"
+    },
+    {
+      "id": 2236,
+      "image_id": 249,
+      "category_id": 1,
+      "bbox": [
+        78.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-RTR-01"
+    },
+    {
+      "id": 2237,
+      "image_id": 249,
+      "category_id": 2,
+      "bbox": [
+        526.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-CORE-SW-01"
+    },
+    {
+      "id": 2238,
+      "image_id": 249,
+      "category_id": 2,
+      "bbox": [
+        526.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-CORE-SW-02"
+    },
+    {
+      "id": 2239,
+      "image_id": 249,
+      "category_id": 2,
+      "bbox": [
+        778.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-AGG-SW-01"
+    },
+    {
+      "id": 2240,
+      "image_id": 249,
+      "category_id": 4,
+      "bbox": [
+        1198.0,
+        218.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-01"
+    },
+    {
+      "id": 2241,
+      "image_id": 249,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-02"
+    },
+    {
+      "id": 2242,
+      "image_id": 249,
+      "category_id": 4,
+      "bbox": [
+        1198.0,
+        484.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-03"
+    },
+    {
+      "id": 2243,
+      "image_id": 249,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        617.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-04"
+    },
+    {
+      "id": 2244,
+      "image_id": 249,
+      "category_id": 4,
+      "bbox": [
+        1198.0,
+        716.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-05"
+    },
+    {
+      "id": 2245,
+      "image_id": 250,
+      "category_id": 8,
+      "bbox": [
+        218.0,
+        384.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "AD-01"
+    },
+    {
+      "id": 2246,
+      "image_id": 250,
+      "category_id": 8,
+      "bbox": [
+        470.0,
+        384.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "IAM-01"
+    },
+    {
+      "id": 2247,
+      "image_id": 250,
+      "category_id": 8,
+      "bbox": [
+        750.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DNS-01"
+    },
+    {
+      "id": 2248,
+      "image_id": 250,
+      "category_id": 8,
+      "bbox": [
+        750.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "NTP-01"
+    },
+    {
+      "id": 2249,
+      "image_id": 250,
+      "category_id": 8,
+      "bbox": [
+        1030.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "MON-01"
+    },
+    {
+      "id": 2250,
+      "image_id": 250,
+      "category_id": 4,
+      "bbox": [
+        1030.0,
+        583.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "SYSLOG-01"
+    },
+    {
+      "id": 2251,
+      "image_id": 250,
+      "category_id": 4,
+      "bbox": [
+        1254.0,
+        268.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "APP-01"
+    },
+    {
+      "id": 2252,
+      "image_id": 250,
+      "category_id": 4,
+      "bbox": [
+        1254.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-APP-01"
+    },
+    {
+      "id": 2253,
+      "image_id": 251,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-01"
+    },
+    {
+      "id": 2254,
+      "image_id": 251,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        592.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-02"
+    },
+    {
+      "id": 2255,
+      "image_id": 251,
+      "category_id": 7,
+      "bbox": [
+        568.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-MPLS-CORE"
+    },
+    {
+      "id": 2256,
+      "image_id": 251,
+      "category_id": 1,
+      "bbox": [
+        330.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-01"
+    },
+    {
+      "id": 2257,
+      "image_id": 251,
+      "category_id": 1,
+      "bbox": [
+        834.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-02"
+    },
+    {
+      "id": 2258,
+      "image_id": 251,
+      "category_id": 1,
+      "bbox": [
+        330.0,
+        633.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-RTR-01"
+    },
+    {
+      "id": 2259,
+      "image_id": 251,
+      "category_id": 1,
+      "bbox": [
+        1058.0,
+        368.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-RTR-01"
+    },
+    {
+      "id": 2260,
+      "image_id": 251,
+      "category_id": 3,
+      "bbox": [
+        1170.0,
+        517.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-FW-01"
+    },
+    {
+      "id": 2261,
+      "image_id": 252,
+      "category_id": 6,
+      "bbox": [
+        414.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-LB-01"
+    },
+    {
+      "id": 2262,
+      "image_id": 252,
+      "category_id": 4,
+      "bbox": [
+        736.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-01"
+    },
+    {
+      "id": 2263,
+      "image_id": 252,
+      "category_id": 4,
+      "bbox": [
+        736.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-02"
+    },
+    {
+      "id": 2264,
+      "image_id": 252,
+      "category_id": 8,
+      "bbox": [
+        736.0,
+        617.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "SERVICE-API-01"
+    },
+    {
+      "id": 2265,
+      "image_id": 252,
+      "category_id": 5,
+      "bbox": [
+        1058.0,
+        384.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-MASTER"
+    },
+    {
+      "id": 2266,
+      "image_id": 252,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        583.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-CACHE-01"
+    },
+    {
+      "id": 2267,
+      "image_id": 252,
+      "category_id": 5,
+      "bbox": [
+        1240.0,
+        683.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-REPLICA-01"
+    },
+    {
+      "id": 2268,
+      "image_id": 252,
+      "category_id": 2,
+      "bbox": [
+        106.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-CORE-SW-01"
+    },
+    {
+      "id": 2269,
+      "image_id": 252,
+      "category_id": 2,
+      "bbox": [
+        106.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-AGG-SW-01"
+    },
+    {
+      "id": 2270,
+      "image_id": 252,
+      "category_id": 8,
+      "bbox": [
+        1282.0,
+        268.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "IAM-01"
+    },
+    {
+      "id": 2271,
+      "image_id": 252,
+      "category_id": 8,
+      "bbox": [
+        1282.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DNS-01"
+    },
+    {
+      "id": 2272,
+      "image_id": 253,
+      "category_id": 1,
+      "bbox": [
+        246.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-RTR-01"
+    },
+    {
+      "id": 2273,
+      "image_id": 253,
+      "category_id": 3,
+      "bbox": [
+        455.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-FW-01"
+    },
+    {
+      "id": 2274,
+      "image_id": 253,
+      "category_id": 2,
+      "bbox": [
+        694.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-SW-01"
+    },
+    {
+      "id": 2275,
+      "image_id": 253,
+      "category_id": 4,
+      "bbox": [
+        974.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-APP-01"
+    },
+    {
+      "id": 2276,
+      "image_id": 253,
+      "category_id": 4,
+      "bbox": [
+        1170.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-01"
+    },
+    {
+      "id": 2277,
+      "image_id": 253,
+      "category_id": 4,
+      "bbox": [
+        974.0,
+        683.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-02"
+    },
+    {
+      "id": 2278,
+      "image_id": 253,
+      "category_id": 4,
+      "bbox": [
+        1170.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-03"
+    },
+    {
+      "id": 2279,
+      "image_id": 253,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "WAN-MPLS-CORE"
+    },
+    {
+      "id": 2280,
+      "image_id": 254,
+      "category_id": 3,
+      "bbox": [
+        246.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-FW-01"
+    },
+    {
+      "id": 2281,
+      "image_id": 254,
+      "category_id": 3,
+      "bbox": [
+        246.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-FW-02"
+    },
+    {
+      "id": 2282,
+      "image_id": 254,
+      "category_id": 1,
+      "bbox": [
+        78.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-RTR-01"
+    },
+    {
+      "id": 2283,
+      "image_id": 254,
+      "category_id": 2,
+      "bbox": [
+        526.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-CORE-SW-01"
+    },
+    {
+      "id": 2284,
+      "image_id": 254,
+      "category_id": 2,
+      "bbox": [
+        526.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-CORE-SW-02"
+    },
+    {
+      "id": 2285,
+      "image_id": 254,
+      "category_id": 2,
+      "bbox": [
+        778.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-AGG-SW-01"
+    },
+    {
+      "id": 2286,
+      "image_id": 254,
+      "category_id": 4,
+      "bbox": [
+        1198.0,
+        218.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-01"
+    },
+    {
+      "id": 2287,
+      "image_id": 254,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-02"
+    },
+    {
+      "id": 2288,
+      "image_id": 254,
+      "category_id": 4,
+      "bbox": [
+        1198.0,
+        484.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-03"
+    },
+    {
+      "id": 2289,
+      "image_id": 255,
+      "category_id": 8,
+      "bbox": [
+        218.0,
+        384.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "AD-01"
+    },
+    {
+      "id": 2290,
+      "image_id": 255,
+      "category_id": 8,
+      "bbox": [
+        470.0,
+        384.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "IAM-01"
+    },
+    {
+      "id": 2291,
+      "image_id": 255,
+      "category_id": 8,
+      "bbox": [
+        750.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DNS-01"
+    },
+    {
+      "id": 2292,
+      "image_id": 255,
+      "category_id": 8,
+      "bbox": [
+        750.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "NTP-01"
+    },
+    {
+      "id": 2293,
+      "image_id": 255,
+      "category_id": 8,
+      "bbox": [
+        1030.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "MON-01"
+    },
+    {
+      "id": 2294,
+      "image_id": 255,
+      "category_id": 4,
+      "bbox": [
+        1030.0,
+        583.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "SYSLOG-01"
+    },
+    {
+      "id": 2295,
+      "image_id": 255,
+      "category_id": 4,
+      "bbox": [
+        1254.0,
+        268.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "APP-01"
+    },
+    {
+      "id": 2296,
+      "image_id": 255,
+      "category_id": 4,
+      "bbox": [
+        1254.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-APP-01"
+    },
+    {
+      "id": 2297,
+      "image_id": 256,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-01"
+    },
+    {
+      "id": 2298,
+      "image_id": 256,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        592.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-02"
+    },
+    {
+      "id": 2299,
+      "image_id": 256,
+      "category_id": 7,
+      "bbox": [
+        568.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-MPLS-CORE"
+    },
+    {
+      "id": 2300,
+      "image_id": 256,
+      "category_id": 1,
+      "bbox": [
+        330.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-01"
+    },
+    {
+      "id": 2301,
+      "image_id": 256,
+      "category_id": 1,
+      "bbox": [
+        834.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-02"
+    },
+    {
+      "id": 2302,
+      "image_id": 256,
+      "category_id": 1,
+      "bbox": [
+        330.0,
+        633.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-RTR-01"
+    },
+    {
+      "id": 2303,
+      "image_id": 256,
+      "category_id": 1,
+      "bbox": [
+        1058.0,
+        368.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-RTR-01"
+    },
+    {
+      "id": 2304,
+      "image_id": 256,
+      "category_id": 3,
+      "bbox": [
+        1170.0,
+        517.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-FW-01"
+    },
+    {
+      "id": 2305,
+      "image_id": 257,
+      "category_id": 1,
+      "bbox": [
+        246.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-RTR-01"
+    },
+    {
+      "id": 2306,
+      "image_id": 257,
+      "category_id": 3,
+      "bbox": [
+        455.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-FW-01"
+    },
+    {
+      "id": 2307,
+      "image_id": 257,
+      "category_id": 2,
+      "bbox": [
+        694.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-SW-01"
+    },
+    {
+      "id": 2308,
+      "image_id": 257,
+      "category_id": 4,
+      "bbox": [
+        974.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-APP-01"
+    },
+    {
+      "id": 2309,
+      "image_id": 257,
+      "category_id": 4,
+      "bbox": [
+        1170.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-01"
+    },
+    {
+      "id": 2310,
+      "image_id": 257,
+      "category_id": 4,
+      "bbox": [
+        974.0,
+        683.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-02"
+    },
+    {
+      "id": 2311,
+      "image_id": 257,
+      "category_id": 4,
+      "bbox": [
+        1170.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-03"
+    },
+    {
+      "id": 2312,
+      "image_id": 257,
+      "category_id": 4,
+      "bbox": [
+        974.0,
+        268.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-04"
+    },
+    {
+      "id": 2313,
+      "image_id": 257,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "WAN-MPLS-CORE"
+    },
+    {
+      "id": 2314,
+      "image_id": 258,
+      "category_id": 3,
+      "bbox": [
+        246.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-FW-01"
+    },
+    {
+      "id": 2315,
+      "image_id": 258,
+      "category_id": 3,
+      "bbox": [
+        246.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-FW-02"
+    },
+    {
+      "id": 2316,
+      "image_id": 258,
+      "category_id": 1,
+      "bbox": [
+        78.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-RTR-01"
+    },
+    {
+      "id": 2317,
+      "image_id": 258,
+      "category_id": 2,
+      "bbox": [
+        526.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-CORE-SW-01"
+    },
+    {
+      "id": 2318,
+      "image_id": 258,
+      "category_id": 2,
+      "bbox": [
+        526.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-CORE-SW-02"
+    },
+    {
+      "id": 2319,
+      "image_id": 258,
+      "category_id": 2,
+      "bbox": [
+        778.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-AGG-SW-01"
+    },
+    {
+      "id": 2320,
+      "image_id": 258,
+      "category_id": 4,
+      "bbox": [
+        1198.0,
+        218.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-01"
+    },
+    {
+      "id": 2321,
+      "image_id": 258,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-02"
+    },
+    {
+      "id": 2322,
+      "image_id": 258,
+      "category_id": 4,
+      "bbox": [
+        1198.0,
+        484.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-03"
+    },
+    {
+      "id": 2323,
+      "image_id": 258,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        617.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-04"
+    },
+    {
+      "id": 2324,
+      "image_id": 259,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-01"
+    },
+    {
+      "id": 2325,
+      "image_id": 259,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        592.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-02"
+    },
+    {
+      "id": 2326,
+      "image_id": 259,
+      "category_id": 7,
+      "bbox": [
+        568.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-MPLS-CORE"
+    },
+    {
+      "id": 2327,
+      "image_id": 259,
+      "category_id": 1,
+      "bbox": [
+        330.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-01"
+    },
+    {
+      "id": 2328,
+      "image_id": 259,
+      "category_id": 1,
+      "bbox": [
+        834.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-02"
+    },
+    {
+      "id": 2329,
+      "image_id": 259,
+      "category_id": 1,
+      "bbox": [
+        330.0,
+        633.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-RTR-01"
+    },
+    {
+      "id": 2330,
+      "image_id": 259,
+      "category_id": 1,
+      "bbox": [
+        1058.0,
+        368.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-RTR-01"
+    },
+    {
+      "id": 2331,
+      "image_id": 259,
+      "category_id": 3,
+      "bbox": [
+        1170.0,
+        517.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-FW-01"
+    },
+    {
+      "id": 2332,
+      "image_id": 260,
+      "category_id": 6,
+      "bbox": [
+        414.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-LB-01"
+    },
+    {
+      "id": 2333,
+      "image_id": 260,
+      "category_id": 4,
+      "bbox": [
+        736.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-01"
+    },
+    {
+      "id": 2334,
+      "image_id": 260,
+      "category_id": 4,
+      "bbox": [
+        736.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-02"
+    },
+    {
+      "id": 2335,
+      "image_id": 260,
+      "category_id": 4,
+      "bbox": [
+        736.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-03"
+    },
+    {
+      "id": 2336,
+      "image_id": 260,
+      "category_id": 8,
+      "bbox": [
+        736.0,
+        617.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "SERVICE-API-01"
+    },
+    {
+      "id": 2337,
+      "image_id": 260,
+      "category_id": 5,
+      "bbox": [
+        1058.0,
+        384.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-MASTER"
+    },
+    {
+      "id": 2338,
+      "image_id": 260,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        583.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-CACHE-01"
+    },
+    {
+      "id": 2339,
+      "image_id": 260,
+      "category_id": 5,
+      "bbox": [
+        1240.0,
+        683.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-REPLICA-01"
+    },
+    {
+      "id": 2340,
+      "image_id": 260,
+      "category_id": 2,
+      "bbox": [
+        106.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-CORE-SW-01"
+    },
+    {
+      "id": 2341,
+      "image_id": 260,
+      "category_id": 2,
+      "bbox": [
+        106.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-AGG-SW-01"
+    },
+    {
+      "id": 2342,
+      "image_id": 261,
+      "category_id": 1,
+      "bbox": [
+        246.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-RTR-01"
+    },
+    {
+      "id": 2343,
+      "image_id": 261,
+      "category_id": 3,
+      "bbox": [
+        455.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-FW-01"
+    },
+    {
+      "id": 2344,
+      "image_id": 261,
+      "category_id": 2,
+      "bbox": [
+        694.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-SW-01"
+    },
+    {
+      "id": 2345,
+      "image_id": 261,
+      "category_id": 4,
+      "bbox": [
+        974.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-APP-01"
+    },
+    {
+      "id": 2346,
+      "image_id": 261,
+      "category_id": 4,
+      "bbox": [
+        1170.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-01"
+    },
+    {
+      "id": 2347,
+      "image_id": 261,
+      "category_id": 4,
+      "bbox": [
+        974.0,
+        683.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-02"
+    },
+    {
+      "id": 2348,
+      "image_id": 261,
+      "category_id": 4,
+      "bbox": [
+        1170.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-03"
+    },
+    {
+      "id": 2349,
+      "image_id": 261,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "WAN-MPLS-CORE"
+    },
+    {
+      "id": 2350,
+      "image_id": 262,
+      "category_id": 3,
+      "bbox": [
+        246.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-FW-01"
+    },
+    {
+      "id": 2351,
+      "image_id": 262,
+      "category_id": 3,
+      "bbox": [
+        246.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-FW-02"
+    },
+    {
+      "id": 2352,
+      "image_id": 262,
+      "category_id": 1,
+      "bbox": [
+        78.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-RTR-01"
+    },
+    {
+      "id": 2353,
+      "image_id": 262,
+      "category_id": 2,
+      "bbox": [
+        526.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-CORE-SW-01"
+    },
+    {
+      "id": 2354,
+      "image_id": 262,
+      "category_id": 2,
+      "bbox": [
+        526.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-CORE-SW-02"
+    },
+    {
+      "id": 2355,
+      "image_id": 262,
+      "category_id": 2,
+      "bbox": [
+        778.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-AGG-SW-01"
+    },
+    {
+      "id": 2356,
+      "image_id": 262,
+      "category_id": 4,
+      "bbox": [
+        1198.0,
+        218.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-01"
+    },
+    {
+      "id": 2357,
+      "image_id": 262,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-02"
+    },
+    {
+      "id": 2358,
+      "image_id": 262,
+      "category_id": 4,
+      "bbox": [
+        1198.0,
+        484.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-03"
+    },
+    {
+      "id": 2359,
+      "image_id": 263,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-01"
+    },
+    {
+      "id": 2360,
+      "image_id": 263,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        592.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-02"
+    },
+    {
+      "id": 2361,
+      "image_id": 263,
+      "category_id": 7,
+      "bbox": [
+        568.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-MPLS-CORE"
+    },
+    {
+      "id": 2362,
+      "image_id": 263,
+      "category_id": 1,
+      "bbox": [
+        330.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-01"
+    },
+    {
+      "id": 2363,
+      "image_id": 263,
+      "category_id": 1,
+      "bbox": [
+        834.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-02"
+    },
+    {
+      "id": 2364,
+      "image_id": 263,
+      "category_id": 1,
+      "bbox": [
+        330.0,
+        633.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-RTR-01"
+    },
+    {
+      "id": 2365,
+      "image_id": 263,
+      "category_id": 1,
+      "bbox": [
+        1058.0,
+        368.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-RTR-01"
+    },
+    {
+      "id": 2366,
+      "image_id": 263,
+      "category_id": 3,
+      "bbox": [
+        1170.0,
+        517.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-FW-01"
+    },
+    {
+      "id": 2367,
+      "image_id": 264,
+      "category_id": 6,
+      "bbox": [
+        414.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-LB-01"
+    },
+    {
+      "id": 2368,
+      "image_id": 264,
+      "category_id": 4,
+      "bbox": [
+        736.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-01"
+    },
+    {
+      "id": 2369,
+      "image_id": 264,
+      "category_id": 4,
+      "bbox": [
+        736.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-02"
+    },
+    {
+      "id": 2370,
+      "image_id": 264,
+      "category_id": 8,
+      "bbox": [
+        736.0,
+        617.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "SERVICE-API-01"
+    },
+    {
+      "id": 2371,
+      "image_id": 264,
+      "category_id": 5,
+      "bbox": [
+        1058.0,
+        384.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-MASTER"
+    },
+    {
+      "id": 2372,
+      "image_id": 264,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        583.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-CACHE-01"
+    },
+    {
+      "id": 2373,
+      "image_id": 264,
+      "category_id": 5,
+      "bbox": [
+        1240.0,
+        683.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-REPLICA-01"
+    },
+    {
+      "id": 2374,
+      "image_id": 264,
+      "category_id": 2,
+      "bbox": [
+        106.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-CORE-SW-01"
+    },
+    {
+      "id": 2375,
+      "image_id": 264,
+      "category_id": 2,
+      "bbox": [
+        106.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-AGG-SW-01"
+    },
+    {
+      "id": 2376,
+      "image_id": 264,
+      "category_id": 8,
+      "bbox": [
+        1282.0,
+        268.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "IAM-01"
+    },
+    {
+      "id": 2377,
+      "image_id": 264,
+      "category_id": 8,
+      "bbox": [
+        1282.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DNS-01"
+    },
+    {
+      "id": 2378,
+      "image_id": 265,
+      "category_id": 1,
+      "bbox": [
+        246.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-RTR-01"
+    },
+    {
+      "id": 2379,
+      "image_id": 265,
+      "category_id": 3,
+      "bbox": [
+        455.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-FW-01"
+    },
+    {
+      "id": 2380,
+      "image_id": 265,
+      "category_id": 2,
+      "bbox": [
+        694.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-SW-01"
+    },
+    {
+      "id": 2381,
+      "image_id": 265,
+      "category_id": 4,
+      "bbox": [
+        974.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-APP-01"
+    },
+    {
+      "id": 2382,
+      "image_id": 265,
+      "category_id": 4,
+      "bbox": [
+        1170.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-01"
+    },
+    {
+      "id": 2383,
+      "image_id": 265,
+      "category_id": 4,
+      "bbox": [
+        974.0,
+        683.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-02"
+    },
+    {
+      "id": 2384,
+      "image_id": 265,
+      "category_id": 4,
+      "bbox": [
+        1170.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-03"
+    },
+    {
+      "id": 2385,
+      "image_id": 265,
+      "category_id": 4,
+      "bbox": [
+        974.0,
+        268.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-04"
+    },
+    {
+      "id": 2386,
+      "image_id": 265,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "WAN-MPLS-CORE"
+    },
+    {
+      "id": 2387,
+      "image_id": 266,
+      "category_id": 3,
+      "bbox": [
+        246.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-FW-01"
+    },
+    {
+      "id": 2388,
+      "image_id": 266,
+      "category_id": 3,
+      "bbox": [
+        246.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-FW-02"
+    },
+    {
+      "id": 2389,
+      "image_id": 266,
+      "category_id": 1,
+      "bbox": [
+        78.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-RTR-01"
+    },
+    {
+      "id": 2390,
+      "image_id": 266,
+      "category_id": 2,
+      "bbox": [
+        526.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-CORE-SW-01"
+    },
+    {
+      "id": 2391,
+      "image_id": 266,
+      "category_id": 2,
+      "bbox": [
+        526.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-CORE-SW-02"
+    },
+    {
+      "id": 2392,
+      "image_id": 266,
+      "category_id": 2,
+      "bbox": [
+        778.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-AGG-SW-01"
+    },
+    {
+      "id": 2393,
+      "image_id": 266,
+      "category_id": 4,
+      "bbox": [
+        1198.0,
+        218.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-01"
+    },
+    {
+      "id": 2394,
+      "image_id": 266,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-02"
+    },
+    {
+      "id": 2395,
+      "image_id": 266,
+      "category_id": 4,
+      "bbox": [
+        1198.0,
+        484.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-03"
+    },
+    {
+      "id": 2396,
+      "image_id": 266,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        617.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-04"
+    },
+    {
+      "id": 2397,
+      "image_id": 267,
+      "category_id": 8,
+      "bbox": [
+        218.0,
+        384.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "AD-01"
+    },
+    {
+      "id": 2398,
+      "image_id": 267,
+      "category_id": 8,
+      "bbox": [
+        470.0,
+        384.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "IAM-01"
+    },
+    {
+      "id": 2399,
+      "image_id": 267,
+      "category_id": 8,
+      "bbox": [
+        750.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DNS-01"
+    },
+    {
+      "id": 2400,
+      "image_id": 267,
+      "category_id": 8,
+      "bbox": [
+        750.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "NTP-01"
+    },
+    {
+      "id": 2401,
+      "image_id": 267,
+      "category_id": 8,
+      "bbox": [
+        1030.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "MON-01"
+    },
+    {
+      "id": 2402,
+      "image_id": 267,
+      "category_id": 4,
+      "bbox": [
+        1030.0,
+        583.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "SYSLOG-01"
+    },
+    {
+      "id": 2403,
+      "image_id": 267,
+      "category_id": 4,
+      "bbox": [
+        1254.0,
+        268.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "APP-01"
+    },
+    {
+      "id": 2404,
+      "image_id": 267,
+      "category_id": 4,
+      "bbox": [
+        1254.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-APP-01"
+    },
+    {
+      "id": 2405,
+      "image_id": 268,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-01"
+    },
+    {
+      "id": 2406,
+      "image_id": 268,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        592.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-02"
+    },
+    {
+      "id": 2407,
+      "image_id": 268,
+      "category_id": 7,
+      "bbox": [
+        568.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-MPLS-CORE"
+    },
+    {
+      "id": 2408,
+      "image_id": 268,
+      "category_id": 1,
+      "bbox": [
+        330.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-01"
+    },
+    {
+      "id": 2409,
+      "image_id": 268,
+      "category_id": 1,
+      "bbox": [
+        834.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-02"
+    },
+    {
+      "id": 2410,
+      "image_id": 268,
+      "category_id": 1,
+      "bbox": [
+        330.0,
+        633.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-RTR-01"
+    },
+    {
+      "id": 2411,
+      "image_id": 268,
+      "category_id": 1,
+      "bbox": [
+        1058.0,
+        368.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-RTR-01"
+    },
+    {
+      "id": 2412,
+      "image_id": 268,
+      "category_id": 3,
+      "bbox": [
+        1170.0,
+        517.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-FW-01"
+    },
+    {
+      "id": 2413,
+      "image_id": 269,
+      "category_id": 6,
+      "bbox": [
+        414.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-LB-01"
+    },
+    {
+      "id": 2414,
+      "image_id": 269,
+      "category_id": 4,
+      "bbox": [
+        736.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-01"
+    },
+    {
+      "id": 2415,
+      "image_id": 269,
+      "category_id": 4,
+      "bbox": [
+        736.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-02"
+    },
+    {
+      "id": 2416,
+      "image_id": 269,
+      "category_id": 8,
+      "bbox": [
+        736.0,
+        617.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "SERVICE-API-01"
+    },
+    {
+      "id": 2417,
+      "image_id": 269,
+      "category_id": 5,
+      "bbox": [
+        1058.0,
+        384.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-MASTER"
+    },
+    {
+      "id": 2418,
+      "image_id": 269,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        583.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-CACHE-01"
+    },
+    {
+      "id": 2419,
+      "image_id": 269,
+      "category_id": 5,
+      "bbox": [
+        1240.0,
+        683.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-REPLICA-01"
+    },
+    {
+      "id": 2420,
+      "image_id": 269,
+      "category_id": 2,
+      "bbox": [
+        106.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-CORE-SW-01"
+    },
+    {
+      "id": 2421,
+      "image_id": 269,
+      "category_id": 2,
+      "bbox": [
+        106.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-AGG-SW-01"
+    },
+    {
+      "id": 2422,
+      "image_id": 270,
+      "category_id": 3,
+      "bbox": [
+        246.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-FW-01"
+    },
+    {
+      "id": 2423,
+      "image_id": 270,
+      "category_id": 3,
+      "bbox": [
+        246.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-FW-02"
+    },
+    {
+      "id": 2424,
+      "image_id": 270,
+      "category_id": 1,
+      "bbox": [
+        78.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-RTR-01"
+    },
+    {
+      "id": 2425,
+      "image_id": 270,
+      "category_id": 2,
+      "bbox": [
+        526.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-CORE-SW-01"
+    },
+    {
+      "id": 2426,
+      "image_id": 270,
+      "category_id": 2,
+      "bbox": [
+        526.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-CORE-SW-02"
+    },
+    {
+      "id": 2427,
+      "image_id": 270,
+      "category_id": 2,
+      "bbox": [
+        778.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-AGG-SW-01"
+    },
+    {
+      "id": 2428,
+      "image_id": 270,
+      "category_id": 4,
+      "bbox": [
+        1198.0,
+        218.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-01"
+    },
+    {
+      "id": 2429,
+      "image_id": 270,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-02"
+    },
+    {
+      "id": 2430,
+      "image_id": 270,
+      "category_id": 4,
+      "bbox": [
+        1198.0,
+        484.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-03"
+    },
+    {
+      "id": 2431,
+      "image_id": 270,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        617.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-04"
+    },
+    {
+      "id": 2432,
+      "image_id": 271,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-01"
+    },
+    {
+      "id": 2433,
+      "image_id": 271,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        592.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-02"
+    },
+    {
+      "id": 2434,
+      "image_id": 271,
+      "category_id": 7,
+      "bbox": [
+        568.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-MPLS-CORE"
+    },
+    {
+      "id": 2435,
+      "image_id": 271,
+      "category_id": 1,
+      "bbox": [
+        330.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-01"
+    },
+    {
+      "id": 2436,
+      "image_id": 271,
+      "category_id": 1,
+      "bbox": [
+        834.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-02"
+    },
+    {
+      "id": 2437,
+      "image_id": 271,
+      "category_id": 1,
+      "bbox": [
+        1058.0,
+        368.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-RTR-01"
+    },
+    {
+      "id": 2438,
+      "image_id": 271,
+      "category_id": 3,
+      "bbox": [
+        1170.0,
+        517.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-FW-01"
+    },
+    {
+      "id": 2439,
+      "image_id": 272,
+      "category_id": 6,
+      "bbox": [
+        414.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-LB-01"
+    },
+    {
+      "id": 2440,
+      "image_id": 272,
+      "category_id": 4,
+      "bbox": [
+        736.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-01"
+    },
+    {
+      "id": 2441,
+      "image_id": 272,
+      "category_id": 4,
+      "bbox": [
+        736.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-02"
+    },
+    {
+      "id": 2442,
+      "image_id": 272,
+      "category_id": 8,
+      "bbox": [
+        736.0,
+        617.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "SERVICE-API-01"
+    },
+    {
+      "id": 2443,
+      "image_id": 272,
+      "category_id": 5,
+      "bbox": [
+        1058.0,
+        384.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-MASTER"
+    },
+    {
+      "id": 2444,
+      "image_id": 272,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        583.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-CACHE-01"
+    },
+    {
+      "id": 2445,
+      "image_id": 272,
+      "category_id": 5,
+      "bbox": [
+        1240.0,
+        683.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-REPLICA-01"
+    },
+    {
+      "id": 2446,
+      "image_id": 272,
+      "category_id": 2,
+      "bbox": [
+        106.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-CORE-SW-01"
+    },
+    {
+      "id": 2447,
+      "image_id": 272,
+      "category_id": 2,
+      "bbox": [
+        106.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-AGG-SW-01"
+    },
+    {
+      "id": 2448,
+      "image_id": 272,
+      "category_id": 8,
+      "bbox": [
+        1282.0,
+        268.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "IAM-01"
+    },
+    {
+      "id": 2449,
+      "image_id": 272,
+      "category_id": 8,
+      "bbox": [
+        1282.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DNS-01"
+    },
+    {
+      "id": 2450,
+      "image_id": 273,
+      "category_id": 1,
+      "bbox": [
+        246.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-RTR-01"
+    },
+    {
+      "id": 2451,
+      "image_id": 273,
+      "category_id": 3,
+      "bbox": [
+        455.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-FW-01"
+    },
+    {
+      "id": 2452,
+      "image_id": 273,
+      "category_id": 2,
+      "bbox": [
+        694.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-SW-01"
+    },
+    {
+      "id": 2453,
+      "image_id": 273,
+      "category_id": 4,
+      "bbox": [
+        974.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-APP-01"
+    },
+    {
+      "id": 2454,
+      "image_id": 273,
+      "category_id": 4,
+      "bbox": [
+        1170.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-01"
+    },
+    {
+      "id": 2455,
+      "image_id": 273,
+      "category_id": 4,
+      "bbox": [
+        974.0,
+        683.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-02"
+    },
+    {
+      "id": 2456,
+      "image_id": 273,
+      "category_id": 4,
+      "bbox": [
+        1170.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-03"
+    },
+    {
+      "id": 2457,
+      "image_id": 273,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "WAN-MPLS-CORE"
+    },
+    {
+      "id": 2458,
+      "image_id": 274,
+      "category_id": 3,
+      "bbox": [
+        246.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-FW-01"
+    },
+    {
+      "id": 2459,
+      "image_id": 274,
+      "category_id": 3,
+      "bbox": [
+        246.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-FW-02"
+    },
+    {
+      "id": 2460,
+      "image_id": 274,
+      "category_id": 1,
+      "bbox": [
+        78.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-RTR-01"
+    },
+    {
+      "id": 2461,
+      "image_id": 274,
+      "category_id": 2,
+      "bbox": [
+        526.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-CORE-SW-01"
+    },
+    {
+      "id": 2462,
+      "image_id": 274,
+      "category_id": 2,
+      "bbox": [
+        526.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-CORE-SW-02"
+    },
+    {
+      "id": 2463,
+      "image_id": 274,
+      "category_id": 2,
+      "bbox": [
+        778.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-AGG-SW-01"
+    },
+    {
+      "id": 2464,
+      "image_id": 274,
+      "category_id": 4,
+      "bbox": [
+        1198.0,
+        218.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-01"
+    },
+    {
+      "id": 2465,
+      "image_id": 274,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-02"
+    },
+    {
+      "id": 2466,
+      "image_id": 274,
+      "category_id": 4,
+      "bbox": [
+        1198.0,
+        484.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-03"
+    },
+    {
+      "id": 2467,
+      "image_id": 274,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        617.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-04"
+    },
+    {
+      "id": 2468,
+      "image_id": 275,
+      "category_id": 8,
+      "bbox": [
+        218.0,
+        384.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "AD-01"
+    },
+    {
+      "id": 2469,
+      "image_id": 275,
+      "category_id": 8,
+      "bbox": [
+        470.0,
+        384.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "IAM-01"
+    },
+    {
+      "id": 2470,
+      "image_id": 275,
+      "category_id": 8,
+      "bbox": [
+        750.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DNS-01"
+    },
+    {
+      "id": 2471,
+      "image_id": 275,
+      "category_id": 8,
+      "bbox": [
+        750.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "NTP-01"
+    },
+    {
+      "id": 2472,
+      "image_id": 275,
+      "category_id": 8,
+      "bbox": [
+        1030.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "MON-01"
+    },
+    {
+      "id": 2473,
+      "image_id": 275,
+      "category_id": 4,
+      "bbox": [
+        1030.0,
+        583.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "SYSLOG-01"
+    },
+    {
+      "id": 2474,
+      "image_id": 275,
+      "category_id": 4,
+      "bbox": [
+        1254.0,
+        268.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "APP-01"
+    },
+    {
+      "id": 2475,
+      "image_id": 275,
+      "category_id": 4,
+      "bbox": [
+        1254.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-APP-01"
+    },
+    {
+      "id": 2476,
+      "image_id": 276,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-01"
+    },
+    {
+      "id": 2477,
+      "image_id": 276,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        592.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-02"
+    },
+    {
+      "id": 2478,
+      "image_id": 276,
+      "category_id": 7,
+      "bbox": [
+        568.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-MPLS-CORE"
+    },
+    {
+      "id": 2479,
+      "image_id": 276,
+      "category_id": 1,
+      "bbox": [
+        330.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-01"
+    },
+    {
+      "id": 2480,
+      "image_id": 276,
+      "category_id": 1,
+      "bbox": [
+        834.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-02"
+    },
+    {
+      "id": 2481,
+      "image_id": 276,
+      "category_id": 1,
+      "bbox": [
+        330.0,
+        633.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-RTR-01"
+    },
+    {
+      "id": 2482,
+      "image_id": 276,
+      "category_id": 1,
+      "bbox": [
+        1058.0,
+        368.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-RTR-01"
+    },
+    {
+      "id": 2483,
+      "image_id": 276,
+      "category_id": 3,
+      "bbox": [
+        1170.0,
+        517.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-FW-01"
+    },
+    {
+      "id": 2484,
+      "image_id": 277,
+      "category_id": 6,
+      "bbox": [
+        414.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-LB-01"
+    },
+    {
+      "id": 2485,
+      "image_id": 277,
+      "category_id": 4,
+      "bbox": [
+        736.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-01"
+    },
+    {
+      "id": 2486,
+      "image_id": 277,
+      "category_id": 4,
+      "bbox": [
+        736.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "APP-02"
+    },
+    {
+      "id": 2487,
+      "image_id": 277,
+      "category_id": 8,
+      "bbox": [
+        736.0,
+        617.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "SERVICE-API-01"
+    },
+    {
+      "id": 2488,
+      "image_id": 277,
+      "category_id": 5,
+      "bbox": [
+        1058.0,
+        384.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-MASTER"
+    },
+    {
+      "id": 2489,
+      "image_id": 277,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        583.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-CACHE-01"
+    },
+    {
+      "id": 2490,
+      "image_id": 277,
+      "category_id": 5,
+      "bbox": [
+        1240.0,
+        683.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DB-REPLICA-01"
+    },
+    {
+      "id": 2491,
+      "image_id": 277,
+      "category_id": 2,
+      "bbox": [
+        106.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-CORE-SW-01"
+    },
+    {
+      "id": 2492,
+      "image_id": 277,
+      "category_id": 2,
+      "bbox": [
+        106.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-AGG-SW-01"
+    },
+    {
+      "id": 2493,
+      "image_id": 277,
+      "category_id": 8,
+      "bbox": [
+        1282.0,
+        268.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "IAM-01"
+    },
+    {
+      "id": 2494,
+      "image_id": 277,
+      "category_id": 8,
+      "bbox": [
+        1282.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DNS-01"
+    },
+    {
+      "id": 2495,
+      "image_id": 278,
+      "category_id": 1,
+      "bbox": [
+        246.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-RTR-01"
+    },
+    {
+      "id": 2496,
+      "image_id": 278,
+      "category_id": 3,
+      "bbox": [
+        455.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-FW-01"
+    },
+    {
+      "id": 2497,
+      "image_id": 278,
+      "category_id": 2,
+      "bbox": [
+        694.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-SW-01"
+    },
+    {
+      "id": 2498,
+      "image_id": 278,
+      "category_id": 4,
+      "bbox": [
+        974.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-APP-01"
+    },
+    {
+      "id": 2499,
+      "image_id": 278,
+      "category_id": 4,
+      "bbox": [
+        1170.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-01"
+    },
+    {
+      "id": 2500,
+      "image_id": 278,
+      "category_id": 4,
+      "bbox": [
+        974.0,
+        683.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-02"
+    },
+    {
+      "id": 2501,
+      "image_id": 278,
+      "category_id": 4,
+      "bbox": [
+        1170.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-03"
+    },
+    {
+      "id": 2502,
+      "image_id": 278,
+      "category_id": 4,
+      "bbox": [
+        974.0,
+        268.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-04"
+    },
+    {
+      "id": 2503,
+      "image_id": 278,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "WAN-MPLS-CORE"
+    },
+    {
+      "id": 2504,
+      "image_id": 279,
+      "category_id": 3,
+      "bbox": [
+        246.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-FW-01"
+    },
+    {
+      "id": 2505,
+      "image_id": 279,
+      "category_id": 3,
+      "bbox": [
+        246.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-FW-02"
+    },
+    {
+      "id": 2506,
+      "image_id": 279,
+      "category_id": 1,
+      "bbox": [
+        78.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-RTR-01"
+    },
+    {
+      "id": 2507,
+      "image_id": 279,
+      "category_id": 2,
+      "bbox": [
+        526.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-CORE-SW-01"
+    },
+    {
+      "id": 2508,
+      "image_id": 279,
+      "category_id": 2,
+      "bbox": [
+        526.0,
+        567.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-CORE-SW-02"
+    },
+    {
+      "id": 2509,
+      "image_id": 279,
+      "category_id": 2,
+      "bbox": [
+        778.0,
+        451.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-AGG-SW-01"
+    },
+    {
+      "id": 2510,
+      "image_id": 279,
+      "category_id": 4,
+      "bbox": [
+        1198.0,
+        218.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-01"
+    },
+    {
+      "id": 2511,
+      "image_id": 279,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-02"
+    },
+    {
+      "id": 2512,
+      "image_id": 279,
+      "category_id": 4,
+      "bbox": [
+        1198.0,
+        484.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-03"
+    },
+    {
+      "id": 2513,
+      "image_id": 279,
+      "category_id": 4,
+      "bbox": [
+        1058.0,
+        617.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-04"
+    },
+    {
+      "id": 2514,
+      "image_id": 279,
+      "category_id": 4,
+      "bbox": [
+        1198.0,
+        716.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-05"
+    },
+    {
+      "id": 2515,
+      "image_id": 280,
+      "category_id": 8,
+      "bbox": [
+        218.0,
+        384.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "AD-01"
+    },
+    {
+      "id": 2516,
+      "image_id": 280,
+      "category_id": 8,
+      "bbox": [
+        470.0,
+        384.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "IAM-01"
+    },
+    {
+      "id": 2517,
+      "image_id": 280,
+      "category_id": 8,
+      "bbox": [
+        750.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "DNS-01"
+    },
+    {
+      "id": 2518,
+      "image_id": 280,
+      "category_id": 8,
+      "bbox": [
+        750.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "NTP-01"
+    },
+    {
+      "id": 2519,
+      "image_id": 280,
+      "category_id": 8,
+      "bbox": [
+        1030.0,
+        351.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "MON-01"
+    },
+    {
+      "id": 2520,
+      "image_id": 280,
+      "category_id": 4,
+      "bbox": [
+        1030.0,
+        583.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "SYSLOG-01"
+    },
+    {
+      "id": 2521,
+      "image_id": 280,
+      "category_id": 4,
+      "bbox": [
+        1254.0,
+        268.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "APP-01"
+    },
+    {
+      "id": 2522,
+      "image_id": 280,
+      "category_id": 4,
+      "bbox": [
+        1254.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-APP-01"
+    },
+    {
+      "id": 2523,
+      "image_id": 281,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        285.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-01"
+    },
+    {
+      "id": 2524,
+      "image_id": 281,
+      "category_id": 7,
+      "bbox": [
+        78.0,
+        592.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-02"
+    },
+    {
+      "id": 2525,
+      "image_id": 281,
+      "category_id": 7,
+      "bbox": [
+        568.0,
+        434.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-MPLS-CORE"
+    },
+    {
+      "id": 2526,
+      "image_id": 281,
+      "category_id": 1,
+      "bbox": [
+        330.0,
+        318.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-01"
+    },
+    {
+      "id": 2527,
+      "image_id": 281,
+      "category_id": 1,
+      "bbox": [
+        834.0,
+        550.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-02"
+    },
+    {
+      "id": 2528,
+      "image_id": 281,
+      "category_id": 1,
+      "bbox": [
+        330.0,
+        633.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "BR-RTR-01"
+    },
+    {
+      "id": 2529,
+      "image_id": 281,
+      "category_id": 1,
+      "bbox": [
+        1058.0,
+        368.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-RTR-01"
+    },
+    {
+      "id": 2530,
+      "image_id": 281,
+      "category_id": 3,
+      "bbox": [
+        1170.0,
+        517.0,
+        68.0,
+        68.0
+      ],
+      "area": 4624.0,
+      "iscrowd": 0,
+      "is_shared_entity": true,
+      "canonical_id": "DC-FW-01"
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "router",
+      "supercategory": "network_device"
+    },
+    {
+      "id": 2,
+      "name": "switch",
+      "supercategory": "network_device"
+    },
+    {
+      "id": 3,
+      "name": "firewall",
+      "supercategory": "network_device"
+    },
+    {
+      "id": 4,
+      "name": "server",
+      "supercategory": "network_device"
+    },
+    {
+      "id": 5,
+      "name": "database",
+      "supercategory": "network_device"
+    },
+    {
+      "id": 6,
+      "name": "load_balancer",
+      "supercategory": "network_device"
+    },
+    {
+      "id": 7,
+      "name": "cloud_or_wan",
+      "supercategory": "network_device"
+    },
+    {
+      "id": 8,
+      "name": "service",
+      "supercategory": "network_device"
+    }
+  ]
+}

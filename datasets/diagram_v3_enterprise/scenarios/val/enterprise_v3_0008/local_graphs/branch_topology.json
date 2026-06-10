@@ -1,0 +1,201 @@
+{
+  "scenario_id": "enterprise_v3_0008",
+  "diagram_id": "branch_topology",
+  "diagram_type": "branch_topology",
+  "nodes": [
+    {
+      "id": "BR-RTR-01",
+      "label": "BR-RTR-01",
+      "type": "router",
+      "ip_address": "10.8.1.1",
+      "zone": "Branch Edge",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology",
+      "is_shared_entity": true,
+      "canonical_id": "BR-RTR-01",
+      "bbox": [
+        254,
+        442,
+        306,
+        494
+      ]
+    },
+    {
+      "id": "BR-FW-01",
+      "label": "BR-FW-01",
+      "type": "firewall",
+      "ip_address": "10.8.1.2",
+      "zone": "Branch Edge",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology",
+      "is_shared_entity": false,
+      "canonical_id": "BR-FW-01",
+      "bbox": [
+        463,
+        442,
+        515,
+        494
+      ]
+    },
+    {
+      "id": "BR-SW-01",
+      "label": "BR-SW-01",
+      "type": "switch",
+      "ip_address": "10.8.1.3",
+      "zone": "Branch LAN",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology",
+      "is_shared_entity": false,
+      "canonical_id": "BR-SW-01",
+      "bbox": [
+        702,
+        442,
+        754,
+        494
+      ]
+    },
+    {
+      "id": "BR-APP-01",
+      "label": "BR-APP-01",
+      "type": "server",
+      "ip_address": "10.8.1.4",
+      "zone": "Branch Apps",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology",
+      "is_shared_entity": false,
+      "canonical_id": "BR-APP-01",
+      "bbox": [
+        982,
+        326,
+        1034,
+        378
+      ]
+    },
+    {
+      "id": "BR-WRK-01",
+      "label": "BR-WRK-01",
+      "type": "server",
+      "ip_address": "10.8.1.5",
+      "zone": "Branch LAN",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology",
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-01",
+      "bbox": [
+        1178,
+        575,
+        1230,
+        627
+      ]
+    },
+    {
+      "id": "BR-WRK-02",
+      "label": "BR-WRK-02",
+      "type": "server",
+      "ip_address": "10.8.1.6",
+      "zone": "Branch LAN",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology",
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-02",
+      "bbox": [
+        982,
+        691,
+        1034,
+        743
+      ]
+    },
+    {
+      "id": "BR-WRK-03",
+      "label": "BR-WRK-03",
+      "type": "server",
+      "ip_address": "10.8.1.7",
+      "zone": "Branch LAN",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology",
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-03",
+      "bbox": [
+        1178,
+        459,
+        1230,
+        511
+      ]
+    },
+    {
+      "id": "WAN-MPLS-CORE",
+      "label": "WAN-MPLS-CORE",
+      "type": "cloud_or_wan",
+      "ip_address": "",
+      "zone": "WAN",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology",
+      "is_shared_entity": true,
+      "canonical_id": "WAN-MPLS-CORE",
+      "bbox": [
+        86,
+        442,
+        138,
+        494
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-MPLS-CORE",
+      "target": "BR-RTR-01",
+      "relationship": "wan_dependency",
+      "label": "MPLS",
+      "edge_scope": "local",
+      "connector_id": "edge_000"
+    },
+    {
+      "source": "BR-RTR-01",
+      "target": "BR-FW-01",
+      "relationship": "routes_to",
+      "label": "VPN",
+      "edge_scope": "local",
+      "connector_id": "edge_001"
+    },
+    {
+      "source": "BR-FW-01",
+      "target": "BR-SW-01",
+      "relationship": "secured_by",
+      "label": "LAN",
+      "edge_scope": "local",
+      "connector_id": "edge_002"
+    },
+    {
+      "source": "BR-SW-01",
+      "target": "BR-APP-01",
+      "relationship": "serves",
+      "label": "HTTPS",
+      "edge_scope": "local",
+      "connector_id": "edge_003"
+    },
+    {
+      "source": "BR-SW-01",
+      "target": "BR-WRK-01",
+      "relationship": "connected_to",
+      "label": "Access",
+      "edge_scope": "local",
+      "connector_id": "edge_004"
+    },
+    {
+      "source": "BR-SW-01",
+      "target": "BR-WRK-02",
+      "relationship": "connected_to",
+      "label": "Access",
+      "edge_scope": "local",
+      "connector_id": "edge_005"
+    },
+    {
+      "source": "BR-SW-01",
+      "target": "BR-WRK-03",
+      "relationship": "connected_to",
+      "label": "Access",
+      "edge_scope": "local",
+      "connector_id": "edge_006"
+    }
+  ]
+}

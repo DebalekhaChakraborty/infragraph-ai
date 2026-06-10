@@ -1,0 +1,72 @@
+{
+  "scenario_id": "enterprise_v3_0004",
+  "root_cause": "BR-RTR-01",
+  "root_cause_diagram": "branch_topology",
+  "root_cause_pattern": "branch_rtr_failure",
+  "severity": "critical",
+  "alerts": [
+    {
+      "node": "BR-RTR-01",
+      "diagram_id": "branch_topology",
+      "alert_type": "packet_drop",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "BR-FW-01",
+      "diagram_id": "branch_topology",
+      "alert_type": "connection_timeout",
+      "severity": "high",
+      "time_offset_min": 1
+    },
+    {
+      "node": "BR-SW-01",
+      "diagram_id": "branch_topology",
+      "alert_type": "packet_loss",
+      "severity": "warning",
+      "time_offset_min": 3
+    },
+    {
+      "node": "BR-WRK-01",
+      "diagram_id": "branch_topology",
+      "alert_type": "error_rate",
+      "severity": "medium",
+      "time_offset_min": 10
+    },
+    {
+      "node": "WAN-PE-01",
+      "diagram_id": "wan_topology",
+      "alert_type": "connection_timeout",
+      "severity": "warning",
+      "time_offset_min": 16
+    }
+  ],
+  "impacted_nodes": [
+    "BR-FW-01",
+    "BR-SW-01",
+    "BR-WRK-01",
+    "WAN-PE-01"
+  ],
+  "impacted_diagrams": [
+    "branch_topology",
+    "wan_topology"
+  ],
+  "impact_paths": [
+    [
+      "BR-RTR-01",
+      "BR-FW-01"
+    ],
+    [
+      "BR-RTR-01",
+      "BR-SW-01"
+    ],
+    [
+      "BR-RTR-01",
+      "BR-WRK-01"
+    ],
+    [
+      "BR-RTR-01",
+      "WAN-PE-01"
+    ]
+  ]
+}

@@ -1,22 +1,36 @@
 """
 InfraGraph AI Command Center — Streamlit demo cockpit.
 
-This app is designed as a guided demo cockpit. It prioritizes narrative
-clarity over exposing all raw artifacts.
+Two modes in Diagram Intelligence:
+  A. Hero Journey Mode   — V3 hero scenario end-to-end story
+  B. Diagram Gallery     — Browse all V1/V2/V3 diagrams with detection previews
 
-Two workspaces:
-  1. Diagram Intelligence  — static diagram → graph memory
-  2. Alert RCA Intelligence — alert stream → learned RCA → operator explanation
+Four workspaces (tabs):
+  1. Diagram Intelligence  — image to local graph
+  2. Local RCA             — alert simulation on ingested diagram
+  3. Enterprise Graph Brain — local graph absorbed into galaxy graph
+  4. Graph Copilot         — ask the enterprise graph
 """
 from __future__ import annotations
 
 import json
+import math
 import os
 import re
+import tempfile
 from pathlib import Path
 
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
+import matplotlib.pyplot as plt
+
+try:
+    import networkx as nx
+    _NX = True
+except Exception:
+    nx = None  # type: ignore
+    _NX = False
 
 # ── Page config ────────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -24,13 +38,13 @@ st.set_page_config(
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded",
-    menu_items={"Get help": None, "Report a bug": None, "About": "InfraGraph AI — AIOps RCA cockpit"},
+    menu_items={"Get help": None, "Report a bug": None,
+                "About": "InfraGraph AI — AIOps RCA cockpit"},
 )
 
 REPO_ROOT = Path(__file__).parent.parent
 DEMO_ID   = "diagram_0373"
 
-# ── Diagram onboarding (optional import from scripts/) ─────────────────────────
 import sys as _sys
 _scripts_dir = str(REPO_ROOT / "scripts")
 if _scripts_dir not in _sys.path:
@@ -42,20 +56,34 @@ except Exception:
     _ONBOARD_OK = False
     _run_onboarding = None  # type: ignore
 
-# ── Node-type inference from node-ID prefix ────────────────────────────────────
 _PREFIX_TYPE = {
     "WAN": "cloud_or_wan", "CLOUD": "cloud_or_wan",
-    "RTR": "router",
+    "RTR": "router", "RTR01": "router",
     "FW":  "firewall",
     "SW":  "switch",
     "LB":  "load_balancer",
     "APP": "server", "WEB": "server", "SRV": "server", "MGMT": "server",
     "DB":  "database",
+    "SHAR": "service",
+    "DC":  "server",
+    "BR":  "router",
 }
 
 def _node_type(node_id: str) -> str:
-    return _PREFIX_TYPE.get(node_id.split("-")[0].upper(), "server")
-
+    prefix = node_id.split("-")[0].upper()
+    if prefix == "BR" and "RTR" in node_id.upper():
+        return "router"
+    if prefix == "DC" and "FW" in node_id.upper():
+        return "firewall"
+    if prefix == "DC" and "SW" in node_id.upper():
+        return "switch"
+    if prefix == "DC" and "SRV" in node_id.upper():
+        return "server"
+    if prefix == "APP" and "LB" in node_id.upper():
+        return "load_balancer"
+    if prefix in ("DB",):
+        return "database"
+    return _PREFIX_TYPE.get(prefix, "server")
 
 def _col(dark: str, light: str) -> str:
     return light if st.session_state.get("theme") == "light" else dark
@@ -68,9 +96,10 @@ _CSS = """
 
 html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 [data-testid="stAppViewContainer"] > .main { background: #0b0f1c; }
-section[data-testid="stSidebar"]           { background: #070b16 !important; border-right: 1px solid rgba(255,255,255,0.06); }
-[data-testid="stHeader"]                   { background: transparent !important; }
-h1,h2,h3,h4,h5,h6,p,li,label              { color: #e2e8f0; }
+section[data-testid="stSidebar"] { background: #070b16 !important; border-right: 1px solid rgba(255,255,255,0.06); }
+[data-testid="stHeader"] { background: transparent !important; }
+h1,h2,h3,h4,h5,h6 { color: #f1f5f9 !important; }
+p,li,label { color: #cbd5e1; }
 
 /* ── Hero ── */
 .hero-title {
@@ -79,7 +108,7 @@ h1,h2,h3,h4,h5,h6,p,li,label              { color: #e2e8f0; }
     -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     margin-bottom: 6px;
 }
-.hero-tagline { font-size: 0.95rem; color: #475569; line-height: 1.55; max-width: 640px; margin-bottom: 14px; }
+.hero-tagline { font-size: 0.95rem; color: #64748b; line-height: 1.55; max-width: 640px; margin-bottom: 14px; }
 .stat-pills   { display: flex; gap: 10px; flex-wrap: wrap; }
 .stat-pill    { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 20px;
                 font-size: 0.73rem; font-weight: 600; letter-spacing: 0.04em; border: 1px solid; }
@@ -91,13 +120,21 @@ h1,h2,h3,h4,h5,h6,p,li,label              { color: #e2e8f0; }
 
 /* ── Workspace header ── */
 .ws-title { font-size: 1.1rem; font-weight: 800; color: #f1f5f9; margin: 4px 0 2px; }
-.ws-desc  { font-size: 0.82rem; color: #475569; margin-bottom: 20px; }
-.ws-rule  { border: none; border-top: 1px solid rgba(255,255,255,0.05); margin: 28px 0 22px; }
+.ws-desc  { font-size: 0.82rem; color: #64748b; margin-bottom: 20px; }
+.ws-rule  { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 24px 0 20px; }
+
+/* ── Section labels — high contrast ── */
 .section-label {
-    font-size: 0.63rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
-    color: #334155; margin: 0 0 10px; padding-bottom: 6px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 0.63rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+    color: #94a3b8; margin: 0 0 10px; padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
 }
+
+/* ── Mode selector banner ── */
+.mode-hero    { background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.2); border-radius: 10px; padding: 11px 16px; margin-bottom: 16px; }
+.mode-gallery { background: rgba(96,165,250,0.06); border: 1px solid rgba(96,165,250,0.18); border-radius: 10px; padding: 11px 16px; margin-bottom: 16px; }
+.mode-title   { font-size: 0.88rem; font-weight: 600; }
+.mode-sub     { font-size: 0.76rem; color: #64748b; margin-top: 3px; }
 
 /* ── Cards ── */
 .card {
@@ -120,7 +157,7 @@ h1,h2,h3,h4,h5,h6,p,li,label              { color: #e2e8f0; }
 .alert-dot.major    { background: #f59e0b; }
 .alert-node { font-weight: 700; color: #f1f5f9; font-size: 0.88rem; }
 .alert-msg  { font-size: 0.81rem; color: #94a3b8; margin-top: 2px; }
-.alert-time { font-size: 0.69rem; color: #475569; margin-left: auto; white-space: nowrap;
+.alert-time { font-size: 0.69rem; color: #64748b; margin-left: auto; white-space: nowrap;
               font-family: 'JetBrains Mono', monospace; }
 
 /* ── Badges ── */
@@ -130,10 +167,10 @@ h1,h2,h3,h4,h5,h6,p,li,label              { color: #e2e8f0; }
 .badge-major    { background: rgba(245,158,11,0.13); color: #f59e0b; border: 1px solid rgba(245,158,11,0.32); }
 .badge-success  { background: rgba(16,185,129,0.13); color: #10b981; border: 1px solid rgba(16,185,129,0.32); }
 .badge-info     { background: rgba(96,165,250,0.13); color: #60a5fa; border: 1px solid rgba(96,165,250,0.28); }
-.badge-wrong    { background: rgba(239,68,68,0.13);  color: #ef4444; border: 1px solid rgba(239,68,68,0.32); }
+.badge-warn     { background: rgba(245,158,11,0.13); color: #f59e0b; border: 1px solid rgba(245,158,11,0.28); }
 
 /* ── Graph memory ── */
-.gm-header { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #475569;
+.gm-header { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #64748b;
              letter-spacing: 0.06em; margin-bottom: 10px; text-transform: uppercase; }
 .gm-node { display: flex; align-items: center; gap: 10px; padding: 7px 0;
            border-bottom: 1px solid rgba(255,255,255,0.04); font-family: 'JetBrains Mono', monospace; }
@@ -143,7 +180,7 @@ h1,h2,h3,h4,h5,h6,p,li,label              { color: #e2e8f0; }
 .gm-status { font-size: 0.72rem; width: 110px; flex-shrink: 0; }
 .gm-score  { font-size: 0.75rem; color: #64748b; margin-left: auto; }
 .gm-edge { display: flex; align-items: center; gap: 8px; padding: 5px 0;
-           font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: #64748b;
+           font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: #94a3b8;
            border-bottom: 1px solid rgba(255,255,255,0.03); }
 .gm-edge:last-child { border-bottom: none; }
 .gm-arrow { color: #334155; }
@@ -177,7 +214,7 @@ h1,h2,h3,h4,h5,h6,p,li,label              { color: #e2e8f0; }
 .rca-row-node   { font-family: 'JetBrains Mono', monospace; font-size: 0.92rem; font-weight: 700; }
 .rca-row-node.correct { color: #10b981; }
 .rca-row-node.wrong   { color: #ef4444; }
-.rca-row-reason { font-size: 0.78rem; color: #475569; margin-left: auto; max-width: 280px;
+.rca-row-reason { font-size: 0.78rem; color: #64748b; margin-left: auto; max-width: 280px;
                   text-align: right; }
 
 /* ── Score bar ── */
@@ -185,14 +222,16 @@ h1,h2,h3,h4,h5,h6,p,li,label              { color: #e2e8f0; }
                overflow: hidden; margin: 4px 0 8px; }
 .score-fill  { height: 100%; border-radius: 4px;
                background: linear-gradient(90deg, #3b82f6, #67e8f9); }
-.score-fill.green { background: linear-gradient(90deg, #10b981, #34d399); }
-.score-fill.red   { background: linear-gradient(90deg, #ef4444, #f87171); }
+.score-fill.green  { background: linear-gradient(90deg, #10b981, #34d399); }
+.score-fill.red    { background: linear-gradient(90deg, #ef4444, #f87171); }
 .score-fill.purple { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
 
-/* ── Path / propagation ── */
+/* ── Path ── */
 .path-row { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #60a5fa;
             padding: 7px 13px; background: rgba(96,165,250,0.05); border-radius: 8px;
             margin: 4px 0; border: 1px solid rgba(96,165,250,0.11); }
+
+/* ── Propagation ── */
 .prop-card { background: rgba(96,165,250,0.04); border: 1px solid rgba(96,165,250,0.15);
              border-radius: 12px; padding: 20px 22px; margin-bottom: 12px; }
 .prop-num   { font-size: 0.63rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
@@ -206,41 +245,57 @@ h1,h2,h3,h4,h5,h6,p,li,label              { color: #e2e8f0; }
 /* ── Misc ── */
 .warn-card { background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.18);
              border-radius: 10px; padding: 12px 16px; font-size: 0.83rem; color: #94a3b8; }
+.info-card { background: rgba(96,165,250,0.06); border: 1px solid rgba(96,165,250,0.18);
+             border-radius: 10px; padding: 12px 16px; font-size: 0.83rem; color: #94a3b8; }
 .report-body { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07);
                border-radius: 14px; padding: 30px 34px; }
-.chat-hint { font-size: 0.75rem; color: #475569; text-align: center; margin-top: 6px; }
-.dev-note  { font-size: 0.79rem; color: #475569; font-style: italic; line-height: 1.6; }
+.chat-hint { font-size: 0.75rem; color: #64748b; text-align: center; margin-top: 6px; }
+.dev-note  { font-size: 0.79rem; color: #64748b; font-style: italic; line-height: 1.6; }
+
+/* ── Absorption story ── */
+.absorb-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07);
+               border-radius: 12px; padding: 16px 18px; height: 100%; min-height: 260px; }
+.absorb-step { display: flex; align-items: center; gap: 10px; padding: 8px 0;
+               border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.8rem; }
+.absorb-step:last-child { border-bottom: none; }
+.absorb-done  { color: #10b981; font-weight: 700; }
+.absorb-wait  { color: #334155; }
 
 /* ── Sidebar ── */
 .sb-label { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
-            color: #1e293b; margin: 18px 0 7px; padding-bottom: 5px;
+            color: #475569; margin: 18px 0 7px; padding-bottom: 5px;
             border-bottom: 1px solid rgba(255,255,255,0.05); }
 .sb-step  { display: flex; align-items: flex-start; gap: 9px; padding: 6px 0;
             font-size: 0.8rem; color: #10b981;
             border-bottom: 1px solid rgba(255,255,255,0.03); }
 .sb-step:last-child { border-bottom: none; }
 .sb-check { flex-shrink: 0; margin-top: 1px; }
-.sb-step-sub { font-size: 0.7rem; color: #1e293b; }
+.sb-step-sub { font-size: 0.7rem; color: #334155; }
+.sb-pending { color: #475569; }
 .demo-pill { background: rgba(96,165,250,0.07); border: 1px solid rgba(96,165,250,0.14);
-             border-radius: 8px; padding: 9px 12px; font-size: 0.75rem; color: #475569; margin-top: 14px; }
+             border-radius: 8px; padding: 9px 12px; font-size: 0.75rem; color: #64748b; margin-top: 14px; }
 
 /* ── Tabs ── */
 .stTabs [data-baseweb="tab-list"] { background: rgba(255,255,255,0.02); border-radius: 10px;
                                     padding: 4px; gap: 2px; }
 .stTabs [data-baseweb="tab"]      { background: transparent; border-radius: 8px;
-                                    color: #475569; font-weight: 500; font-size: 0.83rem; }
+                                    color: #64748b; font-weight: 500; font-size: 0.83rem; }
 .stTabs [aria-selected="true"]    { background: rgba(96,165,250,0.1) !important; color: #93c5fd !important; }
+
+/* ── Detection pair comparison ── */
+.compare-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+                 color: #94a3b8; margin-bottom: 8px; }
+.compare-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.65rem;
+                 font-weight: 700; margin-bottom: 6px; text-transform: uppercase; }
+.compare-badge.original  { background: rgba(96,165,250,0.1); color: #60a5fa; border: 1px solid rgba(96,165,250,0.2); }
+.compare-badge.predicted { background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.2); }
+.compare-badge.prepared  { background: rgba(245,158,11,0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.2); }
+.compare-badge.missing   { background: rgba(100,116,139,0.1); color: #94a3b8; border: 1px solid rgba(100,116,139,0.2); }
 </style>
 """
 
 _LIGHT_OVERRIDES = """
 <style>
-/* ══ LIGHT MODE — full-site override ══════════════════════════════════════════
-   1. CSS custom-property re-definitions  → Streamlit's own widgets pick these up
-   2. Explicit !important overrides       → catches elements that hard-code colors
-   ══════════════════════════════════════════════════════════════════════════════ */
-
-/* ── 1. Streamlit CSS variables ──────────────────────────────────────────── */
 :root {
     --background-color: #f8fafc;
     --secondary-background-color: #f1f5f9;
@@ -248,199 +303,69 @@ _LIGHT_OVERRIDES = """
     --primary-color: #2563eb;
     --font: "Inter", sans-serif;
 }
-
-/* ── 2. Base & layout ────────────────────────────────────────────────────── */
 html, body { background: #f8fafc !important; color: #1e293b !important; }
-
 [data-testid="stAppViewContainer"],
-[data-testid="stMain"],
-.stApp,
-.main,
+[data-testid="stMain"], .stApp, .main,
 .main .block-container { background: #f8fafc !important; }
-
 section[data-testid="stSidebar"],
 section[data-testid="stSidebar"] > div,
 [data-testid="stSidebarContent"] {
-    background: #ffffff !important;
-    border-right: 1px solid rgba(0,0,0,0.09) !important;
+    background: #ffffff !important; border-right: 1px solid rgba(0,0,0,0.09) !important;
 }
-
 [data-testid="stHeader"] { background: rgba(248,250,252,0.92) !important; }
-[data-testid="stToolbar"] { background: transparent !important; }
-
-/* bottom chat input area */
 [data-testid="stBottomBlockContainer"],
 .stChatFloatingInputContainer { background: #f8fafc !important; }
-
-/* ── 3. All text ─────────────────────────────────────────────────────────── */
 h1,h2,h3,h4,h5,h6 { color: #0f172a !important; }
-p, li, span        { color: #1e293b; }
-
-[data-testid="stMarkdown"] *,
-[data-testid="stMarkdownContainer"] * { color: #1e293b !important; }
-[data-testid="stText"]                { color: #1e293b !important; }
-[data-testid="stCaptionContainer"] *,
-figcaption, .stCaption               { color: #64748b !important; }
-
-/* widget labels */
-label,
-[data-testid="stWidgetLabel"] p,
-[data-testid="stWidgetLabel"] span { color: #1e293b !important; }
-
-/* ── 4. Sidebar ──────────────────────────────────────────────────────────── */
+p, li, span { color: #1e293b; }
+[data-testid="stMarkdown"] *, [data-testid="stMarkdownContainer"] * { color: #1e293b !important; }
+[data-testid="stText"] { color: #1e293b !important; }
+label, [data-testid="stWidgetLabel"] p, [data-testid="stWidgetLabel"] span { color: #1e293b !important; }
 [data-testid="stSidebar"] label,
 [data-testid="stSidebar"] p,
 [data-testid="stSidebar"] span,
 [data-testid="stSidebar"] [data-testid="stMarkdown"] * { color: #1e293b !important; }
-
-/* ── 5. Radio ────────────────────────────────────────────────────────────── */
-[data-testid="stRadio"] label,
-[data-testid="stRadio"] p    { color: #1e293b !important; }
-[data-baseweb="radio"] > div:first-child > div { border-color: rgba(0,0,0,0.3) !important; }
-
-/* ── 6. Toggle ───────────────────────────────────────────────────────────── */
-[data-testid="stToggle"] label,
-[data-testid="stToggle"] p { color: #1e293b !important; }
-
-/* ── 7. Buttons ──────────────────────────────────────────────────────────── */
+[data-testid="stRadio"] label, [data-testid="stRadio"] p { color: #1e293b !important; }
+[data-testid="stToggle"] label, [data-testid="stToggle"] p { color: #1e293b !important; }
 [data-testid="stBaseButton-secondary"],
-[data-testid="stBaseButton-minimal"],
-.stButton button,
-[data-testid="stButton"] button {
-    background: #ffffff !important;
-    color: #334155 !important;
-    border: 1px solid rgba(0,0,0,0.14) !important;
-}
-[data-testid="stBaseButton-secondary"]:hover,
-[data-testid="stButton"] button:hover { background: #f1f5f9 !important; }
-
-[data-testid="stDownloadButton"] button {
-    background: #ffffff !important;
-    color: #334155 !important;
-    border: 1px solid rgba(0,0,0,0.14) !important;
-}
-
-/* ── 8. Tabs ─────────────────────────────────────────────────────────────── */
-[data-baseweb="tab-list"]                { background: rgba(0,0,0,0.05) !important; }
-[data-baseweb="tab"]                     { color: #64748b !important; background: transparent !important; }
-[data-baseweb="tab"][aria-selected="true"] {
-    background: rgba(37,99,235,0.1) !important;
-    color: #1d4ed8 !important;
-}
-[data-baseweb="tab-panel"]  { background: transparent !important; }
-[data-baseweb="tab-border"] { background: rgba(0,0,0,0.08) !important; }
-
-/* ── 9. Expander ─────────────────────────────────────────────────────────── */
-[data-testid="stExpander"] details {
-    background: rgba(0,0,0,0.02) !important;
-    border: 1px solid rgba(0,0,0,0.1) !important;
-}
-[data-testid="stExpander"] summary {
-    background: rgba(0,0,0,0.02) !important;
-    color: #1e293b !important;
-}
-[data-testid="stExpander"] summary *,
-[data-testid="stExpander"] details > div * { color: #1e293b !important; }
-
-/* ── 10. Select slider & slider ──────────────────────────────────────────── */
-[data-testid="stSelectSlider"] label,
-[data-testid="stSelectSlider"] p,
-[data-testid="stSlider"] label,
-[data-testid="stSlider"] p { color: #1e293b !important; }
-[data-testid="stSelectSlider"] [role="slider"] { background: #2563eb !important; }
-
-/* ── 11. Chat input ──────────────────────────────────────────────────────── */
-[data-testid="stChatInput"],
-[data-testid="stChatInput"] > div,
-[data-testid="stChatInputContainer"] {
-    background: #ffffff !important;
-    border-color: rgba(0,0,0,0.14) !important;
-}
-[data-testid="stChatInput"] textarea {
-    background: #ffffff !important;
-    color: #1e293b !important;
-}
-
-/* ── 12. Chat messages ───────────────────────────────────────────────────── */
+.stButton button { background: #ffffff !important; color: #334155 !important; border: 1px solid rgba(0,0,0,0.14) !important; }
+[data-baseweb="tab-list"] { background: rgba(0,0,0,0.05) !important; }
+[data-baseweb="tab"] { color: #64748b !important; background: transparent !important; }
+[data-baseweb="tab"][aria-selected="true"] { background: rgba(37,99,235,0.1) !important; color: #1d4ed8 !important; }
+[data-testid="stExpander"] details { background: rgba(0,0,0,0.02) !important; border: 1px solid rgba(0,0,0,0.1) !important; }
+[data-testid="stExpander"] summary { background: rgba(0,0,0,0.02) !important; color: #1e293b !important; }
+[data-testid="stExpander"] summary *, [data-testid="stExpander"] details > div * { color: #1e293b !important; }
+[data-testid="stChatInput"], [data-testid="stChatInput"] > div { background: #ffffff !important; }
 [data-testid="stChatMessage"] { background: rgba(0,0,0,0.03) !important; }
 [data-testid="stChatMessage"] *:not(code):not(pre):not(.badge) { color: #1e293b !important; }
-
-/* ── 13. Dataframe ───────────────────────────────────────────────────────── */
 [data-testid="stDataFrame"] > div { background: #ffffff !important; }
-[data-testid="stDataFrameGlideDataEditor"] { background: #ffffff !important; }
-
-/* ── 14. Alerts / info ───────────────────────────────────────────────────── */
-[data-testid="stAlert"] {
-    background: rgba(0,0,0,0.03) !important;
-    border-color: rgba(0,0,0,0.1) !important;
-}
+[data-testid="stAlert"] { background: rgba(0,0,0,0.03) !important; border-color: rgba(0,0,0,0.1) !important; }
 [data-testid="stAlert"] * { color: #1e293b !important; }
-
-/* ── 15. Code blocks ─────────────────────────────────────────────────────── */
 code { background: rgba(0,0,0,0.06) !important; color: #1e293b !important; }
 pre  { background: rgba(0,0,0,0.04) !important; border-color: rgba(0,0,0,0.1) !important; }
-pre code { color: #1e293b !important; }
-
-/* ── 16. InfraGraph custom classes ──────────────────────────────────────── */
-.hero-tagline { color: #64748b !important; }
-
-.card { background: rgba(0,0,0,0.03) !important; border-color: rgba(0,0,0,0.1) !important; }
-.card.red   { background: rgba(239,68,68,0.05) !important; }
-.card.green { background: rgba(16,185,129,0.05) !important; }
-.card.blue  { background: rgba(59,130,246,0.05) !important; }
-
-.alert-item.critical { background: rgba(239,68,68,0.06) !important; }
-.alert-item.major    { background: rgba(245,158,11,0.06) !important; }
-.alert-node { color: #1e293b !important; }
-.alert-msg  { color: #64748b !important; }
-.alert-time { color: #94a3b8 !important; }
-
-.ws-title { color: #1e293b !important; }
-.ws-desc  { color: #64748b !important; }
-.ws-rule  { border-top-color: rgba(0,0,0,0.08) !important; }
-.section-label { color: #94a3b8 !important; border-bottom-color: rgba(0,0,0,0.07) !important; }
-
-.gm-header { color: #94a3b8 !important; }
-.gm-id     { color: #1e293b !important; }
-.gm-type   { color: #94a3b8 !important; }
-.gm-score  { color: #64748b !important; }
-.gm-node   { border-bottom-color: rgba(0,0,0,0.06) !important; }
-.gm-edge   { color: #64748b !important; border-bottom-color: rgba(0,0,0,0.04) !important; }
-.gm-arrow  { color: #94a3b8 !important; }
-
-.rca-winner { background: rgba(16,185,129,0.05) !important; border-color: rgba(16,185,129,0.25) !important; }
-.rca-winner-title { color: #1e293b !important; }
-.rca-winner-sub   { color: #64748b !important; }
-.rca-winner-meta  { color: #64748b !important; }
-.rca-row { background: rgba(0,0,0,0.03) !important; border-color: rgba(0,0,0,0.09) !important; }
-.rca-row.wrong-row { background: rgba(239,68,68,0.04) !important; border-color: rgba(239,68,68,0.18) !important; }
-.rca-row-label  { color: #94a3b8 !important; }
-.rca-row-reason { color: #64748b !important; }
-
-.score-track { background: rgba(0,0,0,0.09) !important; }
-
-.path-row { background: rgba(59,130,246,0.05) !important; border-color: rgba(59,130,246,0.15) !important; }
-
-.prop-card    { background: rgba(59,130,246,0.04) !important; border-color: rgba(59,130,246,0.18) !important; }
-.prop-num     { color: #2563eb !important; }
-.prop-title   { color: #1e293b !important; }
-.prop-body    { color: #475569 !important; }
-.prop-formula { color: #1d4ed8 !important; background: rgba(59,130,246,0.07) !important; }
-
-.report-body { background: rgba(0,0,0,0.02) !important; border-color: rgba(0,0,0,0.08) !important; }
-.warn-card   { background: rgba(245,158,11,0.06) !important; border-color: rgba(245,158,11,0.22) !important; color: #92400e !important; }
-.chat-hint   { color: #64748b !important; }
-.dev-note    { color: #64748b !important; }
-
-.sb-label    { color: #94a3b8 !important; border-bottom-color: rgba(0,0,0,0.08) !important; }
-.sb-step     { color: #059669 !important; border-bottom-color: rgba(0,0,0,0.05) !important; }
-.sb-step-sub { color: #64748b !important; }
-.demo-pill   { background: rgba(59,130,246,0.06) !important; border-color: rgba(59,130,246,0.15) !important; color: #64748b !important; }
+.hero-tagline  { color: #64748b !important; }
+.card          { background: rgba(0,0,0,0.03) !important; border-color: rgba(0,0,0,0.1) !important; }
+.section-label { color: #64748b !important; border-bottom-color: rgba(0,0,0,0.07) !important; }
+.ws-title      { color: #1e293b !important; }
+.ws-desc       { color: #64748b !important; }
+.warn-card     { background: rgba(245,158,11,0.06) !important; color: #92400e !important; }
+.info-card     { background: rgba(59,130,246,0.05) !important; color: #1e40af !important; }
+.gm-id         { color: #1e293b !important; }
+.gm-type       { color: #94a3b8 !important; }
+.alert-node    { color: #1e293b !important; }
+.alert-msg     { color: #64748b !important; }
+.sb-label      { color: #94a3b8 !important; }
+.sb-step       { color: #059669 !important; }
+.sb-pending    { color: #94a3b8 !important; }
+.absorb-card   { background: rgba(0,0,0,0.02) !important; border-color: rgba(0,0,0,0.09) !important; }
+.report-body   { background: rgba(0,0,0,0.02) !important; border-color: rgba(0,0,0,0.08) !important; }
+.demo-pill     { background: rgba(59,130,246,0.06) !important; color: #64748b !important; }
 </style>
 """
 
 
-# ── Data loaders ───────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# DATA LOADERS
+# ══════════════════════════════════════════════════════════════════════════════
 @st.cache_data
 def load_json(path: str) -> dict | list | None:
     try:
@@ -457,7 +382,9 @@ def load_text(path: str) -> str:
         return ""
 
 
-# ── UI helpers ─────────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# UI HELPERS
+# ══════════════════════════════════════════════════════════════════════════════
 def _img(path: Path, caption: str = "") -> None:
     if path.exists():
         st.image(str(path), caption=caption or None, use_container_width=True)
@@ -563,10 +490,1750 @@ def _extract_edges(rca: dict) -> list[tuple[str, str]]:
     return sorted(edges)
 
 
-# ── Chat QA ────────────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# DIAGRAM CATALOG
+# ══════════════════════════════════════════════════════════════════════════════
+@st.cache_data(ttl=180)
+def _build_diagram_catalog(repo_root_str: str) -> list[dict]:
+    """Scan all dataset paths and return catalog records."""
+    root = Path(repo_root_str)
+    records: list[dict] = []
+
+    pred_dir_v1 = root / "outputs" / "v1_test_predictions_cpu"
+    pred_dir_v2 = root / "outputs" / "v2_test_predictions_cpu"
+    pred_dir_v3 = root / "outputs" / "v3_test_predictions_cpu"
+
+    def _find_pred(diagram_id: str, dataset: str) -> str | None:
+        dirs = [pred_dir_v2, pred_dir_v1] if "v2" in dataset or "v1" in dataset else [pred_dir_v3]
+        for d in dirs:
+            for ext in [".jpg", ".png"]:
+                p = d / f"{diagram_id}{ext}"
+                if p.exists():
+                    return str(p)
+        return None
+
+    for ds_name, ver_label in [("infragraph_v1", "v1"), ("infragraph_v2", "v2")]:
+        img_root = root / "datasets" / ds_name / "images"
+        if not img_root.exists():
+            continue
+        for split in ["train", "val", "test"]:
+            split_dir = img_root / split
+            if not split_dir.exists():
+                continue
+            for img_f in sorted(split_dir.glob("*.png")):
+                did = img_f.stem
+                records.append({
+                    "display_name":        f"{ver_label.upper()} / {split} / {did}",
+                    "dataset":             ver_label,
+                    "split":               split,
+                    "diagram_id":          did,
+                    "diagram_type":        None,
+                    "image_path":          str(img_f),
+                    "prediction_path":     _find_pred(did, ds_name),
+                    "annotation_path":     None,
+                    "local_graph_path":    None,
+                    "scenario_id":         None,
+                    "enterprise_graph_path": None,
+                    "alerts_path":         None,
+                    "is_v3":               False,
+                })
+
+    v3_scen = root / "datasets" / "diagram_v3_enterprise" / "scenarios"
+    if v3_scen.exists():
+        for split_dir in sorted(v3_scen.iterdir()):
+            if not split_dir.is_dir():
+                continue
+            split = split_dir.name
+            for scen_dir in sorted(split_dir.iterdir()):
+                if not scen_dir.is_dir():
+                    continue
+                scen_id = scen_dir.name
+                diag_dir = scen_dir / "diagrams"
+                if not diag_dir.exists():
+                    continue
+                for img_f in sorted(diag_dir.glob("*.png")):
+                    did = img_f.stem
+                    ann_p  = scen_dir / "annotations"  / f"{did}.json"
+                    lg_p   = scen_dir / "local_graphs"  / f"{did}.json"
+                    eg_p   = scen_dir / "enterprise_graph.json"
+                    al_p   = scen_dir / "alerts.json"
+                    records.append({
+                        "display_name":          f"V3 / {scen_id} / {did}",
+                        "dataset":               "v3",
+                        "split":                 split,
+                        "diagram_id":            did,
+                        "diagram_type":          did,
+                        "image_path":            str(img_f),
+                        "prediction_path":       None,
+                        "annotation_path":       str(ann_p) if ann_p.exists() else None,
+                        "local_graph_path":      str(lg_p)  if lg_p.exists()  else None,
+                        "scenario_id":           scen_id,
+                        "enterprise_graph_path": str(eg_p)  if eg_p.exists()  else None,
+                        "alerts_path":           str(al_p)  if al_p.exists()  else None,
+                        "is_v3":                 True,
+                    })
+
+    return records
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# DETECTION PAIR VISUAL
+# ══════════════════════════════════════════════════════════════════════════════
+def _render_detection_pair(record: dict) -> None:
+    """Side-by-side: original diagram + YOLO/prepared detection output."""
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown(
+            '<div class="compare-badge original">Original</div>'
+            '<div class="compare-label">Source Diagram</div>',
+            unsafe_allow_html=True,
+        )
+        img_p = record.get("image_path", "")
+        if img_p and Path(img_p).exists():
+            st.image(img_p, use_container_width=True)
+        else:
+            st.markdown('<div class="warn-card">Image not found</div>', unsafe_allow_html=True)
+
+    with c2:
+        pred_p = record.get("prediction_path")
+        if pred_p and Path(pred_p).exists():
+            ver = record.get("dataset", "").upper()
+            st.markdown(
+                f'<div class="compare-badge predicted">AI Detected</div>'
+                f'<div class="compare-label">YOLO v8 — {ver} Detector Output</div>',
+                unsafe_allow_html=True,
+            )
+            st.image(pred_p, use_container_width=True)
+        elif record.get("is_v3"):
+            st.markdown(
+                '<div class="compare-badge prepared">V3 Prepared</div>'
+                '<div class="compare-label">Annotation Status</div>',
+                unsafe_allow_html=True,
+            )
+            st.markdown(
+                '<div class="info-card">'
+                '<strong>V3 prepared annotation selected.</strong><br>'
+                'Live RF-DETR detector output is not generated yet — annotations were created '
+                'directly from the scenario generator. Run <code>train_rfdetr_diagram_detector.py</code> '
+                'after training to generate detector predictions.'
+                '</div>',
+                unsafe_allow_html=True,
+            )
+            ann_p = record.get("annotation_path")
+            if ann_p and Path(ann_p).exists():
+                ann = load_json(ann_p) or {}
+                n_obj = len(ann.get("objects", []))
+                n_con = len(ann.get("connectors", []))
+                st.caption(f"Prepared annotation: {n_obj} objects, {n_con} connectors")
+        else:
+            st.markdown(
+                '<div class="compare-badge missing">Unavailable</div>'
+                '<div class="compare-label">Detection Output</div>',
+                unsafe_allow_html=True,
+            )
+            st.markdown(
+                '<div class="warn-card">Prediction image not available for this diagram. '
+                'Run YOLO inference on this split to generate predictions.</div>',
+                unsafe_allow_html=True,
+            )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# GRAPH RENDERING
+# ══════════════════════════════════════════════════════════════════════════════
+_DEVICE_PALETTE = {
+    "router":       "#2563eb",
+    "switch":       "#16a34a",
+    "firewall":     "#dc2626",
+    "server":       "#475569",
+    "database":     "#7c3aed",
+    "load_balancer":"#ea580c",
+    "cloud_or_wan": "#0284c7",
+    "service":      "#0d9488",
+}
+
+
+def _render_local_graph_pyvis(local_graph: dict, overlay: dict | None = None,
+                               height: int = 530) -> bool:
+    """Render interactive PyVis local graph. Returns True if rendered."""
+    try:
+        from pyvis.network import Network  # type: ignore
+    except ImportError:
+        return False
+
+    nodes = local_graph.get("nodes", [])
+    edges = local_graph.get("edges", [])
+    if not nodes:
+        return False
+
+    root       = (overlay or {}).get("root_cause")
+    alert_set  = set((overlay or {}).get("alert_nodes", []))
+    impacted   = set((overlay or {}).get("impacted_nodes", []))
+    path_set: set[tuple[str, str]] = set()
+    for a, b in zip((overlay or {}).get("impact_path", []),
+                    (overlay or {}).get("impact_path", [])[1:]):
+        path_set.add((a, b))
+
+    net = Network(height=f"{height}px", width="100%", directed=True,
+                  bgcolor="#0b1220", font_color="#e2e8f0")
+    net.barnes_hut(gravity=-3800, central_gravity=0.28, spring_length=140, spring_strength=0.048)
+
+    for n in nodes:
+        nid   = n.get("id", "")
+        ntype = n.get("type", "server")
+        shared = n.get("is_shared_entity", False)
+
+        if nid == root:
+            color, size, bw = "#ef4444", 36, 4
+        elif nid in alert_set:
+            color, size, bw = "#f97316", 30, 3
+        elif nid in impacted:
+            color, size, bw = "#facc15", 26, 2
+        elif shared:
+            color, size, bw = "#38bdf8", 26, 3
+        else:
+            color, size, bw = _DEVICE_PALETTE.get(ntype, "#64748b"), 22, 2
+
+        border = "#ffffff" if nid == root else ("#fbbf24" if shared else "#4a5568")
+        title  = (
+            f"<b>{nid}</b><br>type: {ntype}<br>"
+            f"ip: {n.get('ip_address','—')}<br>zone: {n.get('zone','—')}<br>"
+            + ("<b>shared entity</b>" if shared else "")
+            + ("<br><b>ROOT CAUSE</b>" if nid == root else "")
+        )
+        net.add_node(nid, label=nid, title=title,
+                     color={"background": color, "border": border},
+                     size=size, borderWidth=bw, borderWidthSelected=5)
+
+    for e in edges:
+        src, tgt = e.get("source", ""), e.get("target", "")
+        is_path  = (src, tgt) in path_set
+        lbl = str(e.get("label") or e.get("relationship", ""))[:16]
+        net.add_edge(src, tgt, label=lbl,
+                     color="#06b6d4" if is_path else "#4a5568",
+                     width=3 if is_path else 1,
+                     title=e.get("relationship", ""),
+                     dashes=e.get("edge_scope") == "cross_diagram")
+
+    with tempfile.NamedTemporaryFile("w", delete=False, suffix=".html", encoding="utf-8") as tmp:
+        tmp_path = Path(tmp.name)
+    try:
+        net.save_graph(str(tmp_path))
+        components.html(tmp_path.read_text(encoding="utf-8"), height=height + 20, scrolling=False)
+    finally:
+        try:
+            tmp_path.unlink()
+        except Exception:
+            pass
+    return True
+
+
+def _render_local_graph_mpl(local_graph: dict, overlay: dict | None = None,
+                              height: float = 4.2) -> None:
+    """Matplotlib fallback for local graph rendering."""
+    nodes = local_graph.get("nodes", [])
+    edges = local_graph.get("edges", [])
+    if not nodes:
+        st.info("No local graph data.")
+        return
+
+    if _NX:
+        G = nx.DiGraph()
+        for n in nodes:
+            G.add_node(n.get("id", ""))
+        for e in edges:
+            G.add_edge(e.get("source", ""), e.get("target", ""))
+        pos = nx.spring_layout(G, seed=12, k=1.35)
+    else:
+        total = len(nodes)
+        pos = {
+            n.get("id", ""): (math.cos(2*math.pi*i/total), math.sin(2*math.pi*i/total))
+            for i, n in enumerate(nodes)
+        }
+
+    root      = (overlay or {}).get("root_cause")
+    alert_set = set((overlay or {}).get("alert_nodes", []))
+    impacted  = set((overlay or {}).get("impacted_nodes", []))
+    path_set: set[tuple[str, str]] = set()
+    for a, b in zip((overlay or {}).get("impact_path", []),
+                    (overlay or {}).get("impact_path", [])[1:]):
+        path_set.add((a, b))
+
+    fig, ax = plt.subplots(figsize=(9, height), facecolor="#f8fafc")
+    ax.set_facecolor("#f8fafc")
+    ax.axis("off")
+
+    for e in edges:
+        src, tgt = e.get("source", ""), e.get("target", "")
+        if src not in pos or tgt not in pos:
+            continue
+        x1, y1 = pos[src]; x2, y2 = pos[tgt]
+        is_path = (src, tgt) in path_set
+        ax.annotate("", xy=(x2, y2), xytext=(x1, y1),
+                    arrowprops=dict(arrowstyle="->",
+                                   color="#00a8e8" if is_path else "#94a3b8",
+                                   lw=2.6 if is_path else 1.1, alpha=0.9), zorder=1)
+        lbl = e.get("label") or e.get("relationship", "")
+        if lbl:
+            ax.text((x1+x2)/2, (y1+y2)/2, str(lbl)[:16], fontsize=7, color="#0f172a",
+                    ha="center", va="center",
+                    bbox=dict(boxstyle="round,pad=0.15", fc="#e0f2fe", ec="#bae6fd", lw=0.5), zorder=3)
+
+    ntype_map = {n.get("id", ""): n.get("type", "server") for n in nodes}
+    for n in nodes:
+        nid = n.get("id", "")
+        if nid not in pos:
+            continue
+        x, y = pos[nid]
+        if nid == root:
+            color, ec, sz = "#ef4444", "#7f1d1d", 950
+        elif nid in alert_set:
+            color, ec, sz = "#f97316", "#9a3412", 780
+        elif nid in impacted:
+            color, ec, sz = "#facc15", "#a16207", 740
+        else:
+            color = _DEVICE_PALETTE.get(ntype_map.get(nid, "server"), "#64748b")
+            ec, sz = "#0f172a", 640
+        ax.scatter([x], [y], s=sz, c=color, edgecolors=ec, linewidths=1.7, zorder=4)
+        ax.text(x, y-0.12, nid, fontsize=8, fontweight="bold",
+                ha="center", va="top", color="#0f172a", zorder=5)
+    st.pyplot(fig, use_container_width=True)
+    plt.close(fig)
+
+
+def _render_local_graph(local_graph: dict, overlay: dict | None = None,
+                         height: int = 530) -> None:
+    """Try PyVis first; fall back to matplotlib."""
+    if _render_local_graph_pyvis(local_graph, overlay, height):
+        return
+    st.caption("Interactive graph requires pyvis — showing matplotlib preview")
+    _render_local_graph_mpl(local_graph, overlay, height / 100)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# V3 CONSTANTS
+# ══════════════════════════════════════════════════════════════════════════════
+V3_DATASET_ROOT  = REPO_ROOT / "datasets" / "diagram_v3_enterprise"
+V3_HERO_SCENARIO = V3_DATASET_ROOT / "scenarios" / "train" / "enterprise_v3_0000"
+V3_DEMO_DIAGRAMS = {
+    "Branch Office Topology":       "branch_topology",
+    "WAN / MPLS Topology":          "wan_topology",
+    "Datacenter Topology":          "datacenter_topology",
+    "Application & Database Tier":  "app_db_topology",
+    "Shared Services Topology":     "shared_services_topology",
+}
+V3_REQUIRED_DIAGRAMS = list(V3_DEMO_DIAGRAMS.values())
+V3_ENTERPRISE_GNN_METRICS = REPO_ROOT / "outputs" / "enterprise_gnn_rca" / "enterprise_gnn_metrics.json"
+V3_ONBOARDING_SCRIPT = REPO_ROOT / "scripts" / "onboard_diagram_v3.py"
+
+_V3_DIAG_COLORS = {
+    "branch_topology":          "#10b981",
+    "wan_topology":             "#3b82f6",
+    "datacenter_topology":      "#ef4444",
+    "app_db_topology":          "#8b5cf6",
+    "shared_services_topology": "#f59e0b",
+}
+
+V3_STATE_KEYS = [
+    "selected_diagram_path", "selected_diagram_id",
+    "local_graph", "node_table", "edge_table", "validation_packet",
+    "local_rca_result",
+    "enterprise_scenario_path", "enterprise_graph_before",
+    "enterprise_graph_after", "enterprise_ingestion_summary", "enterprise_rca_result",
+    "allow_local_simulation", "allow_enterprise_simulation", "allow_deterministic_copilot",
+    "catalog_selected_record",
+]
+
+
+def _init_v3_state() -> None:
+    for key in V3_STATE_KEYS:
+        if key not in st.session_state:
+            st.session_state[key] = None
+    if "v3_chat_messages" not in st.session_state:
+        st.session_state.v3_chat_messages = []
+    if "diagram_mode" not in st.session_state:
+        st.session_state.diagram_mode = "Hero Journey Mode"
+
+
+def _safe_read_json(path: Path) -> dict | list:
+    data = load_json(str(path))
+    return data if data is not None else {}
+
+
+def _strict_mode() -> bool:
+    return os.environ.get("INFRAGRAPH_STRICT_MODE", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _qwen_configured() -> bool:
+    return bool(os.environ.get("QWEN_BASE_URL")) and bool(os.environ.get("QWEN_MODEL"))
+
+
+def _pyvis_available() -> bool:
+    try:
+        import pyvis  # noqa: F401
+        return True
+    except Exception:
+        return False
+
+
+def _enterprise_gnn_available() -> bool:
+    return V3_ENTERPRISE_GNN_METRICS.exists()
+
+
+def _local_rca_model_available() -> bool:
+    selected = st.session_state.get("selected_diagram_id", "")
+    for p in [
+        REPO_ROOT / "outputs" / "v3_local_rca" / "local_rca_result.json",
+        REPO_ROOT / "outputs" / "gnn_rca" / f"{selected}_gnn_rca_result.json",
+    ]:
+        if p.exists():
+            return True
+    return False
+
+
+def _status_label(ok: bool, fallback: bool = False) -> str:
+    if ok:
+        return "✅"
+    if fallback:
+        return "⚠️"
+    return "❌"
+
+
+def _readiness_checks() -> list[dict]:
+    diags_ok = all(
+        (V3_HERO_SCENARIO / "diagrams" / f"{d}.png").exists() for d in V3_REQUIRED_DIAGRAMS
+    )
+    ann_ok = all(
+        (V3_HERO_SCENARIO / "annotations" / f"{d}.json").exists() for d in V3_REQUIRED_DIAGRAMS
+    )
+    lg_ok = all(
+        (V3_HERO_SCENARIO / "local_graphs" / f"{d}.json").exists() for d in V3_REQUIRED_DIAGRAMS
+    )
+    return [
+        {"label": "V3 hero scenario exists",          "ok": V3_HERO_SCENARIO.exists(),                                       "fallback": False},
+        {"label": "Hero diagrams (5 PNGs)",            "ok": diags_ok,                                                        "fallback": False},
+        {"label": "V3 annotations",                    "ok": ann_ok,                                                          "fallback": False},
+        {"label": "V3 local graphs",                   "ok": lg_ok,                                                           "fallback": False},
+        {"label": "V3 enterprise graph",               "ok": (V3_HERO_SCENARIO / "enterprise_graph.json").exists(),           "fallback": False},
+        {"label": "V3 alerts",                         "ok": (V3_HERO_SCENARIO / "alerts.json").exists(),                     "fallback": False},
+        {"label": "RF-DETR COCO export",               "ok": (V3_DATASET_ROOT / "rfdetr" / "annotations" / "instances_train.json").exists(), "fallback": True},
+        {"label": "YOLO export",                       "ok": (V3_DATASET_ROOT / "yolo" / "dataset.yaml").exists(),            "fallback": True},
+        {"label": "PyVis dependency",                  "ok": _pyvis_available(),                                              "fallback": not _strict_mode()},
+        {"label": "Enterprise GNN output",             "ok": _enterprise_gnn_available(),                                     "fallback": not _strict_mode()},
+        {"label": "Qwen endpoint configured",          "ok": _qwen_configured(),                                              "fallback": not _strict_mode()},
+        {"label": "Live onboarding script",            "ok": V3_ONBOARDING_SCRIPT.exists(),                                   "fallback": not _strict_mode()},
+    ]
+
+
+def _render_readiness_panel() -> None:
+    checks = _readiness_checks()
+    ready = sum(1 for c in checks if c["ok"])
+    total = len(checks)
+    pct   = int(ready / total * 100)
+    color = "#10b981" if pct >= 80 else ("#f59e0b" if pct >= 50 else "#ef4444")
+    st.markdown(
+        f'<div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);'
+        f'border-radius:9px;padding:9px 13px;display:flex;justify-content:space-between;align-items:center">'
+        f'<span style="font-size:0.78rem;color:#64748b">Demo readiness</span>'
+        f'<span style="font-size:0.82rem;font-weight:700;color:{color}">{ready}/{total}</span>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+    with st.expander("View details", expanded=False):
+        for item in checks:
+            icon = _status_label(item["ok"], item["fallback"])
+            clr  = "color:#10b981" if item["ok"] else ("color:#f59e0b" if item["fallback"] else "color:#ef4444")
+            st.markdown(
+                f'<div style="font-size:0.76rem;{clr};padding:2px 0">{icon} {item["label"]}</div>',
+                unsafe_allow_html=True,
+            )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# V3 PACKET HELPERS
+# ══════════════════════════════════════════════════════════════════════════════
+def _hero_path(diagram_id: str) -> Path:
+    return V3_HERO_SCENARIO / "diagrams" / f"{diagram_id}.png"
+
+
+def _load_v3_packet(diagram_path: Path, diagram_id: str) -> dict:
+    scenario_dir = diagram_path.parent.parent
+    ann_path  = scenario_dir / "annotations"   / f"{diagram_id}.json"
+    lg_path   = scenario_dir / "local_graphs"  / f"{diagram_id}.json"
+    return {
+        "scenario_dir":      scenario_dir,
+        "diagram_path":      diagram_path,
+        "diagram_id":        diagram_id,
+        "annotation_path":   ann_path,
+        "local_graph_path":  lg_path,
+        "annotation":        _safe_read_json(ann_path) if ann_path.exists() else {},
+        "local_graph":       _safe_read_json(lg_path)  if lg_path.exists()  else {},
+    }
+
+
+def _node_table_from_graph(local_graph: dict) -> pd.DataFrame:
+    rows = []
+    for n in local_graph.get("nodes", []):
+        rows.append({
+            "node_id":    n.get("id", ""),
+            "type":       n.get("type", "unknown"),
+            "ip_address": n.get("ip_address", ""),
+            "zone":       n.get("zone", ""),
+            "shared":     n.get("is_shared_entity", False),
+            "confidence": 0.96 if n.get("bbox") else 0.88,
+            "source":     "V3 annotation" if n.get("bbox") else "V3 local graph",
+        })
+    return pd.DataFrame(rows)
+
+
+def _edge_table_from_graph(local_graph: dict) -> pd.DataFrame:
+    rows = []
+    for e in local_graph.get("edges", []):
+        rows.append({
+            "source":       e.get("source", ""),
+            "target":       e.get("target", ""),
+            "relationship": e.get("relationship", "connected_to"),
+            "label":        e.get("label", ""),
+            "confidence":   0.91 if e.get("connector_id") else 0.78,
+        })
+    return pd.DataFrame(rows)
+
+
+def _run_v3_diagram_intelligence(diagram_path: Path, diagram_id: str,
+                                  uploaded: bool = False) -> bool:
+    if uploaded:
+        msg = "Live onboarding is not available yet. Use a prepared V3 scenario diagram."
+        if _strict_mode():
+            st.error(msg)
+        else:
+            st.warning(msg)
+        return False
+
+    packet = _load_v3_packet(diagram_path, diagram_id)
+    if not packet["annotation"] or not packet["local_graph"]:
+        st.error(
+            "V3 metadata is missing. Generate the dataset first:\n"
+            "`python scripts/generate_diagram_v3_enterprise_dataset.py --num-scenarios 10 "
+            "--out ./datasets/diagram_v3_enterprise --seed 2026 --clean`"
+        )
+        return False
+
+    local_graph = packet["local_graph"]
+    node_table  = _node_table_from_graph(local_graph)
+    edge_table  = _edge_table_from_graph(local_graph)
+
+    conf_summary = {
+        "device_detection_avg": round(float(node_table["confidence"].mean()) if not node_table.empty else 0.0, 3),
+        "edge_extraction_avg":  round(float(edge_table["confidence"].mean()) if not edge_table.empty else 0.0, 3),
+        "ocr_text_blocks":      len(packet["annotation"].get("text_blocks", [])),
+        "low_confidence_items": int((node_table.get("confidence", pd.Series()) < 0.90).sum()),
+    }
+
+    st.session_state.selected_diagram_path      = str(diagram_path)
+    st.session_state.selected_diagram_id        = diagram_id
+    st.session_state.local_graph                = local_graph
+    st.session_state.node_table                 = node_table
+    st.session_state.edge_table                 = edge_table
+    st.session_state.validation_packet          = {
+        "diagram_id":        diagram_id,
+        "image_path":        str(diagram_path),
+        "annotation_path":   str(packet["annotation_path"]),
+        "local_graph_path":  str(packet["local_graph_path"]),
+        "source_label":      "Source: V3 scenario annotation (ground truth)",
+        "text_blocks":       packet["annotation"].get("text_blocks", []),
+        "confidence_summary": conf_summary,
+    }
+    st.session_state.local_rca_result           = None
+    st.session_state.enterprise_rca_result      = None
+    st.session_state.enterprise_ingestion_summary = None
+    st.session_state.enterprise_graph_before    = None
+    st.session_state.enterprise_graph_after     = None
+    st.session_state.allow_local_simulation     = False
+    st.session_state.allow_enterprise_simulation = False
+    st.session_state.allow_deterministic_copilot = False
+    return True
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SIMULATION FUNCTIONS
+# ══════════════════════════════════════════════════════════════════════════════
+def _simulate_local_rca(local_graph: dict) -> dict:
+    nodes = [n.get("id", "") for n in local_graph.get("nodes", [])]
+    edges = [(e.get("source", ""), e.get("target", "")) for e in local_graph.get("edges", [])]
+    outdeg = {n: 0 for n in nodes}
+    indeg  = {n: 0 for n in nodes}
+    adj    = {n: [] for n in nodes}
+    for src, tgt in edges:
+        if src in outdeg and tgt in indeg:
+            outdeg[src] += 1
+            indeg[tgt]  += 1
+            adj[src].append(tgt)
+
+    candidates = sorted(nodes,
+                        key=lambda n: (indeg.get(n, 0) == 0, outdeg.get(n, 0), -indeg.get(n, 0)),
+                        reverse=True)
+    root = candidates[0] if candidates else ""
+
+    impacted: list[str] = []
+    queue = list(adj.get(root, []))
+    seen  = {root}
+    while queue:
+        cur = queue.pop(0)
+        if cur in seen:
+            continue
+        seen.add(cur)
+        impacted.append(cur)
+        queue.extend(adj.get(cur, []))
+    if not impacted and len(nodes) > 1:
+        impacted = [n for n in nodes if n != root][:3]
+
+    target = impacted[-1] if impacted else root
+    prev   = {root: None}
+    queue  = [root]
+    while queue and target not in prev:
+        cur = queue.pop(0)
+        for nxt in adj.get(cur, []):
+            if nxt not in prev:
+                prev[nxt] = cur
+                queue.append(nxt)
+    path = [target] if target else []
+    while path and path[-1] in prev and prev[path[-1]]:
+        path.append(prev[path[-1]])
+    path = list(reversed(path)) if path else [root]
+
+    ranking = []
+    for n in nodes:
+        score = 0.40 + outdeg.get(n, 0) * 0.11 + (0.14 if indeg.get(n, 0) == 0 else 0.0)
+        if n == root:
+            score += 0.20
+        ranking.append({"node": n, "score": round(min(score, 0.99), 3),
+                         "reason": f"out={outdeg.get(n,0)} in={indeg.get(n,0)}"})
+    ranking.sort(key=lambda r: r["score"], reverse=True)
+    return {
+        "mode":          "deterministic_graph_fallback",
+        "root_cause":    root,
+        "alert_nodes":   impacted[:2] or ([root] if root else []),
+        "impacted_nodes": impacted,
+        "impact_path":   path,
+        "ranking":       ranking[:6],
+        "explanation":   "Deterministic simulation — local diagram only.",
+    }
+
+
+def _load_enterprise_context() -> dict:
+    scenario = V3_HERO_SCENARIO
+    eg  = _safe_read_json(scenario / "enterprise_graph.json")
+    sm  = _safe_read_json(scenario / "stitch_map.json")
+    al  = _safe_read_json(scenario / "alerts.json")
+    st.session_state.enterprise_scenario_path = str(scenario)
+    return {"scenario": scenario, "enterprise_graph": eg, "stitch_map": sm, "alerts": al}
+
+
+def _enterprise_without_diagram(enterprise_graph: dict, diagram_id: str) -> dict:
+    graph    = json.loads(json.dumps(enterprise_graph))
+    clusters = {k: v for k, v in graph.get("diagram_clusters", {}).items() if k != diagram_id}
+    keep     = {nid for c in clusters.values() for nid in c.get("node_ids", [])}
+    graph["diagram_clusters"] = clusters
+    graph["nodes"] = [n for n in graph.get("nodes", []) if n.get("id") in keep]
+    graph["edges"] = [
+        e for e in graph.get("edges", [])
+        if e.get("source") in keep and e.get("target") in keep
+    ]
+    return graph
+
+
+def _simulate_enterprise_ingestion(local_graph: dict, enterprise_graph: dict,
+                                    stitch_map: dict, diagram_id: str) -> dict:
+    enterprise_ids = {n.get("id") for n in enterprise_graph.get("nodes", [])}
+    local_ids      = {n.get("canonical_id", n.get("id")) for n in local_graph.get("nodes", [])}
+    matched        = sorted(local_ids & enterprise_ids)
+    new_nodes      = sorted(local_ids - enterprise_ids)
+    cross_links    = [
+        e for e in stitch_map.get("cross_diagram_edges", [])
+        if e.get("source_diagram") == diagram_id or e.get("target_diagram") == diagram_id
+    ]
+    summary = {
+        "absorbed_diagram_id":       diagram_id,
+        "nodes_absorbed":            len(local_graph.get("nodes", [])),
+        "edges_absorbed":            len(local_graph.get("edges", [])),
+        "shared_entities_matched":   len(matched),
+        "cross_diagram_links_created": len(cross_links),
+        "status":                    "absorbed_into_enterprise_graph",
+        "matched_entities":          matched,
+        "new_nodes":                 new_nodes,
+        "cross_diagram_links":       cross_links,
+    }
+    st.session_state.enterprise_graph_before    = _enterprise_without_diagram(enterprise_graph, diagram_id)
+    st.session_state.enterprise_graph_after     = enterprise_graph
+    st.session_state.enterprise_ingestion_summary = summary
+    return summary
+
+
+def _simulate_enterprise_rca(alerts: dict, enterprise_graph: dict) -> dict:
+    root       = alerts.get("root_cause", "")
+    alert_nodes = [a.get("node", "") for a in alerts.get("alerts", [])]
+    ranking = [{"node": root, "score": 0.97, "reason": "scenario ground truth"}] if root else []
+    for n in alert_nodes:
+        if n != root:
+            ranking.append({"node": n, "score": round(0.74 - len(ranking)*0.05, 3),
+                             "reason": "alert propagation evidence"})
+    return {
+        "mode":               "scenario_ground_truth_fallback",
+        "root_cause":         root,
+        "root_cause_diagram": alerts.get("root_cause_diagram", ""),
+        "impacted_diagrams":  alerts.get("impacted_diagrams", []),
+        "alert_count":        len(alerts.get("alerts", [])),
+        "alert_nodes":        alert_nodes,
+        "impacted_nodes":     alerts.get("impacted_nodes", []),
+        "impact_path":        (alerts.get("impact_paths") or [[]])[0],
+        "ranking":            ranking[:6],
+        "enterprise_node_count": len(enterprise_graph.get("nodes", [])),
+    }
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ENTERPRISE PYVIS
+# ══════════════════════════════════════════════════════════════════════════════
+def _render_enterprise_pyvis(enterprise_graph: dict, absorbed_ids: set[str],
+                               rca: dict | None, height: int = 760) -> bool:
+    try:
+        from pyvis.network import Network  # type: ignore
+    except Exception:
+        return False
+
+    root       = (rca or {}).get("root_cause")
+    alert_set  = set((rca or {}).get("alert_nodes", []))
+    impacted   = set((rca or {}).get("impacted_nodes", []))
+    path_set: set[tuple[str, str]] = set()
+    for a, b in zip((rca or {}).get("impact_path", []),
+                    (rca or {}).get("impact_path", [])[1:]):
+        path_set.add((a, b))
+
+    net = Network(height=f"{height}px", width="100%", directed=True,
+                  bgcolor="#0b1220", font_color="#e2e8f0")
+    net.barnes_hut(gravity=-4200, central_gravity=0.22, spring_length=180, spring_strength=0.042)
+
+    groups = {}
+    for did, cluster in enterprise_graph.get("diagram_clusters", {}).items():
+        for nid in cluster.get("node_ids", []):
+            groups[nid] = did
+    node_map = {n.get("id"): n for n in enterprise_graph.get("nodes", [])}
+
+    for n in enterprise_graph.get("nodes", []):
+        nid  = n.get("id", "")
+        ntype = n.get("type", "server")
+        shared = n.get("is_shared_entity", False)
+        diag   = groups.get(nid, n.get("diagram_id", ""))
+        col_base = _V3_DIAG_COLORS.get(diag, "#64748b")
+
+        if nid == root:
+            color, size, bw = "#ef4444", 38, 5
+        elif nid in alert_set:
+            color, size, bw = "#f97316", 30, 4
+        elif nid in impacted:
+            color, size, bw = "#facc15", 26, 3
+        elif nid in absorbed_ids:
+            color, size, bw = "#22d3ee", 28, 4
+        elif shared:
+            color, size, bw = "#38bdf8", 26, 4
+        else:
+            color, size, bw = col_base, 20, 2
+
+        border = "#ffffff" if nid == root else ("#fbbf24" if shared else "#3a4a5a")
+        title  = (
+            f"<b>{nid}</b><br>type: {ntype}<br>"
+            f"diagram: {diag}<br>ip: {n.get('ip_address','—')}<br>zone: {n.get('zone','—')}"
+            + ("<br><b>shared entity</b>" if shared else "")
+            + ("<br><b>newly absorbed</b>" if nid in absorbed_ids else "")
+            + ("<br><b>ROOT CAUSE</b>" if nid == root else "")
+        )
+        net.add_node(nid, label=nid, title=title,
+                     group=diag,
+                     color={"background": color, "border": border},
+                     size=size, borderWidth=bw, borderWidthSelected=6)
+
+    for e in enterprise_graph.get("edges", []):
+        src, tgt = e.get("source", ""), e.get("target", "")
+        if src not in node_map or tgt not in node_map:
+            continue
+        is_cross = e.get("edge_scope") == "cross_diagram" or e.get("edge_type") == "cross_diagram"
+        is_path  = (src, tgt) in path_set
+        net.add_edge(
+            src, tgt,
+            label=str(e.get("label", ""))[:16],
+            color="#22d3ee" if is_cross else ("#06b6d4" if is_path else "#4a5568"),
+            width=4 if is_path else (2 if is_cross else 1),
+            dashes=is_cross,
+            title=f"{e.get('relationship','')} | {e.get('edge_scope','')}",
+        )
+
+    with tempfile.NamedTemporaryFile("w", delete=False, suffix=".html", encoding="utf-8") as tmp:
+        tmp_path = Path(tmp.name)
+    try:
+        net.save_graph(str(tmp_path))
+        components.html(tmp_path.read_text(encoding="utf-8"), height=height+20, scrolling=False)
+    finally:
+        try:
+            tmp_path.unlink()
+        except Exception:
+            pass
+    return True
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 1 — DIAGRAM INTELLIGENCE
+# ══════════════════════════════════════════════════════════════════════════════
+def _tab_diagram_outputs_section() -> None:
+    """Show outputs after diagram has been processed into local graph."""
+    local_graph = st.session_state.get("local_graph")
+    if not local_graph:
+        return
+
+    st.markdown('<hr class="ws-rule">', unsafe_allow_html=True)
+
+    n_nodes = len(local_graph.get("nodes", []))
+    n_edges = len(local_graph.get("edges", []))
+    packet  = st.session_state.get("validation_packet") or {}
+    summary = packet.get("confidence_summary", {})
+
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Nodes detected",    n_nodes)
+    m2.metric("Edges extracted",   n_edges)
+    m3.metric("Avg confidence",    f"{summary.get('device_detection_avg', 0):.0%}")
+    m4.metric("OCR text blocks",   summary.get("ocr_text_blocks", 0))
+
+    source = packet.get("source_label", "")
+    if source:
+        st.caption(source)
+
+    view_mode = st.radio(
+        "View",
+        ["Original + Detection", "Local Graph (Interactive)", "Node/Edge Tables"],
+        horizontal=True,
+        key="diagram_view_mode",
+    )
+
+    if view_mode == "Original + Detection":
+        sel_p = st.session_state.get("selected_diagram_path", "")
+        rec   = st.session_state.get("catalog_selected_record") or {}
+        if rec:
+            _render_detection_pair(rec)
+        elif sel_p and Path(sel_p).exists():
+            c1, c2 = st.columns(2)
+            with c1:
+                st.markdown(
+                    '<div class="compare-badge original">Original</div><div class="compare-label">Source Diagram</div>',
+                    unsafe_allow_html=True)
+                st.image(sel_p, use_container_width=True)
+            with c2:
+                st.markdown(
+                    '<div class="compare-badge prepared">V3 Prepared</div><div class="compare-label">Annotation Status</div>',
+                    unsafe_allow_html=True)
+                st.info("V3 prepared annotation — live detector output pending model training.")
+        else:
+            st.warning("Selected diagram image not available.")
+
+    elif view_mode == "Local Graph (Interactive)":
+        st.markdown('<div class="section-label">Local Graph</div>', unsafe_allow_html=True)
+        if not _pyvis_available():
+            st.caption("Install pyvis for interactive graph: `pip install pyvis`")
+        _render_local_graph(local_graph)
+        did = st.session_state.get("selected_diagram_id", "")
+        if did:
+            diag_color = _V3_DIAG_COLORS.get(did, "#64748b")
+            st.markdown(
+                f'<span style="display:inline-block;background:{diag_color}22;color:{diag_color};'
+                f'border:1px solid {diag_color}44;border-radius:6px;padding:2px 10px;'
+                f'font-size:0.72rem;font-weight:700">{did}</span>',
+                unsafe_allow_html=True,
+            )
+
+    else:
+        tab_n, tab_e, tab_t = st.tabs(["Node inventory", "Edge inventory", "OCR / text"])
+        with tab_n:
+            nt = st.session_state.get("node_table")
+            if nt is not None and not nt.empty:
+                st.dataframe(nt, use_container_width=True, hide_index=True)
+            else:
+                st.info("No node data — run Diagram Intelligence first.")
+        with tab_e:
+            et = st.session_state.get("edge_table")
+            if et is not None and not et.empty:
+                st.dataframe(et, use_container_width=True, hide_index=True)
+            else:
+                st.info("No edge data.")
+        with tab_t:
+            text_rows = packet.get("text_blocks", [])
+            if text_rows:
+                st.dataframe(pd.DataFrame(text_rows), use_container_width=True, hide_index=True)
+            else:
+                st.info("No OCR/text metadata available.")
+
+
+def _tab_hero_mode() -> None:
+    """Hero Journey Mode — 5 prepared V3 diagrams."""
+    st.markdown(
+        '<div class="mode-hero">'
+        '<div class="mode-title" style="color:#10b981">Hero Journey Mode</div>'
+        '<div class="mode-sub">Uses the prepared V3 hero scenario (enterprise_v3_0000). '
+        'Full story: diagram → local graph → local RCA → enterprise brain → copilot.</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    hero_exists = V3_HERO_SCENARIO.exists()
+    if not hero_exists:
+        st.error(
+            "V3 hero scenario not found. Generate it first:\n"
+            "`python scripts/generate_diagram_v3_enterprise_dataset.py "
+            "--num-scenarios 10 --out ./datasets/diagram_v3_enterprise --seed 2026 --clean`"
+        )
+
+    left, right = st.columns([1, 1])
+    with left:
+        demo_choice = st.selectbox(
+            "Select V3 hero diagram",
+            list(V3_DEMO_DIAGRAMS.keys()),
+            index=0,
+        )
+        diagram_id   = V3_DEMO_DIAGRAMS[demo_choice]
+        diagram_path = _hero_path(diagram_id)
+
+        badge_color = _V3_DIAG_COLORS.get(diagram_id, "#64748b")
+        st.markdown(
+            f'<div style="display:inline-flex;align-items:center;gap:8px;margin:6px 0 12px">'
+            f'<span style="width:8px;height:8px;border-radius:50%;background:{badge_color};display:inline-block"></span>'
+            f'<span style="font-family:\'JetBrains Mono\',monospace;font-size:0.8rem;color:{badge_color}">{diagram_id}</span>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+        if st.button("Run Diagram Intelligence", type="primary",
+                     use_container_width=True, disabled=not hero_exists):
+            steps = ["Image received", "Annotation loaded", "OCR metadata loaded",
+                     "Connector annotations loaded", "Node/edge tables generated",
+                     "Local graph created", "Ready for graph memory ingestion"]
+            prog = st.progress(0)
+            for idx, step in enumerate(steps, 1):
+                st.write(f"{idx}. {step}")
+                prog.progress(idx / len(steps))
+            ok = _run_v3_diagram_intelligence(diagram_path, diagram_id, uploaded=False)
+            if ok:
+                st.session_state.catalog_selected_record = {
+                    "image_path": str(diagram_path),
+                    "prediction_path": None,
+                    "is_v3": True,
+                    "annotation_path": str(V3_HERO_SCENARIO / "annotations" / f"{diagram_id}.json"),
+                    "dataset": "v3",
+                }
+                st.success("Complete — local graph ready. Proceed to Tab 2 or 3.")
+
+        st.markdown('<div style="margin-top:16px"></div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-label">All 5 hero diagrams</div>', unsafe_allow_html=True)
+        for label, did in V3_DEMO_DIAGRAMS.items():
+            exists  = _hero_path(did).exists()
+            dcolor  = _V3_DIAG_COLORS.get(did, "#64748b")
+            icon    = "●" if exists else "○"
+            st.markdown(
+                f'<div style="display:flex;align-items:center;gap:8px;padding:5px 0;'
+                f'border-bottom:1px solid rgba(255,255,255,0.04)">'
+                f'<span style="color:{dcolor if exists else "#334155"}">{icon}</span>'
+                f'<span style="font-size:0.78rem;color:{"#cbd5e1" if exists else "#475569"}">{label}</span>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+
+    with right:
+        img_p = str(_hero_path(diagram_id))
+        if Path(img_p).exists():
+            st.image(img_p, caption=f"Selected: {diagram_id}", use_container_width=True)
+        else:
+            st.markdown(
+                '<div class="warn-card" style="text-align:center;padding:40px 20px">'
+                'V3 hero scenario not generated yet.<br><br>'
+                '<code style="font-size:0.72rem">python scripts/generate_diagram_v3_enterprise_dataset.py</code>'
+                '</div>',
+                unsafe_allow_html=True,
+            )
+
+    _tab_diagram_outputs_section()
+
+
+def _tab_gallery_mode() -> None:
+    """Diagram Gallery Mode — browse all V1/V2/V3 diagrams."""
+    st.markdown(
+        '<div class="mode-gallery">'
+        '<div class="mode-title" style="color:#60a5fa">Diagram Gallery Mode</div>'
+        '<div class="mode-sub">Browse all available diagrams from V1/V2/V3 datasets. '
+        'V2 diagrams show side-by-side YOLO detection previews.</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    with st.spinner("Loading diagram catalog..."):
+        catalog = _build_diagram_catalog(str(REPO_ROOT))
+
+    if not catalog:
+        st.warning(
+            "No diagrams found. Ensure at least one of these exists:\n"
+            "- `datasets/infragraph_v2/images/test/`\n"
+            "- `datasets/diagram_v3_enterprise/scenarios/`"
+        )
+        return
+
+    # Filters
+    fc1, fc2, fc3 = st.columns([2, 1, 3])
+    with fc1:
+        ds_filter = st.selectbox("Dataset", ["All", "v1", "v2", "v3"], index=0, key="gal_ds")
+    with fc2:
+        sp_filter = st.selectbox("Split", ["All", "train", "val", "test"], index=0, key="gal_sp")
+    with fc3:
+        search    = st.text_input("Search diagram ID / scenario ID",
+                                   placeholder="e.g. diagram_0373 or enterprise_v3_0000", key="gal_search")
+
+    filtered = catalog
+    if ds_filter != "All":
+        filtered = [r for r in filtered if r["dataset"] == ds_filter]
+    if sp_filter != "All":
+        filtered = [r for r in filtered if r["split"] == sp_filter]
+    if search:
+        s = search.lower()
+        filtered = [
+            r for r in filtered
+            if s in r["diagram_id"].lower() or s in (r.get("scenario_id") or "").lower()
+        ]
+
+    limit = 250
+    st.caption(f"Showing {min(limit, len(filtered))} of {len(filtered)} diagrams")
+
+    if not filtered:
+        st.info("No diagrams match the current filters.")
+        return
+
+    display = [r["display_name"] for r in filtered[:limit]]
+    sel_idx = st.selectbox(
+        "Select diagram",
+        range(len(display)),
+        format_func=lambda i: display[i],
+        index=0,
+        key="gal_select",
+    )
+    record = filtered[sel_idx]
+    st.session_state.catalog_selected_record = record
+    st.session_state.selected_diagram_path   = record["image_path"]
+    st.session_state.selected_diagram_id     = record["diagram_id"]
+
+    # Show detection pair immediately
+    _render_detection_pair(record)
+
+    # Action row
+    is_v3 = record.get("is_v3", False)
+    ca1, ca2 = st.columns([2, 3])
+    with ca1:
+        if is_v3:
+            if st.button("Run Diagram Intelligence (V3)", type="primary",
+                         use_container_width=True):
+                with st.spinner("Processing V3 diagram..."):
+                    ok = _run_v3_diagram_intelligence(
+                        Path(record["image_path"]), record["diagram_id"], uploaded=False
+                    )
+                if ok:
+                    st.success("Local graph loaded. Go to Tab 2 or 3.")
+        else:
+            if record["diagram_id"] == DEMO_ID:
+                if st.button("Load Demo Graph (diagram_0373)", type="secondary",
+                              use_container_width=True):
+                    st.info("Demo diagram_0373 — use Tab 2 (Alert RCA) for full analysis.")
+            else:
+                st.markdown(
+                    '<div class="info-card" style="margin-top:8px">'
+                    'This is a V1/V2 diagram. Select a <strong>V3</strong> diagram for the '
+                    'full graph → RCA → enterprise demo flow.</div>',
+                    unsafe_allow_html=True,
+                )
+    with ca2:
+        ver = record.get("dataset", "").upper()
+        pred_exists = bool(record.get("prediction_path") and
+                           Path(record["prediction_path"]).exists())
+        st.markdown(
+            f'<div style="font-size:0.76rem;color:#64748b;padding:8px 0">'
+            f'Dataset: <span style="color:#94a3b8">{ver}</span> &nbsp;|&nbsp; '
+            f'Split: <span style="color:#94a3b8">{record["split"]}</span> &nbsp;|&nbsp; '
+            f'Detection: <span style="color:{"#10b981" if pred_exists else "#ef4444"}">'
+            f'{"✓ Available" if pred_exists else "✗ Not generated"}</span>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+    _tab_diagram_outputs_section()
+
+
+def _tab_diagram_intelligence() -> None:
+    st.markdown(
+        '<div class="ws-title">Diagram Intelligence — Image to Graph</div>'
+        '<div class="ws-desc">Selected diagram flows through device detection, topology extraction, and graph memory.</div>',
+        unsafe_allow_html=True,
+    )
+
+    mode = st.radio(
+        "UI Mode",
+        ["Hero Journey Mode", "Diagram Gallery Mode"],
+        horizontal=True,
+        key="diagram_mode_radio",
+    )
+    st.markdown(
+        "<hr style='border:none;border-top:1px solid rgba(255,255,255,0.06);margin:8px 0 16px'>",
+        unsafe_allow_html=True,
+    )
+
+    if mode == "Hero Journey Mode":
+        _tab_hero_mode()
+    else:
+        _tab_gallery_mode()
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 2 — LOCAL RCA
+# ══════════════════════════════════════════════════════════════════════════════
+def _tab_local_rca() -> None:
+    st.markdown(
+        '<div class="ws-title">Local RCA — Same Selected Diagram</div>'
+        '<div class="ws-desc">Simulate an alert on the currently ingested diagram and identify the '
+        'root cause within the local topology.</div>',
+        unsafe_allow_html=True,
+    )
+
+    local_graph = st.session_state.get("local_graph")
+    if not local_graph:
+        st.markdown(
+            '<div class="warn-card">'
+            'No diagram has been processed yet.<br>'
+            'Go to <strong>Tab 1 → Hero Journey Mode</strong>, select a V3 diagram, '
+            'and click <em>Run Diagram Intelligence</em>.'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+        return
+
+    diagram_id = st.session_state.get("selected_diagram_id", "unknown")
+    sel_path   = st.session_state.get("selected_diagram_path", "")
+    is_v3      = diagram_id in V3_REQUIRED_DIAGRAMS
+
+    if not is_v3:
+        st.markdown(
+            '<div class="warn-card">'
+            f'Selected diagram <code>{diagram_id}</code> is not a V3 hero scenario diagram.<br>'
+            'Local RCA requires a V3 local graph. Select a V3 hero diagram in Tab 1.'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+        return
+
+    # Diagram summary header
+    c_thumb, c_info = st.columns([1, 3])
+    with c_thumb:
+        if sel_path and Path(sel_path).exists():
+            st.image(sel_path, use_container_width=True)
+    with c_info:
+        badge_color = _V3_DIAG_COLORS.get(diagram_id, "#64748b")
+        n_nodes = len(local_graph.get("nodes", []))
+        n_edges = len(local_graph.get("edges", []))
+        st.markdown(
+            f'<div class="card blue" style="padding:14px 16px;margin-bottom:10px">'
+            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:0.95rem;'
+            f'font-weight:700;color:{badge_color}">{diagram_id}</div>'
+            f'<div style="font-size:0.78rem;color:#64748b;margin-top:4px">'
+            f'Nodes: {n_nodes} &nbsp;|&nbsp; Edges: {n_edges}</div>'
+            f'<div style="font-size:0.72rem;color:#475569;margin-top:2px">'
+            f'Source: V3 scenario annotation (ground truth)</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+        local_model = _local_rca_model_available()
+        if local_model:
+            st.success("RCA source: trained local model output")
+        else:
+            st.warning("RCA source: deterministic local graph simulation (no trained model available)")
+            if _strict_mode() and not st.session_state.allow_local_simulation:
+                st.error("Strict mode: explicitly approve before using deterministic simulation.")
+                if st.button("Use deterministic simulation", key="approve_local_sim"):
+                    st.session_state.allow_local_simulation = True
+                    st.rerun()
+                return
+
+        if st.button("Simulate Alert on This Diagram", type="primary", key="local_rca_btn"):
+            with st.spinner("Running local RCA..."):
+                st.session_state.local_rca_result = _simulate_local_rca(local_graph)
+
+    result = st.session_state.get("local_rca_result")
+    if not result:
+        st.info("Click the button above to simulate an alert on this diagram.")
+        return
+
+    source_lbl = ("Trained local model"
+                  if result.get("mode") != "deterministic_graph_fallback"
+                  else "Deterministic graph simulation")
+
+    st.markdown('<hr class="ws-rule">', unsafe_allow_html=True)
+
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Root Cause",       result.get("root_cause", "—"))
+    m2.metric("Alert Nodes",      len(result.get("alert_nodes", [])))
+    m3.metric("Impacted Nodes",   len(result.get("impacted_nodes", [])))
+    m4.metric("Method",           source_lbl[:12])
+
+    st.caption(
+        f"Source: {source_lbl}. Scope: this RCA is limited to the local diagram. "
+        "For enterprise-wide analysis, proceed to Tab 3."
+    )
+
+    # Graph overlay
+    st.markdown('<div class="section-label">Local Graph RCA Overlay</div>', unsafe_allow_html=True)
+    st.caption(
+        "Root cause: red  |  Alert nodes: orange  |  "
+        "Impacted: yellow  |  Impact path: cyan  |  Shared entities: cyan ring"
+    )
+    if not _pyvis_available():
+        st.markdown(
+            '<div class="warn-card" style="margin-bottom:8px">'
+            'Install <code>pyvis</code> for interactive drag-and-drop graph. '
+            'Falling back to matplotlib preview.</div>',
+            unsafe_allow_html=True,
+        )
+    _render_local_graph(local_graph, result)
+
+    # Impact path chips
+    path = result.get("impact_path", [])
+    if path:
+        st.markdown('<div class="section-label" style="margin-top:14px">Impact Path</div>',
+                    unsafe_allow_html=True)
+        root_id = result.get("root_cause", "")
+        alert_set = set(result.get("alert_nodes", []))
+        imp_set   = set(result.get("impacted_nodes", []))
+        chips = []
+        for n in path:
+            cls = "root" if n == root_id else ("alerting" if n in alert_set else
+                                                "impacted" if n in imp_set else "")
+            chips.append(f'<span class="node-chip {cls}">{n}</span>')
+        st.markdown(
+            '<div style="padding:8px 0;line-height:2.2">' +
+            ' <span style="color:#334155;font-size:0.8rem">→</span> '.join(chips) +
+            '</div>',
+            unsafe_allow_html=True,
+        )
+
+    # Ranking table
+    ranking = result.get("ranking", [])
+    if ranking:
+        st.markdown('<div class="section-label" style="margin-top:14px">RCA Candidate Ranking</div>',
+                    unsafe_allow_html=True)
+        df = pd.DataFrame(ranking)
+        st.dataframe(df, use_container_width=True, hide_index=True)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 3 — ENTERPRISE GRAPH BRAIN
+# ══════════════════════════════════════════════════════════════════════════════
+def _render_absorption_steps(done: bool = True) -> None:
+    steps = [
+        "Entity matching against canonical IDs",
+        "Shared nodes identified across diagrams",
+        "Cross-diagram links created from stitch map",
+        "Local graph nodes + edges absorbed",
+        "Enterprise memory updated",
+    ]
+    for step in steps:
+        color = "#10b981" if done else "#475569"
+        icon  = "✓" if done else "○"
+        st.markdown(
+            f'<div class="absorb-step">'
+            f'<span class="{("absorb-done" if done else "absorb-wait")}">{icon}</span>'
+            f'<span style="font-size:0.79rem;color:{("#cbd5e1" if done else "#64748b")}">{step}</span>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+
+def _tab_enterprise_graph_brain() -> None:
+    st.markdown(
+        '<div class="ws-title">Enterprise Graph Brain</div>'
+        '<div class="ws-desc">Local diagram absorbed into the galaxy graph — cross-diagram RCA across the full enterprise.</div>',
+        unsafe_allow_html=True,
+    )
+
+    local_graph = st.session_state.get("local_graph")
+    if not local_graph:
+        st.markdown(
+            '<div class="warn-card">Ingest a diagram first — Tab 1 → Hero Journey Mode → Run Diagram Intelligence.</div>',
+            unsafe_allow_html=True,
+        )
+        return
+
+    diagram_id = st.session_state.get("selected_diagram_id", "unknown")
+    is_hero    = diagram_id in V3_REQUIRED_DIAGRAMS
+
+    if not is_hero:
+        st.markdown(
+            f'<div class="warn-card">'
+            f'Diagram <code>{diagram_id}</code> is not part of the prepared enterprise galaxy scenario.<br>'
+            f'Select a V3 hero diagram (branch_topology, wan_topology, etc.) for the full absorption demo.'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+        _render_local_graph(local_graph)
+        return
+
+    context         = _load_enterprise_context()
+    enterprise_graph = context["enterprise_graph"]
+    stitch_map      = context["stitch_map"]
+    alerts          = context["alerts"]
+    summary         = _simulate_enterprise_ingestion(local_graph, enterprise_graph, stitch_map, diagram_id)
+
+    # ── Absorption Story (3 columns) ────────────────────────────────────────
+    st.markdown(
+        '<div class="section-label" style="margin-bottom:14px">Graph Memory Absorption</div>',
+        unsafe_allow_html=True,
+    )
+
+    c_local, c_steps, c_enterprise = st.columns(3)
+
+    with c_local:
+        badge_c = _V3_DIAG_COLORS.get(diagram_id, "#64748b")
+        n_local_nodes = len(local_graph.get("nodes", []))
+        n_local_edges = len(local_graph.get("edges", []))
+        shared_ids    = [n.get("id") for n in local_graph.get("nodes", [])
+                         if n.get("is_shared_entity")]
+        matched       = summary.get("matched_entities", [])
+        st.markdown(
+            f'<div class="absorb-card">'
+            f'<div class="section-label">Selected Local Graph</div>'
+            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:0.88rem;'
+            f'font-weight:700;color:{badge_c};margin-bottom:8px">{diagram_id}</div>'
+            f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
+            f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Nodes</div>'
+            f'<div style="font-size:1.4rem;font-weight:800;color:#f1f5f9">{n_local_nodes}</div></div>'
+            f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Edges</div>'
+            f'<div style="font-size:1.4rem;font-weight:800;color:#f1f5f9">{n_local_edges}</div></div>'
+            f'</div>'
+            + (f'<div style="font-size:0.73rem;color:#38bdf8;margin-top:4px">'
+               f'Shared entities:<br>'
+               + "".join(f'<code style="font-size:0.68rem;color:#67e8f9;margin-right:4px">{s}</code>'
+                         for s in shared_ids[:6])
+               + "</div>" if shared_ids else "")
+            + (f'<div style="font-size:0.72rem;color:#10b981;margin-top:8px">'
+               f'Matched canonical IDs:<br>'
+               + "".join(f'<code style="font-size:0.65rem;color:#6ee7b7;margin-right:4px">{m}</code>'
+                         for m in matched[:6])
+               + "</div>" if matched else "")
+            + "</div>",
+            unsafe_allow_html=True,
+        )
+
+    with c_steps:
+        st.markdown(
+            '<div class="absorb-card">'
+            '<div class="section-label">Absorption into Enterprise Brain</div>',
+            unsafe_allow_html=True,
+        )
+        _render_absorption_steps(done=True)
+        st.markdown(
+            f'<div style="margin-top:12px;padding:8px 10px;background:rgba(16,185,129,0.08);'
+            f'border-radius:8px;border:1px solid rgba(16,185,129,0.2)">'
+            f'<div style="font-size:0.72rem;font-weight:700;color:#10b981">Metrics</div>'
+            f'<div style="font-size:0.78rem;color:#94a3b8;margin-top:4px">'
+            f'Nodes absorbed: <strong style="color:#f1f5f9">{summary["nodes_absorbed"]}</strong><br>'
+            f'Edges absorbed: <strong style="color:#f1f5f9">{summary["edges_absorbed"]}</strong><br>'
+            f'Shared matched: <strong style="color:#38bdf8">{summary["shared_entities_matched"]}</strong><br>'
+            f'Cross-diagram links: <strong style="color:#22d3ee">{summary["cross_diagram_links_created"]}</strong>'
+            f'</div></div>',
+            unsafe_allow_html=True,
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with c_enterprise:
+        eg_stats = enterprise_graph.get("stats", {})
+        n_nodes  = eg_stats.get("num_nodes") or len(enterprise_graph.get("nodes", []))
+        n_edges  = eg_stats.get("num_edges") or len(enterprise_graph.get("edges", []))
+        n_cross  = eg_stats.get("num_cross_diagram_edges") or len(enterprise_graph.get("cross_diagram_edges", []))
+        n_clust  = len(enterprise_graph.get("diagram_clusters", {}))
+        n_shared = eg_stats.get("num_shared_entities") or len(enterprise_graph.get("shared_entities", []))
+        st.markdown(
+            f'<div class="absorb-card">'
+            f'<div class="section-label">Enterprise Galaxy Graph</div>'
+            f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+            f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Total nodes</div>'
+            f'<div style="font-size:1.5rem;font-weight:800;color:#f1f5f9">{n_nodes}</div></div>'
+            f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Total edges</div>'
+            f'<div style="font-size:1.5rem;font-weight:800;color:#f1f5f9">{n_edges}</div></div>'
+            f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Diagram clusters</div>'
+            f'<div style="font-size:1.5rem;font-weight:800;color:#e0963a">{n_clust}</div></div>'
+            f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Cross-diag links</div>'
+            f'<div style="font-size:1.5rem;font-weight:800;color:#22d3ee">{n_cross}</div></div>'
+            f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Shared entities</div>'
+            f'<div style="font-size:1.5rem;font-weight:800;color:#38bdf8">{n_shared}</div></div>'
+            f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Newly absorbed</div>'
+            f'<div style="font-size:1.5rem;font-weight:800;color:#10b981">{summary["nodes_absorbed"]}</div></div>'
+            f'</div></div>',
+            unsafe_allow_html=True,
+        )
+
+    st.markdown('<hr class="ws-rule">', unsafe_allow_html=True)
+
+    # ── Enterprise alert simulation ──────────────────────────────────────────
+    enterprise_model = _enterprise_gnn_available()
+    if enterprise_model:
+        st.success("Enterprise RCA source: trained enterprise GNN")
+    else:
+        st.warning("Enterprise RCA source: V3 scenario ground-truth simulation (no trained GNN output)")
+        if _strict_mode() and not st.session_state.allow_enterprise_simulation:
+            st.error("Strict mode: run enterprise GNN training before claiming model-based RCA.")
+            if st.button("Continue with scenario simulation", key="approve_ent_sim"):
+                st.session_state.allow_enterprise_simulation = True
+                st.rerun()
+            return
+
+    if st.button("Simulate Enterprise Alert", type="primary", key="ent_alert_btn"):
+        with st.spinner("Running enterprise RCA..."):
+            st.session_state.enterprise_rca_result = _simulate_enterprise_rca(alerts, enterprise_graph)
+
+    rca = st.session_state.get("enterprise_rca_result")
+
+    # ── Primary: Interactive PyVis enterprise galaxy ─────────────────────────
+    st.markdown(
+        '<div class="section-label" style="margin-top:4px">Enterprise Galaxy Graph — Interactive</div>',
+        unsafe_allow_html=True,
+    )
+
+    if _pyvis_available():
+        st.caption(
+            "Drag nodes · zoom/pan · hover for details · "
+            + ("Root cause: red | Alert: orange | Impacted: yellow | Absorbed: cyan | Shared: ring"
+               if rca else "Select a node to inspect details")
+        )
+        absorbed_ids = {n.get("canonical_id", n.get("id")) for n in local_graph.get("nodes", [])}
+        _render_enterprise_pyvis(enterprise_graph, absorbed_ids, rca, height=780)
+    else:
+        st.markdown(
+            '<div class="warn-card">'
+            'Interactive galaxy graph requires <code>pyvis>=0.3.2</code>.<br>'
+            'Install: <code>pip install pyvis</code>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+        # Static fallback only if PyVis unavailable
+        preview = context["scenario"] / (
+            "preview_rca_overlay.png" if rca else "preview_enterprise_graph.png"
+        )
+        if preview.exists():
+            _img(preview, "Enterprise graph preview (static)")
+        else:
+            st.info("Static preview images not generated yet.")
+
+    # ── RCA result ────────────────────────────────────────────────────────────
+    if rca:
+        st.markdown('<hr class="ws-rule">', unsafe_allow_html=True)
+        st.markdown('<div class="section-label">Enterprise RCA Result</div>', unsafe_allow_html=True)
+
+        r1, r2, r3, r4 = st.columns(4)
+        r1.metric("Root Cause",       rca.get("root_cause", "—"))
+        r2.metric("Root Cause Diagram", rca.get("root_cause_diagram", "—"))
+        r3.metric("Impacted Diagrams", len(rca.get("impacted_diagrams", [])))
+        r4.metric("Alert Count",       rca.get("alert_count", 0))
+
+        src_lbl = ("Trained enterprise GNN" if enterprise_model
+                   else "V3 scenario ground-truth simulation")
+        st.caption(f"Source: {src_lbl}")
+
+        path = rca.get("impact_path", [])
+        if path:
+            path_html = " → ".join(
+                f'<span class="node-chip {"root" if n == rca.get("root_cause") else "alerting" if n in set(rca.get("alert_nodes",[])) else "impacted"}">{n}</span>'
+                for n in path
+            )
+            st.markdown(f'<div style="padding:8px 0;line-height:2.2">{path_html}</div>',
+                        unsafe_allow_html=True)
+
+        st.dataframe(pd.DataFrame(rca.get("ranking", [])), use_container_width=True, hide_index=True)
+
+    # ── Static previews in expanders (secondary) ─────────────────────────────
+    scenario = context["scenario"]
+    with st.expander("Static story preview", expanded=False):
+        for name, caption in [
+            ("preview_stitching_story.png", "Source Diagrams → Local Graphs → Enterprise Graph"),
+            ("preview_contact_sheet.png",   "Contact sheet of all scenario diagrams"),
+        ]:
+            p = scenario / name
+            if p.exists():
+                _img(p, caption)
+            else:
+                st.caption(f"Preview not available: {name}")
+
+    with st.expander("Static RCA overlay", expanded=False):
+        for name, caption in [
+            ("preview_rca_overlay.png",       "Enterprise graph with RCA annotations"),
+            ("preview_enterprise_graph.png",  "Enterprise graph clusters"),
+        ]:
+            p = scenario / name
+            if p.exists():
+                _img(p, caption)
+            else:
+                st.caption(f"Preview not available: {name}")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 4 — GRAPH COPILOT
+# ══════════════════════════════════════════════════════════════════════════════
+def _copilot_context() -> dict:
+    scenario = (
+        Path(st.session_state.enterprise_scenario_path)
+        if st.session_state.enterprise_scenario_path
+        else V3_HERO_SCENARIO
+    )
+    return {
+        "local_graph":                 st.session_state.local_graph,
+        "enterprise_graph_after":      st.session_state.enterprise_graph_after,
+        "enterprise_ingestion_summary": st.session_state.enterprise_ingestion_summary,
+        "local_rca_result":            st.session_state.local_rca_result,
+        "enterprise_rca_result":       st.session_state.enterprise_rca_result,
+        "stitch_map":                  _safe_read_json(scenario / "stitch_map.json"),
+        "alerts":                      _safe_read_json(scenario / "alerts.json"),
+    }
+
+
+def _fallback_graph_copilot(question: str, context: dict) -> str:
+    q         = question.lower()
+    ingestion = context.get("enterprise_ingestion_summary") or {}
+    ent_rca   = context.get("enterprise_rca_result") or {}
+    lg        = context.get("local_graph") or {}
+    local_ids = [n.get("id", "") for n in lg.get("nodes", [])]
+    matched   = ingestion.get("matched_entities", [])
+    links     = ingestion.get("cross_diagram_links", [])
+    path      = ent_rca.get("impact_path", [])
+
+    if "stitched" in q or "where" in q:
+        return (
+            f"Diagram `{ingestion.get('absorbed_diagram_id', 'unknown')}` was stitched into the "
+            f"enterprise graph through {ingestion.get('shared_entities_matched', 0)} matched canonical "
+            f"entities: {', '.join(matched[:8]) or 'none'}. It created "
+            f"{ingestion.get('cross_diagram_links_created', 0)} cross-diagram links from `stitch_map.json`."
+        )
+    if "absorbed" in q or "uploaded" in q:
+        return (
+            f"Absorbed nodes: {', '.join(local_ids[:12]) or 'none'}. "
+            f"Count: {ingestion.get('nodes_absorbed', 0)} nodes, {ingestion.get('edges_absorbed', 0)} edges."
+        )
+    if "shared" in q or "matched" in q:
+        return f"Shared entities matched by canonical ID: {', '.join(matched) or 'none'}."
+    if "cross" in q or "links" in q:
+        rendered = [
+            f"{e.get('source')} -> {e.get('target')} ({e.get('label', e.get('relationship',''))})"
+            for e in links[:8]
+        ]
+        return ("Cross-diagram stitch links:\n\n" + "\n".join(f"- {item}" for item in rendered)
+                if rendered else "No cross-diagram links were created for this selected diagram.")
+    if "root cause" in q:
+        return (
+            f"Enterprise root cause: `{ent_rca.get('root_cause', 'unknown')}` in "
+            f"`{ent_rca.get('root_cause_diagram', 'unknown')}`. "
+            f"Source: `{ent_rca.get('mode', 'not simulated yet')}`."
+        )
+    if "impacted" in q:
+        return f"Impacted diagrams: {', '.join(ent_rca.get('impacted_diagrams', [])) or 'none'}."
+    if "path" in q:
+        return f"Impact path: {' -> '.join(path) if path else 'no path loaded'}."
+    if "servicenow" in q or "incident" in q:
+        return (
+            "### ServiceNow Incident Summary\n\n"
+            f"- Description: Enterprise dependency fault — root `{ent_rca.get('root_cause', 'unknown')}`\n"
+            f"- Assignment: Network / Platform Operations\n"
+            f"- Impacted diagrams: {', '.join(ent_rca.get('impacted_diagrams', [])) or 'unknown'}\n"
+            f"- Evidence path: {' -> '.join(path) if path else 'not available'}"
+        )
+    if "l1" in q or "check first" in q:
+        first = ent_rca.get("root_cause", "the root-cause node")
+        return (
+            f"L1 should check `{first}` counters/logs first, then validate: "
+            f"`{path[1] if len(path) > 1 else 'not available'}`."
+        )
+    return (
+        "Loaded evidence: "
+        f"{len(local_ids)} local nodes, "
+        f"{ingestion.get('shared_entities_matched', 0)} matched shared entities, "
+        f"enterprise RCA root `{ent_rca.get('root_cause', 'not simulated yet')}`."
+    )
+
+
+def _qwen_or_fallback(question: str, context: dict) -> str:
+    qwen_url = os.environ.get("QWEN_BASE_URL", "").rstrip("/")
+    if not qwen_url:
+        if _strict_mode() and not st.session_state.allow_deterministic_copilot:
+            return ("Strict mode + Qwen not configured. "
+                    "Click 'Use deterministic graph response' before using fallback answers.")
+        return _fallback_graph_copilot(question, context)
+    try:
+        import requests  # noqa: PLC0415
+        compact = json.dumps(context, default=str)[:12000]
+        resp = requests.post(
+            f"{qwen_url}/chat/completions",
+            headers={"Content-Type": "application/json", "Bypass-Tunnel-Reminder": "true"},
+            json={
+                "model": os.environ.get("QWEN_MODEL", "Qwen/Qwen2-7B-Instruct"),
+                "messages": [
+                    {"role": "system", "content": (
+                        "You are InfraGraph AI Graph Copilot. Answer only from the supplied "
+                        "graph JSON evidence. Cite node IDs, diagram IDs, and paths. Be concise."
+                    )},
+                    {"role": "user", "content": f"Graph evidence:\n{compact}\n\nQuestion: /no_think {question}"},
+                ],
+                "max_tokens": 700, "temperature": 0.1,
+            },
+            timeout=30,
+        )
+        resp.raise_for_status()
+        answer = resp.json()["choices"][0]["message"]["content"]
+        return re.sub(r"<think>.*?</think>", "", answer, flags=re.DOTALL).strip()
+    except Exception as exc:
+        if _strict_mode() and not st.session_state.allow_deterministic_copilot:
+            return f"Live Qwen failed in strict mode: `{exc}`. Enable deterministic fallback first."
+        return (f"> Live Qwen unavailable — deterministic answer. `{exc}`\n\n"
+                + _fallback_graph_copilot(question, context))
+
+
+def _tab_graph_copilot() -> None:
+    st.markdown(
+        '<div class="ws-title">Graph Copilot — Ask the Enterprise Graph</div>'
+        '<div class="ws-desc">Questions are answered from loaded graph JSON evidence. '
+        'Qwen/vLLM for richer responses when configured.</div>',
+        unsafe_allow_html=True,
+    )
+
+    if not st.session_state.enterprise_graph_after:
+        st.markdown(
+            '<div class="warn-card">Open <strong>Tab 3 (Enterprise Graph Brain)</strong> first '
+            'to load enterprise graph context.</div>',
+            unsafe_allow_html=True,
+        )
+        return
+
+    if _qwen_configured():
+        qwen_url = os.environ.get("QWEN_BASE_URL", "")
+        st.success(f"Copilot mode: Qwen/vLLM @ {qwen_url}")
+    else:
+        if _strict_mode() and not st.session_state.allow_deterministic_copilot:
+            st.error("Qwen not configured. Strict mode requires explicit approval for deterministic answers.")
+            if st.button("Use deterministic graph response", key="approve_copilot"):
+                st.session_state.allow_deterministic_copilot = True
+                st.rerun()
+            return
+        st.warning("Copilot mode: deterministic graph evidence (Qwen not configured)")
+
+    suggestions = [
+        "Where was this diagram stitched into the enterprise graph?",
+        "Which nodes were absorbed from the selected diagram?",
+        "Which shared entities were matched?",
+        "Which cross-diagram links were created?",
+        "What is the root cause?",
+        "Which diagrams are impacted?",
+        "Show the impact path from root cause.",
+        "Generate a ServiceNow incident summary.",
+        "What should L1 check first?",
+    ]
+    cols = st.columns(3)
+    for idx, question in enumerate(suggestions):
+        with cols[idx % 3]:
+            if st.button(question, key=f"v3_q_{idx}", use_container_width=True):
+                context = _copilot_context()
+                st.session_state.v3_chat_messages.append({"role": "user",      "content": question})
+                st.session_state.v3_chat_messages.append({"role": "assistant", "content": _qwen_or_fallback(question, context)})
+                st.rerun()
+
+    qwen_url = os.environ.get("QWEN_BASE_URL", "")
+    if _qwen_configured():
+        st.caption(f"Qwen: {qwen_url} · model={os.environ.get('QWEN_MODEL')}")
+    else:
+        st.caption("Qwen not configured — fallback uses loaded graph JSON only.")
+
+    for msg in st.session_state.v3_chat_messages:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
+
+    if prompt := st.chat_input("Ask the enterprise graph..."):
+        context = _copilot_context()
+        st.session_state.v3_chat_messages.append({"role": "user",      "content": prompt})
+        st.session_state.v3_chat_messages.append({"role": "assistant", "content": _qwen_or_fallback(prompt, context)})
+        st.rerun()
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SIDEBAR
+# ══════════════════════════════════════════════════════════════════════════════
+def _sidebar_v3() -> None:
+    with st.sidebar:
+        title_color = _col("#f1f5f9", "#0f172a")
+        sub_color   = _col("#64748b", "#64748b")
+
+        st.markdown(
+            f'<div style="padding:10px 0 6px">'
+            f'<span style="font-size:1.08rem;font-weight:800;color:{title_color}">InfraGraph AI</span>'
+            f'</div>'
+            f'<p style="font-size:0.72rem;color:{sub_color};margin:-2px 0 0">Diagram Intelligence V3</p>',
+            unsafe_allow_html=True,
+        )
+
+        if _strict_mode():
+            st.error("Strict Mode: ON")
+        else:
+            st.info("Demo Mode: ON — labelled fallback enabled")
+
+        st.markdown('<div class="sb-label">Demo Readiness</div>', unsafe_allow_html=True)
+        _render_readiness_panel()
+
+        st.markdown('<div class="sb-label">Pipeline Progress</div>', unsafe_allow_html=True)
+        steps = [
+            ("Diagram ingested",          bool(st.session_state.local_graph)),
+            ("Local graph created",       bool(st.session_state.local_graph)),
+            ("Local RCA complete",        bool(st.session_state.local_rca_result)),
+            ("Absorbed into enterprise",  bool(st.session_state.enterprise_ingestion_summary)),
+            ("Enterprise RCA complete",   bool(st.session_state.enterprise_rca_result)),
+            ("Copilot ready",             bool(st.session_state.enterprise_graph_after)),
+        ]
+        for label, done in steps:
+            cls  = "sb-step" if done else "sb-step sb-pending"
+            icon = "✓" if done else "○"
+            st.markdown(
+                f'<div class="{cls}">'
+                f'<span class="sb-check">{icon}</span>'
+                f'<span>{label}</span>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+
+        with st.expander("Developer", expanded=False):
+            st.code(
+                "python -m py_compile app/streamlit_app.py\n"
+                "python -m streamlit run app/streamlit_app.py",
+                language="bash",
+            )
+            st.markdown("Strict mode:")
+            st.code("export INFRAGRAPH_STRICT_MODE=1", language="bash")
+            st.code('$env:INFRAGRAPH_STRICT_MODE="1"', language="powershell")
+
+        st.markdown('<div class="sb-label" style="margin-top:22px">Appearance</div>',
+                    unsafe_allow_html=True)
+        is_light = st.toggle(
+            "Light mode",
+            value=(st.session_state.get("theme") == "light"),
+            key="theme_toggle",
+        )
+        st.session_state.theme = "light" if is_light else "dark"
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# OLD WORKSPACE FUNCTIONS (kept for legacy reference, not active in main flow)
+# ══════════════════════════════════════════════════════════════════════════════
 def _answer(question: str) -> str:
     q = question.lower()
-
     if any(kw in q for kw in ["root cause", "what failed", "what is the root", "who is"]):
         return """\
 **Root cause: FW-01 (Firewall)**
@@ -578,52 +2245,7 @@ The GNN identified **FW-01** as root cause with score **30.733** (margin +8.12 o
 | Severity | CRITICAL — t+0 min (earliest) |
 | Device type | Firewall — upstream chokepoint |
 | Upstream neighbours | RTR-01, RTR-02 — both silent |
-| GNN score margin | 30.733 vs 22.613 (FW-02) |
-
-Silent upstream routers are the key signal: FW-01 is not *receiving* a cascade — it *is* the source."""
-
-    if any(kw in q for kw in ["why is fw-01", "why fw", "gnn", "propagat", "graph neural", "how"]):
-        return """\
-**How the GNN identifies FW-01:**
-
-Two rounds of graph convolution:
-```
-H1 = ReLU(Â X  W1)   # 1-hop: FW-01 aggregates RTR-01, RTR-02 (silent)
-H2 = ReLU(Â H1 W2)   # 2-hop: FW-01 encodes 2-hop context
-scores = H2 W_out
-```
-- After Layer 1: FW-01 aggregates from **silent** upstream routers — discriminating signal
-- After Layer 2: FW-01 encodes both its CRITICAL severity and the fact that its upstream is silent
-- Final score: **30.733** vs SW-CORE **11.393** — 20-point separation
-
-Converges at epoch 6 (vs MLP epoch 56) — message-passing propagates signal efficiently."""
-
-    if any(kw in q for kw in ["which nodes", "impacted", "affected", "downstream"]):
-        return """\
-**10 nodes impacted:**
-
-APP-01, APP-02, APP-03, APP-04 (servers) · CLOUD-01 (WAN) · DB-01, DB-02 (databases)
-· LB-01 (load balancer) · MGMT-01 (server) · SW-APP (switch)
-
-**Shortest path:** FW-01 → SW-CORE → SW-APP → LB-01 → APP-01
-
-**DB path (longest):** FW-01 → FW-02 → SW-APP → LB-01 → APP-01 → DB-01 (6 hops)"""
-
-    if any(kw in q for kw in ["baseline", "sw-core", "heuristic", "wrong", "why did baseline"]):
-        return """\
-**Why baseline scoring chose SW-CORE (incorrectly):**
-
-```
-score = severity × 2 + (1/(1+t_offset)) × 10 + downstream_ratio × 3 + device_bonus
-```
-
-| Node | Alerts | Score |
-|------|--------|-------|
-| SW-CORE | 2 MAJOR (t+2, t+4) | **20.86** ← selected |
-| FW-01 | 1 CRITICAL (t+0) | 20.62 ← ground truth |
-
-More alert events + higher downstream reach gave SW-CORE a marginally higher score.
-The rule-based formula cannot distinguish a downstream aggregation node from the upstream origin."""
+| GNN score margin | 30.733 vs 22.613 (FW-02) |"""
 
     if any(kw in q for kw in ["servicenow", "ticket", "snow", "p1"]):
         return """\
@@ -635,951 +2257,58 @@ The rule-based formula cannot distinguish a downstream aggregation node from the
 | Affected CI | FW-01 (firewall) |
 | Priority | **P1** |
 | Assignment group | Network Operations |
-| Root cause (automated) | FW-01 — GNN RCA, HIGH confidence |
-| Services impacted | APP-01..04, CLOUD-01, DB-01, DB-02, LB-01, MGMT-01, SW-APP |"""
+| Root cause (automated) | FW-01 — GNN RCA, HIGH confidence |"""
 
-    return f"""\
-No pre-built answer for: *"{question}"*
-
-Try:
-- **What is the root cause?**
-- **Why is FW-01 the root cause?**
-- **Which nodes are impacted?**
-- **Why did baseline choose SW-CORE?**
-- **Generate ServiceNow summary**"""
-
-
-# ── Sidebar ────────────────────────────────────────────────────────────────────
-def _sidebar() -> str:
-    with st.sidebar:
-        title_color = _col("#f1f5f9", "#0f172a")
-        inc_color   = _col("#f1f5f9", "#0f172a")
-        sub_color   = _col("#334155", "#64748b")
-
-        st.markdown(
-            f'<div style="padding:10px 0 4px">'
-            f'<span style="font-size:1.05rem;font-weight:800;color:{title_color}">⚡ InfraGraph AI</span>'
-            f'</div>'
-            f'<p style="font-size:0.73rem;color:{sub_color};margin:-2px 0 0">AIOps Incident Cockpit</p>',
-            unsafe_allow_html=True,
-        )
-
-        st.markdown('<div class="sb-label">Workspace</div>', unsafe_allow_html=True)
-        workspace = st.radio(
-            "workspace",
-            ["🔍  Diagram Intelligence", "🤖  Alert RCA Intelligence"],
-            index=0,
-            label_visibility="collapsed",
-        )
-
-        st.markdown('<div class="sb-label">Active Incident</div>', unsafe_allow_html=True)
-        st.markdown(
-            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:0.95rem;font-weight:700;color:{inc_color}">INC-SYN-0373</div>'
-            f'<div style="font-size:0.76rem;color:{sub_color};margin-top:2px">diagram_0373 · test split</div>',
-            unsafe_allow_html=True,
-        )
-
-        st.markdown('<div class="sb-label">Pipeline Status</div>', unsafe_allow_html=True)
-        steps = [
-            ("Diagram ingested",       "PNG read"),
-            ("Devices detected",       "YOLO v8 · 17 nodes"),
-            ("Graph memory built",     "17 nodes · 17 edges"),
-            ("Alerts mapped",          "3 alerts · 2 nodes"),
-            ("Learned RCA complete",   "GNN → FW-01"),
-            ("Operator report ready",  "Qwen explanation"),
-        ]
-        html = "".join(
-            f'<div class="sb-step">'
-            f'<span class="sb-check">✓</span>'
-            f'<div><div>{lbl}</div><div class="sb-step-sub">{sub}</div></div>'
-            f'</div>'
-            for lbl, sub in steps
-        )
-        st.markdown(html, unsafe_allow_html=True)
-        st.markdown('<div class="demo-pill">Demo mode — synthetic incident</div>', unsafe_allow_html=True)
-
-        with st.expander("Developer Settings"):
-            st.radio("Split", ["test", "val", "train"], index=0, horizontal=True)
-
-        st.markdown('<div class="sb-label" style="margin-top:22px">Appearance</div>', unsafe_allow_html=True)
-        is_light = st.toggle(
-            "☀  Light mode",
-            value=(st.session_state.get("theme") == "light"),
-            key="theme_toggle",
-        )
-        st.session_state.theme = "light" if is_light else "dark"
-
-    return workspace.strip().lstrip("🔍🤖 ")
-
-
-# ── Compact hero (always visible) ──────────────────────────────────────────────
-def _hero(workspace: str) -> None:
-    h1, h2 = st.columns([4, 1])
-    with h1:
-        st.markdown(
-            '<div style="padding:10px 0 16px">'
-            '<div class="hero-title">InfraGraph AI Command Center</div>'
-            '<div class="hero-tagline">'
-            "Static diagram converted into graph memory. "
-            "Alert stream analyzed using learned graph RCA."
-            "</div>"
-            '<div class="stat-pills">'
-            '<div class="stat-pill incident"><div class="pill-dot"></div>P1 · INC-SYN-0373</div>'
-            '<div class="stat-pill root">Root cause: FW-01</div>'
-            '<div class="stat-pill status">AI RCA confirmed</div>'
-            "</div></div>",
-            unsafe_allow_html=True,
-        )
-    with h2:
-        st.markdown(
-            f'<div style="text-align:right;padding-top:12px">'
-            f'<div style="font-size:0.68rem;font-weight:700;letter-spacing:0.12em;'
-            f'text-transform:uppercase;color:#334155">Workspace</div>'
-            f'<div style="font-size:0.88rem;font-weight:700;color:#93c5fd;margin-top:4px">'
-            f'{workspace}</div>'
-            f"</div>",
-            unsafe_allow_html=True,
-        )
-    st.markdown("<hr style='border:none;border-top:1px solid rgba(255,255,255,0.05);margin:0 0 20px'>", unsafe_allow_html=True)
+    return f"No pre-built answer for: *\"{question}\"*\n\nTry: **What is the root cause?**"
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# DIAGRAM ONBOARDING HELPERS
+# MAIN
 # ══════════════════════════════════════════════════════════════════════════════
+def _main_v3_demo() -> None:
+    _init_v3_state()
+    st.markdown(_CSS, unsafe_allow_html=True)
+    if st.session_state.get("theme") == "light":
+        st.markdown(_LIGHT_OVERRIDES, unsafe_allow_html=True)
 
-_ONBOARD_OUT = REPO_ROOT / "outputs" / "onboarded_diagrams"
-
-
-def _display_onboard_result(result: dict) -> None:
-    """Render the structured output of a successful onboarding run."""
-    paths       = result.get("paths", {})
-    stats       = result.get("stats", {})
-    diagram_id  = result.get("diagram_id", "")
-    det_method  = result.get("detection_method", "")
-    node_count  = stats.get("node_count", 0)
-    edge_count  = stats.get("edge_count", 0)
-    type_dist   = stats.get("detected_types", {})
+    _sidebar_v3()
 
     st.markdown(
-        f'<div class="stat-pills" style="margin:10px 0 18px">'
-        f'<div class="stat-pill status">{node_count} nodes detected</div>'
-        f'<div class="stat-pill status">{edge_count} edges inferred</div>'
-        f'<div class="stat-pill root">Graph Memory Updated</div>'
-        f'<div class="stat-pill status">method: {det_method}</div>'
-        f'</div>',
+        '<div class="hero-title">InfraGraph AI</div>'
+        '<div class="hero-tagline">'
+        "One diagram enters the system, becomes graph memory, then gets absorbed into the "
+        "enterprise graph brain for cross-diagram root-cause analysis."
+        "</div>"
+        '<div class="stat-pills">'
+        '<div class="stat-pill status"><div class="pill-dot"></div>V3 Diagram Intelligence</div>'
+        '<div class="stat-pill root">Galaxy Graph RCA</div>'
+        '<div class="stat-pill status">RF-DETR ready</div>'
+        "</div>",
         unsafe_allow_html=True,
     )
-
-    # Original vs detected image pair
-    ic1, ic2 = st.columns(2)
-    with ic1:
-        st.markdown('<div class="section-label">Original Diagram</div>', unsafe_allow_html=True)
-        _img(Path(paths.get("original", "")))
-    with ic2:
-        st.markdown('<div class="section-label">Vision Detection</div>', unsafe_allow_html=True)
-        _img(Path(paths.get("detected", "")))
-
-    # Node table
-    nodes = result.get("nodes", [])
-    if nodes:
-        st.markdown(
-            '<div class="section-label" style="margin-top:18px">Detected Node Table</div>',
-            unsafe_allow_html=True,
-        )
-        st.markdown(
-            '<p class="dev-note">Node names are generated during MVP onboarding '
-            'unless metadata/OCR is available.</p>',
-            unsafe_allow_html=True,
-        )
-        df = pd.DataFrame([{
-            "Node ID":   n["node_id"],
-            "Type":      n["detected_type"].replace("_", " ").title(),
-            "Confidence": f"{n['confidence']:.1%}",
-            "Zone":      n["zone"],
-            "Status":    n["graph_status"],
-        } for n in nodes])
-        st.dataframe(df, use_container_width=True, hide_index=True)
-
-    # Graph preview + memory card
-    gc1, gc2 = st.columns([3, 2])
-    with gc1:
-        st.markdown('<div class="section-label">Local Graph Created</div>', unsafe_allow_html=True)
-        preview = Path(paths.get("graph_preview", ""))
-        if preview.exists():
-            _img(preview)
-        else:
-            st.info("Graph preview unavailable (matplotlib / networkx not installed)")
-    with gc2:
-        st.markdown('<div class="section-label">Graph Memory Updated</div>', unsafe_allow_html=True)
-        rows = "".join(
-            f'<div style="display:flex;justify-content:space-between;font-size:0.8rem;'
-            f'color:#64748b;margin-bottom:6px">'
-            f'<span>{t.replace("_"," ").title()}</span>'
-            f'<span style="color:#10b981;font-weight:600">{c}</span></div>'
-            for t, c in type_dist.items()
-        )
-        st.markdown(
-            f'<div class="card green" style="padding:16px 20px">'
-            f'<div style="font-size:0.88rem;font-weight:700;color:#10b981;margin-bottom:12px">'
-            f'✓ Registered in graph_memory/index.json</div>'
-            f'{rows}'
-            f'<div style="border-top:1px solid rgba(255,255,255,0.08);margin-top:10px;padding-top:10px;'
-            f'display:flex;justify-content:space-between">'
-            f'<span style="font-size:0.8rem;color:#64748b">diagram_id</span>'
-            f'<span style="font-size:0.78rem;font-family:\'JetBrains Mono\',monospace;'
-            f'color:#10b981">{diagram_id}</span></div></div>',
-            unsafe_allow_html=True,
-        )
-
-
-def _render_onboarding() -> None:
-    """Render the Diagram Onboarding section at the top of Diagram Intelligence workspace."""
-    st.markdown('<div class="section-label">Diagram Onboarding</div>', unsafe_allow_html=True)
-
-    if not _ONBOARD_OK:
-        st.markdown(
-            '<div class="warn-card">Onboarding module could not be loaded. '
-            'Run <code>python scripts/onboard_diagram.py --help</code> from the CLI.</div>',
-            unsafe_allow_html=True,
-        )
-        st.markdown('<hr class="ws-rule">', unsafe_allow_html=True)
-        return
-
-    col_up, col_demo = st.columns([5, 2])
-    with col_up:
-        uploaded = st.file_uploader(
-            "Upload new topology diagram",
-            type=["png", "jpg", "jpeg"],
-            key="onboard_uploader",
-            label_visibility="collapsed",
-        )
-    with col_demo:
-        use_demo = st.button(
-            "Use demo diagram_0373",
-            use_container_width=True,
-            key="onboard_demo_btn",
-        )
-
-    # Resolve trigger
-    trigger_image: Path | None = None
-    trigger_id:    str  | None = None
-
-    if use_demo:
-        trigger_image = REPO_ROOT / "datasets/infragraph_v2/images/test/diagram_0373.png"
-        trigger_id    = "demo_onboard_0373"
-        st.session_state.pop("onboard_result", None)     # force fresh run
-
-    if uploaded is not None:
-        uploads_dir = _ONBOARD_OUT / "uploads"
-        uploads_dir.mkdir(parents=True, exist_ok=True)
-        tmp = uploads_dir / uploaded.name
-        tmp.write_bytes(uploaded.getvalue())
-        trigger_image = tmp
-        trigger_id    = f"upload_{Path(uploaded.name).stem}"
-        # Only re-run if a new file was selected
-        if st.session_state.get("_onboard_last_upload") != uploaded.name:
-            st.session_state.pop("onboard_result", None)
-            st.session_state["_onboard_last_upload"] = uploaded.name
-
-    # Run onboarding if needed
-    if trigger_image and trigger_id and "onboard_result" not in st.session_state:
-        with st.status("Onboarding diagram...", expanded=True) as _status:
-            result = _run_onboarding(
-                image_path=str(trigger_image),
-                diagram_id=trigger_id,
-                model_path=None,
-                out_dir=str(_ONBOARD_OUT),
-                on_step=lambda msg: st.write(f"→ {msg}"),
-            )
-            if result.get("success"):
-                _status.update(label="✓ Diagram Onboarding complete", state="complete")
-            else:
-                _status.update(label=f"✗ {result.get('error', 'unknown error')}", state="error")
-        st.session_state["onboard_result"] = result
-
-    # Display cached result
-    if "onboard_result" in st.session_state:
-        res = st.session_state["onboard_result"]
-        if res.get("success"):
-            _display_onboard_result(res)
-        else:
-            st.error(res.get("error", "Onboarding failed"))
-
-    st.markdown('<hr class="ws-rule">', unsafe_allow_html=True)
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# WORKSPACE 1 — DIAGRAM INTELLIGENCE
-# ══════════════════════════════════════════════════════════════════════════════
-
-def _workspace_diagram(detected_nodes: list, rca: dict, gnn: dict) -> None:
     st.markdown(
-        '<div class="ws-title">Diagram Intelligence</div>'
-        '<div class="ws-desc">Static network diagram → device detection → topology graph → graph memory</div>',
-        unsafe_allow_html=True,
-    )
-
-    _render_onboarding()
-
-    # ── Section 1: Demo — diagram_0373 analysis ───────────────────────────────
-    st.markdown('<div class="section-label">Demo Analysis · diagram_0373</div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-label" style="font-size:0.55rem;margin-bottom:14px">Input Diagram · YOLO Detection</div>', unsafe_allow_html=True)
-    d1, d2 = st.columns(2)
-    with d1:
-        _img(REPO_ROOT / "datasets/infragraph_v2/images/test/diagram_0373.png",
-             "Input: static network diagram")
-    with d2:
-        _img(REPO_ROOT / "outputs/v2_test_predictions_cpu/diagram_0373.jpg",
-             "YOLO v8: 17 devices detected across 7 classes")
-
-    # ── Section 2: Detected entities ──────────────────────────────────────────
-    st.markdown('<hr class="ws-rule">', unsafe_allow_html=True)
-    st.markdown('<div class="section-label">Detected Infrastructure Entities</div>', unsafe_allow_html=True)
-
-    dev_meta = {
-        "router":        ("Router",        "#60a5fa"),
-        "switch":        ("Switch",        "#818cf8"),
-        "firewall":      ("Firewall",      "#ef4444"),
-        "server":        ("Server",        "#22d3ee"),
-        "database":      ("Database",      "#10b981"),
-        "load_balancer": ("Load Balancer", "#f59e0b"),
-        "cloud_or_wan":  ("Cloud / WAN",   "#64748b"),
-    }
-    dev_counts: dict[str, int] = {}
-    for n in detected_nodes:
-        t = n.get("type", "unknown")
-        dev_counts[t] = dev_counts.get(t, 0) + 1
-
-    chip_bg  = _col("rgba(255,255,255,0.03)", "rgba(0,0,0,0.04)")
-    chip_bdr = _col("rgba(255,255,255,0.07)", "rgba(0,0,0,0.1)")
-    c7 = st.columns(7)
-    for col, (dt, (label, color)) in zip(c7, dev_meta.items()):
-        with col:
-            st.markdown(
-                f'<div style="background:{chip_bg};border:1px solid {chip_bdr};'
-                f'border-radius:10px;padding:13px 8px;text-align:center">'
-                f'<div style="font-size:1.4rem;font-weight:800;color:{color}">{dev_counts.get(dt,0)}</div>'
-                f'<div style="font-size:0.62rem;font-weight:700;color:{color};text-transform:uppercase;'
-                f'letter-spacing:0.09em;margin-top:3px">{label}</div></div>',
-                unsafe_allow_html=True,
-            )
-
-    st.markdown('<div style="height:16px"></div>', unsafe_allow_html=True)
-
-    if detected_nodes:
-        top = sorted(detected_nodes, key=lambda x: x.get("confidence", 0), reverse=True)[:10]
-        df = pd.DataFrame([{
-            "Node ID (predicted)": n["predicted_id"],
-            "Device Type": n["type"].replace("_", " ").title(),
-            "Confidence": f"{n['confidence']:.1%}",
-            "BBox (px)": f"({n['bbox_pixel'][0]},{n['bbox_pixel'][1]}) → ({n['bbox_pixel'][2]},{n['bbox_pixel'][3]})",
-        } for n in top])
-        st.dataframe(df, use_container_width=True, hide_index=True)
-
-    # ── Section 3: Topology graph ──────────────────────────────────────────────
-    st.markdown('<hr class="ws-rule">', unsafe_allow_html=True)
-    st.markdown('<div class="section-label">Extracted Topology Graph</div>', unsafe_allow_html=True)
-
-    t1, t2 = st.columns([3, 2])
-    with t1:
-        _img(REPO_ROOT / "outputs/topology_demo/diagram_0373_topology.png",
-             "NetworkX DiGraph — 17 nodes · 17 edges")
-    with t2:
-        st.markdown(
-            '<div class="card blue" style="padding:20px 22px">'
-            '<div class="section-label" style="margin-bottom:12px">Graph Properties</div>'
-            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
-            '<div><div style="font-size:0.63rem;color:#475569;text-transform:uppercase;letter-spacing:0.1em">Nodes</div>'
-            '<div style="font-size:1.5rem;font-weight:800;color:#60a5fa">17</div></div>'
-            '<div><div style="font-size:0.63rem;color:#475569;text-transform:uppercase;letter-spacing:0.1em">Edges</div>'
-            '<div style="font-size:1.5rem;font-weight:800;color:#60a5fa">17</div></div>'
-            '<div><div style="font-size:0.63rem;color:#475569;text-transform:uppercase;letter-spacing:0.1em">Type</div>'
-            '<div style="font-size:0.88rem;font-weight:700;color:#93c5fd;font-family:\'JetBrains Mono\',monospace">DiGraph</div></div>'
-            '<div><div style="font-size:0.63rem;color:#475569;text-transform:uppercase;letter-spacing:0.1em">Framework</div>'
-            '<div style="font-size:0.88rem;font-weight:700;color:#93c5fd;font-family:\'JetBrains Mono\',monospace">NetworkX</div></div>'
-            '</div></div>',
-            unsafe_allow_html=True,
-        )
-
-        st.markdown(
-            '<div style="margin-top:14px">'
-            '<div class="section-label">Device Class Mix</div>',
-            unsafe_allow_html=True,
-        )
-        for dt, (label, color) in dev_meta.items():
-            cnt = dev_counts.get(dt, 0)
-            if cnt == 0:
-                continue
-            pct = cnt / sum(dev_counts.values()) * 100
-            bar_track = _col("rgba(255,255,255,0.06)", "rgba(0,0,0,0.09)")
-            bar_count = _col("#334155", "#94a3b8")
-            st.markdown(
-                f'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
-                f'<div style="font-size:0.73rem;color:{color};width:90px;font-weight:600">{label}</div>'
-                f'<div style="flex:1;background:{bar_track};border-radius:3px;height:5px;overflow:hidden">'
-                f'<div style="height:100%;width:{pct:.0f}%;background:{color};border-radius:3px"></div></div>'
-                f'<div style="font-size:0.71rem;color:{bar_count};width:18px;text-align:right">{cnt}</div>'
-                f'</div>',
-                unsafe_allow_html=True,
-            )
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    # ── Section 4: Graph memory ────────────────────────────────────────────────
-    st.markdown('<hr class="ws-rule">', unsafe_allow_html=True)
-    st.markdown('<div class="section-label">Graph Memory Store</div>', unsafe_allow_html=True)
-
-    node_scores  = gnn.get("node_scores", {})
-    alerting_set = set(rca.get("alerting_nodes", []))
-    impacted_set = set(rca.get("impacted_nodes", []))
-    gt_root      = rca.get("ground_truth_root_cause", "FW-01")
-
-    all_nodes = list(node_scores.keys()) if node_scores else [
-        "WAN-01","WAN-02","RTR-01","RTR-02","FW-01","FW-02",
-        "SW-CORE","SW-APP","LB-01","MGMT-01",
-        "APP-01","APP-02","APP-03","APP-04","DB-01","DB-02","CLOUD-01",
-    ]
-
-    gm1, gm2 = st.columns([3, 2])
-
-    with gm1:
-        st.markdown(
-            '<div class="card" style="padding:18px 20px">'
-            '<div class="gm-header">NODES (17) — ordered by GNN score</div>',
-            unsafe_allow_html=True,
-        )
-        sorted_nodes = sorted(all_nodes, key=lambda n: node_scores.get(n, 0), reverse=True)
-        for node in sorted_nodes:
-            score = node_scores.get(node, 0.0)
-            ntype = _node_type(node)
-            if node in alerting_set:
-                sev = "CRITICAL" if node == "FW-01" else "MAJOR"
-                sev_badge = f'<span class="badge badge-{"critical" if node=="FW-01" else "major"}">{sev}</span>'
-            elif node == gt_root:
-                sev_badge = '<span class="badge badge-success">ROOT CAUSE</span>'
-            elif node in impacted_set:
-                sev_badge = '<span style="font-size:0.69rem;color:#64748b">impacted</span>'
-            else:
-                sev_badge = '<span style="font-size:0.69rem;color:#1e293b">—</span>'
-            score_color = "#10b981" if node == gt_root else ("#ef4444" if node in alerting_set else "#334155")
-            st.markdown(
-                f'<div class="gm-node">'
-                f'<div class="gm-id">{node}</div>'
-                f'<div class="gm-type">{ntype}</div>'
-                f'<div class="gm-status">{sev_badge}</div>'
-                f'<div class="gm-score" style="color:{score_color}">{score:+.2f}</div>'
-                f'</div>',
-                unsafe_allow_html=True,
-            )
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    with gm2:
-        edges = _extract_edges(rca)
-        st.markdown(
-            f'<div class="card" style="padding:18px 20px">'
-            f'<div class="gm-header">EDGES ({len(edges)} extracted)</div>',
-            unsafe_allow_html=True,
-        )
-        edge_clr = _col("#e2e8f0", "#1e293b")
-        for src, tgt in edges[:16]:
-            st.markdown(
-                f'<div class="gm-edge">'
-                f'<span style="color:{edge_clr}">{src}</span>'
-                f'<span class="gm-arrow"> ──→ </span>'
-                f'<span style="color:{edge_clr}">{tgt}</span>'
-                f'</div>',
-                unsafe_allow_html=True,
-            )
-        if len(edges) > 16:
-            st.markdown(
-                f'<div style="font-size:0.72rem;color:#334155;padding:6px 0">'
-                f'+{len(edges)-16} more edges extracted from impact paths</div>',
-                unsafe_allow_html=True,
-            )
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        st.markdown(
-            '<div class="card" style="padding:16px 20px;margin-top:10px">'
-            '<div class="gm-header">KEY RELATIONSHIPS</div>'
-            '<div style="font-size:0.8rem;color:#64748b;line-height:1.8">'
-            'FW-01 is upstream of SW-CORE<br>'
-            'RTR-01, RTR-02 feed into FW-01<br>'
-            'SW-APP bridges core → app tier<br>'
-            'LB-01 distributes to APP-01..04<br>'
-            'APP-01 owns DB-01 · APP-02 owns DB-02'
-            '</div></div>',
-            unsafe_allow_html=True,
-        )
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# WORKSPACE 2 — ALERT RCA INTELLIGENCE
-# ══════════════════════════════════════════════════════════════════════════════
-
-def _workspace_rca(rca: dict, gnn: dict, mlp: dict, explanation_md: str) -> None:
-    st.markdown(
-        '<div class="ws-title">Alert RCA Intelligence</div>'
-        '<div class="ws-desc">Alert stream mapped to graph memory → learned GNN RCA → operator explanation</div>',
+        "<hr style='border:none;border-top:1px solid rgba(255,255,255,0.06);margin:14px 0 20px'>",
         unsafe_allow_html=True,
     )
 
     tabs = st.tabs([
-        "⚡  Alert Investigation",
-        "🤖  GNN RCA Findings",
-        "🌊  GNN Propagation",
-        "📋  Operator Report",
-        "💬  Ask InfraGraph",
+        "Diagram Intelligence",
+        "Local RCA",
+        "Enterprise Graph Brain",
+        "Graph Copilot",
     ])
-
     with tabs[0]:
-        _rca_investigation(rca, gnn)
+        _tab_diagram_intelligence()
     with tabs[1]:
-        _rca_findings(rca, gnn, mlp)
+        _tab_local_rca()
     with tabs[2]:
-        _rca_propagation()
+        _tab_enterprise_graph_brain()
     with tabs[3]:
-        _rca_report(rca, gnn, mlp, explanation_md)
-    with tabs[4]:
-        _rca_chat()
+        _tab_graph_copilot()
 
 
-def _rca_investigation(rca: dict, gnn: dict) -> None:
-    st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
-    left, right = st.columns([2, 3])
-
-    with left:
-        st.markdown('<div class="section-label">Alert Stream</div>', unsafe_allow_html=True)
-        st.markdown("""
-<div class="alert-item critical">
-  <div class="alert-dot critical"></div>
-  <div style="flex:1">
-    <div class="alert-node">FW-01 <span class="badge badge-critical">CRITICAL</span></div>
-    <div class="alert-msg">Packet drops elevated — firewall degraded</div>
-  </div>
-  <div class="alert-time">t+0 min</div>
-</div>
-<div class="alert-item major">
-  <div class="alert-dot major"></div>
-  <div style="flex:1">
-    <div class="alert-node">SW-CORE <span class="badge badge-major">MAJOR</span></div>
-    <div class="alert-msg">Policy deny spike — downstream blocked</div>
-  </div>
-  <div class="alert-time">t+2 min</div>
-</div>
-<div class="alert-item major">
-  <div class="alert-dot major"></div>
-  <div style="flex:1">
-    <div class="alert-node">SW-CORE <span class="badge badge-major">MAJOR</span></div>
-    <div class="alert-msg">App unreachable — application timeout</div>
-  </div>
-  <div class="alert-time">t+4 min</div>
-</div>""", unsafe_allow_html=True)
-
-        st.markdown('<div class="section-label" style="margin-top:20px">Alerting Nodes</div>', unsafe_allow_html=True)
-        alerting = rca.get("alerting_nodes", ["FW-01", "SW-CORE"])
-        st.markdown(
-            "".join(f'<span class="node-chip alerting">{n}</span>' for n in alerting),
-            unsafe_allow_html=True,
-        )
-
-        st.markdown('<div class="section-label" style="margin-top:16px">Impacted Nodes</div>', unsafe_allow_html=True)
-        impacted = rca.get("impacted_nodes", [])
-        st.markdown(
-            '<div style="line-height:2.2">'
-            + "".join(f'<span class="node-chip impacted">{n}</span>' for n in impacted)
-            + '</div>',
-            unsafe_allow_html=True,
-        )
-
-        st.markdown('<div class="section-label" style="margin-top:18px">AI Root Cause</div>', unsafe_allow_html=True)
-        st.markdown(
-            '<span class="node-chip root" style="font-size:0.88rem;padding:5px 14px">FW-01</span>'
-            '<span style="font-size:0.78rem;color:#64748b;margin-left:8px">GNN confirmed · HIGH confidence</span>',
-            unsafe_allow_html=True,
-        )
-
-    with right:
-        st.markdown('<div class="section-label">Alerts Mapped to Topology</div>', unsafe_allow_html=True)
-        _img(REPO_ROOT / "outputs/topology_demo/diagram_0373_topology.png",
-             "FW-01 (CRITICAL, t+0) → SW-CORE (MAJOR, t+2 & t+4)")
-
-    st.markdown('<hr class="ws-rule">', unsafe_allow_html=True)
-    st.markdown('<div class="section-label">Key Impact Propagation Paths</div>', unsafe_allow_html=True)
-
-    gt_paths = rca.get("impact_paths", {}).get("ground_truth_root_cause", [])
-    if gt_paths:
-        p1, p2 = st.columns(2)
-        for i, entry in enumerate(gt_paths[:8]):
-            path_str = " → ".join(entry.get("path", []))
-            reason   = entry.get("target_reason", "")
-            col = p1 if i % 2 == 0 else p2
-            with col:
-                st.markdown(
-                    f'<div class="path-row">'
-                    f'<span style="color:#1e293b;font-size:0.66rem;text-transform:uppercase">{reason}</span><br>'
-                    f'{path_str}</div>',
-                    unsafe_allow_html=True,
-                )
-
-
-def _rca_findings(rca: dict, gnn: dict, mlp: dict) -> None:
-    st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
-    gt = rca.get("ground_truth_root_cause", "FW-01")
-
-    # ── Winner card ────────────────────────────────────────────────────────────
-    w1, w2 = st.columns([2, 3])
-
-    with w1:
-        st.markdown("""
-<div class="rca-winner">
-  <div style="font-size:0.63rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#10b981;margin-bottom:4px">Best Model · GNN RCA</div>
-  <div class="rca-winner-title">Learned GNN Root Cause</div>
-  <div class="rca-winner-sub">Topology-aware 2-layer graph convolutional network</div>
-  <div class="rca-winner-node">FW-01</div>
-  <div class="rca-winner-meta">firewall · CRITICAL · t+0 min</div>
-  <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
-    <span class="badge badge-success">CORRECT</span>
-    <span class="badge badge-success">HIGH CONFIDENCE</span>
-  </div>
-  <div style="margin-top:18px">
-    <div style="font-size:0.7rem;color:#475569;margin-bottom:4px">GNN score: 30.733 · margin +8.12</div>""" +
-    _score_bar(88, "green") + """
-    <div style="font-size:0.7rem;color:#475569">MLP score: 1.842 (also correct, no graph)</div>""" +
-    _score_bar(52, "purple") +
-    """</div>
-</div>""", unsafe_allow_html=True)
-
-        # Comparison rows
-        st.markdown('<div class="section-label">Model Comparison</div>', unsafe_allow_html=True)
-        st.markdown("""
-<div class="rca-row wrong-row">
-  <div class="rca-row-label">Baseline Scoring</div>
-  <div class="rca-row-node wrong">SW-CORE ✗</div>
-  <div class="rca-row-reason">Overweighted alert count &amp; downstream reach</div>
-</div>
-<div class="rca-row">
-  <div class="rca-row-label">Learned MLP RCA</div>
-  <div class="rca-row-node correct">FW-01 ✓</div>
-  <div class="rca-row-reason">Learned feature patterns, no graph structure</div>
-</div>
-<div class="rca-row" style="border-color:rgba(16,185,129,0.25)">
-  <div class="rca-row-label">Learned GNN RCA</div>
-  <div class="rca-row-node correct">FW-01 ✓</div>
-  <div class="rca-row-reason">Learned upstream propagation direction</div>
-</div>""", unsafe_allow_html=True)
-
-    with w2:
-        st.markdown('<div class="section-label">GNN Candidate Rankings</div>', unsafe_allow_html=True)
-        gnn_top = gnn.get("top_candidates", [])
-        for c in gnn_top[:8]:
-            node = c.get("node") or c.get("node_id", "")
-            score = c.get("score", 0.0)
-            is_root = node == gt
-            rank = c.get("rank", "—")
-            max_s = gnn_top[0]["score"] if gnn_top else 1
-            pct = max(0.0, min(100.0, score / (max_s * 1.1) * 100)) if max_s else 0
-            bar_cls = "green" if is_root else ""
-            label_color = "#10b981" if is_root else "#94a3b8"
-            icon = " ✓" if is_root else ""
-            st.markdown(
-                f'<div style="margin-bottom:12px">'
-                f'<div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:3px">'
-                f'<span style="color:{label_color};font-weight:{"700" if is_root else "400"};'
-                f'font-family:\'JetBrains Mono\',monospace">#{rank} {node}{icon}</span>'
-                f'<span style="color:#334155">{score:.2f}</span></div>'
-                + _score_bar(pct, bar_cls) +
-                f'</div>',
-                unsafe_allow_html=True,
-            )
-
-        with st.expander("Model Evidence"):
-            gnn_tm = gnn.get("test_metrics", {})
-            mlp_tm = mlp.get("test_metrics", {})
-            st.markdown(f"""
-**Trained GNN RCA** (`train_gnn_rca.py`)
-- 2-layer GCN (16→32→16→1) · graph message-passing · BCEWithLogitsLoss
-- Train top-1: 99.4% · Val: 100% · Test: **{gnn_tm.get('top1',1.0):.1%}**
-- MRR: {gnn_tm.get('mrr',1.0):.3f} · Best epoch: 6 / 50
-
-**Trained MLP RCA** (`train_mlp_rca.py`)
-- 3-layer MLP · 23-dim features · BCEWithLogitsLoss (pos_weight=9.3)
-- Train top-1: 99.7% · Val: 100% · Test: **{mlp_tm.get('top1',1.0):.1%}**
-- MRR: {mlp_tm.get('mrr',1.0):.3f} · Best epoch: 56 / 80 · 9× slower than GNN
-""")
-            st.markdown(
-                '<div class="dev-note">Performance shown is on generated benchmark topology-alert '
-                'scenarios (infragraph_v2 · 400 diagrams · train=320, val=52, test=28). '
-                'Synthetic data. Results are a research demonstration.</div>',
-                unsafe_allow_html=True,
-            )
-
-
-def _rca_propagation() -> None:
-    STEPS = {
-        1: {
-            "title": "Raw Node Features Ingested",
-            "formula": "X ∈ ℝ^{17×16}  ← device_type, has_alert, severity, timing, degree, reach",
-            "body": (
-                "Each of the 17 nodes is encoded as a 16-dim feature vector. "
-                "FW-01 has <code>severity=4.0</code> (CRITICAL) and <code>earliest_time=0.0</code> (t+0 min). "
-                "SW-CORE has <code>severity=3.0</code> (MAJOR) and timing t+2 min. "
-                "Without graph context, a scorer could still favour SW-CORE due to alert count."
-            ),
-            "scores": {"FW-01": 12.1, "SW-CORE": 15.3, "FW-02": 8.4, "SW-APP": 6.2, "RTR-01": 3.1},
-            "leader": "SW-CORE",
-            "note": ("warn", "Naive feature scoring favours SW-CORE at this stage"),
-        },
-        2: {
-            "title": "Layer 1 — 1-Hop Neighborhood Aggregation",
-            "formula": "H¹ = ReLU(Â X W₁)   where  Â = D^{-½}(A+I)D^{-½}",
-            "body": (
-                "Each node aggregates its direct neighbours. "
-                "FW-01 aggregates from RTR-01 and RTR-02 — both silent (no alerts). "
-                "<strong>Upstream silence is a key signal</strong>: FW-01 is not receiving a cascade, it is the source. "
-                "SW-CORE aggregates from FW-01 (alerting), revealing its downstream dependency."
-            ),
-            "scores": {"FW-01": 18.5, "SW-CORE": 14.2, "FW-02": 11.3, "SW-APP": 8.7, "RTR-01": 4.5},
-            "leader": "FW-01",
-            "note": ("ok", "FW-01 promoted after 1-hop aggregation"),
-        },
-        3: {
-            "title": "Layer 2 — 2-Hop Deep Aggregation",
-            "formula": "H² = ReLU(Â H¹ W₂)   # each node now encodes its 2-hop context",
-            "body": (
-                "FW-01's embedding encodes: (1) its own CRITICAL alert at t+0, "
-                "(2) its upstream routers are silent, "
-                "(3) its downstream switch SW-CORE is alerting. "
-                "This combination confirms FW-01 as a propagation source, not a receiver."
-            ),
-            "scores": {"FW-01": 25.8, "SW-CORE": 12.4, "FW-02": 15.1, "SW-APP": 9.3, "RTR-01": 5.2},
-            "leader": "FW-01",
-            "note": ("ok", "Score margin widening — topology direction encoded"),
-        },
-        4: {
-            "title": "Output Scoring — Linear Projection",
-            "formula": "scores = H² W_out ∈ ℝ^{17}   # scalar score per node",
-            "body": (
-                "The 16-dim embeddings are projected to scalar scores. "
-                "FW-01's embedding — critical severity, t+0 timing, upstream silence, chokepoint position — "
-                "produces the highest score. SW-CORE ranks 4th despite having more alert events."
-            ),
-            "scores": {"FW-01": 30.7, "FW-02": 22.6, "SW-APP": 13.8, "SW-CORE": 11.4, "RTR-01": 9.5},
-            "leader": "FW-01",
-            "note": ("ok", "FW-01 score 30.733 — clear winner before argmax"),
-        },
-        5: {
-            "title": "Root Cause Selected — FW-01",
-            "formula": "root_cause = argmax(scores) = FW-01   [score=30.733, margin=+8.12]",
-            "body": (
-                "GNN selects <strong>FW-01</strong> as root cause. Confidence margin of 8.12 over 2nd-ranked FW-02. "
-                "SW-CORE — the baseline's pick — ranks 4th at 11.4, nearly 20 points below FW-01. "
-                "Test-set top-1 accuracy: <strong>100%</strong> across all 28 test graphs."
-            ),
-            "scores": {"FW-01": 30.7, "FW-02": 22.6, "SW-APP": 13.8, "SW-CORE": 11.4, "RTR-01": 9.5},
-            "leader": "FW-01",
-            "note": ("ok", "Root cause confirmed · test top-1 100% · MRR 1.000"),
-        },
-    }
-
-    st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
-    step = st.select_slider(
-        "Propagation step",
-        options=list(STEPS.keys()),
-        format_func=lambda x: f"Step {x} — {STEPS[x]['title']}",
-    )
-    s = STEPS[step]
-
-    p1, p2 = st.columns([3, 2])
-
-    with p1:
-        st.markdown(
-            f'<div class="prop-card">'
-            f'<div class="prop-num">Step {step} of 5</div>'
-            f'<div class="prop-title">{s["title"]}</div>'
-            f'<code class="prop-formula">{s["formula"]}</code>'
-            f'<div class="prop-body">{s["body"]}</div>'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
-        _img(REPO_ROOT / "outputs/topology_demo/diagram_0373_topology.png",
-             f"Topology — step {step}")
-
-    with p2:
-        st.markdown('<div class="section-label">Candidate Scores</div>', unsafe_allow_html=True)
-        max_s = max(s["scores"].values(), default=1)
-        for node, score in sorted(s["scores"].items(), key=lambda x: -x[1]):
-            pct = max(0.0, min(100.0, score / (max_s * 1.1) * 100))
-            is_leader = node == s["leader"]
-            bar_cls = "green" if is_leader else ""
-            lc = "#10b981" if is_leader else "#94a3b8"
-            crown = " 👑" if is_leader else ""
-            st.markdown(
-                f'<div style="margin-bottom:11px">'
-                f'<div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:3px">'
-                f'<span style="color:{lc};font-weight:{"700" if is_leader else "400"};'
-                f'font-family:\'JetBrains Mono\',monospace">{node}{crown}</span>'
-                f'<span style="color:#334155">{score:.1f}</span></div>'
-                + _score_bar(pct, bar_cls) +
-                f'</div>',
-                unsafe_allow_html=True,
-            )
-
-        note_type, note_text = s["note"]
-        if note_type == "warn":
-            st.markdown(f'<div class="warn-card">{note_text}</div>', unsafe_allow_html=True)
-        else:
-            st.markdown(
-                f'<div class="card green" style="padding:11px 14px">'
-                f'<span style="font-size:0.79rem;color:#10b981">✓ {note_text}</span>'
-                f'</div>',
-                unsafe_allow_html=True,
-            )
-
-    st.markdown('<div class="section-label" style="margin-top:10px">Training Curves</div>', unsafe_allow_html=True)
-    tc1, tc2 = st.columns(2)
-    with tc1:
-        _img(REPO_ROOT / "outputs/gnn_rca/gnn_training_curve.png",
-             "GNN training — converges epoch 6")
-    with tc2:
-        _img(REPO_ROOT / "outputs/mlp_rca/mlp_training_curve.png",
-             "MLP training — converges epoch 56")
-
-
-def _rca_report(rca: dict, gnn: dict, mlp: dict, explanation_md: str) -> None:
-    if explanation_md:
-        report = _clean_report(explanation_md)
-    else:
-        report = _build_fallback_report(rca, gnn, mlp)
-
-    st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
-    r1, r2 = st.columns([5, 1])
-    with r1:
-        st.markdown('<div class="section-label">AI-Generated Incident Report</div>', unsafe_allow_html=True)
-    with r2:
-        st.download_button(
-            label="⬇ Download",
-            data=report,
-            file_name="diagram_0373_rca_report.md",
-            mime="text/markdown",
-            use_container_width=True,
-        )
-
-    if not explanation_md:
-        st.markdown(
-            '<div class="warn-card" style="margin-bottom:14px">Explanation file not found — '
-            'showing deterministic report from evidence. Generate with: '
-            '<code>python scripts/generate_qwen_rca_explanation.py '
-            '--diagram-id diagram_0373 --mode mock</code></div>',
-            unsafe_allow_html=True,
-        )
-
-    st.markdown('<div class="report-body">', unsafe_allow_html=True)
-    st.markdown(report)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-
-def _rca_chat() -> None:
-    _QWEN_DEFAULT = "Qwen/Qwen2-7B-Instruct"
-
-    if "chat_messages" not in st.session_state:
-        st.session_state.chat_messages = []
-
-    quick_qs = [
-        "What is the root cause?",
-        "Why is FW-01 the root cause?",
-        "Which nodes are impacted?",
-        "Why did baseline choose SW-CORE?",
-        "Generate ServiceNow summary",
-    ]
-
-    st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-label">Quick Questions</div>', unsafe_allow_html=True)
-    qq_cols = st.columns(len(quick_qs))
-    for col, q in zip(qq_cols, quick_qs):
-        with col:
-            if st.button(q, key=f"qq_{q}", use_container_width=True):
-                st.session_state.chat_messages.append({"role": "user", "content": q})
-                st.session_state.chat_messages.append({"role": "assistant", "content": _answer(q)})
-                st.rerun()
-
-    qwen_url = os.environ.get("QWEN_BASE_URL", "")
-    if qwen_url:
-        model_name = os.environ.get("QWEN_MODEL", _QWEN_DEFAULT)
-        st.markdown(
-            f'<span class="badge badge-success">Live LLM: {model_name} @ {qwen_url}</span>',
-            unsafe_allow_html=True,
-        )
-    else:
-        st.markdown(
-            '<p class="chat-hint">Set <code>QWEN_BASE_URL=http://localhost:8000/v1</code> '
-            "to enable live Qwen · Using deterministic answers</p>",
-            unsafe_allow_html=True,
-        )
-
-    st.markdown("---")
-
-    for msg in st.session_state.chat_messages:
-        with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
-
-    if prompt := st.chat_input("Ask InfraGraph AI about this incident..."):
-        st.session_state.chat_messages.append({"role": "user", "content": prompt})
-
-        if qwen_url:
-            try:
-                import requests  # noqa: PLC0415
-                resp = requests.post(
-                    f"{qwen_url}/chat/completions",
-                    headers={"Content-Type": "application/json", "Bypass-Tunnel-Reminder": "true"},
-                    json={
-                        "model": os.environ.get("QWEN_MODEL", _QWEN_DEFAULT),
-                        "messages": [
-                            {"role": "system", "content": (
-                                "You are InfraGraph AI. The incident is diagram_0373: "
-                                "FW-01 (firewall) is the GNN root cause of a 10-service outage. "
-                                "Answer concisely in Markdown."
-                            )},
-                            {"role": "user", "content": f"/no_think {prompt}"},
-                        ],
-                        "max_tokens": 512, "temperature": 0.1,
-                    },
-                    timeout=30,
-                )
-                resp.raise_for_status()
-                raw = resp.json()["choices"][0]["message"]["content"]
-                raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
-                answer = raw or _answer(prompt)
-            except Exception:
-                answer = "> ⚠ Live LLM unreachable — showing local answer.\n\n" + _answer(prompt)
-        else:
-            answer = _answer(prompt)
-
-        st.session_state.chat_messages.append({"role": "assistant", "content": answer})
-        st.rerun()
-
-
-# ── Main ───────────────────────────────────────────────────────────────────────
 def main() -> None:
-    if "theme" not in st.session_state:
-        st.session_state.theme = "dark"
-
-    st.markdown(_CSS, unsafe_allow_html=True)
-    if st.session_state.theme == "light":
-        st.markdown(_LIGHT_OVERRIDES, unsafe_allow_html=True)
-
-    rca            = load_json(str(REPO_ROOT / "outputs/topology_demo/diagram_0373_rca_result.json")) or {}
-    gnn            = load_json(str(REPO_ROOT / "outputs/gnn_rca/diagram_0373_gnn_rca_result.json")) or {}
-    mlp            = load_json(str(REPO_ROOT / "outputs/mlp_rca/diagram_0373_mlp_rca_result.json")) or {}
-    graph_summary  = load_json(str(REPO_ROOT / "outputs/topology_demo/diagram_0373_graph_summary.json")) or {}
-    detected_nodes = load_json(str(REPO_ROOT / "outputs/topology_demo/diagram_0373_detected_nodes.json")) or []
-    explanation_md = load_text(str(REPO_ROOT / "outputs/qwen_explanation/diagram_0373_explanation.md"))
-
-    workspace = _sidebar()
-    _hero(workspace)
-
-    if workspace == "Diagram Intelligence":
-        _workspace_diagram(detected_nodes, rca, gnn)
-    else:
-        _workspace_rca(rca, gnn, mlp, explanation_md)
+    _main_v3_demo()
 
 
 if __name__ == "__main__":

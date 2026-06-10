@@ -1,0 +1,126 @@
+{
+  "version": "v3",
+  "dataset_root": "D:\\My Folders\\Hackathons\\infragraph-ai\\datasets\\diagram_v3_enterprise",
+  "generated_at": "2026-06-10T14:59:48.857402Z",
+  "seed": 2026,
+  "total_scenarios": 100,
+  "num_scenarios": 100,
+  "splits": {
+    "train": 80,
+    "val": 10,
+    "test": 10
+  },
+  "total_images": 416,
+  "total_nodes": 3082,
+  "diagram_types": [
+    "branch_topology",
+    "wan_topology",
+    "datacenter_topology",
+    "app_db_topology",
+    "shared_services_topology"
+  ],
+  "device_classes": [
+    "router",
+    "switch",
+    "firewall",
+    "server",
+    "database",
+    "load_balancer",
+    "cloud_or_wan",
+    "service"
+  ],
+  "coco_categories": [
+    {
+      "id": 1,
+      "name": "router",
+      "supercategory": "network_device"
+    },
+    {
+      "id": 2,
+      "name": "switch",
+      "supercategory": "network_device"
+    },
+    {
+      "id": 3,
+      "name": "firewall",
+      "supercategory": "network_device"
+    },
+    {
+      "id": 4,
+      "name": "server",
+      "supercategory": "network_device"
+    },
+    {
+      "id": 5,
+      "name": "database",
+      "supercategory": "network_device"
+    },
+    {
+      "id": 6,
+      "name": "load_balancer",
+      "supercategory": "network_device"
+    },
+    {
+      "id": 7,
+      "name": "cloud_or_wan",
+      "supercategory": "network_device"
+    },
+    {
+      "id": 8,
+      "name": "service",
+      "supercategory": "network_device"
+    }
+  ],
+  "class_distribution": {
+    "load_balancer": 53,
+    "server": 790,
+    "service": 323,
+    "database": 132,
+    "switch": 355,
+    "router": 346,
+    "firewall": 243,
+    "cloud_or_wan": 225
+  },
+  "diagram_type_distribution": {
+    "branch_topology": 87,
+    "wan_topology": 88,
+    "datacenter_topology": 100,
+    "app_db_topology": 81,
+    "shared_services_topology": 60
+  },
+  "average_nodes_per_diagram": 5.93,
+  "average_edges_per_diagram": 5.9,
+  "average_nodes_per_enterprise_graph": 30.82,
+  "average_cross_diagram_edges": 7.45,
+  "ocr_text_block_count": 12965,
+  "connector_count": 2453,
+  "root_cause_type_distribution": {
+    "firewall": 19,
+    "router": 19,
+    "cloud_or_wan": 4,
+    "load_balancer": 11,
+    "database": 7,
+    "service": 4
+  },
+  "impacted_diagram_distribution": {
+    "app_db_topology": 43,
+    "branch_topology": 25,
+    "datacenter_topology": 19,
+    "shared_services_topology": 5,
+    "wan_topology": 21
+  },
+  "alert_pattern_distribution": {
+    "hero_dc_fw_to_app_db_identity": 1,
+    "branch_rtr_failure": 17,
+    "wan_failure": 21,
+    "dc_fw_failure": 23,
+    "lb_failure": 19,
+    "db_failure": 12,
+    "shared_id_failure": 7
+  },
+  "full_5_diagram_scenario_count": 46,
+  "hero_scenario_id": "enterprise_v3_0000",
+  "hero_scenario_path": "D:\\My Folders\\Hackathons\\infragraph-ai\\datasets\\diagram_v3_enterprise\\scenarios\\train\\enterprise_v3_0000",
+  "hero_visual_path": "D:\\My Folders\\Hackathons\\infragraph-ai\\datasets\\diagram_v3_enterprise\\scenarios\\train\\enterprise_v3_0000\\preview_stitching_story_hero.png",
+  "app_db_topology_count": 81
+}

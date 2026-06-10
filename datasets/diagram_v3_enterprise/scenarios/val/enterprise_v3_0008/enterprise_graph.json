@@ -1,0 +1,1577 @@
+{
+  "scenario_id": "enterprise_v3_0008",
+  "diagram_types": [
+    "branch_topology",
+    "wan_topology",
+    "datacenter_topology",
+    "app_db_topology",
+    "shared_services_topology"
+  ],
+  "nodes": [
+    {
+      "id": "BR-RTR-01",
+      "label": "BR-RTR-01",
+      "type": "router",
+      "ip_address": "10.8.1.1",
+      "zone": "Branch Edge",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology",
+      "is_shared_entity": true,
+      "canonical_id": "BR-RTR-01",
+      "bbox": [
+        254,
+        442,
+        306,
+        494
+      ]
+    },
+    {
+      "id": "BR-FW-01",
+      "label": "BR-FW-01",
+      "type": "firewall",
+      "ip_address": "10.8.1.2",
+      "zone": "Branch Edge",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology",
+      "is_shared_entity": false,
+      "canonical_id": "BR-FW-01",
+      "bbox": [
+        463,
+        442,
+        515,
+        494
+      ]
+    },
+    {
+      "id": "BR-SW-01",
+      "label": "BR-SW-01",
+      "type": "switch",
+      "ip_address": "10.8.1.3",
+      "zone": "Branch LAN",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology",
+      "is_shared_entity": false,
+      "canonical_id": "BR-SW-01",
+      "bbox": [
+        702,
+        442,
+        754,
+        494
+      ]
+    },
+    {
+      "id": "BR-APP-01",
+      "label": "BR-APP-01",
+      "type": "server",
+      "ip_address": "10.8.1.4",
+      "zone": "Branch Apps",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology",
+      "is_shared_entity": true,
+      "canonical_id": "BR-APP-01",
+      "bbox": [
+        982,
+        326,
+        1034,
+        378
+      ]
+    },
+    {
+      "id": "BR-WRK-01",
+      "label": "BR-WRK-01",
+      "type": "server",
+      "ip_address": "10.8.1.5",
+      "zone": "Branch LAN",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology",
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-01",
+      "bbox": [
+        1178,
+        575,
+        1230,
+        627
+      ]
+    },
+    {
+      "id": "BR-WRK-02",
+      "label": "BR-WRK-02",
+      "type": "server",
+      "ip_address": "10.8.1.6",
+      "zone": "Branch LAN",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology",
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-02",
+      "bbox": [
+        982,
+        691,
+        1034,
+        743
+      ]
+    },
+    {
+      "id": "BR-WRK-03",
+      "label": "BR-WRK-03",
+      "type": "server",
+      "ip_address": "10.8.1.7",
+      "zone": "Branch LAN",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology",
+      "is_shared_entity": false,
+      "canonical_id": "BR-WRK-03",
+      "bbox": [
+        1178,
+        459,
+        1230,
+        511
+      ]
+    },
+    {
+      "id": "WAN-MPLS-CORE",
+      "label": "WAN-MPLS-CORE",
+      "type": "cloud_or_wan",
+      "ip_address": "",
+      "zone": "WAN",
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology",
+      "is_shared_entity": true,
+      "canonical_id": "WAN-MPLS-CORE",
+      "bbox": [
+        86,
+        442,
+        138,
+        494
+      ]
+    },
+    {
+      "id": "WAN-ISP-01",
+      "label": "WAN-ISP-01",
+      "type": "cloud_or_wan",
+      "ip_address": "172.16.8.1",
+      "zone": "Internet/ISP",
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology",
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-01",
+      "bbox": [
+        86,
+        293,
+        138,
+        345
+      ]
+    },
+    {
+      "id": "WAN-ISP-02",
+      "label": "WAN-ISP-02",
+      "type": "cloud_or_wan",
+      "ip_address": "172.16.8.2",
+      "zone": "Internet/ISP",
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology",
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-02",
+      "bbox": [
+        86,
+        600,
+        138,
+        652
+      ]
+    },
+    {
+      "id": "WAN-PE-01",
+      "label": "WAN-PE-01",
+      "type": "router",
+      "ip_address": "172.16.8.4",
+      "zone": "WAN PE",
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology",
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-01",
+      "bbox": [
+        338,
+        326,
+        390,
+        378
+      ]
+    },
+    {
+      "id": "WAN-PE-02",
+      "label": "WAN-PE-02",
+      "type": "router",
+      "ip_address": "172.16.8.5",
+      "zone": "WAN PE",
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology",
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-02",
+      "bbox": [
+        842,
+        558,
+        894,
+        610
+      ]
+    },
+    {
+      "id": "DC-RTR-01",
+      "label": "DC-RTR-01",
+      "type": "router",
+      "ip_address": "",
+      "zone": "DC Edge",
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology",
+      "is_shared_entity": true,
+      "canonical_id": "DC-RTR-01",
+      "bbox": [
+        1066,
+        376,
+        1118,
+        428
+      ]
+    },
+    {
+      "id": "DC-FW-01",
+      "label": "DC-FW-01",
+      "type": "firewall",
+      "ip_address": "",
+      "zone": "DC Edge",
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology",
+      "is_shared_entity": true,
+      "canonical_id": "DC-FW-01",
+      "bbox": [
+        1178,
+        525,
+        1230,
+        577
+      ]
+    },
+    {
+      "id": "DC-FW-02",
+      "label": "DC-FW-02",
+      "type": "firewall",
+      "ip_address": "10.108.1.2",
+      "zone": "DC Edge",
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology",
+      "is_shared_entity": false,
+      "canonical_id": "DC-FW-02",
+      "bbox": [
+        254,
+        575,
+        306,
+        627
+      ]
+    },
+    {
+      "id": "DC-CORE-SW-01",
+      "label": "DC-CORE-SW-01",
+      "type": "switch",
+      "ip_address": "10.108.1.4",
+      "zone": "DC Core",
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology",
+      "is_shared_entity": true,
+      "canonical_id": "DC-CORE-SW-01",
+      "bbox": [
+        534,
+        359,
+        586,
+        411
+      ]
+    },
+    {
+      "id": "DC-CORE-SW-02",
+      "label": "DC-CORE-SW-02",
+      "type": "switch",
+      "ip_address": "10.108.1.5",
+      "zone": "DC Core",
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology",
+      "is_shared_entity": false,
+      "canonical_id": "DC-CORE-SW-02",
+      "bbox": [
+        534,
+        575,
+        586,
+        627
+      ]
+    },
+    {
+      "id": "DC-AGG-SW-01",
+      "label": "DC-AGG-SW-01",
+      "type": "switch",
+      "ip_address": "10.108.1.6",
+      "zone": "DC Aggregation",
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology",
+      "is_shared_entity": true,
+      "canonical_id": "DC-AGG-SW-01",
+      "bbox": [
+        786,
+        459,
+        838,
+        511
+      ]
+    },
+    {
+      "id": "DC-SRV-01",
+      "label": "DC-SRV-01",
+      "type": "server",
+      "ip_address": "10.108.1.7",
+      "zone": "DC Compute",
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology",
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-01",
+      "bbox": [
+        1206,
+        226,
+        1258,
+        278
+      ]
+    },
+    {
+      "id": "DC-SRV-02",
+      "label": "DC-SRV-02",
+      "type": "server",
+      "ip_address": "10.108.1.8",
+      "zone": "DC Compute",
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology",
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-02",
+      "bbox": [
+        1066,
+        359,
+        1118,
+        411
+      ]
+    },
+    {
+      "id": "DC-SRV-03",
+      "label": "DC-SRV-03",
+      "type": "server",
+      "ip_address": "10.108.1.9",
+      "zone": "DC Compute",
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology",
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-03",
+      "bbox": [
+        1206,
+        492,
+        1258,
+        544
+      ]
+    },
+    {
+      "id": "DC-SRV-04",
+      "label": "DC-SRV-04",
+      "type": "server",
+      "ip_address": "10.108.1.10",
+      "zone": "DC Compute",
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology",
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-04",
+      "bbox": [
+        1066,
+        625,
+        1118,
+        677
+      ]
+    },
+    {
+      "id": "DC-SRV-05",
+      "label": "DC-SRV-05",
+      "type": "server",
+      "ip_address": "10.108.1.11",
+      "zone": "DC Compute",
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology",
+      "is_shared_entity": false,
+      "canonical_id": "DC-SRV-05",
+      "bbox": [
+        1206,
+        724,
+        1258,
+        776
+      ]
+    },
+    {
+      "id": "APP-LB-01",
+      "label": "APP-LB-01",
+      "type": "load_balancer",
+      "ip_address": "10.208.1.2",
+      "zone": "App Ingress",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "is_shared_entity": false,
+      "canonical_id": "APP-LB-01",
+      "bbox": [
+        422,
+        442,
+        474,
+        494
+      ]
+    },
+    {
+      "id": "APP-01",
+      "label": "APP-01",
+      "type": "server",
+      "ip_address": "10.208.1.3",
+      "zone": "App Tier",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "is_shared_entity": true,
+      "canonical_id": "APP-01",
+      "bbox": [
+        744,
+        293,
+        796,
+        345
+      ]
+    },
+    {
+      "id": "APP-02",
+      "label": "APP-02",
+      "type": "server",
+      "ip_address": "10.208.1.4",
+      "zone": "App Tier",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "is_shared_entity": false,
+      "canonical_id": "APP-02",
+      "bbox": [
+        744,
+        459,
+        796,
+        511
+      ]
+    },
+    {
+      "id": "SERVICE-API-01",
+      "label": "SERVICE-API-01",
+      "type": "service",
+      "ip_address": "10.208.1.5",
+      "zone": "App Tier",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "is_shared_entity": false,
+      "canonical_id": "SERVICE-API-01",
+      "bbox": [
+        744,
+        625,
+        796,
+        677
+      ]
+    },
+    {
+      "id": "DB-MASTER",
+      "label": "DB-MASTER",
+      "type": "database",
+      "ip_address": "10.208.1.6",
+      "zone": "DB Tier",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "is_shared_entity": false,
+      "canonical_id": "DB-MASTER",
+      "bbox": [
+        1066,
+        392,
+        1118,
+        444
+      ]
+    },
+    {
+      "id": "DB-CACHE-01",
+      "label": "DB-CACHE-01",
+      "type": "server",
+      "ip_address": "10.208.1.7",
+      "zone": "DB Tier",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "is_shared_entity": false,
+      "canonical_id": "DB-CACHE-01",
+      "bbox": [
+        1066,
+        591,
+        1118,
+        643
+      ]
+    },
+    {
+      "id": "DB-REPLICA-01",
+      "label": "DB-REPLICA-01",
+      "type": "database",
+      "ip_address": "10.208.1.8",
+      "zone": "DB Tier",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "is_shared_entity": false,
+      "canonical_id": "DB-REPLICA-01",
+      "bbox": [
+        1248,
+        691,
+        1300,
+        743
+      ]
+    },
+    {
+      "id": "DB-REPLICA-02",
+      "label": "DB-REPLICA-02",
+      "type": "database",
+      "ip_address": "10.208.1.9",
+      "zone": "DB Tier",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "is_shared_entity": false,
+      "canonical_id": "DB-REPLICA-02",
+      "bbox": [
+        1248,
+        1172,
+        1300,
+        1224
+      ]
+    },
+    {
+      "id": "IAM-01",
+      "label": "IAM-01",
+      "type": "service",
+      "ip_address": "",
+      "zone": "Shared Services",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "is_shared_entity": true,
+      "canonical_id": "IAM-01",
+      "bbox": [
+        1290,
+        276,
+        1342,
+        328
+      ]
+    },
+    {
+      "id": "DNS-01",
+      "label": "DNS-01",
+      "type": "service",
+      "ip_address": "",
+      "zone": "Shared Services",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "is_shared_entity": true,
+      "canonical_id": "DNS-01",
+      "bbox": [
+        1290,
+        558,
+        1342,
+        610
+      ]
+    },
+    {
+      "id": "AD-01",
+      "label": "AD-01",
+      "type": "service",
+      "ip_address": "10.255.0.1",
+      "zone": "Identity",
+      "diagram_id": "shared_services_topology",
+      "diagram_type": "shared_services_topology",
+      "is_shared_entity": false,
+      "canonical_id": "AD-01",
+      "bbox": [
+        226,
+        392,
+        278,
+        444
+      ]
+    },
+    {
+      "id": "NTP-01",
+      "label": "NTP-01",
+      "type": "service",
+      "ip_address": "10.255.0.4",
+      "zone": "DNS/NTP",
+      "diagram_id": "shared_services_topology",
+      "diagram_type": "shared_services_topology",
+      "is_shared_entity": false,
+      "canonical_id": "NTP-01",
+      "bbox": [
+        758,
+        558,
+        810,
+        610
+      ]
+    },
+    {
+      "id": "MON-01",
+      "label": "MON-01",
+      "type": "service",
+      "ip_address": "10.255.0.5",
+      "zone": "Monitoring",
+      "diagram_id": "shared_services_topology",
+      "diagram_type": "shared_services_topology",
+      "is_shared_entity": false,
+      "canonical_id": "MON-01",
+      "bbox": [
+        1038,
+        359,
+        1090,
+        411
+      ]
+    },
+    {
+      "id": "SYSLOG-01",
+      "label": "SYSLOG-01",
+      "type": "server",
+      "ip_address": "10.255.0.6",
+      "zone": "Logging",
+      "diagram_id": "shared_services_topology",
+      "diagram_type": "shared_services_topology",
+      "is_shared_entity": false,
+      "canonical_id": "SYSLOG-01",
+      "bbox": [
+        1038,
+        591,
+        1090,
+        643
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-MPLS-CORE",
+      "target": "BR-RTR-01",
+      "relationship": "wan_dependency",
+      "label": "MPLS",
+      "edge_scope": "local",
+      "connector_id": "edge_000",
+      "edge_type": "local",
+      "source_diagram": "branch_topology",
+      "target_diagram": "branch_topology"
+    },
+    {
+      "source": "BR-RTR-01",
+      "target": "BR-FW-01",
+      "relationship": "routes_to",
+      "label": "VPN",
+      "edge_scope": "local",
+      "connector_id": "edge_001",
+      "edge_type": "local",
+      "source_diagram": "branch_topology",
+      "target_diagram": "branch_topology"
+    },
+    {
+      "source": "BR-FW-01",
+      "target": "BR-SW-01",
+      "relationship": "secured_by",
+      "label": "LAN",
+      "edge_scope": "local",
+      "connector_id": "edge_002",
+      "edge_type": "local",
+      "source_diagram": "branch_topology",
+      "target_diagram": "branch_topology"
+    },
+    {
+      "source": "BR-SW-01",
+      "target": "BR-APP-01",
+      "relationship": "serves",
+      "label": "HTTPS",
+      "edge_scope": "local",
+      "connector_id": "edge_003",
+      "edge_type": "local",
+      "source_diagram": "branch_topology",
+      "target_diagram": "branch_topology"
+    },
+    {
+      "source": "BR-SW-01",
+      "target": "BR-WRK-01",
+      "relationship": "connected_to",
+      "label": "Access",
+      "edge_scope": "local",
+      "connector_id": "edge_004",
+      "edge_type": "local",
+      "source_diagram": "branch_topology",
+      "target_diagram": "branch_topology"
+    },
+    {
+      "source": "BR-SW-01",
+      "target": "BR-WRK-02",
+      "relationship": "connected_to",
+      "label": "Access",
+      "edge_scope": "local",
+      "connector_id": "edge_005",
+      "edge_type": "local",
+      "source_diagram": "branch_topology",
+      "target_diagram": "branch_topology"
+    },
+    {
+      "source": "BR-SW-01",
+      "target": "BR-WRK-03",
+      "relationship": "connected_to",
+      "label": "Access",
+      "edge_scope": "local",
+      "connector_id": "edge_006",
+      "edge_type": "local",
+      "source_diagram": "branch_topology",
+      "target_diagram": "branch_topology"
+    },
+    {
+      "source": "WAN-ISP-01",
+      "target": "WAN-MPLS-CORE",
+      "relationship": "routes_to",
+      "label": "BGP",
+      "edge_scope": "local",
+      "connector_id": "edge_000",
+      "edge_type": "local",
+      "source_diagram": "wan_topology",
+      "target_diagram": "wan_topology"
+    },
+    {
+      "source": "WAN-ISP-02",
+      "target": "WAN-MPLS-CORE",
+      "relationship": "routes_to",
+      "label": "BGP",
+      "edge_scope": "local",
+      "connector_id": "edge_001",
+      "edge_type": "local",
+      "source_diagram": "wan_topology",
+      "target_diagram": "wan_topology"
+    },
+    {
+      "source": "WAN-MPLS-CORE",
+      "target": "WAN-PE-01",
+      "relationship": "routes_to",
+      "label": "MPLS",
+      "edge_scope": "local",
+      "connector_id": "edge_002",
+      "edge_type": "local",
+      "source_diagram": "wan_topology",
+      "target_diagram": "wan_topology"
+    },
+    {
+      "source": "WAN-MPLS-CORE",
+      "target": "WAN-PE-02",
+      "relationship": "routes_to",
+      "label": "MPLS",
+      "edge_scope": "local",
+      "connector_id": "edge_003",
+      "edge_type": "local",
+      "source_diagram": "wan_topology",
+      "target_diagram": "wan_topology"
+    },
+    {
+      "source": "WAN-PE-01",
+      "target": "BR-RTR-01",
+      "relationship": "connected_to",
+      "label": "L3VPN",
+      "edge_scope": "local",
+      "connector_id": "edge_004",
+      "edge_type": "local",
+      "source_diagram": "wan_topology",
+      "target_diagram": "wan_topology"
+    },
+    {
+      "source": "WAN-PE-02",
+      "target": "DC-RTR-01",
+      "relationship": "connected_to",
+      "label": "L3VPN",
+      "edge_scope": "local",
+      "connector_id": "edge_005",
+      "edge_type": "local",
+      "source_diagram": "wan_topology",
+      "target_diagram": "wan_topology"
+    },
+    {
+      "source": "DC-RTR-01",
+      "target": "DC-FW-01",
+      "relationship": "routes_to",
+      "label": "DC Edge",
+      "edge_scope": "local",
+      "connector_id": "edge_006",
+      "edge_type": "local",
+      "source_diagram": "wan_topology",
+      "target_diagram": "wan_topology"
+    },
+    {
+      "source": "DC-RTR-01",
+      "target": "DC-FW-01",
+      "relationship": "routes_to",
+      "label": "MPLS",
+      "edge_scope": "local",
+      "connector_id": "edge_000",
+      "edge_type": "local",
+      "source_diagram": "datacenter_topology",
+      "target_diagram": "datacenter_topology"
+    },
+    {
+      "source": "DC-RTR-01",
+      "target": "DC-FW-02",
+      "relationship": "routes_to",
+      "label": "Backup",
+      "edge_scope": "local",
+      "connector_id": "edge_001",
+      "edge_type": "local",
+      "source_diagram": "datacenter_topology",
+      "target_diagram": "datacenter_topology"
+    },
+    {
+      "source": "DC-FW-01",
+      "target": "DC-CORE-SW-01",
+      "relationship": "secured_by",
+      "label": "DMZ",
+      "edge_scope": "local",
+      "connector_id": "edge_002",
+      "edge_type": "local",
+      "source_diagram": "datacenter_topology",
+      "target_diagram": "datacenter_topology"
+    },
+    {
+      "source": "DC-FW-02",
+      "target": "DC-CORE-SW-02",
+      "relationship": "secured_by",
+      "label": "VPN",
+      "edge_scope": "local",
+      "connector_id": "edge_003",
+      "edge_type": "local",
+      "source_diagram": "datacenter_topology",
+      "target_diagram": "datacenter_topology"
+    },
+    {
+      "source": "DC-CORE-SW-01",
+      "target": "DC-AGG-SW-01",
+      "relationship": "connected_to",
+      "label": "10G",
+      "edge_scope": "local",
+      "connector_id": "edge_004",
+      "edge_type": "local",
+      "source_diagram": "datacenter_topology",
+      "target_diagram": "datacenter_topology"
+    },
+    {
+      "source": "DC-CORE-SW-02",
+      "target": "DC-AGG-SW-01",
+      "relationship": "connected_to",
+      "label": "10G",
+      "edge_scope": "local",
+      "connector_id": "edge_005",
+      "edge_type": "local",
+      "source_diagram": "datacenter_topology",
+      "target_diagram": "datacenter_topology"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-01",
+      "relationship": "connected_to",
+      "label": "VLAN",
+      "edge_scope": "local",
+      "connector_id": "edge_006",
+      "edge_type": "local",
+      "source_diagram": "datacenter_topology",
+      "target_diagram": "datacenter_topology"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-02",
+      "relationship": "connected_to",
+      "label": "VLAN",
+      "edge_scope": "local",
+      "connector_id": "edge_007",
+      "edge_type": "local",
+      "source_diagram": "datacenter_topology",
+      "target_diagram": "datacenter_topology"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-03",
+      "relationship": "connected_to",
+      "label": "VLAN",
+      "edge_scope": "local",
+      "connector_id": "edge_008",
+      "edge_type": "local",
+      "source_diagram": "datacenter_topology",
+      "target_diagram": "datacenter_topology"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-04",
+      "relationship": "connected_to",
+      "label": "VLAN",
+      "edge_scope": "local",
+      "connector_id": "edge_009",
+      "edge_type": "local",
+      "source_diagram": "datacenter_topology",
+      "target_diagram": "datacenter_topology"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-05",
+      "relationship": "connected_to",
+      "label": "VLAN",
+      "edge_scope": "local",
+      "connector_id": "edge_010",
+      "edge_type": "local",
+      "source_diagram": "datacenter_topology",
+      "target_diagram": "datacenter_topology"
+    },
+    {
+      "source": "DC-CORE-SW-01",
+      "target": "APP-LB-01",
+      "relationship": "routes_to",
+      "label": "HTTPS",
+      "edge_scope": "local",
+      "connector_id": "edge_000",
+      "edge_type": "local",
+      "source_diagram": "app_db_topology",
+      "target_diagram": "app_db_topology"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "APP-LB-01",
+      "relationship": "routes_to",
+      "label": "10G",
+      "edge_scope": "local",
+      "connector_id": "edge_001",
+      "edge_type": "local",
+      "source_diagram": "app_db_topology",
+      "target_diagram": "app_db_topology"
+    },
+    {
+      "source": "APP-LB-01",
+      "target": "APP-01",
+      "relationship": "serves",
+      "label": "HTTPS",
+      "edge_scope": "local",
+      "connector_id": "edge_002",
+      "edge_type": "local",
+      "source_diagram": "app_db_topology",
+      "target_diagram": "app_db_topology"
+    },
+    {
+      "source": "APP-01",
+      "target": "DB-MASTER",
+      "relationship": "depends_on",
+      "label": "JDBC",
+      "edge_scope": "local",
+      "connector_id": "edge_003",
+      "edge_type": "local",
+      "source_diagram": "app_db_topology",
+      "target_diagram": "app_db_topology"
+    },
+    {
+      "source": "APP-01",
+      "target": "DB-CACHE-01",
+      "relationship": "depends_on",
+      "label": "API",
+      "edge_scope": "local",
+      "connector_id": "edge_004",
+      "edge_type": "local",
+      "source_diagram": "app_db_topology",
+      "target_diagram": "app_db_topology"
+    },
+    {
+      "source": "APP-01",
+      "target": "SERVICE-API-01",
+      "relationship": "depends_on",
+      "label": "API",
+      "edge_scope": "local",
+      "connector_id": "edge_005",
+      "edge_type": "local",
+      "source_diagram": "app_db_topology",
+      "target_diagram": "app_db_topology"
+    },
+    {
+      "source": "APP-LB-01",
+      "target": "APP-02",
+      "relationship": "serves",
+      "label": "HTTPS",
+      "edge_scope": "local",
+      "connector_id": "edge_006",
+      "edge_type": "local",
+      "source_diagram": "app_db_topology",
+      "target_diagram": "app_db_topology"
+    },
+    {
+      "source": "APP-02",
+      "target": "DB-MASTER",
+      "relationship": "depends_on",
+      "label": "JDBC",
+      "edge_scope": "local",
+      "connector_id": "edge_007",
+      "edge_type": "local",
+      "source_diagram": "app_db_topology",
+      "target_diagram": "app_db_topology"
+    },
+    {
+      "source": "APP-02",
+      "target": "DB-CACHE-01",
+      "relationship": "depends_on",
+      "label": "API",
+      "edge_scope": "local",
+      "connector_id": "edge_008",
+      "edge_type": "local",
+      "source_diagram": "app_db_topology",
+      "target_diagram": "app_db_topology"
+    },
+    {
+      "source": "APP-02",
+      "target": "SERVICE-API-01",
+      "relationship": "depends_on",
+      "label": "API",
+      "edge_scope": "local",
+      "connector_id": "edge_009",
+      "edge_type": "local",
+      "source_diagram": "app_db_topology",
+      "target_diagram": "app_db_topology"
+    },
+    {
+      "source": "SERVICE-API-01",
+      "target": "IAM-01",
+      "relationship": "depends_on",
+      "label": "LDAP/IAM",
+      "edge_scope": "local",
+      "connector_id": "edge_010",
+      "edge_type": "local",
+      "source_diagram": "app_db_topology",
+      "target_diagram": "app_db_topology"
+    },
+    {
+      "source": "APP-01",
+      "target": "DNS-01",
+      "relationship": "depends_on",
+      "label": "DNS",
+      "edge_scope": "local",
+      "connector_id": "edge_011",
+      "edge_type": "local",
+      "source_diagram": "app_db_topology",
+      "target_diagram": "app_db_topology"
+    },
+    {
+      "source": "DB-MASTER",
+      "target": "DB-REPLICA-01",
+      "relationship": "connected_to",
+      "label": "DB Link",
+      "edge_scope": "local",
+      "connector_id": "edge_012",
+      "edge_type": "local",
+      "source_diagram": "app_db_topology",
+      "target_diagram": "app_db_topology"
+    },
+    {
+      "source": "DB-MASTER",
+      "target": "DB-REPLICA-02",
+      "relationship": "connected_to",
+      "label": "DB Link",
+      "edge_scope": "local",
+      "connector_id": "edge_013",
+      "edge_type": "local",
+      "source_diagram": "app_db_topology",
+      "target_diagram": "app_db_topology"
+    },
+    {
+      "source": "AD-01",
+      "target": "IAM-01",
+      "relationship": "connected_to",
+      "label": "LDAP",
+      "edge_scope": "local",
+      "connector_id": "edge_000",
+      "edge_type": "local",
+      "source_diagram": "shared_services_topology",
+      "target_diagram": "shared_services_topology"
+    },
+    {
+      "source": "IAM-01",
+      "target": "MON-01",
+      "relationship": "monitored_by",
+      "label": "API",
+      "edge_scope": "local",
+      "connector_id": "edge_001",
+      "edge_type": "local",
+      "source_diagram": "shared_services_topology",
+      "target_diagram": "shared_services_topology"
+    },
+    {
+      "source": "DNS-01",
+      "target": "NTP-01",
+      "relationship": "connected_to",
+      "label": "NTP",
+      "edge_scope": "local",
+      "connector_id": "edge_002",
+      "edge_type": "local",
+      "source_diagram": "shared_services_topology",
+      "target_diagram": "shared_services_topology"
+    },
+    {
+      "source": "MON-01",
+      "target": "SYSLOG-01",
+      "relationship": "depends_on",
+      "label": "Syslog",
+      "edge_scope": "local",
+      "connector_id": "edge_003",
+      "edge_type": "local",
+      "source_diagram": "shared_services_topology",
+      "target_diagram": "shared_services_topology"
+    },
+    {
+      "source": "APP-01",
+      "target": "IAM-01",
+      "relationship": "depends_on",
+      "label": "OAuth",
+      "edge_scope": "local",
+      "connector_id": "edge_004",
+      "edge_type": "local",
+      "source_diagram": "shared_services_topology",
+      "target_diagram": "shared_services_topology"
+    },
+    {
+      "source": "BR-APP-01",
+      "target": "DNS-01",
+      "relationship": "depends_on",
+      "label": "DNS",
+      "edge_scope": "local",
+      "connector_id": "edge_005",
+      "edge_type": "local",
+      "source_diagram": "shared_services_topology",
+      "target_diagram": "shared_services_topology"
+    },
+    {
+      "source": "BR-RTR-01",
+      "target": "WAN-PE-01",
+      "relationship": "connected_to",
+      "label": "MPLS-L3VPN",
+      "edge_scope": "cross_diagram",
+      "edge_type": "cross_diagram",
+      "source_diagram": "branch_topology",
+      "target_diagram": "wan_topology"
+    },
+    {
+      "source": "WAN-MPLS-CORE",
+      "target": "WAN-MPLS-CORE",
+      "relationship": "shared_entity",
+      "label": "same-node",
+      "edge_scope": "cross_diagram",
+      "edge_type": "cross_diagram",
+      "source_diagram": "branch_topology",
+      "target_diagram": "wan_topology"
+    },
+    {
+      "source": "WAN-PE-02",
+      "target": "DC-RTR-01",
+      "relationship": "connected_to",
+      "label": "MPLS-L3VPN",
+      "edge_scope": "cross_diagram",
+      "edge_type": "cross_diagram",
+      "source_diagram": "wan_topology",
+      "target_diagram": "datacenter_topology"
+    },
+    {
+      "source": "DC-CORE-SW-01",
+      "target": "DC-CORE-SW-01",
+      "relationship": "shared_entity",
+      "label": "same-node",
+      "edge_scope": "cross_diagram",
+      "edge_type": "cross_diagram",
+      "source_diagram": "datacenter_topology",
+      "target_diagram": "app_db_topology"
+    },
+    {
+      "source": "DC-CORE-SW-01",
+      "target": "APP-LB-01",
+      "relationship": "routes_to",
+      "label": "HTTPS",
+      "edge_scope": "cross_diagram",
+      "edge_type": "cross_diagram",
+      "source_diagram": "datacenter_topology",
+      "target_diagram": "app_db_topology"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "APP-LB-01",
+      "relationship": "routes_to",
+      "label": "10G",
+      "edge_scope": "cross_diagram",
+      "edge_type": "cross_diagram",
+      "source_diagram": "datacenter_topology",
+      "target_diagram": "app_db_topology"
+    },
+    {
+      "source": "BR-RTR-01",
+      "target": "DNS-01",
+      "relationship": "depends_on",
+      "label": "DNS",
+      "edge_scope": "cross_diagram",
+      "edge_type": "cross_diagram",
+      "source_diagram": "branch_topology",
+      "target_diagram": "shared_services_topology"
+    },
+    {
+      "source": "APP-LB-01",
+      "target": "IAM-01",
+      "relationship": "depends_on",
+      "label": "Auth",
+      "edge_scope": "cross_diagram",
+      "edge_type": "cross_diagram",
+      "source_diagram": "app_db_topology",
+      "target_diagram": "shared_services_topology"
+    },
+    {
+      "source": "APP-01",
+      "target": "IAM-01",
+      "relationship": "depends_on",
+      "label": "LDAP/IAM",
+      "edge_scope": "cross_diagram",
+      "edge_type": "cross_diagram",
+      "source_diagram": "app_db_topology",
+      "target_diagram": "shared_services_topology"
+    },
+    {
+      "source": "APP-01",
+      "target": "DNS-01",
+      "relationship": "depends_on",
+      "label": "DNS",
+      "edge_scope": "cross_diagram",
+      "edge_type": "cross_diagram",
+      "source_diagram": "app_db_topology",
+      "target_diagram": "shared_services_topology"
+    },
+    {
+      "source": "DB-MASTER",
+      "target": "MON-01",
+      "relationship": "depends_on",
+      "label": "Monitor",
+      "edge_scope": "cross_diagram",
+      "edge_type": "cross_diagram",
+      "source_diagram": "app_db_topology",
+      "target_diagram": "shared_services_topology"
+    }
+  ],
+  "cross_diagram_edges": [
+    {
+      "source": "BR-RTR-01",
+      "target": "WAN-PE-01",
+      "relationship": "connected_to",
+      "label": "MPLS-L3VPN",
+      "edge_scope": "cross_diagram",
+      "edge_type": "cross_diagram",
+      "source_diagram": "branch_topology",
+      "target_diagram": "wan_topology"
+    },
+    {
+      "source": "WAN-MPLS-CORE",
+      "target": "WAN-MPLS-CORE",
+      "relationship": "shared_entity",
+      "label": "same-node",
+      "edge_scope": "cross_diagram",
+      "edge_type": "cross_diagram",
+      "source_diagram": "branch_topology",
+      "target_diagram": "wan_topology"
+    },
+    {
+      "source": "WAN-PE-02",
+      "target": "DC-RTR-01",
+      "relationship": "connected_to",
+      "label": "MPLS-L3VPN",
+      "edge_scope": "cross_diagram",
+      "edge_type": "cross_diagram",
+      "source_diagram": "wan_topology",
+      "target_diagram": "datacenter_topology"
+    },
+    {
+      "source": "DC-CORE-SW-01",
+      "target": "DC-CORE-SW-01",
+      "relationship": "shared_entity",
+      "label": "same-node",
+      "edge_scope": "cross_diagram",
+      "edge_type": "cross_diagram",
+      "source_diagram": "datacenter_topology",
+      "target_diagram": "app_db_topology"
+    },
+    {
+      "source": "DC-CORE-SW-01",
+      "target": "APP-LB-01",
+      "relationship": "routes_to",
+      "label": "HTTPS",
+      "edge_scope": "cross_diagram",
+      "edge_type": "cross_diagram",
+      "source_diagram": "datacenter_topology",
+      "target_diagram": "app_db_topology"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "APP-LB-01",
+      "relationship": "routes_to",
+      "label": "10G",
+      "edge_scope": "cross_diagram",
+      "edge_type": "cross_diagram",
+      "source_diagram": "datacenter_topology",
+      "target_diagram": "app_db_topology"
+    },
+    {
+      "source": "BR-RTR-01",
+      "target": "DNS-01",
+      "relationship": "depends_on",
+      "label": "DNS",
+      "edge_scope": "cross_diagram",
+      "edge_type": "cross_diagram",
+      "source_diagram": "branch_topology",
+      "target_diagram": "shared_services_topology"
+    },
+    {
+      "source": "APP-LB-01",
+      "target": "IAM-01",
+      "relationship": "depends_on",
+      "label": "Auth",
+      "edge_scope": "cross_diagram",
+      "edge_type": "cross_diagram",
+      "source_diagram": "app_db_topology",
+      "target_diagram": "shared_services_topology"
+    },
+    {
+      "source": "APP-01",
+      "target": "IAM-01",
+      "relationship": "depends_on",
+      "label": "LDAP/IAM",
+      "edge_scope": "cross_diagram",
+      "edge_type": "cross_diagram",
+      "source_diagram": "app_db_topology",
+      "target_diagram": "shared_services_topology"
+    },
+    {
+      "source": "APP-01",
+      "target": "DNS-01",
+      "relationship": "depends_on",
+      "label": "DNS",
+      "edge_scope": "cross_diagram",
+      "edge_type": "cross_diagram",
+      "source_diagram": "app_db_topology",
+      "target_diagram": "shared_services_topology"
+    },
+    {
+      "source": "DB-MASTER",
+      "target": "MON-01",
+      "relationship": "depends_on",
+      "label": "Monitor",
+      "edge_scope": "cross_diagram",
+      "edge_type": "cross_diagram",
+      "source_diagram": "app_db_topology",
+      "target_diagram": "shared_services_topology"
+    }
+  ],
+  "diagram_clusters": [
+    {
+      "diagram_id": "branch_topology",
+      "diagram_type": "branch_topology",
+      "node_ids": [
+        "BR-RTR-01",
+        "BR-FW-01",
+        "BR-SW-01",
+        "BR-APP-01",
+        "BR-WRK-01",
+        "BR-WRK-02",
+        "BR-WRK-03",
+        "WAN-MPLS-CORE"
+      ]
+    },
+    {
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology",
+      "node_ids": [
+        "WAN-ISP-01",
+        "WAN-ISP-02",
+        "WAN-MPLS-CORE",
+        "WAN-PE-01",
+        "WAN-PE-02",
+        "BR-RTR-01",
+        "DC-RTR-01",
+        "DC-FW-01"
+      ]
+    },
+    {
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology",
+      "node_ids": [
+        "DC-FW-01",
+        "DC-FW-02",
+        "DC-RTR-01",
+        "DC-CORE-SW-01",
+        "DC-CORE-SW-02",
+        "DC-AGG-SW-01",
+        "DC-SRV-01",
+        "DC-SRV-02",
+        "DC-SRV-03",
+        "DC-SRV-04",
+        "DC-SRV-05"
+      ]
+    },
+    {
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "node_ids": [
+        "APP-LB-01",
+        "APP-01",
+        "APP-02",
+        "SERVICE-API-01",
+        "DB-MASTER",
+        "DB-CACHE-01",
+        "DB-REPLICA-01",
+        "DB-REPLICA-02",
+        "DC-CORE-SW-01",
+        "DC-AGG-SW-01",
+        "IAM-01",
+        "DNS-01"
+      ]
+    },
+    {
+      "diagram_id": "shared_services_topology",
+      "diagram_type": "shared_services_topology",
+      "node_ids": [
+        "AD-01",
+        "IAM-01",
+        "DNS-01",
+        "NTP-01",
+        "MON-01",
+        "SYSLOG-01",
+        "APP-01",
+        "BR-APP-01"
+      ]
+    }
+  ],
+  "shared_entities": [
+    {
+      "canonical_id": "BR-RTR-01",
+      "appears_in": [
+        {
+          "diagram_id": "branch_topology",
+          "local_id": "BR-RTR-01"
+        },
+        {
+          "diagram_id": "wan_topology",
+          "local_id": "BR-RTR-01"
+        }
+      ]
+    },
+    {
+      "canonical_id": "WAN-MPLS-CORE",
+      "appears_in": [
+        {
+          "diagram_id": "wan_topology",
+          "local_id": "WAN-MPLS-CORE"
+        },
+        {
+          "diagram_id": "branch_topology",
+          "local_id": "WAN-MPLS-CORE"
+        }
+      ]
+    },
+    {
+      "canonical_id": "DC-RTR-01",
+      "appears_in": [
+        {
+          "diagram_id": "datacenter_topology",
+          "local_id": "DC-RTR-01"
+        },
+        {
+          "diagram_id": "wan_topology",
+          "local_id": "DC-RTR-01"
+        }
+      ]
+    },
+    {
+      "canonical_id": "DC-FW-01",
+      "appears_in": [
+        {
+          "diagram_id": "datacenter_topology",
+          "local_id": "DC-FW-01"
+        },
+        {
+          "diagram_id": "wan_topology",
+          "local_id": "DC-FW-01"
+        }
+      ]
+    },
+    {
+      "canonical_id": "DC-CORE-SW-01",
+      "appears_in": [
+        {
+          "diagram_id": "datacenter_topology",
+          "local_id": "DC-CORE-SW-01"
+        },
+        {
+          "diagram_id": "app_db_topology",
+          "local_id": "DC-CORE-SW-01"
+        }
+      ]
+    },
+    {
+      "canonical_id": "DC-AGG-SW-01",
+      "appears_in": [
+        {
+          "diagram_id": "datacenter_topology",
+          "local_id": "DC-AGG-SW-01"
+        },
+        {
+          "diagram_id": "app_db_topology",
+          "local_id": "DC-AGG-SW-01"
+        }
+      ]
+    },
+    {
+      "canonical_id": "BR-APP-01",
+      "appears_in": [
+        {
+          "diagram_id": "branch_topology",
+          "local_id": "BR-APP-01"
+        },
+        {
+          "diagram_id": "shared_services_topology",
+          "local_id": "BR-APP-01"
+        }
+      ]
+    },
+    {
+      "canonical_id": "APP-01",
+      "appears_in": [
+        {
+          "diagram_id": "app_db_topology",
+          "local_id": "APP-01"
+        },
+        {
+          "diagram_id": "shared_services_topology",
+          "local_id": "APP-01"
+        }
+      ]
+    },
+    {
+      "canonical_id": "IAM-01",
+      "appears_in": [
+        {
+          "diagram_id": "shared_services_topology",
+          "local_id": "IAM-01"
+        },
+        {
+          "diagram_id": "app_db_topology",
+          "local_id": "IAM-01"
+        }
+      ]
+    },
+    {
+      "canonical_id": "DNS-01",
+      "appears_in": [
+        {
+          "diagram_id": "shared_services_topology",
+          "local_id": "DNS-01"
+        },
+        {
+          "diagram_id": "app_db_topology",
+          "local_id": "DNS-01"
+        }
+      ]
+    }
+  ],
+  "stats": {
+    "num_nodes": 37,
+    "num_edges": 56,
+    "num_cross_diagram_edges": 11,
+    "num_shared_entities": 10
+  }
+}

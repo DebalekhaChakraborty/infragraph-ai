@@ -1,0 +1,59 @@
+{
+  "scenario_id": "enterprise_v3_0088",
+  "root_cause": "APP-LB-01",
+  "root_cause_diagram": "app_db_topology",
+  "root_cause_pattern": "lb_failure",
+  "severity": "critical",
+  "alerts": [
+    {
+      "node": "APP-LB-01",
+      "diagram_id": "app_db_topology",
+      "alert_type": "packet_drop",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "APP-01",
+      "diagram_id": "app_db_topology",
+      "alert_type": "error_rate",
+      "severity": "high",
+      "time_offset_min": 1
+    },
+    {
+      "node": "APP-02",
+      "diagram_id": "app_db_topology",
+      "alert_type": "latency",
+      "severity": "high",
+      "time_offset_min": 4
+    },
+    {
+      "node": "DB-MASTER",
+      "diagram_id": "app_db_topology",
+      "alert_type": "packet_loss",
+      "severity": "warning",
+      "time_offset_min": 9
+    }
+  ],
+  "impacted_nodes": [
+    "APP-01",
+    "APP-02",
+    "DB-MASTER"
+  ],
+  "impacted_diagrams": [
+    "app_db_topology"
+  ],
+  "impact_paths": [
+    [
+      "APP-LB-01",
+      "APP-01"
+    ],
+    [
+      "APP-LB-01",
+      "APP-02"
+    ],
+    [
+      "APP-LB-01",
+      "DB-MASTER"
+    ]
+  ]
+}
