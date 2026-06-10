@@ -1407,21 +1407,27 @@ def _tab_diagram_outputs_section() -> None:
                 f'<div class="compare-label">Detection Output</div>',
                 unsafe_allow_html=True,
             )
-            if det_p and Path(det_p).exists() and det_p != orig_p:
+            _det_ready = det_p and Path(det_p).exists() and det_p != orig_p
+            if _det_ready:
                 st.image(det_p, use_container_width=True)
+            elif is_rfdetr:
+                st.image(orig_p, use_container_width=True)
+            elif orig_p and Path(orig_p).exists():
+                st.warning(
+                    "Annotation overlay could not be rendered; showing source image."
+                )
+                st.image(orig_p, use_container_width=True)
             else:
-                if is_rfdetr:
-                    st.image(orig_p, use_container_width=True)
-                else:
-                    st.markdown(
-                        '<div class="info-card">'
-                        '<strong>Prepared V3 annotation fallback.</strong><br>'
-                        'Bounding boxes and node labels come from the scenario ground-truth annotation. '
-                        'Train RF-DETR (<code>train_rfdetr_diagram_detector.py</code>) to generate '
-                        'live detector predictions.'
-                        '</div>',
-                        unsafe_allow_html=True,
-                    )
+                st.markdown(
+                    '<div class="info-card">'
+                    '<strong>Prepared V3 annotation fallback.</strong><br>'
+                    'Bounding boxes and node labels come from the scenario '
+                    'ground-truth annotation. Train RF-DETR '
+                    '(<code>train_rfdetr_diagram_detector.py</code>) to generate '
+                    'live detector predictions.'
+                    '</div>',
+                    unsafe_allow_html=True,
+                )
 
     elif view_mode == "Local Graph (Interactive)":
         st.markdown('<div class="section-label">Local Graph</div>', unsafe_allow_html=True)
