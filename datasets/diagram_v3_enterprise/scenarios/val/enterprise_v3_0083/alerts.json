@@ -1,0 +1,72 @@
+{
+  "scenario_id": "enterprise_v3_0083",
+  "root_cause": "DC-FW-01",
+  "root_cause_diagram": "datacenter_topology",
+  "root_cause_pattern": "dc_fw_failure",
+  "severity": "critical",
+  "alerts": [
+    {
+      "node": "DC-FW-01",
+      "diagram_id": "datacenter_topology",
+      "alert_type": "link_down",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "DC-CORE-SW-01",
+      "diagram_id": "datacenter_topology",
+      "alert_type": "connection_timeout",
+      "severity": "high",
+      "time_offset_min": 1
+    },
+    {
+      "node": "DC-AGG-SW-01",
+      "diagram_id": "datacenter_topology",
+      "alert_type": "packet_loss",
+      "severity": "warning",
+      "time_offset_min": 8
+    },
+    {
+      "node": "APP-LB-01",
+      "diagram_id": "app_db_topology",
+      "alert_type": "latency",
+      "severity": "high",
+      "time_offset_min": 16
+    },
+    {
+      "node": "APP-01",
+      "diagram_id": "app_db_topology",
+      "alert_type": "error_rate",
+      "severity": "medium",
+      "time_offset_min": 18
+    }
+  ],
+  "impacted_nodes": [
+    "DC-CORE-SW-01",
+    "DC-AGG-SW-01",
+    "APP-LB-01",
+    "APP-01"
+  ],
+  "impacted_diagrams": [
+    "app_db_topology",
+    "datacenter_topology"
+  ],
+  "impact_paths": [
+    [
+      "DC-FW-01",
+      "DC-CORE-SW-01"
+    ],
+    [
+      "DC-FW-01",
+      "DC-AGG-SW-01"
+    ],
+    [
+      "DC-FW-01",
+      "APP-LB-01"
+    ],
+    [
+      "DC-FW-01",
+      "APP-01"
+    ]
+  ]
+}

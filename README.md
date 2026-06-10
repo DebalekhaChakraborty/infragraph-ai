@@ -145,6 +145,32 @@ See `docs/mlp_rca.md` and `docs/gnn_rca.md` for full details.
 
 ---
 
+### Enterprise GNN RCA
+
+Trains a GCN on stitched multi-diagram enterprise topology graphs and ranks all nodes
+across the unified enterprise graph to identify the root-cause node.
+
+```bash
+python scripts/train_enterprise_gnn_rca.py \
+    --dataset-root ./datasets/enterprise_graph_v1 \
+    --out ./outputs/enterprise_gnn_rca \
+    --epochs 80 \
+    --demo-scenario enterprise_0000 \
+    --demo-split test
+```
+
+| Output | Description |
+|--------|-------------|
+| `outputs/enterprise_gnn_rca/enterprise_gnn_model.pt` | Trained GCN checkpoint |
+| `outputs/enterprise_gnn_rca/enterprise_gnn_metrics.json` | Top-1, Top-3, MRR across splits |
+| `outputs/enterprise_gnn_rca/enterprise_gnn_training_curve.png` | Loss and ranking curves |
+| `outputs/enterprise_gnn_rca/<scenario_id>_enterprise_gnn_rca_result.json` | Demo scenario output |
+| `outputs/enterprise_gnn_rca/<scenario_id>_enterprise_gnn_prediction.png` | Graph visualisation |
+
+See: [docs/enterprise_gnn_rca.md](docs/enterprise_gnn_rca.md)
+
+---
+
 ### Enterprise Graph Dataset
 
 This dataset demonstrates multi-diagram graph stitching, where each architecture diagram
@@ -168,6 +194,48 @@ python scripts/generate_enterprise_scenarios.py \
 ```
 
 See: [docs/enterprise_graph_dataset.md](docs/enterprise_graph_dataset.md)
+
+---
+
+### Diagram Intelligence V3 + RF-DETR
+
+V3 starts the scenario-native diagram intelligence track. Each scenario is one
+enterprise environment with 3-5 related topology diagrams. The individual diagram
+images are used for detector training, OCR/connector validation, local graph
+creation, and the stitched enterprise "galaxy" graph used later by enterprise GNN
+RCA.
+
+```bash
+python scripts/generate_diagram_v3_enterprise_dataset.py \
+    --num-scenarios 100 \
+    --out ./datasets/diagram_v3_enterprise \
+    --seed 2026 \
+    --clean
+
+python scripts/prepare_rfdetr_dataset.py \
+    --dataset-root ./datasets/diagram_v3_enterprise \
+    --out ./datasets/diagram_v3_enterprise/rfdetr
+
+python scripts/train_rfdetr_diagram_detector.py \
+    --dataset-root ./datasets/diagram_v3_enterprise/rfdetr \
+    --out ./outputs/rfdetr_v3 \
+    --epochs 25
+```
+
+| Output | Description |
+|--------|-------------|
+| `datasets/diagram_v3_enterprise/scenarios/` | Scenario-native source diagrams, annotations, local graphs, stitch maps, enterprise graphs, alerts, and previews |
+| `datasets/diagram_v3_enterprise/rfdetr/` | COCO-style RF-DETR export with metadata linking each image back to its scenario graphs |
+| `datasets/diagram_v3_enterprise/yolo/dataset.yaml` | YOLO-compatible export from the same annotations |
+| `outputs/rfdetr_v3/` | RF-DETR model outputs when the external RF-DETR package is installed |
+
+RF-DETR is the advanced V3 detector path. YOLO remains the stable baseline for
+comparison. The stitched enterprise graph is generated from the same local graphs
+derived from the scenario diagrams, so future enterprise GNN RCA can analyze
+alerts across diagram boundaries.
+
+See: [docs/diagram_intelligence_v3_dataset.md](docs/diagram_intelligence_v3_dataset.md)
+and [docs/rfdetr_v3_detector.md](docs/rfdetr_v3_detector.md)
 
 ---
 

@@ -1,0 +1,73 @@
+{
+  "scenario_id": "enterprise_v3_0009",
+  "root_cause": "WAN-PE-01",
+  "root_cause_diagram": "wan_topology",
+  "root_cause_pattern": "wan_failure",
+  "severity": "critical",
+  "alerts": [
+    {
+      "node": "WAN-PE-01",
+      "diagram_id": "wan_topology",
+      "alert_type": "cpu_spike",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "WAN-PE-02",
+      "diagram_id": "wan_topology",
+      "alert_type": "error_rate",
+      "severity": "high",
+      "time_offset_min": 1
+    },
+    {
+      "node": "BR-RTR-01",
+      "diagram_id": "branch_topology",
+      "alert_type": "latency",
+      "severity": "high",
+      "time_offset_min": 8
+    },
+    {
+      "node": "BR-FW-01",
+      "diagram_id": "branch_topology",
+      "alert_type": "packet_loss",
+      "severity": "warning",
+      "time_offset_min": 14
+    },
+    {
+      "node": "APP-LB-01",
+      "diagram_id": "app_db_topology",
+      "alert_type": "latency",
+      "severity": "warning",
+      "time_offset_min": 16
+    }
+  ],
+  "impacted_nodes": [
+    "WAN-PE-02",
+    "BR-RTR-01",
+    "BR-FW-01",
+    "APP-LB-01"
+  ],
+  "impacted_diagrams": [
+    "app_db_topology",
+    "branch_topology",
+    "wan_topology"
+  ],
+  "impact_paths": [
+    [
+      "WAN-PE-01",
+      "WAN-PE-02"
+    ],
+    [
+      "WAN-PE-01",
+      "BR-RTR-01"
+    ],
+    [
+      "WAN-PE-01",
+      "BR-FW-01"
+    ],
+    [
+      "WAN-PE-01",
+      "APP-LB-01"
+    ]
+  ]
+}

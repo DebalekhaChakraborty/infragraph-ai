@@ -1,0 +1,22 @@
+{
+  "scenario_id": "enterprise_v3_0091",
+  "diagram_types": [
+    "branch_topology",
+    "wan_topology",
+    "datacenter_topology",
+    "app_db_topology",
+    "shared_services_topology"
+  ],
+  "num_diagrams": 5,
+  "num_nodes": 35,
+  "num_edges": 54,
+  "num_cross_diagram_edges": 11,
+  "num_shared_entities": 10,
+  "root_cause": "IAM-01",
+  "root_cause_diagram": "shared_services_topology",
+  "root_cause_pattern": "shared_id_failure",
+  "severity": "critical",
+  "num_impacted_nodes": 3,
+  "num_impacted_diagrams": 3,
+  "split": "test"
+}

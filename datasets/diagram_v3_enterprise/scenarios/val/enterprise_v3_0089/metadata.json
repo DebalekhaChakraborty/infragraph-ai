@@ -1,0 +1,21 @@
+{
+  "scenario_id": "enterprise_v3_0089",
+  "diagram_types": [
+    "branch_topology",
+    "datacenter_topology",
+    "app_db_topology",
+    "shared_services_topology"
+  ],
+  "num_diagrams": 4,
+  "num_nodes": 30,
+  "num_edges": 43,
+  "num_cross_diagram_edges": 8,
+  "num_shared_entities": 9,
+  "root_cause": "BR-RTR-01",
+  "root_cause_diagram": "branch_topology",
+  "root_cause_pattern": "branch_rtr_failure",
+  "severity": "critical",
+  "num_impacted_nodes": 3,
+  "num_impacted_diagrams": 1,
+  "split": "val"
+}

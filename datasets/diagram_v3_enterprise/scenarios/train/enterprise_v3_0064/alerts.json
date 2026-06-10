@@ -1,0 +1,47 @@
+{
+  "scenario_id": "enterprise_v3_0064",
+  "root_cause": "DC-FW-01",
+  "root_cause_diagram": "datacenter_topology",
+  "root_cause_pattern": "dc_fw_failure",
+  "severity": "critical",
+  "alerts": [
+    {
+      "node": "DC-FW-01",
+      "diagram_id": "datacenter_topology",
+      "alert_type": "interface_flap",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "DC-CORE-SW-01",
+      "diagram_id": "datacenter_topology",
+      "alert_type": "connection_timeout",
+      "severity": "high",
+      "time_offset_min": 1
+    },
+    {
+      "node": "DC-AGG-SW-01",
+      "diagram_id": "datacenter_topology",
+      "alert_type": "error_rate",
+      "severity": "warning",
+      "time_offset_min": 9
+    }
+  ],
+  "impacted_nodes": [
+    "DC-CORE-SW-01",
+    "DC-AGG-SW-01"
+  ],
+  "impacted_diagrams": [
+    "datacenter_topology"
+  ],
+  "impact_paths": [
+    [
+      "DC-FW-01",
+      "DC-CORE-SW-01"
+    ],
+    [
+      "DC-FW-01",
+      "DC-AGG-SW-01"
+    ]
+  ]
+}

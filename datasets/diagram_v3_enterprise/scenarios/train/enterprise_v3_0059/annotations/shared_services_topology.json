@@ -1,0 +1,589 @@
+{
+  "scenario_id": "enterprise_v3_0059",
+  "diagram_id": "shared_services_topology",
+  "diagram_type": "shared_services_topology",
+  "image_path": "D:\\My Folders\\Hackathons\\infragraph-ai\\datasets\\diagram_v3_enterprise\\scenarios\\train\\enterprise_v3_0059\\diagrams\\shared_services_topology.png",
+  "width": 1400,
+  "height": 900,
+  "objects": [
+    {
+      "object_id": "AD-01",
+      "class_name": "service",
+      "bbox": [
+        218,
+        384,
+        286,
+        452
+      ],
+      "label_text": "AD-01",
+      "ip_address": "10.255.0.1",
+      "zone": "Identity",
+      "is_shared_entity": false,
+      "canonical_id": "AD-01"
+    },
+    {
+      "object_id": "IAM-01",
+      "class_name": "service",
+      "bbox": [
+        470,
+        384,
+        538,
+        452
+      ],
+      "label_text": "IAM-01",
+      "ip_address": "10.255.0.2",
+      "zone": "Identity",
+      "is_shared_entity": false,
+      "canonical_id": "IAM-01"
+    },
+    {
+      "object_id": "DNS-01",
+      "class_name": "service",
+      "bbox": [
+        750,
+        285,
+        818,
+        353
+      ],
+      "label_text": "DNS-01",
+      "ip_address": "10.255.0.3",
+      "zone": "DNS/NTP",
+      "is_shared_entity": false,
+      "canonical_id": "DNS-01"
+    },
+    {
+      "object_id": "NTP-01",
+      "class_name": "service",
+      "bbox": [
+        750,
+        550,
+        818,
+        618
+      ],
+      "label_text": "NTP-01",
+      "ip_address": "10.255.0.4",
+      "zone": "DNS/NTP",
+      "is_shared_entity": false,
+      "canonical_id": "NTP-01"
+    },
+    {
+      "object_id": "MON-01",
+      "class_name": "service",
+      "bbox": [
+        1030,
+        351,
+        1098,
+        419
+      ],
+      "label_text": "MON-01",
+      "ip_address": "10.255.0.5",
+      "zone": "Monitoring",
+      "is_shared_entity": false,
+      "canonical_id": "MON-01"
+    },
+    {
+      "object_id": "SYSLOG-01",
+      "class_name": "server",
+      "bbox": [
+        1030,
+        583,
+        1098,
+        651
+      ],
+      "label_text": "SYSLOG-01",
+      "ip_address": "10.255.0.6",
+      "zone": "Logging",
+      "is_shared_entity": false,
+      "canonical_id": "SYSLOG-01"
+    },
+    {
+      "object_id": "BR-APP-01",
+      "class_name": "server",
+      "bbox": [
+        1254,
+        550,
+        1322,
+        618
+      ],
+      "label_text": "BR-APP-01",
+      "ip_address": "",
+      "zone": "Consumers",
+      "is_shared_entity": true,
+      "canonical_id": "BR-APP-01"
+    }
+  ],
+  "text_blocks": [
+    {
+      "text": "AD-01",
+      "bbox": [
+        227,
+        448,
+        277,
+        462
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.255.0.1",
+      "bbox": [
+        212,
+        376,
+        292,
+        388
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "IAM-01",
+      "bbox": [
+        474,
+        448,
+        534,
+        462
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.255.0.2",
+      "bbox": [
+        464,
+        376,
+        544,
+        388
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "DNS-01",
+      "bbox": [
+        754,
+        349,
+        814,
+        363
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.255.0.3",
+      "bbox": [
+        744,
+        277,
+        824,
+        289
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "NTP-01",
+      "bbox": [
+        754,
+        614,
+        814,
+        628
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.255.0.4",
+      "bbox": [
+        744,
+        542,
+        824,
+        554
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "MON-01",
+      "bbox": [
+        1034,
+        415,
+        1094,
+        429
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.255.0.5",
+      "bbox": [
+        1024,
+        343,
+        1104,
+        355
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "SYSLOG-01",
+      "bbox": [
+        1019,
+        647,
+        1109,
+        661
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.255.0.6",
+      "bbox": [
+        1024,
+        575,
+        1104,
+        587
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "BR-APP-01",
+      "bbox": [
+        1243,
+        614,
+        1333,
+        628
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "Identity",
+      "bbox": [
+        94,
+        260,
+        142,
+        276
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "DNS/NTP",
+      "bbox": [
+        654,
+        227,
+        696,
+        243
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "Monitoring",
+      "bbox": [
+        962,
+        260,
+        1022,
+        276
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "Consumers",
+      "bbox": [
+        1214,
+        210,
+        1268,
+        226
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "LDAP",
+      "bbox": [
+        354,
+        408,
+        402,
+        428
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        260,
+        422,
+        280,
+        434
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        464,
+        402,
+        496,
+        414
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "API",
+      "bbox": [
+        760,
+        391,
+        808,
+        411
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        512,
+        422,
+        528,
+        434
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        1036,
+        369,
+        1056,
+        381
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "NTP",
+      "bbox": [
+        760,
+        441,
+        808,
+        461
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        792,
+        323,
+        824,
+        335
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        760,
+        568,
+        776,
+        580
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Syslog",
+      "bbox": [
+        1034,
+        491,
+        1094,
+        511
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        1072,
+        389,
+        1092,
+        401
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        1036,
+        601,
+        1056,
+        613
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "DNS",
+      "bbox": [
+        1012,
+        441,
+        1060,
+        461
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        1296,
+        588,
+        1316,
+        600
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        744,
+        303,
+        776,
+        315
+      ],
+      "text_type": "interface_label"
+    }
+  ],
+  "connectors": [
+    {
+      "connector_id": "edge_000",
+      "source": "AD-01",
+      "target": "IAM-01",
+      "relationship": "connected_to",
+      "label_text": "LDAP",
+      "source_interface": "Gi0/1",
+      "target_interface": "ge-0/0/1",
+      "points": [
+        [
+          252,
+          418
+        ],
+        [
+          378,
+          418
+        ],
+        [
+          504,
+          418
+        ]
+      ],
+      "bbox": [
+        248,
+        414,
+        508,
+        422
+      ],
+      "style": "solid"
+    },
+    {
+      "connector_id": "edge_001",
+      "source": "IAM-01",
+      "target": "MON-01",
+      "relationship": "monitored_by",
+      "label_text": "API",
+      "source_interface": "eth0",
+      "target_interface": "Gi0/2",
+      "points": [
+        [
+          504,
+          418
+        ],
+        [
+          784,
+          401
+        ],
+        [
+          1064,
+          385
+        ]
+      ],
+      "bbox": [
+        500,
+        381,
+        1068,
+        422
+      ],
+      "style": "solid"
+    },
+    {
+      "connector_id": "edge_002",
+      "source": "DNS-01",
+      "target": "NTP-01",
+      "relationship": "connected_to",
+      "label_text": "NTP",
+      "source_interface": "ge-0/0/1",
+      "target_interface": "eth1",
+      "points": [
+        [
+          784,
+          319
+        ],
+        [
+          784,
+          451
+        ],
+        [
+          784,
+          584
+        ]
+      ],
+      "bbox": [
+        780,
+        315,
+        788,
+        588
+      ],
+      "style": "solid"
+    },
+    {
+      "connector_id": "edge_003",
+      "source": "MON-01",
+      "target": "SYSLOG-01",
+      "relationship": "depends_on",
+      "label_text": "Syslog",
+      "source_interface": "Gi0/2",
+      "target_interface": "Gi0/1",
+      "points": [
+        [
+          1064,
+          385
+        ],
+        [
+          1064,
+          501
+        ],
+        [
+          1064,
+          617
+        ]
+      ],
+      "bbox": [
+        1060,
+        381,
+        1068,
+        621
+      ],
+      "style": "solid"
+    },
+    {
+      "connector_id": "edge_005",
+      "source": "BR-APP-01",
+      "target": "DNS-01",
+      "relationship": "depends_on",
+      "label_text": "DNS",
+      "source_interface": "Gi0/1",
+      "target_interface": "ge-0/0/1",
+      "points": [
+        [
+          1288,
+          584
+        ],
+        [
+          1036,
+          451
+        ],
+        [
+          784,
+          319
+        ]
+      ],
+      "bbox": [
+        780,
+        315,
+        1292,
+        588
+      ],
+      "style": "dashed"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "scenario_id": "enterprise_v3_0007",
+  "diagram_types": [
+    "branch_topology",
+    "datacenter_topology",
+    "app_db_topology"
+  ],
+  "num_diagrams": 3,
+  "num_nodes": 24,
+  "num_edges": 33,
+  "num_cross_diagram_edges": 3,
+  "num_shared_entities": 5,
+  "root_cause": "APP-LB-01",
+  "root_cause_diagram": "app_db_topology",
+  "root_cause_pattern": "lb_failure",
+  "severity": "critical",
+  "num_impacted_nodes": 3,
+  "num_impacted_diagrams": 1,
+  "split": "train"
+}

@@ -1,0 +1,201 @@
+{
+  "scenario_id": "enterprise_v3_0003",
+  "diagram_id": "wan_topology",
+  "diagram_type": "wan_topology",
+  "nodes": [
+    {
+      "id": "WAN-ISP-01",
+      "label": "WAN-ISP-01",
+      "type": "cloud_or_wan",
+      "ip_address": "172.16.3.1",
+      "zone": "Internet/ISP",
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology",
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-01",
+      "bbox": [
+        86,
+        293,
+        138,
+        345
+      ]
+    },
+    {
+      "id": "WAN-ISP-02",
+      "label": "WAN-ISP-02",
+      "type": "cloud_or_wan",
+      "ip_address": "172.16.3.2",
+      "zone": "Internet/ISP",
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology",
+      "is_shared_entity": false,
+      "canonical_id": "WAN-ISP-02",
+      "bbox": [
+        86,
+        600,
+        138,
+        652
+      ]
+    },
+    {
+      "id": "WAN-MPLS-CORE",
+      "label": "WAN-MPLS-CORE",
+      "type": "cloud_or_wan",
+      "ip_address": "172.16.3.3",
+      "zone": "WAN Core",
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology",
+      "is_shared_entity": false,
+      "canonical_id": "WAN-MPLS-CORE",
+      "bbox": [
+        576,
+        442,
+        628,
+        494
+      ]
+    },
+    {
+      "id": "WAN-PE-01",
+      "label": "WAN-PE-01",
+      "type": "router",
+      "ip_address": "172.16.3.4",
+      "zone": "WAN PE",
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology",
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-01",
+      "bbox": [
+        338,
+        326,
+        390,
+        378
+      ]
+    },
+    {
+      "id": "WAN-PE-02",
+      "label": "WAN-PE-02",
+      "type": "router",
+      "ip_address": "172.16.3.5",
+      "zone": "WAN PE",
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology",
+      "is_shared_entity": false,
+      "canonical_id": "WAN-PE-02",
+      "bbox": [
+        842,
+        558,
+        894,
+        610
+      ]
+    },
+    {
+      "id": "BR-RTR-01",
+      "label": "BR-RTR-01",
+      "type": "router",
+      "ip_address": "",
+      "zone": "Branch",
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology",
+      "is_shared_entity": true,
+      "canonical_id": "BR-RTR-01",
+      "bbox": [
+        338,
+        641,
+        390,
+        693
+      ]
+    },
+    {
+      "id": "DC-RTR-01",
+      "label": "DC-RTR-01",
+      "type": "router",
+      "ip_address": "",
+      "zone": "DC Edge",
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology",
+      "is_shared_entity": true,
+      "canonical_id": "DC-RTR-01",
+      "bbox": [
+        1066,
+        376,
+        1118,
+        428
+      ]
+    },
+    {
+      "id": "DC-FW-01",
+      "label": "DC-FW-01",
+      "type": "firewall",
+      "ip_address": "",
+      "zone": "DC Edge",
+      "diagram_id": "wan_topology",
+      "diagram_type": "wan_topology",
+      "is_shared_entity": true,
+      "canonical_id": "DC-FW-01",
+      "bbox": [
+        1178,
+        525,
+        1230,
+        577
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-ISP-01",
+      "target": "WAN-MPLS-CORE",
+      "relationship": "routes_to",
+      "label": "BGP",
+      "edge_scope": "local",
+      "connector_id": "edge_000"
+    },
+    {
+      "source": "WAN-ISP-02",
+      "target": "WAN-MPLS-CORE",
+      "relationship": "routes_to",
+      "label": "BGP",
+      "edge_scope": "local",
+      "connector_id": "edge_001"
+    },
+    {
+      "source": "WAN-MPLS-CORE",
+      "target": "WAN-PE-01",
+      "relationship": "routes_to",
+      "label": "MPLS",
+      "edge_scope": "local",
+      "connector_id": "edge_002"
+    },
+    {
+      "source": "WAN-MPLS-CORE",
+      "target": "WAN-PE-02",
+      "relationship": "routes_to",
+      "label": "MPLS",
+      "edge_scope": "local",
+      "connector_id": "edge_003"
+    },
+    {
+      "source": "WAN-PE-01",
+      "target": "BR-RTR-01",
+      "relationship": "connected_to",
+      "label": "L3VPN",
+      "edge_scope": "local",
+      "connector_id": "edge_004"
+    },
+    {
+      "source": "WAN-PE-02",
+      "target": "DC-RTR-01",
+      "relationship": "connected_to",
+      "label": "L3VPN",
+      "edge_scope": "local",
+      "connector_id": "edge_005"
+    },
+    {
+      "source": "DC-RTR-01",
+      "target": "DC-FW-01",
+      "relationship": "routes_to",
+      "label": "DC Edge",
+      "edge_scope": "local",
+      "connector_id": "edge_006"
+    }
+  ]
+}

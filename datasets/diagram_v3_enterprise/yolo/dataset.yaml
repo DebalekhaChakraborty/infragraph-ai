@@ -1,0 +1,7 @@
+path: D:\My Folders\Hackathons\infragraph-ai\datasets\diagram_v3_enterprise\yolo
+train: images/train
+val:   images/val
+test:  images/test
+
+nc: 8
+names: ['router', 'switch', 'firewall', 'server', 'database', 'load_balancer', 'cloud_or_wan', 'service']
