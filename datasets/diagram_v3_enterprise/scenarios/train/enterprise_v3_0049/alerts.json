@@ -56,8 +56,8 @@
     "APP-LB-01"
   ],
   "impacted_diagrams": [
-    "branch_topology",
     "app_db_topology",
+    "branch_topology",
     "wan_topology"
   ],
   "impact_paths": [

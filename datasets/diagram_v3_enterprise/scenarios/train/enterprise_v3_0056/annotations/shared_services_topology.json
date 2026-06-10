@@ -2,7 +2,7 @@
   "scenario_id": "enterprise_v3_0056",
   "diagram_id": "shared_services_topology",
   "diagram_type": "shared_services_topology",
-  "image_path": "D:\\My Folders\\Hackathons\\infragraph-ai\\datasets\\diagram_v3_enterprise\\scenarios\\train\\enterprise_v3_0056\\diagrams\\shared_services_topology.png",
+  "image_path": "/workspace/shared/infragraph-ai/datasets/diagram_v3_enterprise/scenarios/train/enterprise_v3_0056/diagrams/shared_services_topology.png",
   "width": 1400,
   "height": 900,
   "objects": [

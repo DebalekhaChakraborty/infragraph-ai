@@ -1,0 +1,1189 @@
+{
+  "scenario_id": "enterprise_v3_0067",
+  "diagram_id": "app_db_topology",
+  "diagram_type": "app_db_topology",
+  "image_path": "/workspace/shared/infragraph-ai/datasets/diagram_v3_enterprise/scenarios/val/enterprise_v3_0067/diagrams/app_db_topology.png",
+  "width": 1400,
+  "height": 900,
+  "objects": [
+    {
+      "object_id": "APP-LB-01",
+      "class_name": "load_balancer",
+      "bbox": [
+        414,
+        434,
+        482,
+        502
+      ],
+      "label_text": "APP-LB-01",
+      "ip_address": "10.11.1.2",
+      "zone": "App Ingress",
+      "is_shared_entity": false,
+      "canonical_id": "APP-LB-01"
+    },
+    {
+      "object_id": "APP-01",
+      "class_name": "server",
+      "bbox": [
+        736,
+        285,
+        804,
+        353
+      ],
+      "label_text": "APP-01",
+      "ip_address": "10.11.1.3",
+      "zone": "App Tier",
+      "is_shared_entity": false,
+      "canonical_id": "APP-01"
+    },
+    {
+      "object_id": "APP-02",
+      "class_name": "server",
+      "bbox": [
+        736,
+        451,
+        804,
+        519
+      ],
+      "label_text": "APP-02",
+      "ip_address": "10.11.1.4",
+      "zone": "App Tier",
+      "is_shared_entity": false,
+      "canonical_id": "APP-02"
+    },
+    {
+      "object_id": "SERVICE-API-01",
+      "class_name": "service",
+      "bbox": [
+        736,
+        617,
+        804,
+        685
+      ],
+      "label_text": "SERVICE-API-01",
+      "ip_address": "10.11.1.5",
+      "zone": "App Tier",
+      "is_shared_entity": false,
+      "canonical_id": "SERVICE-API-01"
+    },
+    {
+      "object_id": "DB-MASTER",
+      "class_name": "database",
+      "bbox": [
+        1058,
+        384,
+        1126,
+        452
+      ],
+      "label_text": "DB-MASTER",
+      "ip_address": "10.11.1.6",
+      "zone": "DB Tier",
+      "is_shared_entity": false,
+      "canonical_id": "DB-MASTER"
+    },
+    {
+      "object_id": "DB-CACHE-01",
+      "class_name": "server",
+      "bbox": [
+        1058,
+        583,
+        1126,
+        651
+      ],
+      "label_text": "DB-CACHE-01",
+      "ip_address": "10.11.1.7",
+      "zone": "DB Tier",
+      "is_shared_entity": false,
+      "canonical_id": "DB-CACHE-01"
+    },
+    {
+      "object_id": "DB-REPLICA-01",
+      "class_name": "database",
+      "bbox": [
+        1240,
+        683,
+        1308,
+        751
+      ],
+      "label_text": "DB-REPLICA-01",
+      "ip_address": "10.11.1.8",
+      "zone": "DB Tier",
+      "is_shared_entity": false,
+      "canonical_id": "DB-REPLICA-01"
+    },
+    {
+      "object_id": "DC-CORE-SW-01",
+      "class_name": "switch",
+      "bbox": [
+        106,
+        318,
+        174,
+        386
+      ],
+      "label_text": "DC-CORE-SW-01",
+      "ip_address": "",
+      "zone": "Network",
+      "is_shared_entity": true,
+      "canonical_id": "DC-CORE-SW-01"
+    },
+    {
+      "object_id": "DC-AGG-SW-01",
+      "class_name": "switch",
+      "bbox": [
+        106,
+        550,
+        174,
+        618
+      ],
+      "label_text": "DC-AGG-SW-01",
+      "ip_address": "",
+      "zone": "Network",
+      "is_shared_entity": true,
+      "canonical_id": "DC-AGG-SW-01"
+    },
+    {
+      "object_id": "IAM-01",
+      "class_name": "service",
+      "bbox": [
+        1282,
+        268,
+        1350,
+        336
+      ],
+      "label_text": "IAM-01",
+      "ip_address": "",
+      "zone": "Shared Services",
+      "is_shared_entity": true,
+      "canonical_id": "IAM-01"
+    },
+    {
+      "object_id": "DNS-01",
+      "class_name": "service",
+      "bbox": [
+        1282,
+        550,
+        1350,
+        618
+      ],
+      "label_text": "DNS-01",
+      "ip_address": "",
+      "zone": "Shared Services",
+      "is_shared_entity": true,
+      "canonical_id": "DNS-01"
+    }
+  ],
+  "text_blocks": [
+    {
+      "text": "APP-LB-01",
+      "bbox": [
+        403,
+        498,
+        493,
+        512
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.11.1.2",
+      "bbox": [
+        412,
+        426,
+        484,
+        438
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "APP-01",
+      "bbox": [
+        740,
+        349,
+        800,
+        363
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.11.1.3",
+      "bbox": [
+        734,
+        277,
+        806,
+        289
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "APP-02",
+      "bbox": [
+        740,
+        515,
+        800,
+        529
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.11.1.4",
+      "bbox": [
+        734,
+        443,
+        806,
+        455
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "SERVICE-API-01",
+      "bbox": [
+        700,
+        681,
+        840,
+        695
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.11.1.5",
+      "bbox": [
+        734,
+        609,
+        806,
+        621
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "DB-MASTER",
+      "bbox": [
+        1047,
+        448,
+        1137,
+        462
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.11.1.6",
+      "bbox": [
+        1056,
+        376,
+        1128,
+        388
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "DB-CACHE-01",
+      "bbox": [
+        1037,
+        647,
+        1147,
+        661
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.11.1.7",
+      "bbox": [
+        1056,
+        575,
+        1128,
+        587
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "DB-REPLICA-01",
+      "bbox": [
+        1209,
+        747,
+        1339,
+        761
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.11.1.8",
+      "bbox": [
+        1238,
+        675,
+        1310,
+        687
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "DC-CORE-SW-01",
+      "bbox": [
+        75,
+        382,
+        205,
+        396
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "DC-AGG-SW-01",
+      "bbox": [
+        80,
+        614,
+        200,
+        628
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "IAM-01",
+      "bbox": [
+        1286,
+        332,
+        1346,
+        346
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "DNS-01",
+      "bbox": [
+        1286,
+        614,
+        1346,
+        628
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "Network",
+      "bbox": [
+        66,
+        277,
+        108,
+        293
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "App Ingress",
+      "bbox": [
+        346,
+        277,
+        412,
+        293
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "App Tier",
+      "bbox": [
+        626,
+        210,
+        674,
+        226
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "DB Tier",
+      "bbox": [
+        962,
+        194,
+        1004,
+        210
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "Shared Services Ref",
+      "bbox": [
+        1242,
+        244,
+        1356,
+        260
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "HTTPS",
+      "bbox": [
+        269,
+        400,
+        319,
+        420
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        148,
+        356,
+        168,
+        368
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        408,
+        452,
+        440,
+        464
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "10G",
+      "bbox": [
+        270,
+        516,
+        318,
+        536
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        148,
+        588,
+        164,
+        600
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        420,
+        452,
+        440,
+        464
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "HTTPS",
+      "bbox": [
+        584,
+        383,
+        634,
+        403
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        456,
+        472,
+        488,
+        484
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        746,
+        303,
+        762,
+        315
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "JDBC",
+      "bbox": [
+        907,
+        358,
+        955,
+        378
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        778,
+        323,
+        798,
+        335
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        1064,
+        402,
+        1084,
+        414
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "API",
+      "bbox": [
+        907,
+        458,
+        955,
+        478
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        778,
+        323,
+        794,
+        335
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        1068,
+        601,
+        1084,
+        613
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "API",
+      "bbox": [
+        746,
+        475,
+        794,
+        495
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        778,
+        323,
+        798,
+        335
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        730,
+        635,
+        762,
+        647
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "HTTPS",
+      "bbox": [
+        584,
+        466,
+        634,
+        486
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        456,
+        472,
+        472,
+        484
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        742,
+        469,
+        762,
+        481
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "JDBC",
+      "bbox": [
+        907,
+        441,
+        955,
+        461
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        778,
+        489,
+        810,
+        501
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        1068,
+        402,
+        1084,
+        414
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "API",
+      "bbox": [
+        907,
+        541,
+        955,
+        561
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        778,
+        489,
+        798,
+        501
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        1064,
+        601,
+        1084,
+        613
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "API",
+      "bbox": [
+        746,
+        558,
+        794,
+        578
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        778,
+        489,
+        794,
+        501
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        746,
+        635,
+        762,
+        647
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "LDAP/IAM",
+      "bbox": [
+        1003,
+        466,
+        1083,
+        486
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        778,
+        655,
+        798,
+        667
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        1276,
+        286,
+        1308,
+        298
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "DNS",
+      "bbox": [
+        1019,
+        441,
+        1067,
+        461
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        778,
+        323,
+        794,
+        335
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        1288,
+        568,
+        1308,
+        580
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "DB Link",
+      "bbox": [
+        1148,
+        557,
+        1218,
+        577
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        1100,
+        422,
+        1132,
+        434
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        1250,
+        701,
+        1266,
+        713
+      ],
+      "text_type": "interface_label"
+    }
+  ],
+  "connectors": [
+    {
+      "connector_id": "edge_000",
+      "source": "DC-CORE-SW-01",
+      "target": "APP-LB-01",
+      "relationship": "routes_to",
+      "label_text": "HTTPS",
+      "source_interface": "Gi0/1",
+      "target_interface": "ge-0/0/1",
+      "points": [
+        [
+          140,
+          352
+        ],
+        [
+          294,
+          410
+        ],
+        [
+          448,
+          468
+        ]
+      ],
+      "bbox": [
+        136,
+        348,
+        452,
+        472
+      ],
+      "style": "dashed"
+    },
+    {
+      "connector_id": "edge_001",
+      "source": "DC-AGG-SW-01",
+      "target": "APP-LB-01",
+      "relationship": "routes_to",
+      "label_text": "10G",
+      "source_interface": "eth0",
+      "target_interface": "Gi0/2",
+      "points": [
+        [
+          140,
+          584
+        ],
+        [
+          294,
+          526
+        ],
+        [
+          448,
+          468
+        ]
+      ],
+      "bbox": [
+        136,
+        464,
+        452,
+        588
+      ],
+      "style": "dashed"
+    },
+    {
+      "connector_id": "edge_002",
+      "source": "APP-LB-01",
+      "target": "APP-01",
+      "relationship": "serves",
+      "label_text": "HTTPS",
+      "source_interface": "ge-0/0/1",
+      "target_interface": "eth1",
+      "points": [
+        [
+          448,
+          468
+        ],
+        [
+          609,
+          393
+        ],
+        [
+          770,
+          319
+        ]
+      ],
+      "bbox": [
+        444,
+        315,
+        774,
+        472
+      ],
+      "style": "solid"
+    },
+    {
+      "connector_id": "edge_003",
+      "source": "APP-01",
+      "target": "DB-MASTER",
+      "relationship": "depends_on",
+      "label_text": "JDBC",
+      "source_interface": "Gi0/2",
+      "target_interface": "Gi0/1",
+      "points": [
+        [
+          770,
+          319
+        ],
+        [
+          931,
+          368
+        ],
+        [
+          1092,
+          418
+        ]
+      ],
+      "bbox": [
+        766,
+        315,
+        1096,
+        422
+      ],
+      "style": "solid"
+    },
+    {
+      "connector_id": "edge_004",
+      "source": "APP-01",
+      "target": "DB-CACHE-01",
+      "relationship": "depends_on",
+      "label_text": "API",
+      "source_interface": "eth1",
+      "target_interface": "eth0",
+      "points": [
+        [
+          770,
+          319
+        ],
+        [
+          931,
+          468
+        ],
+        [
+          1092,
+          617
+        ]
+      ],
+      "bbox": [
+        766,
+        315,
+        1096,
+        621
+      ],
+      "style": "solid"
+    },
+    {
+      "connector_id": "edge_005",
+      "source": "APP-01",
+      "target": "SERVICE-API-01",
+      "relationship": "depends_on",
+      "label_text": "API",
+      "source_interface": "Gi0/1",
+      "target_interface": "ge-0/0/1",
+      "points": [
+        [
+          770,
+          319
+        ],
+        [
+          770,
+          485
+        ],
+        [
+          770,
+          651
+        ]
+      ],
+      "bbox": [
+        766,
+        315,
+        774,
+        655
+      ],
+      "style": "solid"
+    },
+    {
+      "connector_id": "edge_006",
+      "source": "APP-LB-01",
+      "target": "APP-02",
+      "relationship": "serves",
+      "label_text": "HTTPS",
+      "source_interface": "eth0",
+      "target_interface": "Gi0/2",
+      "points": [
+        [
+          448,
+          468
+        ],
+        [
+          609,
+          476
+        ],
+        [
+          770,
+          485
+        ]
+      ],
+      "bbox": [
+        444,
+        464,
+        774,
+        489
+      ],
+      "style": "solid"
+    },
+    {
+      "connector_id": "edge_007",
+      "source": "APP-02",
+      "target": "DB-MASTER",
+      "relationship": "depends_on",
+      "label_text": "JDBC",
+      "source_interface": "ge-0/0/1",
+      "target_interface": "eth1",
+      "points": [
+        [
+          770,
+          485
+        ],
+        [
+          931,
+          451
+        ],
+        [
+          1092,
+          418
+        ]
+      ],
+      "bbox": [
+        766,
+        414,
+        1096,
+        489
+      ],
+      "style": "solid"
+    },
+    {
+      "connector_id": "edge_008",
+      "source": "APP-02",
+      "target": "DB-CACHE-01",
+      "relationship": "depends_on",
+      "label_text": "API",
+      "source_interface": "Gi0/2",
+      "target_interface": "Gi0/1",
+      "points": [
+        [
+          770,
+          485
+        ],
+        [
+          931,
+          551
+        ],
+        [
+          1092,
+          617
+        ]
+      ],
+      "bbox": [
+        766,
+        481,
+        1096,
+        621
+      ],
+      "style": "solid"
+    },
+    {
+      "connector_id": "edge_009",
+      "source": "APP-02",
+      "target": "SERVICE-API-01",
+      "relationship": "depends_on",
+      "label_text": "API",
+      "source_interface": "eth1",
+      "target_interface": "eth0",
+      "points": [
+        [
+          770,
+          485
+        ],
+        [
+          770,
+          568
+        ],
+        [
+          770,
+          651
+        ]
+      ],
+      "bbox": [
+        766,
+        481,
+        774,
+        655
+      ],
+      "style": "solid"
+    },
+    {
+      "connector_id": "edge_010",
+      "source": "SERVICE-API-01",
+      "target": "IAM-01",
+      "relationship": "depends_on",
+      "label_text": "LDAP/IAM",
+      "source_interface": "Gi0/1",
+      "target_interface": "ge-0/0/1",
+      "points": [
+        [
+          770,
+          651
+        ],
+        [
+          1043,
+          476
+        ],
+        [
+          1316,
+          302
+        ]
+      ],
+      "bbox": [
+        766,
+        298,
+        1320,
+        655
+      ],
+      "style": "dashed"
+    },
+    {
+      "connector_id": "edge_011",
+      "source": "APP-01",
+      "target": "DNS-01",
+      "relationship": "depends_on",
+      "label_text": "DNS",
+      "source_interface": "eth0",
+      "target_interface": "Gi0/2",
+      "points": [
+        [
+          770,
+          319
+        ],
+        [
+          1043,
+          451
+        ],
+        [
+          1316,
+          584
+        ]
+      ],
+      "bbox": [
+        766,
+        315,
+        1320,
+        588
+      ],
+      "style": "dashed"
+    },
+    {
+      "connector_id": "edge_012",
+      "source": "DB-MASTER",
+      "target": "DB-REPLICA-01",
+      "relationship": "connected_to",
+      "label_text": "DB Link",
+      "source_interface": "ge-0/0/1",
+      "target_interface": "eth1",
+      "points": [
+        [
+          1092,
+          418
+        ],
+        [
+          1183,
+          567
+        ],
+        [
+          1274,
+          717
+        ]
+      ],
+      "bbox": [
+        1088,
+        414,
+        1278,
+        721
+      ],
+      "style": "solid"
+    }
+  ]
+}

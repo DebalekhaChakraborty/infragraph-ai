@@ -1,2 +1,36 @@
-# Avoid committing packaged repo archive inside the repo
-infragraph-ai.tar.gz
+# Python/cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/
+
+# Virtual environments
+.venv/
+.venv-rfdetr/
+.venv-ui/
+venv/
+env/
+
+# Logs/temp
+*.log
+*.tmp
+.DS_Store
+
+# Archives
+*.tar.gz
+*.zip
+
+# Heavy training/model artifacts
+outputs/rfdetr_v3/
+outputs/rfdetr_v3_smoke/
+outputs/**/model/
+runs/
+training_runs/
+*.ckpt
+*.pth
+*.pt
+*.onnx
+
+# Keep datasets in git for submission
+# datasets/ is intentionally NOT ignored

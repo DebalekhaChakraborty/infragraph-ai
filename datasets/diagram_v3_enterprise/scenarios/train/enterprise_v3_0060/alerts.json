@@ -48,8 +48,8 @@
     "APP-01"
   ],
   "impacted_diagrams": [
-    "app_db_topology",
-    "datacenter_topology"
+    "datacenter_topology",
+    "app_db_topology"
   ],
   "impact_paths": [
     [

@@ -1,0 +1,232 @@
+{
+  "scenario_id": "enterprise_v3_0011",
+  "diagram_types": [
+    "branch_topology",
+    "wan_topology",
+    "datacenter_topology",
+    "app_db_topology",
+    "shared_services_topology"
+  ],
+  "shared_entities": [
+    {
+      "canonical_id": "BR-RTR-01",
+      "appears_in": [
+        {
+          "diagram_id": "branch_topology",
+          "local_id": "BR-RTR-01"
+        },
+        {
+          "diagram_id": "wan_topology",
+          "local_id": "BR-RTR-01"
+        }
+      ]
+    },
+    {
+      "canonical_id": "WAN-MPLS-CORE",
+      "appears_in": [
+        {
+          "diagram_id": "wan_topology",
+          "local_id": "WAN-MPLS-CORE"
+        },
+        {
+          "diagram_id": "branch_topology",
+          "local_id": "WAN-MPLS-CORE"
+        }
+      ]
+    },
+    {
+      "canonical_id": "DC-RTR-01",
+      "appears_in": [
+        {
+          "diagram_id": "datacenter_topology",
+          "local_id": "DC-RTR-01"
+        },
+        {
+          "diagram_id": "wan_topology",
+          "local_id": "DC-RTR-01"
+        }
+      ]
+    },
+    {
+      "canonical_id": "DC-FW-01",
+      "appears_in": [
+        {
+          "diagram_id": "datacenter_topology",
+          "local_id": "DC-FW-01"
+        },
+        {
+          "diagram_id": "wan_topology",
+          "local_id": "DC-FW-01"
+        }
+      ]
+    },
+    {
+      "canonical_id": "DC-CORE-SW-01",
+      "appears_in": [
+        {
+          "diagram_id": "datacenter_topology",
+          "local_id": "DC-CORE-SW-01"
+        },
+        {
+          "diagram_id": "app_db_topology",
+          "local_id": "DC-CORE-SW-01"
+        }
+      ]
+    },
+    {
+      "canonical_id": "DC-AGG-SW-01",
+      "appears_in": [
+        {
+          "diagram_id": "datacenter_topology",
+          "local_id": "DC-AGG-SW-01"
+        },
+        {
+          "diagram_id": "app_db_topology",
+          "local_id": "DC-AGG-SW-01"
+        }
+      ]
+    },
+    {
+      "canonical_id": "BR-APP-01",
+      "appears_in": [
+        {
+          "diagram_id": "branch_topology",
+          "local_id": "BR-APP-01"
+        },
+        {
+          "diagram_id": "shared_services_topology",
+          "local_id": "BR-APP-01"
+        }
+      ]
+    },
+    {
+      "canonical_id": "APP-01",
+      "appears_in": [
+        {
+          "diagram_id": "app_db_topology",
+          "local_id": "APP-01"
+        },
+        {
+          "diagram_id": "shared_services_topology",
+          "local_id": "APP-01"
+        }
+      ]
+    },
+    {
+      "canonical_id": "IAM-01",
+      "appears_in": [
+        {
+          "diagram_id": "shared_services_topology",
+          "local_id": "IAM-01"
+        },
+        {
+          "diagram_id": "app_db_topology",
+          "local_id": "IAM-01"
+        }
+      ]
+    },
+    {
+      "canonical_id": "DNS-01",
+      "appears_in": [
+        {
+          "diagram_id": "shared_services_topology",
+          "local_id": "DNS-01"
+        },
+        {
+          "diagram_id": "app_db_topology",
+          "local_id": "DNS-01"
+        }
+      ]
+    }
+  ],
+  "cross_diagram_edges": [
+    {
+      "source": "BR-RTR-01",
+      "source_diagram": "branch_topology",
+      "target": "WAN-PE-01",
+      "target_diagram": "wan_topology",
+      "relationship": "connected_to",
+      "label": "MPLS-L3VPN"
+    },
+    {
+      "source": "WAN-MPLS-CORE",
+      "source_diagram": "branch_topology",
+      "target": "WAN-MPLS-CORE",
+      "target_diagram": "wan_topology",
+      "relationship": "shared_entity",
+      "label": "same-node"
+    },
+    {
+      "source": "WAN-PE-02",
+      "source_diagram": "wan_topology",
+      "target": "DC-RTR-01",
+      "target_diagram": "datacenter_topology",
+      "relationship": "connected_to",
+      "label": "MPLS-L3VPN"
+    },
+    {
+      "source": "DC-CORE-SW-01",
+      "source_diagram": "datacenter_topology",
+      "target": "DC-CORE-SW-01",
+      "target_diagram": "app_db_topology",
+      "relationship": "shared_entity",
+      "label": "same-node"
+    },
+    {
+      "source": "DC-CORE-SW-01",
+      "source_diagram": "datacenter_topology",
+      "target": "APP-LB-01",
+      "target_diagram": "app_db_topology",
+      "relationship": "routes_to",
+      "label": "HTTPS"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "source_diagram": "datacenter_topology",
+      "target": "APP-LB-01",
+      "target_diagram": "app_db_topology",
+      "relationship": "routes_to",
+      "label": "10G"
+    },
+    {
+      "source": "BR-RTR-01",
+      "source_diagram": "branch_topology",
+      "target": "DNS-01",
+      "target_diagram": "shared_services_topology",
+      "relationship": "depends_on",
+      "label": "DNS"
+    },
+    {
+      "source": "APP-LB-01",
+      "source_diagram": "app_db_topology",
+      "target": "IAM-01",
+      "target_diagram": "shared_services_topology",
+      "relationship": "depends_on",
+      "label": "Auth"
+    },
+    {
+      "source": "APP-01",
+      "source_diagram": "app_db_topology",
+      "target": "IAM-01",
+      "target_diagram": "shared_services_topology",
+      "relationship": "depends_on",
+      "label": "LDAP/IAM"
+    },
+    {
+      "source": "APP-01",
+      "source_diagram": "app_db_topology",
+      "target": "DNS-01",
+      "target_diagram": "shared_services_topology",
+      "relationship": "depends_on",
+      "label": "DNS"
+    },
+    {
+      "source": "DB-MASTER",
+      "source_diagram": "app_db_topology",
+      "target": "MON-01",
+      "target_diagram": "shared_services_topology",
+      "relationship": "depends_on",
+      "label": "Monitor"
+    }
+  ]
+}

@@ -2,7 +2,7 @@
   "scenario_id": "enterprise_v3_0006",
   "diagram_id": "datacenter_topology",
   "diagram_type": "datacenter_topology",
-  "image_path": "D:\\My Folders\\Hackathons\\infragraph-ai\\datasets\\diagram_v3_enterprise\\scenarios\\train\\enterprise_v3_0006\\diagrams\\datacenter_topology.png",
+  "image_path": "/workspace/shared/infragraph-ai/datasets/diagram_v3_enterprise/scenarios/train/enterprise_v3_0006/diagrams/datacenter_topology.png",
   "width": 1400,
   "height": 900,
   "objects": [

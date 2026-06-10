@@ -2,7 +2,7 @@
   "scenario_id": "enterprise_v3_0005",
   "diagram_id": "app_db_topology",
   "diagram_type": "app_db_topology",
-  "image_path": "D:\\My Folders\\Hackathons\\infragraph-ai\\datasets\\diagram_v3_enterprise\\scenarios\\train\\enterprise_v3_0005\\diagrams\\app_db_topology.png",
+  "image_path": "/workspace/shared/infragraph-ai/datasets/diagram_v3_enterprise/scenarios/train/enterprise_v3_0005/diagrams/app_db_topology.png",
   "width": 1400,
   "height": 900,
   "objects": [

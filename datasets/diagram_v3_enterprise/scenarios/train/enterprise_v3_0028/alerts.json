@@ -1,0 +1,48 @@
+{
+  "scenario_id": "enterprise_v3_0028",
+  "root_cause": "IAM-01",
+  "root_cause_diagram": "shared_services_topology",
+  "root_cause_pattern": "shared_id_failure",
+  "severity": "critical",
+  "alerts": [
+    {
+      "node": "IAM-01",
+      "diagram_id": "shared_services_topology",
+      "alert_type": "link_down",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "MON-01",
+      "diagram_id": "shared_services_topology",
+      "alert_type": "error_rate",
+      "severity": "high",
+      "time_offset_min": 1
+    },
+    {
+      "node": "BR-WRK-01",
+      "diagram_id": "branch_topology",
+      "alert_type": "latency",
+      "severity": "warning",
+      "time_offset_min": 6
+    }
+  ],
+  "impacted_nodes": [
+    "MON-01",
+    "BR-WRK-01"
+  ],
+  "impacted_diagrams": [
+    "shared_services_topology",
+    "branch_topology"
+  ],
+  "impact_paths": [
+    [
+      "IAM-01",
+      "MON-01"
+    ],
+    [
+      "IAM-01",
+      "BR-WRK-01"
+    ]
+  ]
+}

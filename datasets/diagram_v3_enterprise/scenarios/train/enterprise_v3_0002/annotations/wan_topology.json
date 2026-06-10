@@ -2,7 +2,7 @@
   "scenario_id": "enterprise_v3_0002",
   "diagram_id": "wan_topology",
   "diagram_type": "wan_topology",
-  "image_path": "D:\\My Folders\\Hackathons\\infragraph-ai\\datasets\\diagram_v3_enterprise\\scenarios\\train\\enterprise_v3_0002\\diagrams\\wan_topology.png",
+  "image_path": "/workspace/shared/infragraph-ai/datasets/diagram_v3_enterprise/scenarios/train/enterprise_v3_0002/diagrams/wan_topology.png",
   "width": 1400,
   "height": 900,
   "objects": [

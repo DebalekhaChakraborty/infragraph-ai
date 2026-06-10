@@ -1,0 +1,299 @@
+{
+  "scenario_id": "enterprise_v3_0025",
+  "diagram_id": "app_db_topology",
+  "diagram_type": "app_db_topology",
+  "nodes": [
+    {
+      "id": "APP-LB-01",
+      "label": "APP-LB-01",
+      "type": "load_balancer",
+      "ip_address": "10.225.1.2",
+      "zone": "App Ingress",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "is_shared_entity": false,
+      "canonical_id": "APP-LB-01",
+      "bbox": [
+        422,
+        442,
+        474,
+        494
+      ]
+    },
+    {
+      "id": "APP-01",
+      "label": "APP-01",
+      "type": "server",
+      "ip_address": "10.225.1.3",
+      "zone": "App Tier",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "is_shared_entity": false,
+      "canonical_id": "APP-01",
+      "bbox": [
+        744,
+        293,
+        796,
+        345
+      ]
+    },
+    {
+      "id": "APP-02",
+      "label": "APP-02",
+      "type": "server",
+      "ip_address": "10.225.1.4",
+      "zone": "App Tier",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "is_shared_entity": false,
+      "canonical_id": "APP-02",
+      "bbox": [
+        744,
+        459,
+        796,
+        511
+      ]
+    },
+    {
+      "id": "APP-03",
+      "label": "APP-03",
+      "type": "server",
+      "ip_address": "10.225.1.5",
+      "zone": "App Tier",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "is_shared_entity": false,
+      "canonical_id": "APP-03",
+      "bbox": [
+        744,
+        558,
+        796,
+        610
+      ]
+    },
+    {
+      "id": "SERVICE-API-01",
+      "label": "SERVICE-API-01",
+      "type": "service",
+      "ip_address": "10.225.1.6",
+      "zone": "App Tier",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "is_shared_entity": false,
+      "canonical_id": "SERVICE-API-01",
+      "bbox": [
+        744,
+        625,
+        796,
+        677
+      ]
+    },
+    {
+      "id": "DB-MASTER",
+      "label": "DB-MASTER",
+      "type": "database",
+      "ip_address": "10.225.1.7",
+      "zone": "DB Tier",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "is_shared_entity": false,
+      "canonical_id": "DB-MASTER",
+      "bbox": [
+        1066,
+        392,
+        1118,
+        444
+      ]
+    },
+    {
+      "id": "DB-CACHE-01",
+      "label": "DB-CACHE-01",
+      "type": "server",
+      "ip_address": "10.225.1.8",
+      "zone": "DB Tier",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "is_shared_entity": false,
+      "canonical_id": "DB-CACHE-01",
+      "bbox": [
+        1066,
+        591,
+        1118,
+        643
+      ]
+    },
+    {
+      "id": "DB-REPLICA-01",
+      "label": "DB-REPLICA-01",
+      "type": "database",
+      "ip_address": "10.225.1.9",
+      "zone": "DB Tier",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "is_shared_entity": false,
+      "canonical_id": "DB-REPLICA-01",
+      "bbox": [
+        1248,
+        691,
+        1300,
+        743
+      ]
+    },
+    {
+      "id": "DC-CORE-SW-01",
+      "label": "DC-CORE-SW-01",
+      "type": "switch",
+      "ip_address": "",
+      "zone": "Network",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "is_shared_entity": true,
+      "canonical_id": "DC-CORE-SW-01",
+      "bbox": [
+        114,
+        326,
+        166,
+        378
+      ]
+    },
+    {
+      "id": "DC-AGG-SW-01",
+      "label": "DC-AGG-SW-01",
+      "type": "switch",
+      "ip_address": "",
+      "zone": "Network",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "is_shared_entity": true,
+      "canonical_id": "DC-AGG-SW-01",
+      "bbox": [
+        114,
+        558,
+        166,
+        610
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "DC-CORE-SW-01",
+      "target": "APP-LB-01",
+      "relationship": "routes_to",
+      "label": "HTTPS",
+      "edge_scope": "local",
+      "connector_id": "edge_000"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "APP-LB-01",
+      "relationship": "routes_to",
+      "label": "10G",
+      "edge_scope": "local",
+      "connector_id": "edge_001"
+    },
+    {
+      "source": "APP-LB-01",
+      "target": "APP-01",
+      "relationship": "serves",
+      "label": "HTTPS",
+      "edge_scope": "local",
+      "connector_id": "edge_002"
+    },
+    {
+      "source": "APP-01",
+      "target": "DB-MASTER",
+      "relationship": "depends_on",
+      "label": "JDBC",
+      "edge_scope": "local",
+      "connector_id": "edge_003"
+    },
+    {
+      "source": "APP-01",
+      "target": "DB-CACHE-01",
+      "relationship": "depends_on",
+      "label": "API",
+      "edge_scope": "local",
+      "connector_id": "edge_004"
+    },
+    {
+      "source": "APP-01",
+      "target": "SERVICE-API-01",
+      "relationship": "depends_on",
+      "label": "API",
+      "edge_scope": "local",
+      "connector_id": "edge_005"
+    },
+    {
+      "source": "APP-LB-01",
+      "target": "APP-02",
+      "relationship": "serves",
+      "label": "HTTPS",
+      "edge_scope": "local",
+      "connector_id": "edge_006"
+    },
+    {
+      "source": "APP-02",
+      "target": "DB-MASTER",
+      "relationship": "depends_on",
+      "label": "JDBC",
+      "edge_scope": "local",
+      "connector_id": "edge_007"
+    },
+    {
+      "source": "APP-02",
+      "target": "DB-CACHE-01",
+      "relationship": "depends_on",
+      "label": "API",
+      "edge_scope": "local",
+      "connector_id": "edge_008"
+    },
+    {
+      "source": "APP-02",
+      "target": "SERVICE-API-01",
+      "relationship": "depends_on",
+      "label": "API",
+      "edge_scope": "local",
+      "connector_id": "edge_009"
+    },
+    {
+      "source": "APP-LB-01",
+      "target": "APP-03",
+      "relationship": "serves",
+      "label": "HTTPS",
+      "edge_scope": "local",
+      "connector_id": "edge_010"
+    },
+    {
+      "source": "APP-03",
+      "target": "DB-MASTER",
+      "relationship": "depends_on",
+      "label": "JDBC",
+      "edge_scope": "local",
+      "connector_id": "edge_011"
+    },
+    {
+      "source": "APP-03",
+      "target": "DB-CACHE-01",
+      "relationship": "depends_on",
+      "label": "API",
+      "edge_scope": "local",
+      "connector_id": "edge_012"
+    },
+    {
+      "source": "APP-03",
+      "target": "SERVICE-API-01",
+      "relationship": "depends_on",
+      "label": "API",
+      "edge_scope": "local",
+      "connector_id": "edge_013"
+    },
+    {
+      "source": "DB-MASTER",
+      "target": "DB-REPLICA-01",
+      "relationship": "connected_to",
+      "label": "DB Link",
+      "edge_scope": "local",
+      "connector_id": "edge_016"
+    }
+  ]
+}
