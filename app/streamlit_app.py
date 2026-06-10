@@ -60,17 +60,19 @@ _src_dir = str(REPO_ROOT / "src")
 if _src_dir not in _sys.path:
     _sys.path.insert(0, _src_dir)
 try:
-    from runtime_ingestion import run_live_v3_ingestion as _live_ingest          # type: ignore
-    from runtime_ingestion import run_enterprise_absorption as _live_absorb      # type: ignore
-    from runtime_ingestion import run_ingestion as _run_ingestion                # type: ignore
-    from runtime_ingestion import run_absorption as _run_absorption              # type: ignore
+    from runtime_ingestion import run_live_v3_ingestion as _live_ingest                    # type: ignore
+    from runtime_ingestion import run_enterprise_absorption as _live_absorb                # type: ignore
+    from runtime_ingestion import run_ingestion as _run_ingestion                          # type: ignore
+    from runtime_ingestion import run_absorption as _run_absorption                        # type: ignore
+    from runtime_ingestion import render_v3_annotation_preview as _render_ann_preview      # type: ignore
     _RUNTIME_INGESTION = True
 except Exception:
     _RUNTIME_INGESTION = False
-    _live_ingest      = None  # type: ignore
-    _live_absorb      = None  # type: ignore
-    _run_ingestion    = None  # type: ignore
-    _run_absorption   = None  # type: ignore
+    _live_ingest         = None  # type: ignore
+    _live_absorb         = None  # type: ignore
+    _run_ingestion       = None  # type: ignore
+    _run_absorption      = None  # type: ignore
+    _render_ann_preview  = None  # type: ignore
 
 try:
     from live_detector import find_best_yolo_checkpoint as _find_ckpt  # type: ignore
@@ -682,9 +684,49 @@ def build_onboarding_sample_catalog(repo_root_str: str, max_samples: int = 20) -
     return records
 
 
+_MANIFEST_PATH_KEYS_GALLERY = (
+    "image_path", "annotation_path", "detected_preview_path", "preview_path",
+    "local_graph_path", "enterprise_graph_path", "stitch_map_path", "alerts_path",
+)
+_MANIFEST_PATH_KEYS_ONBOARD = (
+    "image_path", "annotation_path", "local_graph_path",
+    "enterprise_graph_path", "stitch_map_path", "alerts_path", "sample_dir",
+)
+_ROOTED_SEGS = ("datasets", "assets", "outputs", "scripts", "src", "app")
+
+
+def _resolve_manifest_path(raw: str, root: Path) -> str:
+    """
+    Resolve a manifest path to an absolute string that exists on disk.
+
+    Strategy (in order):
+    1. Empty → return "".
+    2. Already a non-absolute (relative) path → join with root.
+    3. Absolute and exists → return as-is.
+    4. Absolute but stale (built on another machine) → find the first known
+       top-level segment and re-root under `root`.
+    5. Fall through → return original string (caller checks existence).
+    """
+    if not raw:
+        return ""
+    p = Path(raw)
+    if not p.is_absolute():
+        return str(root / p)
+    if p.exists():
+        return str(p)
+    # Attempt re-rooting for stale absolute paths
+    parts = p.parts
+    for i, part in enumerate(parts):
+        if part in _ROOTED_SEGS:
+            candidate = root.joinpath(*parts[i:])
+            if candidate.exists():
+                return str(candidate)
+    return str(p)
+
+
 @st.cache_data(ttl=3600)
 def _load_gallery_manifest(repo_root_str: str) -> list[dict]:
-    """Load assets/gallery/manifest.json and resolve relative paths to absolute."""
+    """Load assets/gallery/manifest.json and resolve/repair all paths."""
     root = Path(repo_root_str)
     mf   = root / "assets" / "gallery" / "manifest.json"
     if not mf.exists():
@@ -693,21 +735,17 @@ def _load_gallery_manifest(repo_root_str: str) -> list[dict]:
         records: list[dict] = json.loads(mf.read_text(encoding="utf-8"))
     except Exception:
         return []
-    _path_keys = (
-        "image_path", "annotation_path", "detected_preview_path", "preview_path",
-        "local_graph_path", "enterprise_graph_path", "stitch_map_path", "alerts_path",
-    )
     for r in records:
-        for k in _path_keys:
+        for k in _MANIFEST_PATH_KEYS_GALLERY:
             v = r.get(k, "")
-            if v and not Path(v).is_absolute():
-                r[k] = str(root / v)
+            if v:
+                r[k] = _resolve_manifest_path(v, root)
     return records
 
 
 @st.cache_data(ttl=3600)
 def _load_onboarding_manifest(repo_root_str: str) -> list[dict]:
-    """Load assets/onboarding/manifest.json and resolve relative paths to absolute."""
+    """Load assets/onboarding/manifest.json and resolve/repair all paths."""
     root = Path(repo_root_str)
     mf   = root / "assets" / "onboarding" / "manifest.json"
     if not mf.exists():
@@ -716,15 +754,11 @@ def _load_onboarding_manifest(repo_root_str: str) -> list[dict]:
         records: list[dict] = json.loads(mf.read_text(encoding="utf-8"))
     except Exception:
         return []
-    _path_keys = (
-        "image_path", "annotation_path", "local_graph_path",
-        "enterprise_graph_path", "stitch_map_path", "alerts_path", "sample_dir",
-    )
     for r in records:
-        for k in _path_keys:
+        for k in _MANIFEST_PATH_KEYS_ONBOARD:
             v = r.get(k, "")
-            if v and not Path(v).is_absolute():
-                r[k] = str(root / v)
+            if v:
+                r[k] = _resolve_manifest_path(v, root)
     return records
 
 
@@ -1073,6 +1107,88 @@ def _ss_dict(key: str) -> dict:
     """Return a session-state value as a dict, guarding against None."""
     value = st.session_state.get(key)
     return value if isinstance(value, dict) else {}
+
+
+# ── Path repair ───────────────────────────────────────────────────────────────
+_ROOTED_SEGMENTS = ("datasets", "assets", "outputs", "scripts", "src", "app")
+
+
+def _repair_path(raw: str, repo_root: Path) -> Path:
+    """
+    Return a resolved Path for `raw`.
+
+    Priority:
+    1. If the path exists as-is → return it.
+    2. If it is absolute but stale (built on a different machine), try re-rooting:
+       - Find the first occurrence of a known top-level segment in the path parts
+         and reconstruct using repo_root.
+    3. If it is relative, join with repo_root.
+    4. Fall through: return the original Path unchanged (caller checks .exists()).
+    """
+    if not raw:
+        return Path(raw)
+    p = Path(raw)
+    if p.exists():
+        return p
+    # try to re-root absolute stale paths
+    if p.is_absolute():
+        parts = p.parts
+        for i, part in enumerate(parts):
+            if part in _ROOTED_SEGMENTS:
+                candidate = repo_root.joinpath(*parts[i:])
+                if candidate.exists():
+                    return candidate
+        # last resort: join just the filename under the same relative structure
+        return p
+    # relative path
+    candidate = repo_root / p
+    if candidate.exists():
+        return candidate
+    return p
+
+
+def _ensure_annotation_overlay(record: dict, repo_root: Path) -> tuple[str, dict]:
+    """
+    Render a Verified Annotation Overlay for a gallery record and cache the result.
+
+    Returns (overlay_path_str, render_meta).
+    overlay_path_str is "" on failure.
+    Never raises.
+    """
+    if _render_ann_preview is None:
+        return "", {"error": "render_v3_annotation_preview not imported"}
+
+    img_raw = record.get("image_path", "")
+    ann_raw = record.get("annotation_path", "")
+    if not img_raw or not ann_raw:
+        return "", {"error": "image_path or annotation_path missing from record"}
+
+    img_p = _repair_path(img_raw, repo_root)
+    ann_p = _repair_path(ann_raw, repo_root)
+
+    if not img_p.exists():
+        return "", {"error": f"image not found: {img_p}"}
+    if not ann_p.exists():
+        return "", {"error": f"annotation not found: {ann_p}"}
+
+    # Build a stable output path so repeated gallery selections reuse the file
+    gid = record.get("gallery_id", "")
+    if not gid:
+        scen = record.get("source_scenario_id", "unknown")
+        did  = record.get("source_diagram_id",  "unknown")
+        gid  = f"{scen}__{did}"
+    out_dir = repo_root / "outputs" / "annotation_overlays" / gid
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / "detected.png"
+
+    try:
+        meta = _render_ann_preview(img_p, ann_p, out_path)
+    except Exception as exc:
+        return "", {"error": str(exc)}
+
+    if out_path.exists():
+        return str(out_path), meta
+    return "", meta
 
 
 def _safe_read_json(path: Path) -> dict | list:
@@ -1966,6 +2082,15 @@ def _tab_diagram_gallery() -> None:
     ann_p  = record.get("annotation_path", "")
     is_v3  = record.get("source_dataset") == "v3"
 
+    # Repair stale paths in case the record came from a manifest built on another machine
+    img_p = _resolve_manifest_path(img_p, REPO_ROOT)
+    det_p = _resolve_manifest_path(det_p, REPO_ROOT)
+    ann_p = _resolve_manifest_path(ann_p, REPO_ROOT)
+
+    img_exists = bool(img_p and Path(img_p).exists())
+    det_exists = bool(det_p and Path(det_p).exists())
+    ann_exists = bool(ann_p and Path(ann_p).exists())
+
     c1, c2 = st.columns(2)
     with c1:
         st.markdown(
@@ -1973,62 +2098,75 @@ def _tab_diagram_gallery() -> None:
             '<div class="compare-label">Source Diagram</div>',
             unsafe_allow_html=True,
         )
-        if img_p and Path(img_p).exists():
+        if img_exists:
             st.image(img_p, use_container_width=True)
         else:
-            st.warning("Image not found.")
+            st.warning(f"Image not found: `{img_p}`")
 
     with c2:
-        if det_p and Path(det_p).exists():
+        # Priority: a) trained detector preview  b) Verified Annotation Overlay  c) pending
+        _overlay_path = ""
+        _overlay_meta: dict = {}
+        _render_err   = ""
+
+        if det_exists:
             src_label = record.get("source_dataset", "").upper()
-            badge_lbl = "Trained Detector Output"
             st.markdown(
-                f'<div class="compare-badge predicted">{badge_lbl}</div>'
+                f'<div class="compare-badge predicted">Trained Detector Output</div>'
                 f'<div class="compare-label">{src_label} trained detector</div>',
                 unsafe_allow_html=True,
             )
             st.image(det_p, use_container_width=True)
-        elif is_v3 and ann_p and Path(ann_p).exists():
-            # render annotation overlay on-the-fly
-            import tempfile as _tf, sys as _sys
-            _src_dir = str(REPO_ROOT / "src")
-            if _src_dir not in _sys.path:
-                _sys.path.insert(0, _src_dir)
-            try:
-                from runtime_ingestion import render_v3_annotation_preview as _render_ann
-                _tmp = Path(_tf.mktemp(suffix=".png"))
-                _meta = _render_ann(Path(img_p), Path(ann_p), _tmp)
-                if _meta.get("rendered") and _tmp.exists():
-                    st.markdown(
-                        '<div class="compare-badge prepared">Verified Annotation Overlay</div>'
-                        '<div class="compare-label">Graph-ready annotation bboxes</div>',
-                        unsafe_allow_html=True,
-                    )
-                    st.image(str(_tmp), use_container_width=True)
-                    try:
-                        _tmp.unlink()
-                    except Exception:
-                        pass
-                else:
-                    st.info("Annotation overlay not available.")
-            except Exception:
-                st.info("Annotation overlay not available.")
+        elif is_v3 and img_exists and ann_exists:
+            with st.spinner("Rendering annotation overlay…"):
+                _overlay_path, _overlay_meta = _ensure_annotation_overlay(record, REPO_ROOT)
+            _render_err = _overlay_meta.get("error", "")
+            if _overlay_path and Path(_overlay_path).exists():
+                n_obj = _overlay_meta.get("boxes_rendered", 0)
+                n_con = _overlay_meta.get("connectors_rendered", 0)
+                st.markdown(
+                    '<div class="compare-badge prepared">Verified Annotation Overlay</div>'
+                    f'<div class="compare-label">{n_obj} objects, {n_con} connectors</div>',
+                    unsafe_allow_html=True,
+                )
+                st.image(_overlay_path, use_container_width=True)
+            else:
+                st.markdown(
+                    '<div class="compare-badge missing">Detection overlay pending.</div>'
+                    '<div class="compare-label">Load graph metadata or run live intelligence '
+                    'from Onboard New Diagram.</div>',
+                    unsafe_allow_html=True,
+                )
+                if img_exists:
+                    st.image(img_p, use_container_width=True)
         else:
             st.markdown(
-                '<div class="compare-badge missing">Detection Output Pending</div>'
-                '<div class="compare-label">Run live detector to generate output</div>',
+                '<div class="compare-badge missing">Detection overlay pending.</div>'
+                '<div class="compare-label">Load graph metadata or run live intelligence '
+                'from Onboard New Diagram.</div>',
                 unsafe_allow_html=True,
             )
-            if img_p and Path(img_p).exists():
+            if img_exists:
                 st.image(img_p, use_container_width=True)
+
+    # ── Overlay diagnostics (under Source details expander further below) ─────
+    # Store for use in the expander; keyed by gallery_id so it survives re-render
+    st.session_state[f"_diag_{record.get('gallery_id','')}"] = {
+        "image_path":    img_p,
+        "img_exists":    img_exists,
+        "annotation_path": ann_p,
+        "ann_exists":    ann_exists,
+        "overlay_path":  _overlay_path,
+        "render_error":  _render_err,
+    }
 
     # ── Badges ────────────────────────────────────────────────────────────────
     has_graph = record.get("graph_metadata_available", False)
     has_conn  = record.get("connector_metadata_available", False)
     has_ocr   = record.get("ocr_metadata_available", False)
     has_ent   = record.get("enterprise_mapping_available", False)
-    has_det   = bool(det_p and Path(det_p).exists())
-    has_ann   = bool(ann_p and Path(ann_p).exists())
+    has_det   = det_exists
+    has_ann   = ann_exists
 
     def _badge(label: str, ok: bool, ok_cls: str = "badge-success") -> str:
         cls = ok_cls if ok else "badge-warn"
@@ -2054,7 +2192,7 @@ def _tab_diagram_gallery() -> None:
     st.markdown(badge_html, unsafe_allow_html=True)
 
     # ── Load graph metadata action ────────────────────────────────────────────
-    lg_path = record.get("local_graph_path", "")
+    lg_path = _resolve_manifest_path(record.get("local_graph_path", ""), REPO_ROOT)
     if has_graph and lg_path and Path(lg_path).exists():
         if st.button("Load Graph Metadata", type="secondary",
                      use_container_width=False, key="gal_load_graph"):
@@ -2071,7 +2209,7 @@ def _tab_diagram_gallery() -> None:
             st.session_state.edge_table = pd.DataFrame(e_rows)
             st.success(f"Graph metadata loaded: {len(n_rows)} nodes, {len(e_rows)} edges.")
 
-    # ── Source details expander ───────────────────────────────────────────────
+    # ── Source details + overlay diagnostics expander ────────────────────────
     with st.expander("Source details", expanded=False):
         st.markdown(
             f'**Dataset:** {record.get("source_dataset","").upper()} &nbsp;|&nbsp; '
@@ -2086,6 +2224,17 @@ def _tab_diagram_gallery() -> None:
             v = record.get(key, "")
             if v:
                 st.caption(f"{lbl}: `{v}`")
+
+        # Overlay diagnostics
+        _diag = st.session_state.get(f"_diag_{record.get('gallery_id','')}", {})
+        if _diag:
+            st.markdown("**Overlay diagnostics**")
+            st.caption(f"image_path exists: `{_diag.get('img_exists', '?')}`")
+            st.caption(f"annotation_path exists: `{_diag.get('ann_exists', '?')}`")
+            if _diag.get("overlay_path"):
+                st.caption(f"overlay_path: `{_diag['overlay_path']}`")
+            if _diag.get("render_error"):
+                st.caption(f"render error: `{_diag['render_error']}`")
     # Gallery does not include a live ingestion button — use Onboard New Diagram for that
 
 
