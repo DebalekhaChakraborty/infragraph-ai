@@ -44,6 +44,7 @@ st.set_page_config(
 
 REPO_ROOT = Path(__file__).parent.parent
 _GALLERY_REFERENCE_ID = "diagram_0373"
+_OVERLAY_RENDERER_VERSION = "v3_clean_overlay_v1"
 
 
 def get_infragraph_v3_root(repo_root: Path) -> Path:
@@ -1238,15 +1239,34 @@ def _ensure_annotation_overlay(
     out_dir  = repo_root / "outputs" / "annotation_overlays" / gid
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / "detected.png"
+    meta_path = out_dir / "detected.meta.json"
 
     # ── skip re-render if already on disk ─────────────────────────────────────
-    if out_path.exists():
+    cached_meta = load_json(str(meta_path)) if meta_path.exists() else None
+    if (
+        out_path.exists()
+        and isinstance(cached_meta, dict)
+        and cached_meta.get("renderer_version") == _OVERLAY_RENDERER_VERSION
+    ):
         return str(out_path), {"rendered": True, "cached": True,
-                               "boxes_rendered": 0, "connectors_rendered": 0,
+                               "boxes_rendered": cached_meta.get("boxes_rendered", 0),
+                               "boxes_skipped": cached_meta.get("boxes_skipped", 0),
+                               "boxes_skipped_large": cached_meta.get("boxes_skipped_large", 0),
+                               "connectors_rendered": cached_meta.get("connectors_rendered", 0),
+                               "connectors_skipped": cached_meta.get("connectors_skipped", 0),
+                               "overlay_mode": cached_meta.get("overlay_mode", "clean"),
+                               "draw_connectors": cached_meta.get("draw_connectors", False),
+                               "renderer_version": cached_meta.get("renderer_version"),
                                "renderer_imported": True}
 
     try:
-        meta = renderer(img_p, ann_p, out_path)
+        meta = renderer(
+            img_p,
+            ann_p,
+            out_path,
+            overlay_mode="clean",
+            draw_connectors=False,
+        )
     except Exception as exc:
         return "", {"error": str(exc), "renderer_imported": True}
 

@@ -295,6 +295,20 @@ comparison. The stitched enterprise graph is generated from the same local graph
 derived from the scenario diagrams, so future enterprise GNN RCA can analyze
 alerts across diagram boundaries.
 
+#### V3 annotation quality check
+
+Run annotation QA before detector training:
+
+```bash
+python scripts/qa_infragraph_v3_annotations.py \
+    --dataset-root ./datasets/infragraph_v3 \
+    --out ./outputs/v3_annotation_qa
+```
+
+If QA reports `DISPLAY_ONLY_FIX`, the clean Verified Annotation Overlay is enough.
+If QA reports `ANNOTATION_REGENERATION_RECOMMENDED`, fix the generator and
+regenerate V3 before retraining. Do not retrain the detector until annotation QA passes.
+
 See: [docs/diagram_intelligence_v3_dataset.md](docs/diagram_intelligence_v3_dataset.md)
 and [docs/rfdetr_v3_detector.md](docs/rfdetr_v3_detector.md)
 
