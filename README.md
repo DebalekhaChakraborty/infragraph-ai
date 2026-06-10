@@ -309,6 +309,10 @@ If QA reports `DISPLAY_ONLY_FIX`, the clean Verified Annotation Overlay is enoug
 If QA reports `ANNOTATION_REGENERATION_RECOMMENDED`, fix the generator and
 regenerate V3 before retraining. Do not retrain the detector until annotation QA passes.
 
+Current V3 QA returned `DISPLAY_ONLY_FIX`, so the source annotations are
+acceptable and the production overlay uses clean mode by default. Technical
+connector overlays are available only for developer diagnostics.
+
 See: [docs/diagram_intelligence_v3_dataset.md](docs/diagram_intelligence_v3_dataset.md)
 and [docs/rfdetr_v3_detector.md](docs/rfdetr_v3_detector.md)
 
