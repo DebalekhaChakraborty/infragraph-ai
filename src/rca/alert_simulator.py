@@ -1,5 +1,5 @@
 """
-Simulate realistic alert sequences from a topology graph for RCA training/demo.
+Simulate realistic alert sequences from a topology graph for RCA training/Presentation.
 """
 
 import random
@@ -103,3 +103,4 @@ def simulate_incident(
         "alerts":          alerts,
         "impacted_nodes":  impacted[:5],
     }
+

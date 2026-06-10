@@ -60,7 +60,7 @@ _MODEL_CANDIDATES = [
 GRAPH_MEMORY_DIR   = REPO_ROOT / "graph_memory"
 GRAPH_MEMORY_INDEX = GRAPH_MEMORY_DIR / "index.json"
 
-# Demo fallback paths (used when YOLO unavailable and image is diagram_0373)
+# Presentation Alternate path paths (used when YOLO unavailable and image is diagram_0373)
 _DEMO_STEM           = "diagram_0373"
 _DEMO_DETECTED_NODES = REPO_ROOT / "outputs" / "topology_demo" / "diagram_0373_detected_nodes.json"
 _DEMO_DETECTED_IMG   = REPO_ROOT / "outputs" / "v2_test_predictions_cpu" / "diagram_0373.jpg"
@@ -225,7 +225,7 @@ def _save_annotated(results_obj: Any, out_path: Path) -> bool:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# MOCK FALLBACK (diagram_0373 only)
+# MOCK Alternate path (diagram_0373 only)
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _load_mock_detections(image_path: Path) -> list[dict] | str:
@@ -239,7 +239,7 @@ def _load_mock_detections(image_path: Path) -> list[dict] | str:
             "Provide a trained model via --model to onboard new diagrams."
         )
     if not _DEMO_DETECTED_NODES.exists():
-        return f"Demo detected_nodes not found at {_DEMO_DETECTED_NODES}"
+        return f"Presentation detected_nodes not found at {_DEMO_DETECTED_NODES}"
 
     raw = json.loads(_DEMO_DETECTED_NODES.read_text(encoding="utf-8"))
     detections: list[dict] = []
@@ -642,7 +642,7 @@ def main() -> None:
     p.add_argument(
         "--model",
         default=str(REPO_ROOT / "training_runs" / "infragraph_yolo_v2" / "weights" / "best.pt"),
-        help="YOLO model weights path (default: infragraph_yolo_v2/best.pt, falls back to v1)",
+        help="YOLO model weights path (default: infragraph_yolo_v2/best.pt, uses v1)",
     )
     p.add_argument("--out", default="outputs/onboarded_diagrams",
                    help="Root output directory (default: outputs/onboarded_diagrams)")
@@ -691,3 +691,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+

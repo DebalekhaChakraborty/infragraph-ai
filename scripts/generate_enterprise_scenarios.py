@@ -7,7 +7,7 @@ into one unified enterprise graph.  Designed for cross-diagram GNN RCA training.
 
 Usage:
     python scripts/generate_enterprise_scenarios.py \
-        --num 120 --out ./datasets/enterprise_graph_v1 \
+        --num 120 --out ./datasets/infragraph_v1/enterprise_graph \
         --seed 2026 --clean
 """
 from __future__ import annotations
@@ -17,7 +17,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-# optional visuals — graceful fallback if not installed
+# optional visuals; JSON generation continues if these packages are unavailable
 try:
     import matplotlib; matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -489,7 +489,7 @@ def _generate_alerts(
         if all(dt in diagram_types for dt in p[1]) and p[2] in node_ids
     ]
     if not eligible:
-        eligible = ROOT_CAUSE_PATTERNS[:1]  # fallback
+        eligible = ROOT_CAUSE_PATTERNS[:1]
 
     pattern = rng.choice(eligible)
     pattern_name, _req_types, root_cause, default_severity = pattern
@@ -1074,7 +1074,7 @@ def generate_dataset(
     )
 
     summary = {
-        "dataset":                       "enterprise_graph_v1",
+        "dataset":                       "infragraph_v1_enterprise_graph",
         "total_scenarios":               num,
         "splits":                        split_counts,
         "avg_diagrams_per_scenario":     round(total_diagrams / max(num, 1), 2),
@@ -1105,7 +1105,7 @@ def main() -> None:
     )
     parser.add_argument("--num",           type=int, default=120,
                         help="Number of enterprise scenarios to generate")
-    parser.add_argument("--out",           type=str, default="./datasets/enterprise_graph_v1",
+    parser.add_argument("--out",           type=str, default="./datasets/infragraph_v1/enterprise_graph",
                         help="Output directory")
     parser.add_argument("--seed",          type=int, default=2026,
                         help="Global random seed")

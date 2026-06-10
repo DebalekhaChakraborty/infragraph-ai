@@ -1,5 +1,5 @@
 {
-  "dataset": "enterprise_graph_v1",
+  "dataset": "infragraph_v1_enterprise_graph",
   "total_scenarios": 20,
   "splits": {
     "train": 16,

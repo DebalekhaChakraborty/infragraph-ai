@@ -149,7 +149,7 @@ def render_v3_annotation_preview(
     Returns a metadata dict:
         rendered, boxes_rendered, boxes_skipped, connectors_rendered,
         connectors_skipped, out_path
-    Falls back gracefully if Pillow is unavailable or annotation is missing.
+    Uses an alternate path gracefully if Pillow is unavailable or annotation is missing.
     Never raises.
     """
     meta: dict = {
@@ -940,3 +940,4 @@ def run_absorption(
         "alerts":            alerts,
         "summary":           summary,
     }
+

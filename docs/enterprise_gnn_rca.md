@@ -25,7 +25,7 @@ the entire enterprise in one pass.
 | Alert scope | Single diagram | Cross-diagram propagation |
 | Node features | 16-dim | 34-dim (adds diagram-type, shared-entity, bridge, reachability) |
 | Architecture | GCN(16-64-32-1) | GCN(34-96-48-1) |
-| Training data | infragraph_v2 per-diagram graphs | enterprise_graph_v1 stitched graphs |
+| Training data | infragraph_v2 per-diagram graphs | infragraph_v1_enterprise_graph stitched graphs |
 | Backend | torch or numpy alternate path | torch required |
 
 ---
@@ -107,7 +107,7 @@ to the root-cause node relative to all other nodes in the same graph.
 
 ```bash
 python scripts/train_enterprise_gnn_rca.py \
-    --dataset-root ./datasets/enterprise_graph_v1 \
+    --dataset-root ./datasets/infragraph_v1/enterprise_graph \
     --out ./outputs/enterprise_gnn_rca \
     --epochs 80 \
     --presentation-scenario enterprise_0000 \
@@ -118,7 +118,7 @@ python scripts/train_enterprise_gnn_rca.py \
 
 | Flag | Default | Description |
 |---|---|---|
-| `--dataset-root` | `datasets/enterprise_graph_v1` | Dataset root |
+| `--dataset-root` | `datasets/infragraph_v1/enterprise_graph` | Dataset root |
 | `--out` | `outputs/enterprise_gnn_rca` | Output directory |
 | `--epochs` | 80 | Training epochs |
 | `--lr` | 0.001 | Adam learning rate |
@@ -224,11 +224,12 @@ Production use requires:
 3. Real-time alert enrichment from monitoring systems (SNMP traps, syslog, Prometheus, etc.)
 4. Ongoing re-labelling as new incident root causes are confirmed by operators
 
-**Small dataset.** `enterprise_graph_v1` has 16 train / 2 val / 2 test scenarios.
+**Small dataset.** `infragraph_v1_enterprise_graph` has 16 train / 2 val / 2 test scenarios.
 This is sufficient to demonstrate the architecture and verify learning, but the model
 will require a much larger labelled dataset for production deployment.
 
 **No line detection or OCR.** Cross-diagram edges in the training data are generated
 from a stitch map, not extracted from diagram images. A production system would need
 an automated pipeline to detect cables, labels, and CMDB references across diagram boundaries.
+
 

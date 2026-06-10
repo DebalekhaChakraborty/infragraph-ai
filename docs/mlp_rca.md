@@ -118,8 +118,8 @@ python scripts/train_mlp_rca.py \
     --dataset-root datasets/infragraph_v2 \
     --out          outputs/mlp_rca \
     --epochs       80 \
-    --demo-diagram diagram_0373 \
-    --demo-split   test \
+    --Presentation-diagram diagram_0373 \
+    --Presentation-split   test \
     --seed         42
 ```
 
@@ -156,7 +156,7 @@ to rank correctly — but the GNN does it with far fewer parameter updates.
 | File | Description |
 |------|-------------|
 | `outputs/mlp_rca/mlp_rca_model.pt` | Best-epoch PyTorch state dict |
-| `outputs/mlp_rca/mlp_rca_model.npz` | Best-epoch numpy weights (fallback) |
+| `outputs/mlp_rca/mlp_rca_model.npz` | Best-epoch numpy weights (Alternate path) |
 | `outputs/mlp_rca/mlp_rca_metrics.json` | Full metrics + training history |
 | `outputs/mlp_rca/mlp_training_curve.png` | Loss and accuracy curves |
 | `outputs/mlp_rca/<id>_mlp_rca_result.json` | Per-diagram inference result |
@@ -199,3 +199,4 @@ based on the root cause scenario.
 In a real deployment, partial observability (missing alerts, noisy telemetry)
 would likely widen the gap between MLP and GNN — the GNN can use graph
 neighbourhood to infer that a silent upstream node is the probable origin.
+

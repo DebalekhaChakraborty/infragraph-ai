@@ -8,7 +8,7 @@ Default:
         --out ./outputs/rfdetr_v3 \
         --epochs 25
 
-The wrapper intentionally does not fall back to YOLO or any other detector.
+The wrapper intentionally does not use YOLO or any other detector.
 If RF-DETR is unavailable or its local API differs, it exits with explicit
 instructions instead of faking a training run.
 """
@@ -248,3 +248,4 @@ def main():
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
