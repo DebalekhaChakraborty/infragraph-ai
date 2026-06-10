@@ -18,6 +18,7 @@ import csv
 import json
 import math
 import shutil
+import time
 from pathlib import Path
 from typing import Any
 
@@ -293,6 +294,8 @@ def run_live_v3_ingestion(
     diagram_path: Path,
     diagram_id: str,
     scenario_path: Path,
+    use_live_rfdetr: bool = True,
+    rfdetr_model=None,      # pre-loaded RF-DETR model (from st.cache_resource); loaded internally if None
 ) -> dict:
     """
     Load a V3 annotation + local graph and write a self-contained ingestion
@@ -320,19 +323,57 @@ def run_live_v3_ingestion(
     if diagram_path.exists() and not orig_out.exists():
         shutil.copy2(diagram_path, orig_out)
 
-    # ── detect source ─────────────────────────────────────────────────────────
-    rfdetr_pred = (
-        repo_root / "outputs" / "rfdetr_v3_predictions"
-        / f"{scenario_id}__{diagram_id}.png"
-    )
-    if rfdetr_pred.exists():
-        detected_out = run_dir / "detected.png"
-        if not detected_out.exists():
-            shutil.copy2(rfdetr_pred, detected_out)
-        detection_source = "RF-DETR trained prediction"
-    else:
-        detected_out = run_dir / "detected.png"
-        detection_source = "Prepared V3 annotation fallback"
+    # ── detect source (3-tier priority) ──────────────────────────────────────
+    #   1. Live RF-DETR inference  (use_live_rfdetr=True + checkpoint exists)
+    #   2. Static rfdetr_v3_predictions file
+    #   3. Annotation overlay fallback (rendered below after annotation loads)
+    detected_out     = run_dir / "detected.png"
+    detection_source = "Prepared V3 annotation fallback"
+    _rfdetr_error: str  = ""
+    _rfdetr_time_s: float = 0.0
+
+    if use_live_rfdetr:
+        try:
+            from live_rfdetr_detector import (  # type: ignore
+                find_best_rfdetr_checkpoint, run_live_rfdetr_detection,
+            )
+            _ckpt = find_best_rfdetr_checkpoint(repo_root)
+            if _ckpt is not None:
+                _split_inferred = (
+                    scenario_path.parent.name
+                    if scenario_path.parent.name in ("train", "val", "test")
+                    else "train"
+                )
+                _t0 = time.perf_counter()
+                _live_res = run_live_rfdetr_detection(
+                    repo_root   = repo_root,
+                    image_path  = diagram_path,
+                    dataset     = "v3",
+                    split       = _split_inferred,
+                    scenario_id = scenario_id,
+                    diagram_id  = diagram_id,
+                    model       = rfdetr_model,
+                )
+                _rfdetr_time_s = round(time.perf_counter() - _t0, 3)
+                if _live_res.get("ok"):
+                    _live_det = Path(_live_res["detected_image_path"])
+                    if _live_det.exists():
+                        shutil.copy2(_live_det, detected_out)
+                        detection_source = "Live RF-DETR detector"
+                else:
+                    _rfdetr_error = _live_res.get("error", "unknown error")
+        except Exception as _e:
+            _rfdetr_error = str(_e)
+
+    if detection_source == "Prepared V3 annotation fallback":
+        _rfdetr_pred_static = (
+            repo_root / "outputs" / "rfdetr_v3_predictions"
+            / f"{scenario_id}__{diagram_id}.png"
+        )
+        if _rfdetr_pred_static.exists():
+            if not detected_out.exists():
+                shutil.copy2(_rfdetr_pred_static, detected_out)
+            detection_source = "RF-DETR trained prediction"
 
     # ── load annotation & local graph ─────────────────────────────────────────
     ann_path = scenario_path / "annotations" / f"{diagram_id}.json"
@@ -463,25 +504,32 @@ def run_live_v3_ingestion(
     _save_csv(run_dir  / "node_table.csv",           node_table_rows)
     _save_csv(run_dir  / "edge_table.csv",           edge_table_rows)
     _save_json(run_dir / "ingestion_summary.json",   {
-        "diagram_id": diagram_id, "scenario_id": scenario_id,
-        "detection_source": detection_source,
-        "node_count": len(node_table_rows), "edge_count": len(edge_table_rows),
-        "annotation_preview": _render_meta,
+        "diagram_id":          diagram_id,
+        "scenario_id":         scenario_id,
+        "detection_source":    detection_source,
+        "node_count":          len(node_table_rows),
+        "edge_count":          len(edge_table_rows),
+        "annotation_preview":  _render_meta,
+        "rfdetr_inference_time_s": _rfdetr_time_s,
+        "rfdetr_error":        _rfdetr_error,
+        "use_live_rfdetr":     use_live_rfdetr,
     })
 
     return {
-        "run_dir":            run_dir,
-        "original_image":     orig_out,
-        "detected_image":     detected_out,
-        "detection_source":   detection_source,
-        "annotation":         annotation,
-        "local_graph":        local_graph,
-        "detected_nodes":     detected_nodes,
-        "detected_edges":     detected_edges,
-        "node_table_rows":    node_table_rows,
-        "edge_table_rows":    edge_table_rows,
-        "packet":             packet,
-        "confidence_summary": confidence_summary,
+        "run_dir":               run_dir,
+        "original_image":        orig_out,
+        "detected_image":        detected_out,
+        "detection_source":      detection_source,
+        "rfdetr_inference_time_s": _rfdetr_time_s,
+        "rfdetr_error":          _rfdetr_error,
+        "annotation":            annotation,
+        "local_graph":           local_graph,
+        "detected_nodes":        detected_nodes,
+        "detected_edges":        detected_edges,
+        "node_table_rows":       node_table_rows,
+        "edge_table_rows":       edge_table_rows,
+        "packet":                packet,
+        "confidence_summary":    confidence_summary,
     }
 
 
