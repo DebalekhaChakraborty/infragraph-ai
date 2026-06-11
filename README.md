@@ -313,6 +313,11 @@ Current V3 QA returned `DISPLAY_ONLY_FIX`, so the source annotations are
 acceptable and the production overlay uses clean mode by default. Technical
 connector overlays are available only for developer diagnostics.
 
+Verified Annotation Overlay is a graph-ready ground-truth metadata view: it
+shows node identity and device type without confidence scores. Detector Output
+is the model inference view: live RF-DETR, trained RF-DETR, and YOLO prediction
+images may show predicted class and confidence.
+
 See: [docs/diagram_intelligence_v3_dataset.md](docs/diagram_intelligence_v3_dataset.md)
 and [docs/rfdetr_v3_detector.md](docs/rfdetr_v3_detector.md)
 

@@ -1198,6 +1198,7 @@ def _ensure_annotation_overlay(
     repo_root: Path,
     img_p: "Path | None" = None,
     ann_p: "Path | None" = None,
+    draw_connectors: bool = False,
 ) -> tuple[str, dict]:
     """
     Render a Verified Annotation Overlay for a gallery record and cache to disk.
@@ -1238,8 +1239,9 @@ def _ensure_annotation_overlay(
         gid  = f"{scen}__{did}"
     out_dir  = repo_root / "outputs" / "annotation_overlays" / gid
     out_dir.mkdir(parents=True, exist_ok=True)
-    out_path = out_dir / "detected.png"
-    meta_path = out_dir / "detected.meta.json"
+    stem = "detected_clean_connectors" if draw_connectors else "detected_clean"
+    out_path = out_dir / f"{stem}.png"
+    meta_path = out_dir / f"{stem}.meta.json"
 
     # ── skip re-render if already on disk ─────────────────────────────────────
     cached_meta = load_json(str(meta_path)) if meta_path.exists() else None
@@ -1248,7 +1250,7 @@ def _ensure_annotation_overlay(
         and isinstance(cached_meta, dict)
         and cached_meta.get("renderer_version") == _OVERLAY_RENDERER_VERSION
         and cached_meta.get("overlay_mode") == "clean"
-        and not bool(cached_meta.get("draw_connectors", False))
+        and bool(cached_meta.get("draw_connectors", False)) == bool(draw_connectors)
     ):
         return str(out_path), {"rendered": True, "cached": True,
                                "boxes_rendered": cached_meta.get("boxes_rendered", 0),
@@ -1268,7 +1270,7 @@ def _ensure_annotation_overlay(
             ann_p,
             out_path,
             overlay_mode="clean",
-            draw_connectors=False,
+            draw_connectors=draw_connectors,
         )
     except Exception as exc:
         return "", {"error": str(exc), "renderer_imported": True}
@@ -2206,18 +2208,33 @@ def _tab_diagram_gallery() -> None:
             )
             st.image(det_p, use_container_width=True)
         elif is_v3 and img_exists and ann_exists:
+            show_overlay_connectors = st.checkbox(
+                "Show connectors",
+                value=False,
+                key=f"show_connectors_{record.get('gallery_id', record.get('source_diagram_id', 'v3'))}",
+                help="Draw subtle metadata connector lines on the verified overlay.",
+            )
+            st.caption(
+                "Verified metadata view: node identity + device type. "
+                "Confidence scores appear only on live detector outputs."
+            )
             with st.spinner("Rendering annotation overlay…"):
                 _overlay_path, _overlay_meta = _ensure_annotation_overlay(
                     record, REPO_ROOT,
                     img_p=Path(img_p),
                     ann_p=Path(ann_p),
+                    draw_connectors=show_overlay_connectors,
                 )
             _render_err = _overlay_meta.get("error", "")
             if _overlay_path and Path(_overlay_path).exists():
                 n_obj = _overlay_meta.get("boxes_rendered", 0)
                 n_con = _overlay_meta.get("connectors_rendered", 0)
                 _cached = _overlay_meta.get("cached", False)
-                _sub = "graph-ready annotation bboxes" if _cached else f"{n_obj} objects, {n_con} connectors"
+                _sub = f"{n_obj} objects"
+                if show_overlay_connectors:
+                    _sub += f", {n_con} connectors"
+                if _cached:
+                    _sub += " · cached"
                 st.markdown(
                     '<div class="compare-badge prepared">Verified Annotation Overlay</div>'
                     f'<div class="compare-label">{_sub}</div>',
