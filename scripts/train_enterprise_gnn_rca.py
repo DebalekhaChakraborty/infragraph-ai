@@ -308,6 +308,7 @@ def save_metrics(
     best_val_epoch:  int,
     hidden1:         int,
     hidden2:         int,
+    device_info:     "dict | None" = None,
 ) -> None:
     metrics = {
         "backend":       "torch",
@@ -327,6 +328,8 @@ def save_metrics(
             "not just inside a single diagram."
         ),
     }
+    if device_info:
+        metrics.update(device_info)
     path = out_dir / "enterprise_gnn_metrics.json"
     path.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     print(f"  Metrics saved: {path}")
@@ -527,6 +530,10 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument("--presentation-split",    default="test",
                    choices=["train", "val", "test"])
     p.add_argument("--seed", type=int, default=2026)
+    p.add_argument(
+        "--device", default="auto", choices=["auto", "cpu", "cuda"],
+        help="Training device. 'auto' uses CUDA if available, else CPU.",
+    )
     return p.parse_args()
 
 
@@ -540,11 +547,36 @@ def main() -> None:
     dataset_root = Path(args.dataset_root)
     out_dir      = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
-    device = torch.device("cpu")
+
+    # ── Device selection ─────────────────────────────────────────────────────
+    cuda_available = torch.cuda.is_available()
+    if args.device == "auto":
+        device = torch.device("cuda") if cuda_available else torch.device("cpu")
+    elif args.device == "cuda":
+        device = torch.device("cuda")
+    else:
+        device = torch.device("cpu")
+
+    device_name = ""
+    try:
+        if device.type == "cuda":
+            device_name = torch.cuda.get_device_name(device)
+    except Exception:
+        pass
+
+    device_info = {
+        "selected_device": str(device),
+        "torch_version":   torch.__version__,
+        "torch_hip_version": getattr(torch.version, "hip", None),
+        "cuda_available":  cuda_available,
+        "device_name":     device_name,
+    }
 
     print("InfraGraph AI -- Enterprise GNN RCA")
     print(f"  Dataset : {dataset_root}")
     print(f"  Output  : {out_dir}")
+    print(f"  Device  : {device}  (cuda_available={cuda_available}"
+          + (f", device_name={device_name}" if device_name else "") + ")")
     print(f"  Epochs  : {args.epochs}  LR={args.lr}  WD={args.weight_decay}")
     print(f"  Hidden  : {args.hidden1} -> {args.hidden2}  Features: {IN_FEAT}")
     if not HAS_MPL:
@@ -605,6 +637,7 @@ def main() -> None:
     save_metrics(
         out_dir, history, train_m, val_m, test_m,
         split_counts, args.epochs, best_val_epoch, args.hidden1, args.hidden2,
+        device_info=device_info,
     )
     save_training_curve(history, out_dir)
 
