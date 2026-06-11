@@ -81,13 +81,13 @@ def _build_prompt_messages(record: dict) -> str:
     return json.dumps(messages, ensure_ascii=False)
 
 
-def _build_ground_truth(record: dict) -> str:
+def _build_ground_truth(record: dict) -> dict:
     """
-    Build the ground_truth payload stored in reward_model.
+    Build the ground_truth payload stored inside reward_model.
 
-    Contains all fields the reward function needs to score a response.
+    Returned as a dict so parquet preserves it as a nested struct, not a string.
     """
-    gt = {
+    return {
         "root_cause":        record.get("root_cause", ""),
         "impacted_nodes":    record.get("impacted_nodes", []),
         "impacted_diagrams": record.get("impacted_diagrams", []),
@@ -95,62 +95,68 @@ def _build_ground_truth(record: dict) -> str:
         "scope":             record.get("scope", "enterprise"),
         "reward_tags":       record.get("reward_tags", []),
     }
-    return json.dumps(gt, ensure_ascii=False)
 
 
-def _build_reward_model(record: dict) -> str:
-    rm = {
+def _build_reward_model(record: dict) -> dict:
+    """Return reward_model as a dict so parquet stores it as a struct, not a string."""
+    return {
         "style":        "rule",
         "ground_truth": _build_ground_truth(record),
     }
-    return json.dumps(rm, ensure_ascii=False)
 
 
-def _build_extra_info(record: dict) -> str:
-    ei = {
-        "id":               record.get("id", ""),
-        "scenario_id":      record.get("scenario_id", ""),
-        "scope":            record.get("scope", "enterprise"),
-        "root_cause":       record.get("root_cause", ""),
-        "impacted_nodes":   record.get("impacted_nodes", []),
+def _build_extra_info(record: dict, idx: int) -> dict:
+    """
+    Return extra_info as a dict with an explicit 'index' key.
+
+    vERL's rl_dataset.py calls row_dict.get('extra_info', {}).get('index', 0),
+    so extra_info must be a dict (not a JSON string) and must contain 'index'.
+    """
+    return {
+        "index":           idx,
+        "id":              record.get("id", ""),
+        "scenario_id":     record.get("scenario_id", ""),
+        "scope":           record.get("scope", "enterprise"),
+        "root_cause":      record.get("root_cause", ""),
+        "impacted_nodes":  record.get("impacted_nodes", []),
         "impacted_diagrams": record.get("impacted_diagrams", []),
     }
-    return json.dumps(ei, ensure_ascii=False)
 
 
-def _to_verl_row(record: dict) -> dict:
+def _to_verl_row(record: dict, idx: int) -> dict:
     return {
         "data_source":  "infragraph_rca_remediation",
         "prompt":       _build_prompt_messages(record),
         "ability":      "graph_grounded_remediation",
         "reward_model": _build_reward_model(record),
-        "extra_info":   _build_extra_info(record),
+        "extra_info":   _build_extra_info(record, idx),
     }
 
 
 def _write_parquet(rows: list[dict], out_path: Path) -> None:
-    """Write rows to parquet, preferring pandas; falls back to pyarrow directly."""
+    """
+    Write rows to parquet using datasets.Dataset so nested dicts (extra_info,
+    reward_model) are stored as struct columns, not JSON strings.
+    vERL's rl_dataset.py calls row_dict.get('extra_info', {}).get('index', 0)
+    directly on the deserialised row — it must be a dict, not a string.
+    """
     out_path.parent.mkdir(parents=True, exist_ok=True)
     try:
-        import pandas as pd
-        df = pd.DataFrame(rows)
-        df.to_parquet(out_path, index=False, engine="pyarrow")
-        print(f"  {len(rows)} rows -> {out_path}  (via pandas)")
-        return
-    except ImportError:
-        pass
-    try:
-        import pyarrow as pa
-        import pyarrow.parquet as pq
-        table = pa.Table.from_pylist(rows)
-        pq.write_table(table, str(out_path))
-        print(f"  {len(rows)} rows -> {out_path}  (via pyarrow)")
+        from datasets import Dataset
+        ds = Dataset.from_list(rows)
+        ds.to_parquet(str(out_path))
+        print(f"  {len(rows)} rows -> {out_path}  (via datasets)")
+
+        # Validation: confirm extra_info is a dict in the written data
+        first_ei = rows[0]["extra_info"]
+        print(f"  type(extra_info[0]) = {type(first_ei).__name__}  "
+              f"index={first_ei.get('index')}  scope={first_ei.get('scope')}")
         return
     except ImportError:
         pass
     raise RuntimeError(
-        "Neither pandas nor pyarrow is installed. "
-        "Install with:  pip install pandas pyarrow"
+        "The 'datasets' package is required for parquet serialisation. "
+        "Install with:  pip install datasets"
     )
 
 
@@ -189,8 +195,8 @@ def main() -> None:
     eval_records  = _read_jsonl(eval_path)
     print(f"  {len(eval_records)} eval records")
 
-    train_rows = [_to_verl_row(r) for r in train_records]
-    eval_rows  = [_to_verl_row(r) for r in eval_records]
+    train_rows = [_to_verl_row(r, i) for i, r in enumerate(train_records)]
+    eval_rows  = [_to_verl_row(r, i) for i, r in enumerate(eval_records)]
 
     print("Writing parquet files ...")
     _write_parquet(train_rows, Path(args.train_parquet))
