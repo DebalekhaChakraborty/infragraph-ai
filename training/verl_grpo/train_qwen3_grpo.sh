@@ -104,6 +104,7 @@ TRAIN_CMD="python -m verl.trainer.main_ppo \
   actor_rollout_ref.rollout.max_model_len=1024 \
   actor_rollout_ref.rollout.max_num_batched_tokens=1024 \
   actor_rollout_ref.rollout.load_format=safetensors \
+  actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=1 \
   actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=1 \
   actor_rollout_ref.ref.log_prob_max_token_len_per_gpu=2048 \
   trainer.n_gpus_per_node=1 \
