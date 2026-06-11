@@ -1854,16 +1854,19 @@ def _simulate_enterprise_ingestion(local_graph: dict, enterprise_graph: dict,
 
 
 def _load_gnn_rca_result(scenario_id: str) -> dict | None:
-    """Try to load a trained enterprise GNN RCA result for this scenario."""
-    for candidate in [
-        REPO_ROOT / "outputs" / "enterprise_gnn_rca" / f"{scenario_id}_enterprise_gnn_rca_result.json",
-        REPO_ROOT / "outputs" / "enterprise_gnn_rca" / "enterprise_0000_enterprise_gnn_rca_result.json",
-    ]:
-        if candidate.exists():
-            try:
-                return json.loads(candidate.read_text(encoding="utf-8"))
-            except Exception:
-                pass
+    """Load a trained enterprise GNN RCA result for the exact scenario only.
+
+    Returns None if no result exists for this scenario — does NOT silently
+    return a result from a different scenario.
+    """
+    if not scenario_id or scenario_id == "—":
+        return None
+    candidate = REPO_ROOT / "outputs" / "enterprise_gnn_rca" / f"{scenario_id}_enterprise_gnn_rca_result.json"
+    if candidate.exists():
+        try:
+            return json.loads(candidate.read_text(encoding="utf-8"))
+        except Exception:
+            pass
     return None
 
 
@@ -1899,12 +1902,10 @@ def _simulate_enterprise_rca(alerts: dict, enterprise_graph: dict) -> dict:
             "impact_path":        (alerts.get("impact_paths") or [[]])[0],
             "ranking":            ranking,
             "enterprise_node_count": gnn.get("node_count", len(enterprise_graph.get("nodes", []))),
-            "gnn_source_file":    str(next(
-                (REPO_ROOT / "outputs" / "enterprise_gnn_rca" / f)
-                for f in [f"{scenario_id}_enterprise_gnn_rca_result.json",
-                           "enterprise_0000_enterprise_gnn_rca_result.json"]
-                if (REPO_ROOT / "outputs" / "enterprise_gnn_rca" / f).exists()
-            )),
+            "gnn_source_file":    str(
+                REPO_ROOT / "outputs" / "enterprise_gnn_rca" /
+                f"{scenario_id}_enterprise_gnn_rca_result.json"
+            ),
         }
 
     # Scenario-grounded simulation (alerts.json ground truth)
@@ -3163,6 +3164,28 @@ def _selected_enterprise_record() -> dict:
     return {}
 
 
+def _selected_scenario_path() -> "Path | None":
+    """Return the Path of the selected scenario directory.
+
+    Priority:
+    1. enterprise_scenario_path in session state (set on absorption or onboarding)
+    2. source_scenario_path from the selected enterprise record
+    3. None — caller must handle, do NOT silently fall back to V3_HERO_SCENARIO
+    """
+    ss_path = st.session_state.get("enterprise_scenario_path", "")
+    if ss_path:
+        p = Path(ss_path)
+        if p.exists():
+            return p
+    rec = _selected_enterprise_record()
+    sp = rec.get("source_scenario_path", "")
+    if sp:
+        rp = _resolve_manifest_path(sp, REPO_ROOT)
+        if rp and Path(rp).exists():
+            return Path(rp)
+    return None
+
+
 def _tab_enterprise_graph_brain() -> None:
     st.markdown(
         '<div class="ws-title">Enterprise Graph Brain</div>'
@@ -3290,10 +3313,11 @@ def _tab_enterprise_graph_brain() -> None:
     # ── Post-absorption view ──────────────────────────────────────────────────
     summary          = st.session_state.enterprise_ingestion_summary or {}
     enterprise_graph = st.session_state.enterprise_graph_after or {}
+    _sel_scen_p   = _selected_scenario_path()
     _alerts_src = (
         st.session_state.get("enterprise_alerts_path")
         or _alerts_p
-        or str(V3_HERO_SCENARIO / "alerts.json")
+        or (str(_sel_scen_p / "alerts.json") if _sel_scen_p else None)
     )
     alerts_data = _safe_read_json(Path(_alerts_src)) if _alerts_src else {}
 
@@ -3376,7 +3400,7 @@ def _tab_enterprise_graph_brain() -> None:
         n_shared = eg_stats.get("num_shared_entities") or len(enterprise_graph.get("shared_entities", []))
         st.markdown(
             f'<div class="absorb-card">'
-            f'<div class="section-label">Enterprise Galaxy Graph</div>'
+            f'<div class="section-label">Scenario Enterprise Graph</div>'
             f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
             f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Total nodes</div>'
             f'<div style="font-size:1.5rem;font-weight:800;color:#f1f5f9">{n_nodes}</div></div>'
@@ -3425,15 +3449,47 @@ def _tab_enterprise_graph_brain() -> None:
 
     st.markdown('<hr class="ws-rule">', unsafe_allow_html=True)
 
+    # ── RCA Engine panel ──────────────────────────────────────────────────────
+    _ent_summary_pre = st.session_state.get("enterprise_ingestion_summary") or {}
+    _sel_rec_pre     = _selected_enterprise_record()
+    _rca_scenario_id = (
+        _ent_summary_pre.get("scenario_id")
+        or alerts_data.get("scenario_id")
+        or _sel_rec_pre.get("source_scenario_id")
+        or "—"
+    )
+    _gnn_result_pre  = _load_gnn_rca_result(_rca_scenario_id) if _rca_scenario_id != "—" else None
+    _gnn_avail_str   = "Yes" if _gnn_result_pre else "No"
+    _rca_src_str     = "Enterprise GNN RCA" if _gnn_result_pre else "Scenario-grounded RCA simulation"
+    _n_nodes_pre     = len(enterprise_graph.get("nodes", []))
+    _n_edges_pre     = len(enterprise_graph.get("edges", []))
+    st.markdown(
+        '<div style="background:rgba(15,23,42,0.7);border:1px solid rgba(51,65,85,0.6);'
+        'border-radius:10px;padding:14px 16px;margin-bottom:14px">'
+        '<div style="font-size:0.68rem;font-weight:700;color:#64748b;text-transform:uppercase;'
+        'letter-spacing:0.08em;margin-bottom:10px">RCA Engine</div>'
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">'
+        f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Selected scenario</div>'
+        f'<div style="font-size:0.82rem;font-weight:700;color:#38bdf8;font-family:monospace">{_rca_scenario_id}</div></div>'
+        f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Scenario nodes</div>'
+        f'<div style="font-size:0.82rem;font-weight:700;color:#f1f5f9">{_n_nodes_pre}</div></div>'
+        f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Scenario edges</div>'
+        f'<div style="font-size:0.82rem;font-weight:700;color:#f1f5f9">{_n_edges_pre}</div></div>'
+        f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">GNN result available</div>'
+        f'<div style="font-size:0.82rem;font-weight:700;color:{"#10b981" if _gnn_result_pre else "#f59e0b"}">{_gnn_avail_str}</div></div>'
+        f'<div style="grid-column:span 2"><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">RCA source</div>'
+        f'<div style="font-size:0.82rem;font-weight:700;color:{"#10b981" if _gnn_result_pre else "#f59e0b"}">{_rca_src_str}</div></div>'
+        '</div>'
+        '<div style="font-size:0.72rem;color:#475569;border-top:1px solid rgba(51,65,85,0.4);padding-top:8px">'
+        'Enterprise GNN is trained across many scenario graphs. Inference is displayed on the selected scenario graph. '
+        'A global galaxy view is used for graph-memory exploration.'
+        '</div></div>',
+        unsafe_allow_html=True,
+    )
+
     # ── Enterprise alert simulation ───────────────────────────────────────────
     gnn_metrics_available = _enterprise_gnn_available()
-    if gnn_metrics_available:
-        st.success("Enterprise RCA: trained enterprise GNN metrics available")
-    else:
-        st.warning(
-            "Enterprise RCA source: scenario-grounded simulation "
-            "(GNN metrics not found — run train_enterprise_gnn_rca.py to get trained results)"
-        )
+    if not gnn_metrics_available:
         if _strict_mode() and not st.session_state.allow_enterprise_simulation:
             st.error("Strict mode: approve before using scenario-grounded simulation.")
             if st.button("Continue with scenario simulation", key="approve_ent_sim"):
@@ -3452,7 +3508,9 @@ def _tab_enterprise_graph_brain() -> None:
     # ── Primary: FalconVue 3D WebGL galaxy (falls back to PyVis on failure) ────
     st.markdown(
         '<div class="section-label" style="margin-top:4px">'
-        'Enterprise Galaxy Graph — 3D Interactive</div>',
+        'Scenario Enterprise Graph — Interactive</div>'
+        '<div style="font-size:0.75rem;color:#64748b;margin-bottom:8px">'
+        'This graph represents the selected V3 scenario stitched from multiple local topology diagrams.</div>',
         unsafe_allow_html=True,
     )
     absorbed_ids = {n.get("canonical_id", n.get("id")) for n in local_graph.get("nodes", [])}
@@ -3475,11 +3533,14 @@ def _tab_enterprise_graph_brain() -> None:
             _render_enterprise_pyvis(enterprise_graph, absorbed_ids, rca, height=800)
         else:
             st.warning("Install `pyvis>=0.3.2` for interactive graph.")
-            preview_p = V3_HERO_SCENARIO / (
-                "preview_rca_overlay.png" if rca else "preview_enterprise_graph.png"
-            )
-            if preview_p.exists():
-                _img(preview_p, "Enterprise graph (static preview)")
+            _pv_scen = _selected_scenario_path()
+            if _pv_scen:
+                _pv_name = "preview_rca_overlay.png" if rca else "preview_enterprise_graph.png"
+                _pv_p = _pv_scen / _pv_name
+                if _pv_p.exists():
+                    _img(_pv_p, "Scenario Enterprise Graph (static preview)")
+                else:
+                    st.caption("Static preview not generated for this selected scenario.")
 
     # ── RCA result panel ─────────────────────────────────────────────────────
     if rca:
@@ -3525,27 +3586,158 @@ def _tab_enterprise_graph_brain() -> None:
             st.dataframe(pd.DataFrame(ranking), use_container_width=True, hide_index=True)
 
     # ── Static previews (secondary) ──────────────────────────────────────────
+    _preview_scen = _selected_scenario_path()
     with st.expander("Static story preview", expanded=False):
-        for name, cap in [
-            ("preview_stitching_story.png", "Source Diagrams → Local Graphs → Enterprise Graph"),
-            ("preview_contact_sheet.png",   "Contact sheet — all scenario diagrams"),
-        ]:
-            p = V3_HERO_SCENARIO / name
-            if p.exists():
-                _img(p, cap)
-            else:
-                st.caption(f"Not generated yet: {name}")
+        if not _preview_scen:
+            st.caption("Static preview not generated for this selected scenario.")
+        else:
+            for name, cap in [
+                ("preview_stitching_story.png", "Source Diagrams → Local Graphs → Enterprise Graph"),
+                ("preview_contact_sheet.png",   "Contact sheet — all scenario diagrams"),
+            ]:
+                p = _preview_scen / name
+                if p.exists():
+                    _img(p, cap)
+                else:
+                    st.caption(f"Static preview not generated for this selected scenario: {name}")
 
     with st.expander("Static RCA overlay", expanded=False):
-        for name, cap in [
-            ("preview_rca_overlay.png",      "Enterprise graph with RCA annotations"),
-            ("preview_enterprise_graph.png", "Enterprise graph clusters"),
-        ]:
-            p = V3_HERO_SCENARIO / name
-            if p.exists():
-                _img(p, cap)
+        if not _preview_scen:
+            st.caption("Static preview not generated for this selected scenario.")
+        else:
+            for name, cap in [
+                ("preview_rca_overlay.png",      "Enterprise graph with RCA annotations"),
+                ("preview_enterprise_graph.png", "Enterprise graph clusters"),
+            ]:
+                p = _preview_scen / name
+                if p.exists():
+                    _img(p, cap)
+                else:
+                    st.caption(f"Static preview not generated for this selected scenario: {name}")
+
+    # ── Global InfraGraph Galaxy ──────────────────────────────────────────────
+    _GLOBAL_GRAPH_PATH = REPO_ROOT / "outputs" / "global_graph_memory" / "infragraph_global_graph.json"
+    _GLOBAL_SUMMARY_PATH = REPO_ROOT / "outputs" / "global_graph_memory" / "summary.json"
+    with st.expander("Global InfraGraph Galaxy", expanded=False):
+        st.markdown(
+            '<div style="font-size:0.75rem;color:#64748b;margin-bottom:10px">'
+            'This is the global graph-memory index across all V3 scenarios. '
+            'It is used for exploration and storytelling, not for per-scenario GNN inference.'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+        if not _GLOBAL_GRAPH_PATH.exists():
+            st.info(
+                "Global graph not built yet. Run:\n\n"
+                "```\npython scripts/build_global_infragraph_galaxy.py "
+                "--dataset-root ./datasets/infragraph_v3 "
+                "--out ./outputs/global_graph_memory\n```"
+            )
+        else:
+            _gsum = _safe_read_json(_GLOBAL_SUMMARY_PATH) if _GLOBAL_SUMMARY_PATH.exists() else {}
+            _gm1, _gm2, _gm3, _gm4 = st.columns(4)
+            _gm1.metric("Scenarios",        _gsum.get("total_scenarios", "—"))
+            _gm2.metric("Total nodes",       _gsum.get("total_nodes", "—"))
+            _gm3.metric("Total edges",       _gsum.get("total_edges", "—"))
+            _gm4.metric("Cross-diag edges",  _gsum.get("total_cross_diagram_edges", "—"))
+
+            _nt = _gsum.get("node_type_counts", {})
+            _dt = _gsum.get("diagram_type_counts", {})
+            if _nt or _dt:
+                _gc1, _gc2 = st.columns(2)
+                with _gc1:
+                    st.caption("Node types")
+                    st.dataframe(
+                        pd.DataFrame(list(_nt.items()), columns=["type", "count"]),
+                        use_container_width=True, hide_index=True,
+                    )
+                with _gc2:
+                    st.caption("Diagram types")
+                    st.dataframe(
+                        pd.DataFrame(list(_dt.items()), columns=["diagram_type", "count"]),
+                        use_container_width=True, hide_index=True,
+                    )
+
+            # Sampled interactive graph
+            if _pyvis_available():
+                _galaxy_data = _safe_read_json(_GLOBAL_GRAPH_PATH)
+                _all_gnodes  = _galaxy_data.get("nodes", [])
+                _all_gedges  = _galaxy_data.get("edges", [])
+
+                _gc_col1, _gc_col2, _gc_col3, _gc_col4 = st.columns(4)
+                _max_nodes = _gc_col1.number_input("Max nodes", 50, 500, 300, 50, key="galaxy_max_nodes")
+                _splits    = ["all"] + sorted({n.get("split", "") for n in _all_gnodes if n.get("split")})
+                _ntypes    = ["all"] + sorted({n.get("type", "") for n in _all_gnodes if n.get("type")})
+                _dtypes    = ["all"] + sorted({n.get("diagram_type", "") for n in _all_gnodes if n.get("diagram_type")})
+                _filt_split = _gc_col2.selectbox("Filter split",        _splits, key="galaxy_split")
+                _filt_ntype = _gc_col3.selectbox("Filter node type",    _ntypes, key="galaxy_ntype")
+                _filt_dtype = _gc_col4.selectbox("Filter diagram type", _dtypes, key="galaxy_dtype")
+
+                _filtered_nodes = [
+                    n for n in _all_gnodes
+                    if (_filt_split == "all" or n.get("split") == _filt_split)
+                    and (_filt_ntype == "all" or n.get("type") == _filt_ntype)
+                    and (_filt_dtype == "all" or n.get("diagram_type") == _filt_dtype)
+                ]
+                _sampled = _filtered_nodes[:int(_max_nodes)]
+                _sampled_ids = {n["global_node_id"] for n in _sampled}
+                _sampled_edges = [
+                    e for e in _all_gedges
+                    if e.get("source_global_id") in _sampled_ids
+                    and e.get("target_global_id") in _sampled_ids
+                ]
+
+                if _sampled:
+                    from pyvis.network import Network as _GalNet  # type: ignore
+                    _gnet = _GalNet(height="500px", width="100%", directed=True,
+                                    bgcolor="#0b1220", font_color="#e2e8f0")
+                    _gnet.barnes_hut(gravity=-3000, central_gravity=0.15,
+                                     spring_length=160, spring_strength=0.04)
+                    _SCEN_COLORS = [
+                        "#38bdf8", "#10b981", "#f59e0b", "#a78bfa", "#f472b6",
+                        "#34d399", "#fb923c", "#60a5fa", "#e879f9", "#4ade80",
+                    ]
+                    _scen_list = sorted({n.get("scenario_id", "") for n in _sampled})
+                    _scen_color = {s: _SCEN_COLORS[i % len(_SCEN_COLORS)]
+                                   for i, s in enumerate(_scen_list)}
+                    for _gn in _sampled:
+                        _col = _scen_color.get(_gn.get("scenario_id", ""), "#64748b")
+                        _gnet.add_node(
+                            _gn["global_node_id"],
+                            label=_gn.get("node_id", ""),
+                            color=_col,
+                            title=(
+                                f"Scenario: {_gn.get('scenario_id','')}\n"
+                                f"Type: {_gn.get('type','')}\n"
+                                f"Diagram: {_gn.get('diagram_id','')}\n"
+                                f"Split: {_gn.get('split','')}"
+                            ),
+                            size=8,
+                        )
+                    for _ge in _sampled_edges:
+                        try:
+                            _gnet.add_edge(
+                                _ge["source_global_id"], _ge["target_global_id"],
+                                color="#334155", width=1,
+                            )
+                        except Exception:
+                            pass
+                    import tempfile, os as _os
+                    with tempfile.NamedTemporaryFile(suffix=".html", delete=False,
+                                                     mode="w", encoding="utf-8") as _tf:
+                        _gnet.save_graph(_tf.name)
+                        _html = Path(_tf.name).read_text(encoding="utf-8")
+                        _os.unlink(_tf.name)
+                    components.html(_html, height=520, scrolling=False)
+                    st.caption(
+                        f"Showing {len(_sampled)} of {len(_filtered_nodes)} nodes · "
+                        f"{len(_sampled_edges)} edges · color = scenario · "
+                        f"Global InfraGraph Galaxy (sampled)"
+                    )
+                else:
+                    st.info("No nodes match the current filter.")
             else:
-                st.caption(f"Not generated yet: {name}")
+                st.info("Install `pyvis>=0.3.2` for interactive galaxy graph.")
 
 
 # ══════════════════════════════════════════════════════════════════════════════

@@ -208,25 +208,59 @@ See `docs/mlp_rca.md` and `docs/gnn_rca.md` for full details.
 
 ### Enterprise GNN RCA
 
-Trains a GCN on stitched multi-diagram enterprise topology graphs and ranks all nodes
-across the unified enterprise graph to identify the root-cause node.
+Trains a 3-layer GCN on stitched multi-diagram enterprise topology graphs.
+Each scenario graph (branch + WAN + datacenter + app/db + shared services stitched together)
+is one training sample.  The model ranks all nodes across the scenario to identify
+the root-cause node that triggered cross-diagram alert propagation.
+
+**How it works:**
+- The GNN trains across many V3 scenario enterprise graphs (one graph = one scenario).
+- Each scenario graph is a separate training sample with its own label (root-cause node).
+- At inference time the model ranks nodes inside the **selected scenario graph** to identify the root cause.
+- The Global InfraGraph Galaxy is a separate graph-memory index used for exploration and storytelling — it is not the GNN inference graph.
 
 ```bash
+# Preferred: V3 multi-diagram enterprise scenarios
 python scripts/train_enterprise_gnn_rca.py \
-    --dataset-root ./datasets/infragraph_v1/enterprise_graph \
+    --dataset-root ./datasets/infragraph_v3 \
     --out ./outputs/enterprise_gnn_rca \
     --epochs 80 \
-    --presentation-scenario enterprise_0000 \
+    --presentation-scenario enterprise_v3_0000 \
     --presentation-split test
 ```
+
+> **Note:** The script also accepts `--dataset-root ./datasets/infragraph_v1/enterprise_graph`
+> for backward compatibility with V1 single-graph datasets.
 
 | Output | Description |
 |--------|-------------|
 | `outputs/enterprise_gnn_rca/enterprise_gnn_model.pt` | Trained GCN checkpoint |
 | `outputs/enterprise_gnn_rca/enterprise_gnn_metrics.json` | Top-1, Top-3, MRR across splits |
 | `outputs/enterprise_gnn_rca/enterprise_gnn_training_curve.png` | Loss and ranking curves |
-| `outputs/enterprise_gnn_rca/<scenario_id>_enterprise_gnn_rca_result.json` | Sample scenario output |
+| `outputs/enterprise_gnn_rca/<scenario_id>_enterprise_gnn_rca_result.json` | Per-scenario inference result |
 | `outputs/enterprise_gnn_rca/<scenario_id>_enterprise_gnn_prediction.png` | Graph visualisation |
+
+The app UI shows **"Enterprise GNN RCA"** only when a result JSON exists for the
+**exact selected scenario**.  If no matching result is found, the UI shows
+**"Scenario-grounded RCA simulation"** using the scenario's `alerts.json` ground truth.
+
+### Global InfraGraph Galaxy
+
+Builds a combined graph-memory index across all V3 scenarios for exploration and storytelling.
+
+```bash
+python scripts/build_global_infragraph_galaxy.py \
+    --dataset-root ./datasets/infragraph_v3 \
+    --out ./outputs/global_graph_memory
+```
+
+| Output | Description |
+|--------|-------------|
+| `outputs/global_graph_memory/infragraph_global_graph.json` | Full global node/edge list |
+| `outputs/global_graph_memory/nodes.csv` | One row per node (global_node_id = scenario::node_id) |
+| `outputs/global_graph_memory/edges.csv` | One row per edge |
+| `outputs/global_graph_memory/scenario_index.json` | Per-scenario metadata |
+| `outputs/global_graph_memory/summary.json` | Aggregate counts |
 
 See: [docs/enterprise_gnn_rca.md](docs/enterprise_gnn_rca.md)
 

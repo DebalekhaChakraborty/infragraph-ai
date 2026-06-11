@@ -1,0 +1,28 @@
+{
+  "total_scenarios": 80,
+  "total_nodes": 2448,
+  "total_edges": 4150,
+  "total_cross_diagram_edges": 1158,
+  "node_type_counts": {
+    "router": 290,
+    "firewall": 228,
+    "switch": 308,
+    "server": 888,
+    "cloud_or_wan": 213,
+    "load_balancer": 64,
+    "service": 294,
+    "database": 163
+  },
+  "diagram_type_counts": {
+    "branch": 570,
+    "wan": 438,
+    "datacenter": 648,
+    "app_db": 592,
+    "shared_services": 200
+  },
+  "split_counts": {
+    "train": 64,
+    "val": 8,
+    "test": 8
+  }
+}
