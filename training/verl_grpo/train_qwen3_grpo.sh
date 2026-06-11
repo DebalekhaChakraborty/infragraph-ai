@@ -105,6 +105,7 @@ TRAIN_CMD="python -m verl.trainer.main_ppo \
   actor_rollout_ref.rollout.max_model_len=1024 \
   actor_rollout_ref.rollout.max_num_batched_tokens=1024 \
   actor_rollout_ref.rollout.load_format=safetensors \
+  actor_rollout_ref.rollout.agent.num_workers=1 \
   actor_rollout_ref.rollout.free_cache_engine=False \
   actor_rollout_ref.rollout.enforce_eager=True \
   actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=1 \
