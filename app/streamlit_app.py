@@ -1088,6 +1088,7 @@ V3_DIAGRAM_IDS = {
 }
 V3_REQUIRED_DIAGRAMS = list(V3_DIAGRAM_IDS.values())
 V3_ENTERPRISE_GNN_METRICS = REPO_ROOT / "outputs" / "enterprise_gnn_rca" / "enterprise_gnn_metrics.json"
+V3_ENTERPRISE_GNN_MODEL   = REPO_ROOT / "outputs" / "enterprise_gnn_rca" / "enterprise_gnn_model.pt"
 V3_ONBOARDING_SCRIPT = REPO_ROOT / "scripts" / "onboard_diagram_v3.py"
 
 _V3_DIAG_COLORS = {
@@ -3458,11 +3459,13 @@ def _tab_enterprise_graph_brain() -> None:
         or _sel_rec_pre.get("source_scenario_id")
         or "—"
     )
-    _gnn_result_pre  = _load_gnn_rca_result(_rca_scenario_id) if _rca_scenario_id != "—" else None
-    _gnn_avail_str   = "Yes" if _gnn_result_pre else "No"
-    _rca_src_str     = "Enterprise GNN RCA" if _gnn_result_pre else "Scenario-grounded RCA simulation"
-    _n_nodes_pre     = len(enterprise_graph.get("nodes", []))
-    _n_edges_pre     = len(enterprise_graph.get("edges", []))
+    _gnn_result_pre   = _load_gnn_rca_result(_rca_scenario_id) if _rca_scenario_id != "—" else None
+    _gnn_model_exists = V3_ENTERPRISE_GNN_MODEL.exists()
+    _gnn_avail_str    = "Yes" if _gnn_result_pre else "No"
+    _model_avail_str  = "Yes" if _gnn_model_exists else "No"
+    _rca_src_str      = "Enterprise GNN RCA" if _gnn_result_pre else "Scenario-grounded RCA simulation"
+    _n_nodes_pre      = len(enterprise_graph.get("nodes", []))
+    _n_edges_pre      = len(enterprise_graph.get("edges", []))
     st.markdown(
         '<div style="background:rgba(15,23,42,0.7);border:1px solid rgba(51,65,85,0.6);'
         'border-radius:10px;padding:14px 16px;margin-bottom:14px">'
@@ -3475,9 +3478,11 @@ def _tab_enterprise_graph_brain() -> None:
         f'<div style="font-size:0.82rem;font-weight:700;color:#f1f5f9">{_n_nodes_pre}</div></div>'
         f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Scenario edges</div>'
         f'<div style="font-size:0.82rem;font-weight:700;color:#f1f5f9">{_n_edges_pre}</div></div>'
-        f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">GNN result available</div>'
+        f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">GNN model available</div>'
+        f'<div style="font-size:0.82rem;font-weight:700;color:{"#10b981" if _gnn_model_exists else "#f59e0b"}">{_model_avail_str}</div></div>'
+        f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">GNN result for scenario</div>'
         f'<div style="font-size:0.82rem;font-weight:700;color:{"#10b981" if _gnn_result_pre else "#f59e0b"}">{_gnn_avail_str}</div></div>'
-        f'<div style="grid-column:span 2"><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">RCA source</div>'
+        f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">RCA source</div>'
         f'<div style="font-size:0.82rem;font-weight:700;color:{"#10b981" if _gnn_result_pre else "#f59e0b"}">{_rca_src_str}</div></div>'
         '</div>'
         '<div style="font-size:0.72rem;color:#475569;border-top:1px solid rgba(51,65,85,0.4);padding-top:8px">'
@@ -3487,9 +3492,62 @@ def _tab_enterprise_graph_brain() -> None:
         unsafe_allow_html=True,
     )
 
+    # ── Case A: model not trained yet ────────────────────────────────────────
+    if not _gnn_model_exists:
+        st.info(
+            "Enterprise GNN model not trained yet. "
+            "Current RCA uses scenario-grounded evidence."
+        )
+        _train_cmd = (
+            "python scripts/train_enterprise_gnn_rca.py "
+            "--dataset-root ./datasets/infragraph_v3 "
+            "--out ./outputs/enterprise_gnn_rca --epochs 80"
+        )
+        st.code(_train_cmd, language="bash")
+
+    # ── Case B: model exists but no result for this scenario ─────────────────
+    elif not _gnn_result_pre and _rca_scenario_id != "—":
+        st.info(
+            f"Enterprise GNN model is available. "
+            f"Generate RCA result for this selected scenario."
+        )
+        if st.button(
+            "Generate GNN RCA for Selected Scenario",
+            type="primary",
+            key="gen_gnn_rca_btn",
+        ):
+            _inf_cmd = [
+                "python",
+                str(REPO_ROOT / "scripts" / "run_enterprise_gnn_inference.py"),
+                "--dataset-root", str(REPO_ROOT / "datasets" / "infragraph_v3"),
+                "--scenario-id",  _rca_scenario_id,
+                "--out",          str(REPO_ROOT / "outputs" / "enterprise_gnn_rca"),
+            ]
+            with st.spinner(f"Running GNN inference for {_rca_scenario_id}..."):
+                import subprocess as _sp
+                _inf_result = _sp.run(
+                    _inf_cmd,
+                    capture_output=True,
+                    text=True,
+                    cwd=str(REPO_ROOT),
+                )
+            if _inf_result.returncode == 0:
+                st.success("GNN inference complete. Reloading result...")
+                st.rerun()
+            else:
+                st.error("GNN inference failed.")
+                st.code(_inf_result.stderr or _inf_result.stdout, language="text")
+
+    # ── Case C: result exists — badge already shown via rca_mode below ───────
+    elif _gnn_result_pre:
+        st.success(
+            f"Enterprise GNN RCA result loaded for **{_rca_scenario_id}**.",
+            icon=None,
+        )
+
     # ── Enterprise alert simulation ───────────────────────────────────────────
     gnn_metrics_available = _enterprise_gnn_available()
-    if not gnn_metrics_available:
+    if not gnn_metrics_available and not _gnn_model_exists:
         if _strict_mode() and not st.session_state.allow_enterprise_simulation:
             st.error("Strict mode: approve before using scenario-grounded simulation.")
             if st.button("Continue with scenario simulation", key="approve_ent_sim"):
@@ -3722,13 +3780,18 @@ def _tab_enterprise_graph_brain() -> None:
                             )
                         except Exception:
                             pass
-                    import tempfile, os as _os
-                    with tempfile.NamedTemporaryFile(suffix=".html", delete=False,
-                                                     mode="w", encoding="utf-8") as _tf:
-                        _gnet.save_graph(_tf.name)
-                        _html = Path(_tf.name).read_text(encoding="utf-8")
-                        _os.unlink(_tf.name)
-                    components.html(_html, height=520, scrolling=False)
+                    with tempfile.NamedTemporaryFile("w", delete=False,
+                                                     suffix=".html", encoding="utf-8") as _tf:
+                        _gal_tmp = Path(_tf.name)
+                    try:
+                        _gnet.save_graph(str(_gal_tmp))
+                        components.html(_gal_tmp.read_text(encoding="utf-8"),
+                                        height=520, scrolling=False)
+                    finally:
+                        try:
+                            _gal_tmp.unlink()
+                        except Exception:
+                            pass
                     st.caption(
                         f"Showing {len(_sampled)} of {len(_filtered_nodes)} nodes · "
                         f"{len(_sampled_edges)} edges · color = scenario · "

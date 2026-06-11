@@ -1,0 +1,68 @@
+{
+  "backend": "torch",
+  "model_type": "Enterprise GCN RCA",
+  "architecture": "GCN(34-96-48-1)",
+  "epochs_trained": 80,
+  "best_val_epoch": 26,
+  "feature_names": [
+    "type_router",
+    "type_switch",
+    "type_firewall",
+    "type_server",
+    "type_database",
+    "type_load_balancer",
+    "type_cloud_or_wan",
+    "type_service",
+    "type_unknown",
+    "diag_branch_topology",
+    "diag_wan_topology",
+    "diag_datacenter_topology",
+    "diag_app_db_topology",
+    "diag_shared_services_topology",
+    "diag_unknown",
+    "has_alert",
+    "max_severity_score",
+    "earliest_alert_score",
+    "alert_count_norm",
+    "is_impacted_node",
+    "is_shared_entity",
+    "is_cross_diagram_bridge",
+    "in_degree_norm",
+    "out_degree_norm",
+    "total_degree_norm",
+    "downstream_reach_norm",
+    "upstream_reach_norm",
+    "cross_diag_degree_norm",
+    "cluster_size_norm",
+    "rc_prior_firewall",
+    "rc_prior_router",
+    "rc_prior_lb",
+    "rc_prior_database",
+    "rc_prior_service"
+  ],
+  "feature_dim": 34,
+  "dataset_sizes": {
+    "train": 64,
+    "val": 8,
+    "test": 8
+  },
+  "train_metrics": {
+    "top1": 0.9531,
+    "top3": 1.0,
+    "mrr": 0.9766,
+    "scenario_count": 64
+  },
+  "val_metrics": {
+    "top1": 1.0,
+    "top3": 1.0,
+    "mrr": 1.0,
+    "scenario_count": 8
+  },
+  "test_metrics": {
+    "top1": 1.0,
+    "top3": 1.0,
+    "mrr": 1.0,
+    "scenario_count": 8
+  },
+  "note": "This model is trained on stitched multi-diagram enterprise topology graphs. It predicts root cause across the unified enterprise graph, not just inside a single diagram."
+}

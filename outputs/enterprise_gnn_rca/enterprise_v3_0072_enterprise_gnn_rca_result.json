@@ -1,0 +1,183 @@
+{
+  "scenario_id": "enterprise_v3_0072",
+  "model_type": "Enterprise GCN RCA",
+  "backend": "torch",
+  "predicted_root_cause": "APP-LB-01",
+  "ground_truth_root_cause": "APP-LB-01",
+  "is_correct": true,
+  "ground_truth_rank": 1,
+  "root_cause_diagram": "app_db_topology",
+  "impacted_diagrams": [
+    "app_db_topology"
+  ],
+  "alert_count": 4,
+  "node_count": 28,
+  "edge_count": 40,
+  "cross_diagram_edge_count": 6,
+  "top_candidates": [
+    {
+      "rank": 1,
+      "node_id": "APP-LB-01",
+      "score": 0.961453,
+      "type": "load_balancer",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "has_alert": true,
+      "is_impacted_node": false,
+      "is_shared_entity": false,
+      "is_cross_diagram_bridge": false
+    },
+    {
+      "rank": 2,
+      "node_id": "DC-CORE-SW-01",
+      "score": 0.915854,
+      "type": "switch",
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology",
+      "has_alert": false,
+      "is_impacted_node": false,
+      "is_shared_entity": true,
+      "is_cross_diagram_bridge": false
+    },
+    {
+      "rank": 3,
+      "node_id": "SERVICE-API-01",
+      "score": 0.901206,
+      "type": "service",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "has_alert": false,
+      "is_impacted_node": false,
+      "is_shared_entity": false,
+      "is_cross_diagram_bridge": false
+    },
+    {
+      "rank": 4,
+      "node_id": "DB-CACHE-01",
+      "score": 0.899245,
+      "type": "server",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "has_alert": false,
+      "is_impacted_node": false,
+      "is_shared_entity": false,
+      "is_cross_diagram_bridge": false
+    },
+    {
+      "rank": 5,
+      "node_id": "APP-01",
+      "score": 0.830502,
+      "type": "server",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "has_alert": true,
+      "is_impacted_node": true,
+      "is_shared_entity": false,
+      "is_cross_diagram_bridge": false
+    },
+    {
+      "rank": 6,
+      "node_id": "APP-02",
+      "score": 0.827103,
+      "type": "server",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "has_alert": true,
+      "is_impacted_node": true,
+      "is_shared_entity": false,
+      "is_cross_diagram_bridge": false
+    },
+    {
+      "rank": 7,
+      "node_id": "DC-SRV-01",
+      "score": 0.24182,
+      "type": "server",
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology",
+      "has_alert": false,
+      "is_impacted_node": false,
+      "is_shared_entity": false,
+      "is_cross_diagram_bridge": false
+    },
+    {
+      "rank": 8,
+      "node_id": "DC-SRV-02",
+      "score": 0.24182,
+      "type": "server",
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology",
+      "has_alert": false,
+      "is_impacted_node": false,
+      "is_shared_entity": false,
+      "is_cross_diagram_bridge": false
+    },
+    {
+      "rank": 9,
+      "node_id": "DC-SRV-03",
+      "score": 0.24182,
+      "type": "server",
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology",
+      "has_alert": false,
+      "is_impacted_node": false,
+      "is_shared_entity": false,
+      "is_cross_diagram_bridge": false
+    },
+    {
+      "rank": 10,
+      "node_id": "DC-AGG-SW-01",
+      "score": 0.153512,
+      "type": "switch",
+      "diagram_id": "datacenter_topology",
+      "diagram_type": "datacenter_topology",
+      "has_alert": false,
+      "is_impacted_node": false,
+      "is_shared_entity": true,
+      "is_cross_diagram_bridge": false
+    }
+  ],
+  "alerts": [
+    {
+      "node": "APP-LB-01",
+      "diagram_id": "app_db_topology",
+      "alert_type": "cpu_spike",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "APP-01",
+      "diagram_id": "app_db_topology",
+      "alert_type": "connection_timeout",
+      "severity": "high",
+      "time_offset_min": 1
+    },
+    {
+      "node": "APP-02",
+      "diagram_id": "app_db_topology",
+      "alert_type": "connection_timeout",
+      "severity": "high",
+      "time_offset_min": 9
+    },
+    {
+      "node": "DB-MASTER",
+      "diagram_id": "app_db_topology",
+      "alert_type": "latency",
+      "severity": "warning",
+      "time_offset_min": 11
+    }
+  ],
+  "impact_paths": [
+    [
+      "APP-LB-01",
+      "APP-01"
+    ],
+    [
+      "APP-LB-01",
+      "APP-02"
+    ],
+    [
+      "APP-LB-01",
+      "DB-MASTER"
+    ]
+  ]
+}
