@@ -64,5 +64,10 @@
     "mrr": 1.0,
     "scenario_count": 8
   },
-  "note": "This model is trained on stitched multi-diagram enterprise topology graphs. It predicts root cause across the unified enterprise graph, not just inside a single diagram."
+  "note": "This model is trained on stitched multi-diagram enterprise topology graphs. It predicts root cause across the unified enterprise graph, not just inside a single diagram.",
+  "selected_device": "cuda",
+  "torch_version": "2.6.0+rocm6.1",
+  "torch_hip_version": "6.1.40091-a8dbc0c19",
+  "cuda_available": true,
+  "device_name": "AMD Radeon Graphics"
 }
