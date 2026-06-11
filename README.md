@@ -1,6 +1,56 @@
 # InfraGraph AI
 
-Synthetic network-diagram dataset generator and AI pipeline for **automated topology extraction** and **root-cause analysis (RCA)** of network incidents.
+Synthetic network-diagram dataset generator and AI pipeline for **automated topology extraction**, **root-cause analysis (RCA)**, and **AI-driven remediation** of network incidents.
+
+---
+
+## AI Remediation Agent: Qwen3 + vLLM + vERL/GRPO
+
+InfraGraph AI uses a three-stage intelligence pipeline:
+
+1. **Diagram Intelligence** — RF-DETR extracts topology graph memory from network diagrams.
+2. **GNN RCA** — Enterprise GNN ranks root-cause nodes across scenario graphs.
+3. **Qwen3 Remediation Agent** — served via vLLM and designed for LoRA/GRPO fine-tuning with vERL, generates grounded resolution plans from graph memory, alert timeline, RCA path, and GNN ranking.
+
+The GRPO reward functions align Qwen3 outputs to be:
+- **Graph-grounded** — only referencing nodes and IPs present in the enterprise graph.
+- **Safe** — validation steps precede remediation, rollback notes always included.
+- **Operator-ready** — specific, actionable steps with escalation guidance.
+
+### Start the vLLM server (local AMD/CUDA GPU)
+
+```bash
+python -m vllm.entrypoints.openai.api_server \
+    --model Qwen/Qwen3-4B-Instruct \
+    --host 0.0.0.0 \
+    --port 8000
+```
+
+### Build the RL training dataset
+
+```bash
+python training/verl_grpo/build_rca_rl_dataset.py \
+    --dataset-root ./datasets/infragraph_v3 \
+    --gnn-results  ./outputs/enterprise_gnn_rca \
+    --out          ./data/rl_training/infragraph_rca_remediation_grpo.jsonl
+```
+
+### Run GRPO fine-tuning with vERL
+
+```bash
+bash training/verl_grpo/train_qwen3_grpo.sh
+```
+
+### Point the app at the fine-tuned adapter
+
+```bash
+export INFRAGRAPH_LORA_ADAPTER_PATH=./outputs/verl_grpo_checkpoints/qwen3_grpo_rca_remediation/latest
+export INFRAGRAPH_QWEN_BASE_URL=http://localhost:8000/v1
+export INFRAGRAPH_QWEN_MODEL=Qwen/Qwen3-4B-Instruct
+streamlit run app/streamlit_app.py
+```
+
+---
 
 ---
 
@@ -201,6 +251,33 @@ python -m streamlit run app/streamlit_app.py \
 When `QWEN_BASE_URL` is a localtunnel URL the cockpit automatically sends the `Bypass-Tunnel-Reminder: true` header.
 
 See: [docs/run_qwen_vllm_amd.md](docs/run_qwen_vllm_amd.md)
+
+### Vector Memory Layer
+
+ChromaDB indexes graph-memory evidence for semantic retrieval. It complements
+the topology graph and GNN; it does not replace them.
+
+| Layer | Role |
+|-------|------|
+| Graph JSON / graph memory packet | Structured topology truth |
+| Vector DB | Semantic retrieval over graph evidence, timelines, RCA, and resolution plans |
+| GNN | Root-cause ranking over graph structure |
+| Qwen/vLLM | Remediation and reasoning generation |
+
+Graph Copilot retrieves Chroma chunks before answering. AI Resolution plans can
+include retrieved graph evidence in the Qwen context.
+
+```bash
+pip install chromadb sentence-transformers
+
+python scripts/build_vector_memory.py \
+    --repo-root . \
+    --persist-dir ./outputs/vector_memory/chroma \
+    --collection infragraph_memory
+```
+
+Vector memory files are local runtime artifacts under `outputs/vector_memory/`
+and are intentionally ignored by git.
 
 ### RCA model architecture
 
@@ -545,6 +622,5 @@ python data_generator/generate_infragraph_dataset.py \
 ## License
 
 MIT
-
 
 
