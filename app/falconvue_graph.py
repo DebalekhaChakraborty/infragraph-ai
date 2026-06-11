@@ -5,15 +5,16 @@ Two rendering modes
 -------------------
 scenario (default)
     Scenario Enterprise Graph — Alert Propagation.
-    Used in GNN RCA tab.  Nodes 2x larger, camera z=220, zoomToFit after
-    layout, d3 charge -45, local-link distance 45, cross-link distance 90.
-    No auto-orbit.  Current propagation-step node highlighted bright-white
-    with oversized label.
+    Used in GNN RCA tab.  All node sizes per spec (10–24), nodeRelSize=4,
+    camera z=220, zoomToFit after layout, d3 charge -45,
+    local-link distance 45, cross-link distance 90.
+    No auto-orbit.  Alert nodes orange, root-cause red, step-node white,
+    traversal cyan.  Links visible (width 1.2 / 2.2 / 4.0, opacity 0.85).
 
 global
     InfraGraph AI — Enterprise Graph Galaxy.
-    Original galaxy behaviour: z=580, charge -120, distances 90/240,
-    auto-orbit after 3 s.  For large multi-scenario global graph exploration.
+    Original galaxy behaviour: z=580, nodeRelSize=3, charge -120,
+    distances 90/240, auto-orbit after 3 s.  Thinner/dimmer links.
 
 Uses 3d-force-graph + three-spritetext via CDN + streamlit.components.v1.html.
 Raises on Python-level failure so callers can handle gracefully.
@@ -21,6 +22,7 @@ Raises on Python-level failure so callers can handle gracefully.
 from __future__ import annotations
 
 import json
+import streamlit as st
 import streamlit.components.v1 as components
 
 # ── Node colour palette ───────────────────────────────────────────────────────
@@ -50,7 +52,7 @@ _LEGEND_ROWS: list[tuple[str, str]] = [
     ("#67e8f9", "Cloud / WAN"),
 ]
 
-# ── CSS template — __HEIGHT__ placeholder ────────────────────────────────────
+# ── CSS template ──────────────────────────────────────────────────────────────
 _CSS_TMPL = """\
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{
@@ -110,13 +112,12 @@ html,body{
 """
 
 # ── JS template ───────────────────────────────────────────────────────────────
-# Plain string (no f-prefix) — { } are literal JS, no Python escaping needed.
-# Placeholders replaced by _assemble_html:
-#   __MODE__       → "scenario" or "global"
-#   __STEP_NODE__  → JSON string of current-step node id (or "")
-#   __TRAV_PATH__  → JSON array of traversal path node ids
-#   __GDATA__      → JSON graph payload
-#   __HEIGHT__     → pixel height integer
+# Plain string — { } are literal JS.  Placeholders:
+#   __MODE__        → "scenario" | "global"
+#   __STEP_NODE__   → JSON string of current-step node id
+#   __TRAV_PATH__   → JSON array of traversal path node ids
+#   __GDATA__       → JSON graph payload
+#   __HEIGHT__      → pixel height integer
 _JS_TMPL = """\
 (function(){
   /* ── Mode flags ── */
@@ -186,7 +187,7 @@ _JS_TMPL = """\
     .nodeId('id')
     .nodeLabel('')
     .nodeColor(function(n){ return n.color; })
-    .nodeRelSize(3)
+    .nodeRelSize(_IS_SCEN?4:3)
     .nodeVal(function(n){ return n.size*n.size; })
     .nodeOpacity(0.95)
     .nodeThreeObject(function(node){
@@ -194,11 +195,11 @@ _JS_TMPL = """\
       var isStep=(node.highlight==='step');
       var isTrav=(node.highlight==='trav');
       sprite.color=isStep?'#ffffff':(isTrav?'#67e8f9':'#e8edf4');
-      sprite.textHeight=isStep?5.5:(isTrav?3.8:(_IS_SCEN?3.2:2.2));
+      sprite.textHeight=isStep?6.0:(isTrav?4.5:(_IS_SCEN?3.8:2.2));
       sprite.fontFace='system-ui,-apple-system,sans-serif';
       sprite.fontWeight=isStep?'900':'600';
       sprite.material.depthWrite=false;
-      var r=Math.cbrt(node.size*node.size)*3;
+      var r=Math.cbrt(node.size*node.size)*(_IS_SCEN?4:3);
       sprite.position.x=r+5;
       return sprite;
     })
@@ -207,7 +208,8 @@ _JS_TMPL = """\
     .linkTarget('target')
     .linkColor(function(l){ return l.color; })
     .linkWidth(function(l){ return l.width; })
-    .linkOpacity(0.75)
+    .linkOpacity(_IS_SCEN?0.88:0.75)
+    .linkCurvature(0.05)
     .linkDirectionalParticles(function(l){ return l.particles; })
     .linkDirectionalParticleSpeed(function(l){ return l.p_speed; })
     .linkDirectionalParticleWidth(function(l){ return l.p_width; })
@@ -281,6 +283,7 @@ def render_falconvue_graph(
     mode: str = "scenario",
     current_step_node: "str | None" = None,
     traversal_path: "list[str] | None" = None,
+    alert_timeline: "list[dict] | None" = None,
 ) -> None:
     """Render the enterprise graph as a 3D WebGL FalconVue visualisation.
 
@@ -289,11 +292,12 @@ def render_falconvue_graph(
     enterprise_graph  : Full enterprise graph (nodes/edges/cross_diagram_edges).
     absorbed_ids      : Node IDs just absorbed (cyan highlight).
     rca               : RCA result with root_cause/alert_nodes/impact_path.
-    incident          : Enterprise incident for pre-RCA alert highlighting.
+    incident          : Enterprise incident dict (alert_timeline used if alert_timeline is None).
     height            : Iframe height in pixels.
     mode              : "scenario" (default) or "global".
     current_step_node : Node ID of the current propagation step (white/bright).
-    traversal_path    : Ordered path so far (cyan chips in the graph).
+    traversal_path    : Ordered path so far (cyan in graph).
+    alert_timeline    : Alert event list; nodes highlighted orange before RCA exists.
     """
     absorbed_ids   = absorbed_ids or set()
     rca            = rca or {}
@@ -306,21 +310,33 @@ def render_falconvue_graph(
     impact_path     = rca.get("impact_path", [])
     path_edges: set[tuple[str, str]] = set(zip(impact_path, impact_path[1:]))
 
-    # Alert nodes from incident timeline (pre-RCA or supplement)
+    # Alert nodes: explicit parameter wins, then incident dict
     incident_alert_set: set[str] = set()
-    for ev in incident.get("alert_timeline", []):
+    for ev in (alert_timeline or incident.get("alert_timeline", [])):
         n = ev.get("node", "")
         if n:
             incident_alert_set.add(n)
 
-    # Combined alert set: prefer rca, fall back to incident
     alert_set = rca_alert_set or incident_alert_set
 
-    step_set  = {current_step_node} if current_step_node else set()
-    trav_set  = (set(traversal_path) - step_set)
+    step_set = {current_step_node} if current_step_node else set()
+    trav_set = set(traversal_path) - step_set
 
-    # Size multiplier for scenario mode
-    sm = 2.0 if mode == "scenario" else 1.0
+    # ── Mode-specific size and link constants ─────────────────────────────────
+    if mode == "scenario":
+        SZ_ROOT  = 24.0; SZ_STEP  = 22.0; SZ_ALERT = 18.0
+        SZ_IMPA  = 16.0; SZ_ABS   = 18.0; SZ_TRAV  = 14.0; SZ_SHARE = 18.0
+        SZ_HUB   = 14.0; SZ_CONN  = 14.0; SZ_DEF   = 10.0
+        LW_PATH  = 4.0;  LW_CROSS = 2.2;  LW_LOCAL = 1.2
+        LC_LOCAL = "rgba(255,255,255,0.60)"
+        LC_CROSS = "rgba(255,255,255,0.90)"
+    else:
+        SZ_ROOT  = 12.0; SZ_STEP  = 11.0; SZ_ALERT  = 9.0
+        SZ_IMPA  =  8.0; SZ_ABS   =  9.0; SZ_TRAV   = 7.0; SZ_SHARE  = 9.0
+        SZ_HUB   =  7.0; SZ_CONN  =  6.0; SZ_DEF    = 5.0
+        LW_PATH  =  2.5; LW_CROSS =  1.2; LW_LOCAL  = 0.7
+        LC_LOCAL = "rgba(255,255,255,0.42)"
+        LC_CROSS = "rgba(255,255,255,0.65)"
 
     # node → diagram cluster
     node_diag: dict[str, str] = {}
@@ -339,32 +355,31 @@ def render_falconvue_graph(
     nodes_out: list[dict] = []
     for n in enterprise_graph.get("nodes", []):
         nid    = n.get("id", "")
-        ntype  = n.get("type", "server")
+        ntype  = (n.get("type") or n.get("class_name") or "server").lower()
         shared = n.get("is_shared_entity", False)
 
-        # Priority: root → step → alert → impacted → absorbed → traversal → shared → normal
         if nid == root_cause and root_cause:
-            color, sz, status, hl = "#ef4444", 12.0 * sm, "root_cause", ""
+            color, sz, status, hl = "#ef4444", SZ_ROOT, "root_cause", ""
         elif nid in step_set:
-            color, sz, status, hl = "#ffffff", 11.0 * sm, "step_node", "step"
+            color, sz, status, hl = "#ffffff", SZ_STEP, "step_node", "step"
         elif nid in alert_set:
-            color, sz, status, hl = "#f97316", 9.0 * sm, "alert", ""
+            color, sz, status, hl = "#f97316", SZ_ALERT, "alert", ""
         elif nid in impacted_set:
-            color, sz, status, hl = "#facc15", 8.0 * sm, "impacted", ""
+            color, sz, status, hl = "#facc15", SZ_IMPA, "impacted", ""
         elif nid in absorbed_ids:
-            color, sz, status, hl = "#22d3ee", 9.0 * sm, "absorbed", ""
+            color, sz, status, hl = "#22d3ee", SZ_ABS, "absorbed", ""
         elif nid in trav_set:
-            color, sz, status, hl = "#22d3ee", 7.0 * sm, "traversal", "trav"
+            color, sz, status, hl = "#22d3ee", SZ_TRAV, "traversal", "trav"
         elif shared:
-            color, sz, status, hl = "#a855f7", 9.0 * sm, "shared", ""
+            color, sz, status, hl = "#a855f7", SZ_SHARE, "shared", ""
         else:
             color = _DEVICE_COLORS.get(ntype, _DEFAULT_COLOR)
-            if ntype in ("router", "firewall", "cloud_or_wan"):
-                sz = 7.0 * sm
-            elif ntype in ("switch", "load_balancer"):
-                sz = 6.0 * sm
+            if ntype in ("router", "firewall", "cloud_or_wan", "load_balancer"):
+                sz = SZ_HUB
+            elif ntype in ("switch",):
+                sz = SZ_CONN
             else:
-                sz = 5.0 * sm
+                sz = SZ_DEF
             status, hl = "normal", ""
 
         nodes_out.append({
@@ -380,11 +395,18 @@ def render_falconvue_graph(
             "diagram":   node_diag.get(nid) or n.get("diagram_id", ""),
         })
 
+    # ── Safety check ─────────────────────────────────────────────────────────
+    if not nodes_out:
+        st.warning(
+            "Scenario graph has no renderable nodes — "
+            "ensure the enterprise graph has been built from a scenario."
+        )
+        return
+
     # ── Links ─────────────────────────────────────────────────────────────────
     seen_pairs: set[tuple[str, str]] = set()
     links_out: list[dict]            = []
     valid_ids  = {n["id"] for n in nodes_out}
-    link_width_mul = 1.5 if mode == "scenario" else 1.0
 
     def _push(e: dict, force_cross: bool = False) -> None:
         src, tgt = e.get("source", ""), e.get("target", "")
@@ -403,17 +425,21 @@ def render_falconvue_graph(
         is_path = k in path_edges
 
         if is_path:
-            color, w, parts, spd, pw, pc = (
-                "#22d3ee", 2.5 * link_width_mul, 6, 0.007, 2.5, "#22d3ee"
-            )
+            color = "#22d3ee"
+            w     = LW_PATH
+            parts, spd, pw, pc = 6, 0.007, 2.5, "#22d3ee"
         elif is_cross:
-            color, w, parts, spd, pw, pc = (
-                "rgba(255,255,255,0.65)", 1.2 * link_width_mul, 0, 0.0, 0.0, "#fff"
-            )
+            color = LC_CROSS
+            w     = LW_CROSS
+            # Ambient particles on cross-links in scenario mode so the graph feels alive
+            parts = 2 if mode == "scenario" else 0
+            spd   = 0.003 if mode == "scenario" else 0.0
+            pw    = 1.5   if mode == "scenario" else 0.0
+            pc    = "#67e8f9"
         else:
-            color, w, parts, spd, pw, pc = (
-                "rgba(255,255,255,0.42)", 0.7 * link_width_mul, 0, 0.0, 0.0, "#fff"
-            )
+            color = LC_LOCAL
+            w     = LW_LOCAL
+            parts, spd, pw, pc = 0, 0.0, 0.0, "#fff"
 
         links_out.append({
             "source":    src,
@@ -434,7 +460,10 @@ def render_falconvue_graph(
     for e in enterprise_graph.get("cross_diagram_edges", []):
         _push(e, force_cross=True)
 
-    # ── JSON payload ──────────────────────────────────────────────────────────
+    if not links_out and mode == "scenario":
+        st.info("Scenario graph has nodes but no renderable links.")
+
+    # ── Metrics ──────────────────────────────────────────────────────────────
     graph_json = json.dumps({"nodes": nodes_out, "links": links_out})
 
     n_nodes  = len(nodes_out)
@@ -445,13 +474,12 @@ def render_falconvue_graph(
     has_rca  = bool(root_cause)
     has_step = bool(current_step_node)
 
-    # Titles
     if mode == "scenario":
         main_title = "Scenario Enterprise Graph &#8212; Alert Propagation"
-        sub_title  = "Cross-diagram incident propagation &middot; Select node to zoom"
+        sub_title  = "Cross-diagram incident propagation across selected scenario"
     else:
-        main_title = "InfraGraph AI &#8212; Enterprise Graph Galaxy"
-        sub_title  = "3D Topology &middot; Cross-Diagram RCA &middot; Live Graph Memory"
+        main_title = "InfraGraph AI &#8212; Global Galaxy"
+        sub_title  = "Global graph-memory index across V3 scenarios"
 
     html = _assemble_html(
         graph_json, height, mode, main_title, sub_title,

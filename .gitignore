@@ -24,7 +24,10 @@ env/
 # Heavy training/model artifacts
 outputs/rfdetr_v3/
 outputs/rfdetr_v3_smoke/
+outputs/vector_memory/
 outputs/**/model/
+.chroma/
+data/vector_memory/
 runs/
 training_runs/
 *.ckpt

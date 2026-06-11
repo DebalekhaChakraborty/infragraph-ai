@@ -134,7 +134,33 @@ except Exception as _isim_exc:
     _build_enterprise_incident_pkg = None  # type: ignore
     _build_cross_hero_incident_pkg = None  # type: ignore
 
-# ── FalconVue 3D WebGL renderer (optional — falls back to PyVis if missing) ──
+# ── AI remediation package ───────────────────────────────────────────────────
+import os as _os
+_QWEN_BASE_URL  = _os.environ.get("INFRAGRAPH_QWEN_BASE_URL",  "http://localhost:8000/v1")
+_QWEN_MODEL     = _os.environ.get("INFRAGRAPH_QWEN_MODEL",     "Qwen/Qwen3-4B-Instruct")
+_QWEN_TIMEOUT   = int(_os.environ.get("INFRAGRAPH_QWEN_TIMEOUT", "60"))
+_LORA_ADAPTER   = _os.environ.get("INFRAGRAPH_LORA_ADAPTER_PATH", "")
+
+for _k in [k for k in _sys.modules if "ai_remediation" in k]:
+    _sys.modules.pop(_k, None)
+_AI_REM_OK = False
+try:
+    from ai_remediation import (                                               # type: ignore
+        make_remediation_input          as _make_remediation_input,
+        generate_resolution_plan        as _generate_resolution_plan,
+        generate_remediation_with_qwen  as _generate_qwen_remediation,
+        check_vllm_available            as _check_vllm_available_fn,
+        generate_template_remediation   as _generate_template_remediation,
+    )
+    _AI_REM_OK = True
+except Exception:
+    _make_remediation_input         = None  # type: ignore
+    _generate_resolution_plan       = None  # type: ignore
+    _generate_qwen_remediation      = None  # type: ignore
+    _check_vllm_available_fn        = None  # type: ignore
+    _generate_template_remediation  = None  # type: ignore
+
+# ── FalconVue 3D WebGL renderer (optional; PyVis remains available) ──
 _app_dir = str(Path(__file__).parent)
 if _app_dir not in _sys.path:
     _sys.path.insert(0, _app_dir)
@@ -1742,6 +1768,236 @@ def _local_rca_ranking_reason(
 # ══════════════════════════════════════════════════════════════════════════════
 # INCIDENT HELPERS
 # ══════════════════════════════════════════════════════════════════════════════
+# AI REMEDIATION HELPERS
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _check_vllm_available() -> bool:
+    """Return True if the vLLM server answers at _QWEN_BASE_URL/models."""
+    if not _AI_REM_OK or _check_vllm_available_fn is None:
+        return False
+    return _check_vllm_available_fn(_QWEN_BASE_URL, timeout=4)
+
+
+def _build_remediation_context(
+    rca: dict,
+    ent_incident: dict,
+    enterprise_graph: dict,
+    alerts_data: dict,
+    diagram_id: str,
+    gnn_result: "dict | None",
+) -> dict:
+    """Assemble an enterprise make_remediation_input() context from session state."""
+    if not _AI_REM_OK or _make_remediation_input is None:
+        return {}
+
+    nodes = enterprise_graph.get("nodes", [])
+    edges = enterprise_graph.get("edges", [])
+
+    device_ctx = [
+        {
+            "node_id":    n.get("id", n.get("node_id", "")),
+            "device_type": n.get("type", n.get("class_name", "")),
+            "ip_address": n.get("ip_address", ""),
+            "diagram_id": n.get("diagram_id", n.get("source_diagram", "")),
+        }
+        for n in nodes[:20]
+    ]
+    connector_ctx = [
+        {
+            "source":     e.get("source", ""),
+            "target":     e.get("target", ""),
+            "type":       e.get("label", e.get("relationship", "")),
+            "diagram_id": e.get("diagram_id", ""),
+        }
+        for e in edges[:15]
+    ]
+    n_cross = len(enterprise_graph.get("cross_diagram_edges", []))
+    clusters = enterprise_graph.get("diagram_clusters", {})
+    n_domains = len(clusters) if isinstance(clusters, dict) else len(clusters)
+    graph_summary = (
+        f"{len(nodes)} nodes, {len(edges)} intra-diagram edges, "
+        f"{n_cross} cross-diagram edges across {n_domains} topology domains."
+    )
+
+    root_cause   = rca.get("root_cause", "")            if rca else alerts_data.get("root_cause", "")
+    rc_diagram   = rca.get("root_cause_diagram", "")    if rca else alerts_data.get("root_cause_diagram", "")
+    imp_nodes    = rca.get("impacted_nodes", [])         if rca else ent_incident.get("impacted_nodes", [])
+    imp_diagrams = rca.get("impacted_diagrams", [])      if rca else ent_incident.get("impacted_diagrams", [])
+    impact_path  = rca.get("impact_path", [])            if rca else ent_incident.get("impact_path", [])
+    ranking      = rca.get("ranking", [])                if rca else ent_incident.get("candidate_ranking", [])
+    rca_source   = rca.get("mode", "Scenario-grounded RCA simulation") if rca else ""
+    incident_id  = ent_incident.get("incident_id", "")
+    scenario_id  = ent_incident.get("scenario_id", alerts_data.get("scenario_id", ""))
+
+    return _make_remediation_input(
+        incident_id=incident_id,
+        scope="enterprise",
+        selected_diagram_id=diagram_id,
+        scenario_id=scenario_id,
+        alert_timeline=ent_incident.get("alert_timeline", []),
+        graph_memory_summary=graph_summary,
+        root_cause=root_cause,
+        root_cause_diagram=rc_diagram,
+        impacted_nodes=list(imp_nodes),
+        impacted_diagrams=list(imp_diagrams),
+        impact_path=list(impact_path),
+        candidate_ranking=list(ranking),
+        gnn_result_available=bool(gnn_result),
+        rca_source=rca_source,
+        device_context=device_ctx,
+        connector_context=connector_ctx,
+    )
+
+
+def _build_local_remediation_context(
+    result: dict,
+    incident: dict,
+    local_graph: dict,
+    diagram_id: str,
+) -> dict:
+    """Assemble a local make_remediation_input() context from Tab 2 session state."""
+    if not _AI_REM_OK or _make_remediation_input is None:
+        return {}
+
+    nodes = local_graph.get("nodes", [])
+    edges = local_graph.get("edges", [])
+
+    device_ctx = [
+        {
+            "node_id":     n.get("id", n.get("node_id", "")),
+            "device_type": n.get("type", n.get("class_name", "")),
+            "ip_address":  n.get("ip_address", ""),
+            "diagram_id":  diagram_id,
+        }
+        for n in nodes[:15]
+    ]
+    connector_ctx = [
+        {
+            "source":     e.get("source", ""),
+            "target":     e.get("target", ""),
+            "type":       e.get("label", e.get("relationship", "")),
+            "diagram_id": diagram_id,
+        }
+        for e in edges[:12]
+    ]
+    graph_summary = f"{len(nodes)} nodes, {len(edges)} edges in {diagram_id}."
+
+    root_cause    = result.get("root_cause", "")
+    first_obs     = result.get("first_observed", incident.get("first_observed_node", ""))
+    imp_nodes     = result.get("impacted_nodes", [])
+    impact_path   = result.get("impact_path", [])
+    ranking       = result.get("ranking", [])
+    rca_source    = result.get("mode", result.get("rca_source", "Topology BFS RCA"))
+    incident_id   = incident.get("incident_id", "")
+    scenario_id   = incident.get("scenario_id", "")
+
+    return _make_remediation_input(
+        incident_id=incident_id,
+        scope="local",
+        selected_diagram_id=diagram_id,
+        diagram_type=diagram_id,
+        scenario_id=scenario_id,
+        alert_timeline=incident.get("alert_timeline", []),
+        graph_memory_summary=graph_summary,
+        root_cause=root_cause,
+        root_cause_diagram=diagram_id,
+        first_observed_node=first_obs,
+        impacted_nodes=list(imp_nodes),
+        impacted_diagrams=[diagram_id],
+        impact_path=list(impact_path),
+        candidate_ranking=list(ranking),
+        gnn_result_available=False,
+        rca_source=rca_source,
+        device_context=device_ctx,
+        connector_context=connector_ctx,
+    )
+
+
+def _render_remediation_plan(plan: dict) -> None:
+    """Render a remediation plan dict in the Streamlit UI.
+
+    Handles both the new structured schema (evidence_from_graph as list,
+    rollback_or_safety_notes as list, servicenow_incident_summary as dict)
+    and legacy string values for backward compatibility.
+    """
+    resp = plan.get("response", {})
+    if not resp:
+        st.warning("Remediation plan is empty.")
+        return
+
+    def _label(text: str) -> None:
+        st.markdown(
+            f'<div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;'
+            f'color:#64748b;margin-top:14px;margin-bottom:4px">{text}</div>',
+            unsafe_allow_html=True,
+        )
+
+    def _list_section(label: str, value: "str | list") -> None:
+        _label(label)
+        items = value if isinstance(value, list) else ([value] if value else [])
+        for i, item in enumerate(items, 1):
+            st.markdown(
+                f'<div style="font-size:0.82rem;color:#d1fae5;padding:3px 0 3px 10px;'
+                f'border-left:2px solid #10b981;margin-bottom:3px">{i}. {item}</div>',
+                unsafe_allow_html=True,
+            )
+
+    def _text_section(label: str, value: str) -> None:
+        if not value:
+            return
+        _label(label)
+        st.markdown(
+            f'<div style="font-size:0.85rem;color:#e2e8f0;padding:4px 0">{value}</div>',
+            unsafe_allow_html=True,
+        )
+
+    # Executive summary card
+    exec_sum = resp.get("executive_summary", "")
+    if exec_sum:
+        st.markdown(
+            f'<div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);'
+            f'border-radius:10px;padding:14px 16px;margin:10px 0">'
+            f'<div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;'
+            f'color:#10b981;margin-bottom:6px">Executive Summary</div>'
+            f'<div style="font-size:0.88rem;color:#f1f5f9;line-height:1.5">{exec_sum}</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+    _text_section("Probable Root Cause",      resp.get("probable_root_cause", ""))
+    _list_section("Evidence from Graph",       resp.get("evidence_from_graph", []))
+    _list_section("Triage Steps",              resp.get("triage_steps", []))
+    _list_section("Validation Steps",          resp.get("validation_steps", []))
+    _list_section("Remediation Steps",         resp.get("remediation_steps", []))
+    _list_section("Rollback / Safety Notes",   resp.get("rollback_or_safety_notes", []))
+    _text_section("Escalation Recommendation", resp.get("escalation_recommendation", ""))
+
+    # ServiceNow summary — structured dict or legacy string
+    snow = resp.get("servicenow_incident_summary")
+    if snow:
+        _label("ServiceNow Incident Summary")
+        if isinstance(snow, dict):
+            snow_lines = []
+            if snow.get("short_description"):
+                snow_lines.append(f"Short description : {snow['short_description']}")
+            if snow.get("description"):
+                snow_lines.append(f"Description       : {snow['description']}")
+            if snow.get("affected_ci"):
+                snow_lines.append(f"Affected CI       : {snow['affected_ci']}")
+            if snow.get("priority"):
+                snow_lines.append(f"Priority          : {snow['priority']}")
+            if snow.get("assignment_group"):
+                snow_lines.append(f"Assignment group  : {snow['assignment_group']}")
+            st.code("\n".join(snow_lines) if snow_lines else "(empty)", language="text")
+        else:
+            st.code(str(snow), language="text")
+
+    conf = resp.get("confidence_notes", "")
+    if conf:
+        st.caption(f"Confidence notes: {conf}")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 
 def _render_alert_timeline(timeline: list[dict], show_diagram_col: bool = False) -> None:
     """Render an alert timeline as styled event cards."""
@@ -2671,7 +2927,7 @@ def _tab_onboard_new_diagram() -> None:
                 st.success(
                     f"Ingestion complete — {pkt.get('node_count', 0)} nodes, "
                     f"{pkt.get('edge_count', 0)} edges. "
-                    "Proceed to Tab 2 (Local RCA) or Tab 3 (Enterprise Brain)."
+                    "Proceed to Tab 2 (Topology RCA) or Tab 3 (Enterprise Brain)."
                 )
 
     with right:
@@ -3237,9 +3493,9 @@ def _tab_diagram_intelligence() -> None:
 # ══════════════════════════════════════════════════════════════════════════════
 def _tab_local_rca() -> None:
     st.markdown(
-        '<div class="ws-title">Local RCA — Same Selected Diagram</div>'
+        '<div class="ws-title">Topology RCA — Same Selected Diagram</div>'
         '<div class="ws-desc">Simulate a realistic alert stream, then trace the root cause '
-        'through the local diagram topology.</div>',
+        'through the selected diagram topology.</div>',
         unsafe_allow_html=True,
     )
 
@@ -3304,7 +3560,7 @@ def _tab_local_rca() -> None:
     col_b1, col_b2 = st.columns([1, 1])
     with col_b1:
         if st.button(
-            "Generate Local Alert Stream",
+            "Generate Topology Alert Stream",
             type="primary" if not incident else "secondary",
             key="gen_local_alerts_btn",
             help="Analyse the diagram topology and produce a realistic alert timeline",
@@ -3317,14 +3573,15 @@ def _tab_local_rca() -> None:
                     story = _build_local_incident_story(local_graph, diagram_id, None)
                     inc   = story
                     inc["alert_timeline"] = []
-                st.session_state.local_incident   = inc
-                st.session_state.local_rca_result = {}
+                st.session_state.local_incident             = inc
+                st.session_state.local_rca_result           = {}
+                st.session_state.pop("local_ai_resolution_plan", None)
             st.rerun()
 
     if incident:
         with col_b2:
             if st.button(
-                "Find Local Root Cause",
+                "Find Topology Root Cause",
                 type="primary",
                 key="local_rca_btn",
                 help="Run graph-traversal RCA and reveal the root cause node",
@@ -3332,6 +3589,7 @@ def _tab_local_rca() -> None:
                 with st.spinner("Running local RCA…"):
                     rca = _incident_to_local_rca(incident)
                     st.session_state.local_rca_result = rca
+                    st.session_state.pop("local_ai_resolution_plan", None)
                     _persist_incident(incident, "local")
                 st.rerun()
 
@@ -3345,7 +3603,7 @@ def _tab_local_rca() -> None:
         st.markdown(
             f'<div class="info-card" style="margin:12px 0 10px;border-left:4px solid {sev_color}">'
             f'<div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;'
-            f'color:#94a3b8;margin-bottom:4px">Local Incident</div>'
+            f'color:#94a3b8;margin-bottom:4px">Topology Incident</div>'
             f'<div style="font-size:1.05rem;font-weight:700;color:#f1f5f9;margin-bottom:8px">'
             f'{incident.get("incident_title","Topology Incident")}</div>'
             f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:0.78rem">'
@@ -3375,9 +3633,9 @@ def _tab_local_rca() -> None:
     result = st.session_state.get("local_rca_result")
     if not result:
         if not incident:
-            st.info("Click **Generate Local Alert Stream** to begin the incident simulation.")
+            st.info("Click **Generate Topology Alert Stream** to begin the incident simulation.")
         else:
-            st.info("Click **Find Local Root Cause** to run RCA on this alert stream.")
+            st.info("Click **Find Topology Root Cause** to run RCA on this alert stream.")
         return
 
     st.markdown('<hr class="ws-rule">', unsafe_allow_html=True)
@@ -3536,6 +3794,129 @@ def _tab_local_rca() -> None:
         if result.get("path_note"):
             st.caption(f"Path note: {result['path_note']}")
 
+    # ── AI Resolution Agent (Local) ────────────────────────────────────────────
+    st.markdown('<hr class="ws-rule" style="margin:22px 0 14px 0">', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-label" style="margin-bottom:10px">AI Resolution Agent</div>',
+        unsafe_allow_html=True,
+    )
+
+    if not _AI_REM_OK:
+        st.warning("AI remediation package unavailable — check src/ai_remediation/.")
+    else:
+        _loc_vllm_ok     = _check_vllm_available()
+        _loc_lora_exists = bool(_LORA_ADAPTER and Path(_LORA_ADAPTER).exists())
+        _loc_rem_src     = "Qwen3-4B via vLLM" if _loc_vllm_ok else "Template remediation mode"
+        _loc_plan        = st.session_state.get("local_ai_resolution_plan")
+
+        # Status grid
+        st.markdown(
+            f'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">'
+            f'<div style="background:rgba(30,41,59,0.7);border:1px solid rgba(100,116,139,0.3);'
+            f'border-radius:8px;padding:10px 12px">'
+            f'<div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.08em;'
+            f'color:#64748b;margin-bottom:4px">RCA Scope</div>'
+            f'<div style="font-size:0.8rem;font-weight:600;color:#7dd3fc">Topology (single-diagram)</div></div>'
+            f'<div style="background:rgba(30,41,59,0.7);border:1px solid rgba(100,116,139,0.3);'
+            f'border-radius:8px;padding:10px 12px">'
+            f'<div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.08em;'
+            f'color:#64748b;margin-bottom:4px">RCA Source</div>'
+            f'<div style="font-size:0.8rem;font-weight:600;color:#94a3b8">'
+            f'{result.get("rca_source", result.get("mode","Topology BFS RCA"))}</div></div>'
+            f'<div style="background:rgba(30,41,59,0.7);border:1px solid rgba(100,116,139,0.3);'
+            f'border-radius:8px;padding:10px 12px">'
+            f'<div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.08em;'
+            f'color:#64748b;margin-bottom:4px">Qwen / vLLM</div>'
+            f'<div style="font-size:0.8rem;font-weight:600;'
+            f'color:{"#34d399" if _loc_vllm_ok else "#f87171"}">'
+            f'{"Available" if _loc_vllm_ok else "Unavailable"}</div></div>'
+            f'<div style="background:rgba(30,41,59,0.7);border:1px solid rgba(100,116,139,0.3);'
+            f'border-radius:8px;padding:10px 12px">'
+            f'<div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.08em;'
+            f'color:#64748b;margin-bottom:4px">Fine-tuned Adapter</div>'
+            f'<div style="font-size:0.8rem;font-weight:600;'
+            f'color:{"#34d399" if _loc_lora_exists else "#f87171"}">'
+            f'{"Loaded" if _loc_lora_exists else "Not loaded"}</div></div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+        if not _loc_vllm_ok:
+            st.info(
+                "Qwen3 vLLM server is not reachable — generating from **template remediation mode**. "
+                "Start a local vLLM server and set `INFRAGRAPH_QWEN_BASE_URL` to enable model inference.",
+                icon="ℹ️",
+            )
+        if not _loc_lora_exists:
+            st.caption(
+                "No LoRA adapter loaded — using base Qwen3-4B-Instruct (or template mode). "
+                "Set `INFRAGRAPH_LORA_ADAPTER_PATH` after running GRPO fine-tuning."
+            )
+
+        # Action buttons
+        _col_la, _col_lb = st.columns([1, 1])
+        with _col_la:
+            _loc_btn_lbl = (
+                "Generate Topology AI Resolution Plan"
+                if _loc_vllm_ok
+                else "Generate Topology Template Resolution Plan"
+            )
+            if st.button(_loc_btn_lbl, key="local_ai_plan_btn", type="primary"):
+                with st.spinner("Building local resolution plan…"):
+                    _loc_ctx = _build_local_remediation_context(result, incident, local_graph, diagram_id)
+                    if _loc_ctx and _generate_resolution_plan is not None:
+                        _root = (result or {}).get("root_cause", "")
+                        _query = f"root cause {_root} diagram {diagram_id} impacted nodes remediation validation"
+                        _vec_evidence, _vec_err = _retrieve_vector_evidence(_query, k=6)
+                        if _vec_evidence:
+                            _loc_ctx["retrieved_graph_memory_evidence"] = _vec_evidence
+                            _loc_ctx["retrieved_graph_memory_label"] = "Retrieved graph memory evidence"
+                        _loc_plan_result = _generate_resolution_plan(
+                            _loc_ctx,
+                            scope="local",
+                            prefer_qwen=_loc_vllm_ok,
+                            base_url=_QWEN_BASE_URL,
+                            model=_QWEN_MODEL,
+                            timeout=_QWEN_TIMEOUT,
+                        )
+                        st.session_state.local_ai_resolution_plan = _loc_plan_result
+                    else:
+                        st.error("Could not build remediation context — RCA result may be incomplete.")
+                st.rerun()
+
+        with _col_lb:
+            if _loc_plan and st.button(
+                "View ServiceNow Summary",
+                key="local_snow_btn",
+            ):
+                _loc_resp = _loc_plan.get("response", {})
+                _loc_snow = _loc_resp.get("servicenow_incident_summary", {})
+                if isinstance(_loc_snow, dict) and _loc_snow.get("short_description"):
+                    st.info(
+                        f"**{_loc_snow.get('short_description','')}**\n\n"
+                        f"{_loc_snow.get('description','')}\n\n"
+                        f"Priority: {_loc_snow.get('priority','')} | "
+                        f"Assignment: {_loc_snow.get('assignment_group','')}"
+                    )
+                elif _loc_snow:
+                    st.code(str(_loc_snow), language="text")
+
+        # Honesty banner for template source
+        if _loc_plan:
+            _loc_src = _loc_plan.get("source", "")
+            if _loc_src == "template":
+                st.markdown(
+                    '<div style="background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.3);'
+                    'border-radius:8px;padding:10px 14px;margin:10px 0;font-size:0.8rem;color:#fbbf24">'
+                    'Template remediation mode — output is deterministic and not model-generated. '
+                    'Connect a vLLM server to enable Qwen3 AI inference.'
+                    '</div>',
+                    unsafe_allow_html=True,
+                )
+            if _loc_plan.get("error"):
+                st.warning(f"Inference error: {_loc_plan['error']}")
+            _render_remediation_plan(_loc_plan)
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 3 — ENTERPRISE GRAPH BRAIN
@@ -3582,7 +3963,7 @@ def _selected_scenario_path() -> "Path | None":
     Priority:
     1. enterprise_scenario_path in session state (set on absorption or onboarding)
     2. source_scenario_path from the selected enterprise record
-    3. None — caller must handle, do NOT silently fall back to V3_HERO_SCENARIO
+    3. None — caller must handle, do NOT silently substitute V3_HERO_SCENARIO
     """
     ss_path = st.session_state.get("enterprise_scenario_path", "")
     if ss_path:
@@ -4474,8 +4855,9 @@ def _tab_gnn_rca() -> None:
                     ent_inc = _simulate_enterprise_rca(alerts_data, enterprise_graph)
                     ent_inc["alert_timeline"]    = []
                     ent_inc["propagation_steps"] = []
-                st.session_state.enterprise_incident   = ent_inc
-                st.session_state.enterprise_rca_result = {}
+                st.session_state.enterprise_incident          = ent_inc
+                st.session_state.enterprise_rca_result        = {}
+                st.session_state.pop("enterprise_ai_resolution_plan", None)
             st.rerun()
 
     # Surface any generation or import error
@@ -4600,6 +4982,7 @@ def _tab_gnn_rca() -> None:
     absorbed_ids = {n.get("canonical_id", n.get("id")) for n in local_graph.get("nodes", [])}
 
     _fv_rendered = False
+    _fv_alert_tl = (ent_incident or {}).get("alert_timeline", [])
     if _FALCONVUE_OK and _render_falconvue_graph is not None:
         try:
             _render_falconvue_graph(
@@ -4609,10 +4992,21 @@ def _tab_gnn_rca() -> None:
                 mode="scenario",
                 current_step_node=_prop_step_node or None,
                 traversal_path=_prop_trav_path,
+                alert_timeline=_fv_alert_tl,
             )
             _fv_rendered = True
-        except Exception:
-            pass
+        except Exception as _fv_exc:
+            st.error(f"FalconVue renderer error: {_fv_exc}")
+
+    with st.expander("Developer details", expanded=False):
+        st.caption(f"FalconVue renderer loaded: {'Yes' if _FALCONVUE_OK else 'No'}")
+        st.caption(f"Render mode: scenario")
+        st.caption(f"Graph nodes passed: {len(enterprise_graph.get('nodes', []))}")
+        st.caption(f"Graph links passed: {len(enterprise_graph.get('edges', []))} intra + {len(enterprise_graph.get('cross_diagram_edges', []))} cross")
+        st.caption(f"RCA root cause: {(rca or {}).get('root_cause', '—')}")
+        st.caption(f"Alert nodes from timeline: {len(_fv_alert_tl)}")
+        st.caption(f"Current step node: {_prop_step_node or '—'}")
+        st.caption(f"Impact path length: {len((rca or {}).get('impact_path', []))}")
 
     if not _fv_rendered:
         if _pyvis_available():
@@ -4743,6 +5137,159 @@ def _tab_gnn_rca() -> None:
     elif ent_incident and not rca:
         st.info("Click **Run Enterprise RCA** to identify the root cause from the alert stream.")
 
+    # ── AI Resolution Agent ───────────────────────────────────────────────────
+    st.markdown('<hr class="ws-rule" style="margin:18px 0">', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-label">AI Resolution Agent</div>'
+        '<div style="font-size:0.75rem;color:#64748b;margin-bottom:10px">'
+        'Qwen3 remediation agent — grounded in graph memory, alert timeline, '
+        'RCA path, and GNN ranking.</div>',
+        unsafe_allow_html=True,
+    )
+
+    # Status cards
+    _vllm_ok      = _check_vllm_available()
+    _lora_path    = Path(_LORA_ADAPTER) if _LORA_ADAPTER else None
+    _lora_exists  = bool(_lora_path and _lora_path.exists())
+    _rem_src_lbl  = "Qwen3 via vLLM" if _vllm_ok else "Template remediation mode"
+    _rca_src_disp = (rca or {}).get("mode", "—") if rca else "—"
+
+    def _sbadge(ok: bool, yes_text: str, no_text: str) -> str:
+        c = "#10b981" if ok else "#f59e0b"
+        t = yes_text if ok else no_text
+        return (
+            f'<span style="background:rgba({("16,185,129" if ok else "245,158,11")},0.15);'
+            f'color:{c};border:1px solid {c};border-radius:6px;'
+            f'padding:2px 10px;font-size:0.7rem;font-weight:700">{t}</span>'
+        )
+
+    st.markdown(
+        '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">'
+        f'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);'
+        f'border-radius:8px;padding:10px 12px">'
+        f'<div style="font-size:0.6rem;color:#64748b;text-transform:uppercase;margin-bottom:5px">RCA Source</div>'
+        f'<div style="font-size:0.78rem;color:#f1f5f9;font-weight:600">{_rca_src_disp}</div></div>'
+        f'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);'
+        f'border-radius:8px;padding:10px 12px">'
+        f'<div style="font-size:0.6rem;color:#64748b;text-transform:uppercase;margin-bottom:5px">Qwen / vLLM</div>'
+        + _sbadge(_vllm_ok, "Available", "Not running")
+        + '</div>'
+        f'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);'
+        f'border-radius:8px;padding:10px 12px">'
+        f'<div style="font-size:0.6rem;color:#64748b;text-transform:uppercase;margin-bottom:5px">Remediation Source</div>'
+        f'<div style="font-size:0.78rem;color:#f1f5f9;font-weight:600">{_rem_src_lbl}</div></div>'
+        f'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);'
+        f'border-radius:8px;padding:10px 12px">'
+        f'<div style="font-size:0.6rem;color:#64748b;text-transform:uppercase;margin-bottom:5px">Fine-tuned Adapter</div>'
+        + _sbadge(_lora_exists, "Detected", "Not loaded")
+        + '</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    # Honesty notices
+    if not _vllm_ok:
+        st.info(
+            f"Qwen/vLLM is not running. Start the local model server to generate AI remediation.\n\n"
+            f"```\npython -m vllm.entrypoints.openai.api_server "
+            f"--model {_QWEN_MODEL} --host 0.0.0.0 --port 8000\n```",
+        )
+    if not _lora_exists:
+        st.caption(
+            "Base Qwen model detected. Fine-tuned adapter not loaded. "
+            "Run `bash training/verl_grpo/train_qwen3_grpo.sh` to prepare and set "
+            "`INFRAGRAPH_LORA_ADAPTER_PATH`."
+        )
+
+    # Only show generation buttons when we have something to remediate
+    _rem_plan    = st.session_state.get("enterprise_ai_resolution_plan") or {}
+    _has_context = bool(ent_incident and (rca or ent_incident.get("root_cause")))
+
+    if _has_context and _AI_REM_OK:
+        _col_r1, _col_r2 = st.columns([1, 1])
+        with _col_r1:
+            _ai_btn_lbl = (
+                "Generate Enterprise AI Resolution Plan"
+                if _vllm_ok
+                else "Generate Enterprise Template Resolution Plan"
+            )
+            if st.button(_ai_btn_lbl, type="primary", key="gen_ai_plan_btn"):
+                with st.spinner(
+                    "Calling Qwen3 via vLLM…" if _vllm_ok else "Generating template plan…"
+                ):
+                    _ctx = _build_remediation_context(
+                        rca or {}, ent_incident or {}, enterprise_graph,
+                        alerts_data, diagram_id, _gnn_result_pre,
+                    )
+                    if _ctx and _generate_resolution_plan is not None:
+                        _root = (rca or {}).get("root_cause", "")
+                        _impacted = " ".join((rca or {}).get("impacted_diagrams", []) or [])
+                        _query = f"root cause {_root} impacted diagrams {_impacted} validation remediation"
+                        _vec_evidence, _vec_err = _retrieve_vector_evidence(_query, k=6)
+                        if _vec_evidence:
+                            _ctx["retrieved_graph_memory_evidence"] = _vec_evidence
+                            _ctx["retrieved_graph_memory_label"] = "Retrieved graph memory evidence"
+                        _plan = _generate_resolution_plan(
+                            _ctx,
+                            scope="enterprise",
+                            prefer_qwen=_vllm_ok,
+                            base_url=_QWEN_BASE_URL,
+                            model=_QWEN_MODEL,
+                            timeout=_QWEN_TIMEOUT,
+                        )
+                    else:
+                        _plan = {}
+                    st.session_state.enterprise_ai_resolution_plan = _plan
+                st.rerun()
+
+        with _col_r2:
+            if _rem_plan and st.button(
+                "View ServiceNow Summary", key="gen_snow_btn", type="secondary"
+            ):
+                _snow = (_rem_plan.get("response") or {}).get("servicenow_incident_summary")
+                if isinstance(_snow, dict) and _snow.get("short_description"):
+                    st.info(
+                        f"**{_snow.get('short_description','')}**\n\n"
+                        f"{_snow.get('description','')}\n\n"
+                        f"Priority: {_snow.get('priority','')} | "
+                        f"Assignment: {_snow.get('assignment_group','')}"
+                    )
+                elif _snow:
+                    st.code(str(_snow), language="text")
+
+    elif not _has_context:
+        st.caption(
+            "Generate a Cross-Diagram Alert Stream and run Enterprise RCA first "
+            "to enable the AI Resolution Agent."
+        )
+    elif not _AI_REM_OK:
+        st.caption("AI remediation package failed to load — check the logs.")
+
+    # Render existing plan
+    if _rem_plan:
+        _plan_src = _rem_plan.get("source", "")
+        _plan_ok  = _rem_plan.get("ok", False)
+
+        if _plan_src == "template":
+            st.markdown(
+                '<div style="background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.3);'
+                'border-radius:8px;padding:10px 14px;margin:10px 0;font-size:0.8rem;color:#fbbf24">'
+                'Template remediation mode — deterministic output, not model-generated.</div>',
+                unsafe_allow_html=True,
+            )
+        elif _plan_src == "qwen_vllm" and _plan_ok:
+            _used_model = _rem_plan.get("model", _QWEN_MODEL)
+            st.markdown(
+                f'<div style="font-size:0.7rem;color:#10b981;margin-bottom:6px">'
+                f'Generated by {_used_model} via vLLM.</div>',
+                unsafe_allow_html=True,
+            )
+
+        if not _plan_ok and _rem_plan.get("error"):
+            st.error(f"Resolution plan error: {_rem_plan['error']}")
+        else:
+            _render_remediation_plan(_rem_plan)
+
     # ── Static RCA overlay ────────────────────────────────────────────────────
     _rca_preview_scen = _selected_scenario_path()
     with st.expander("Static RCA overlay", expanded=False):
@@ -4781,6 +5328,8 @@ def _copilot_context() -> dict:
         "enterprise_ingestion_summary": _ss_dict("enterprise_ingestion_summary"),
         "local_rca_result":             _ss_dict("local_rca_result"),
         "enterprise_rca_result":        _ss_dict("enterprise_rca_result"),
+        "local_ai_resolution_plan":     _ss_dict("local_ai_resolution_plan"),
+        "enterprise_ai_resolution_plan": _ss_dict("enterprise_ai_resolution_plan"),
         "local_incident":               loc_inc,
         "enterprise_incident":          ent_inc,
         "alert_timeline":               (
@@ -4794,6 +5343,106 @@ def _copilot_context() -> dict:
         "stitch_map":                   _safe_read_json(scenario / "stitch_map.json"),
         "alerts":                       _safe_read_json(scenario / "alerts.json"),
     }
+
+
+_VECTOR_SETUP_MESSAGE = "Vector memory is not installed. Run pip install chromadb sentence-transformers."
+
+
+def _vector_modules() -> tuple[dict, str]:
+    try:
+        import importlib.util
+        if importlib.util.find_spec("chromadb") is None:
+            return {}, _VECTOR_SETUP_MESSAGE
+        if importlib.util.find_spec("sentence_transformers") is None:
+            return {}, _VECTOR_SETUP_MESSAGE
+        from vector_memory.chroma_store import get_or_create_collection, upsert_documents  # type: ignore
+        from vector_memory.index_builder import build_vector_docs_from_graph_memory  # type: ignore
+        from vector_memory.retriever import retrieve_graph_memory  # type: ignore
+        return {
+            "get_or_create_collection": get_or_create_collection,
+            "upsert_documents": upsert_documents,
+            "build_docs": build_vector_docs_from_graph_memory,
+            "retrieve": retrieve_graph_memory,
+        }, ""
+    except Exception as exc:
+        return {}, f"{_VECTOR_SETUP_MESSAGE} ({exc})"
+
+
+def _current_ai_resolution_plan() -> dict:
+    return _ss_dict("enterprise_ai_resolution_plan") or _ss_dict("local_ai_resolution_plan")
+
+
+def _build_current_vector_docs() -> tuple[list[dict], str]:
+    mods, err = _vector_modules()
+    if err:
+        return [], err
+    build_docs = mods["build_docs"]
+    context = _copilot_context()
+    docs = build_docs(
+        context.get("validation_packet") or {},
+        local_graph=context.get("local_graph") or {},
+        enterprise_graph=context.get("enterprise_graph_after") or {},
+        local_incident=context.get("local_incident") or {},
+        enterprise_incident=context.get("enterprise_incident") or {},
+        local_rca_result=context.get("local_rca_result") or {},
+        enterprise_rca_result=context.get("enterprise_rca_result") or {},
+        ai_resolution_plan=_current_ai_resolution_plan(),
+    )
+    return docs, ""
+
+
+def _index_current_context_to_vector_memory() -> tuple[int, str]:
+    mods, err = _vector_modules()
+    if err:
+        return 0, err
+    docs, err = _build_current_vector_docs()
+    if err:
+        return 0, err
+    if not docs:
+        return 0, "No graph memory evidence is loaded for indexing."
+    try:
+        collection = mods["get_or_create_collection"]("infragraph_memory", "./outputs/vector_memory/chroma")
+        count = mods["upsert_documents"](collection, docs)
+        return count, ""
+    except Exception as exc:
+        return 0, f"{_VECTOR_SETUP_MESSAGE} ({exc})"
+
+
+def _retrieve_vector_evidence(query: str, k: int = 8) -> tuple[list[dict], str]:
+    mods, err = _vector_modules()
+    if err:
+        return [], err
+    try:
+        return mods["retrieve"](
+            query,
+            k=k,
+            collection_name="infragraph_memory",
+            persist_dir="./outputs/vector_memory/chroma",
+        ), ""
+    except Exception as exc:
+        return [], f"{_VECTOR_SETUP_MESSAGE} ({exc})"
+
+
+def _format_retrieved_evidence(evidence: list[dict]) -> str:
+    lines = []
+    for idx, item in enumerate(evidence[:8], 1):
+        meta = item.get("metadata") or {}
+        lines.append(
+            f"{idx}. [{meta.get('source_type','unknown')}] "
+            f"scenario={meta.get('scenario_id','')} diagram={meta.get('diagram_id','')} "
+            f"text={item.get('text','')}"
+        )
+    return "\n".join(lines)
+
+
+def _answer_with_vector_context(question: str) -> str:
+    context = _copilot_context()
+    evidence, err = _retrieve_vector_evidence(question, k=8)
+    st.session_state.last_vector_evidence = evidence
+    st.session_state.last_vector_error = err
+    if evidence:
+        context["retrieved_graph_memory_evidence"] = evidence
+    return _qwen_or_deterministic(question, context)
 
 
 def _deterministic_graph_copilot(question: str, context: dict) -> str:
@@ -4814,6 +5463,8 @@ def _deterministic_graph_copilot(question: str, context: dict) -> str:
     local_path = local_rca.get("impact_path", [])
 
     conf = packet.get("confidence_summary", {})
+    retrieved = context.get("retrieved_graph_memory_evidence") or []
+    retrieved_text = _format_retrieved_evidence(retrieved)
 
     if "detection" in q or "source" in q or "rf-detr" in q or "yolo" in q:
         return (
@@ -4859,10 +5510,10 @@ def _deterministic_graph_copilot(question: str, context: dict) -> str:
         ]
         return ("Cross-diagram stitch links:\n\n" + "\n".join(f"- {item}" for item in rendered)
                 if rendered else "No cross-diagram links for this diagram.")
-    if "local rca" in q or "local root" in q:
+    if "topology rca" in q or "local rca" in q or "local root" in q or "topology root" in q:
         local_root = local_rca.get("root_cause", "not simulated yet")
         return (
-            f"Local RCA (within diagram `{diagram_id}`):\n\n"
+            f"Topology RCA (within diagram `{diagram_id}`):\n\n"
             f"- Root cause: **`{local_root}`**\n"
             f"- Alert nodes: {', '.join(local_rca.get('alert_nodes', [])) or 'none'}\n"
             f"- Impacted nodes: {', '.join(local_rca.get('impacted_nodes', [])) or 'none'}\n"
@@ -4879,6 +5530,7 @@ def _deterministic_graph_copilot(question: str, context: dict) -> str:
             f"- Impacted diagrams: {', '.join(ent_rca.get('impacted_diagrams', [])) or 'none'}\n"
             f"- Alert count: {ent_rca.get('alert_count', 0)}\n"
             f"- Impact path: {' → '.join(ent_path) if ent_path else 'not available'}"
+            + (f"\n\nRetrieved graph memory evidence:\n{retrieved_text}" if retrieved_text else "")
         )
     if "impacted" in q:
         return (
@@ -4922,7 +5574,8 @@ def _deterministic_graph_copilot(question: str, context: dict) -> str:
         f"- Cross-diagram links: {ingestion.get('cross_diagram_links_created', 0)}\n"
         f"- Enterprise root cause: `{ent_rca.get('root_cause', 'not simulated yet')}`\n"
         f"- RCA mode: {ent_rca.get('mode', 'not simulated yet')}\n\n"
-        "Ask: root cause | stitched | absorbed | shared | cross-diagram | path | servicenow | l1"
+        + (f"Retrieved graph memory evidence:\n{retrieved_text}\n\n" if retrieved_text else "")
+        + "Ask: root cause | stitched | absorbed | shared | cross-diagram | path | servicenow | l1"
     )
 
 
@@ -4936,6 +5589,8 @@ def _qwen_or_deterministic(question: str, context: dict) -> str:
     try:
         import requests  # noqa: PLC0415
         compact = json.dumps(context, default=str)[:12000]
+        retrieved = context.get("retrieved_graph_memory_evidence") or []
+        retrieved_text = _format_retrieved_evidence(retrieved)
         resp = requests.post(
             f"{qwen_url}/chat/completions",
             headers={"Content-Type": "application/json", "Bypass-Tunnel-Reminder": "true"},
@@ -4946,7 +5601,11 @@ def _qwen_or_deterministic(question: str, context: dict) -> str:
                         "You are InfraGraph AI Graph Copilot. Answer only from the supplied "
                         "graph JSON evidence. Cite node IDs, diagram IDs, and paths. Be concise."
                     )},
-                    {"role": "user", "content": f"Graph evidence:\n{compact}\n\nQuestion: /no_think {question}"},
+                    {"role": "user", "content": (
+                        f"Graph evidence:\n{compact}\n\n"
+                        f"Retrieved graph memory evidence:\n{retrieved_text or 'none'}\n\n"
+                        f"Question: /no_think {question}"
+                    )},
                 ],
                 "max_tokens": 700, "temperature": 0.1,
             },
@@ -4990,6 +5649,19 @@ def _tab_graph_copilot() -> None:
             return
         st.warning("Copilot mode: deterministic graph evidence (Qwen not configured)")
 
+    mods, vector_err = _vector_modules()
+    if vector_err:
+        st.info("Vector memory is not installed. Run pip install chromadb sentence-transformers.")
+    else:
+        st.success("Vector memory enabled: ChromaDB local store")
+        if st.button("Index Current Graph Memory", key="index_vector_memory"):
+            with st.spinner("Indexing graph memory into ChromaDB…"):
+                count, err = _index_current_context_to_vector_memory()
+            if err:
+                st.error(err)
+            else:
+                st.success(f"Indexed {count} graph memory document(s).")
+
     suggestions = [
         "Where was this diagram stitched into the enterprise graph?",
         "Which nodes were absorbed from the selected diagram?",
@@ -5005,9 +5677,8 @@ def _tab_graph_copilot() -> None:
     for idx, question in enumerate(suggestions):
         with cols[idx % 3]:
             if st.button(question, key=f"v3_q_{idx}", use_container_width=True):
-                context = _copilot_context()
                 st.session_state.v3_chat_messages.append({"role": "user",      "content": question})
-                st.session_state.v3_chat_messages.append({"role": "assistant", "content": _qwen_or_deterministic(question, context)})
+                st.session_state.v3_chat_messages.append({"role": "assistant", "content": _answer_with_vector_context(question)})
                 st.rerun()
 
     qwen_url = os.environ.get("QWEN_BASE_URL", "")
@@ -5020,10 +5691,24 @@ def _tab_graph_copilot() -> None:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
+    evidence = st.session_state.get("last_vector_evidence") or []
+    vector_err = st.session_state.get("last_vector_error", "")
+    if evidence or vector_err:
+        with st.expander("Retrieved Graph Memory Evidence", expanded=bool(evidence)):
+            if vector_err and not evidence:
+                st.info("Vector memory is not installed. Run pip install chromadb sentence-transformers.")
+            for item in evidence:
+                meta = item.get("metadata") or {}
+                st.markdown(
+                    f"**{meta.get('source_type', 'unknown')}** · "
+                    f"scenario `{meta.get('scenario_id', '')}` · "
+                    f"diagram `{meta.get('diagram_id', '')}`"
+                )
+                st.caption(str(item.get("text", ""))[:600])
+
     if prompt := st.chat_input("Ask the enterprise graph..."):
-        context = _copilot_context()
         st.session_state.v3_chat_messages.append({"role": "user",      "content": prompt})
-        st.session_state.v3_chat_messages.append({"role": "assistant", "content": _qwen_or_deterministic(prompt, context)})
+        st.session_state.v3_chat_messages.append({"role": "assistant", "content": _answer_with_vector_context(prompt)})
         st.rerun()
 
 
@@ -5054,8 +5739,8 @@ def _sidebar_v3() -> None:
         st.markdown('<div class="sb-label">Pipeline Progress</div>', unsafe_allow_html=True)
         steps = [
             ("Diagram ingested",          bool(st.session_state.local_graph)),
-            ("Local graph created",       bool(st.session_state.local_graph)),
-            ("Local RCA complete",        bool(st.session_state.local_rca_result)),
+            ("Topology graph created",     bool(st.session_state.local_graph)),
+            ("Topology RCA complete",      bool(st.session_state.local_rca_result)),
             ("Absorbed into enterprise",  bool(st.session_state.enterprise_ingestion_summary)),
             ("Enterprise RCA complete",   bool(st.session_state.enterprise_rca_result)),
             ("Copilot ready",             bool(st.session_state.enterprise_graph_after)),
@@ -5155,7 +5840,7 @@ def _main_cockpit() -> None:
 
     tabs = st.tabs([
         "Diagram Intelligence",
-        "Local RCA",
+        "Topology RCA",
         "Enterprise Graph Brain",
         "GNN RCA",
         "Graph Copilot",
@@ -5178,4 +5863,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
