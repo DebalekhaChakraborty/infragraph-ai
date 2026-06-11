@@ -1,4 +1,4 @@
-# InfraGraph AI — Qwen3-4B LoRA + GRPO/vERL Alignment
+# InfraGraph AI — Qwen3-4B LoRA + GRPO/vERL Alignment (AMD ROCm)
 
 This directory implements the RL alignment pipeline for a graph-grounded
 remediation agent based on Qwen3-4B-Instruct, LoRA adapters, and GRPO via vERL.
