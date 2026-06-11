@@ -19,7 +19,7 @@
     {
       "rank": 1,
       "node_id": "APP-LB-01",
-      "score": 0.959947,
+      "score": 0.945858,
       "type": "load_balancer",
       "diagram_id": "app_db_topology",
       "diagram_type": "app_db_topology",
@@ -31,7 +31,7 @@
     {
       "rank": 2,
       "node_id": "DC-CORE-SW-01",
-      "score": 0.92844,
+      "score": 0.888882,
       "type": "switch",
       "diagram_id": "datacenter_topology",
       "diagram_type": "datacenter_topology",
@@ -42,9 +42,9 @@
     },
     {
       "rank": 3,
-      "node_id": "DB-CACHE-01",
-      "score": 0.882879,
-      "type": "server",
+      "node_id": "SERVICE-API-01",
+      "score": 0.877553,
+      "type": "service",
       "diagram_id": "app_db_topology",
       "diagram_type": "app_db_topology",
       "has_alert": false,
@@ -54,9 +54,9 @@
     },
     {
       "rank": 4,
-      "node_id": "SERVICE-API-01",
-      "score": 0.881862,
-      "type": "service",
+      "node_id": "DB-CACHE-01",
+      "score": 0.872849,
+      "type": "server",
       "diagram_id": "app_db_topology",
       "diagram_type": "app_db_topology",
       "has_alert": false,
@@ -67,7 +67,7 @@
     {
       "rank": 5,
       "node_id": "APP-01",
-      "score": 0.776357,
+      "score": 0.805184,
       "type": "server",
       "diagram_id": "app_db_topology",
       "diagram_type": "app_db_topology",
@@ -79,7 +79,7 @@
     {
       "rank": 6,
       "node_id": "APP-02",
-      "score": 0.772198,
+      "score": 0.800983,
       "type": "server",
       "diagram_id": "app_db_topology",
       "diagram_type": "app_db_topology",
@@ -91,7 +91,7 @@
     {
       "rank": 7,
       "node_id": "DC-SRV-01",
-      "score": 0.238865,
+      "score": 0.172505,
       "type": "server",
       "diagram_id": "datacenter_topology",
       "diagram_type": "datacenter_topology",
@@ -103,7 +103,7 @@
     {
       "rank": 8,
       "node_id": "DC-SRV-02",
-      "score": 0.238865,
+      "score": 0.172505,
       "type": "server",
       "diagram_id": "datacenter_topology",
       "diagram_type": "datacenter_topology",
@@ -115,7 +115,7 @@
     {
       "rank": 9,
       "node_id": "DC-SRV-03",
-      "score": 0.238865,
+      "score": 0.172505,
       "type": "server",
       "diagram_id": "datacenter_topology",
       "diagram_type": "datacenter_topology",
@@ -126,14 +126,14 @@
     },
     {
       "rank": 10,
-      "node_id": "DC-AGG-SW-01",
-      "score": 0.156725,
-      "type": "switch",
-      "diagram_id": "datacenter_topology",
-      "diagram_type": "datacenter_topology",
-      "has_alert": false,
-      "is_impacted_node": false,
-      "is_shared_entity": true,
+      "node_id": "DB-MASTER",
+      "score": 0.132398,
+      "type": "database",
+      "diagram_id": "app_db_topology",
+      "diagram_type": "app_db_topology",
+      "has_alert": true,
+      "is_impacted_node": true,
+      "is_shared_entity": false,
       "is_cross_diagram_bridge": false
     }
   ],
