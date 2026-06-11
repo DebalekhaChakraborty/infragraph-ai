@@ -115,6 +115,18 @@ except Exception:
     _find_rfdetr_ckpt    = None  # type: ignore
     _load_rfdetr_model_raw = None  # type: ignore
 
+# ── Incident simulation package ───────────────────────────────────────────────
+try:
+    from incident_simulation import (                                         # type: ignore
+        build_local_incident     as _build_local_incident_pkg,
+        build_enterprise_incident as _build_enterprise_incident_pkg,
+    )
+    _INCIDENT_SIM_OK = True
+except Exception:
+    _INCIDENT_SIM_OK = False
+    _build_local_incident_pkg     = None  # type: ignore
+    _build_enterprise_incident_pkg = None  # type: ignore
+
 # ── FalconVue 3D WebGL renderer (optional — falls back to PyVis if missing) ──
 _app_dir = str(Path(__file__).parent)
 if _app_dir not in _sys.path:
@@ -362,6 +374,39 @@ div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
     color: #93c5fd !important; box-shadow: inset 0 -2px 0 #60a5fa !important; }
 div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] p { color: #93c5fd !important; }
 
+/* ── Incident timeline ── */
+.timeline-section { margin: 16px 0 8px; }
+.timeline-diag-hdr {
+    font-size: 0.62rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    color: #475569; padding: 8px 0 4px; margin-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+.diag-label {
+    display: inline-block; padding: 2px 8px; border-radius: 5px;
+    font-size: 0.65rem; font-weight: 600; letter-spacing: 0.04em;
+    background: rgba(139,92,246,0.1); color: #a78bfa;
+    border: 1px solid rgba(139,92,246,0.2); margin-left: 6px; vertical-align: middle;
+}
+.diag-label.cross { background: rgba(245,158,11,0.1); color: #f59e0b;
+                    border-color: rgba(245,158,11,0.25); }
+/* ── Traversal ── */
+.traversal-card {
+    background: rgba(96,165,250,0.04); border: 1px solid rgba(96,165,250,0.18);
+    border-radius: 12px; padding: 16px 20px; margin: 8px 0 12px;
+}
+.traversal-step-lbl {
+    font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    color: #60a5fa; margin-bottom: 6px;
+}
+.traversal-node {
+    font-family: 'JetBrains Mono', monospace; font-size: 1.15rem; font-weight: 900;
+    color: #67e8f9; line-height: 1.2;
+}
+.traversal-desc { font-size: 0.8rem; color: #94a3b8; margin-top: 6px; line-height: 1.55; }
+.node-chip.visited { background: rgba(96,165,250,0.15); color: #93c5fd;
+                     border-color: rgba(96,165,250,0.35); }
+.node-chip.current { background: rgba(103,232,249,0.15); color: #67e8f9;
+                     border: 2px solid #67e8f9; }
 /* ── Detection pair comparison ── */
 .compare-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
                  color: #94a3b8; margin-bottom: 8px; }
@@ -1103,9 +1148,10 @@ _V3_DIAG_COLORS = {
 V3_STATE_KEYS = [
     "selected_diagram_path", "selected_diagram_id",
     "local_graph", "node_table", "edge_table", "validation_packet",
-    "local_rca_result",
+    "local_rca_result", "local_incident",
     "enterprise_scenario_path", "enterprise_graph_before",
-    "enterprise_graph_after", "enterprise_ingestion_summary", "enterprise_rca_result",
+    "enterprise_graph_after", "enterprise_ingestion_summary",
+    "enterprise_rca_result", "enterprise_incident",
     "allow_local_simulation", "allow_enterprise_simulation", "allow_deterministic_copilot",
     "catalog_selected_record",
     # live runtime state
@@ -1116,7 +1162,8 @@ V3_STATE_KEYS = [
 
 
 _V3_DICT_KEYS = {
-    "validation_packet", "local_rca_result", "enterprise_rca_result",
+    "validation_packet", "local_rca_result", "local_incident",
+    "enterprise_rca_result", "enterprise_incident",
     "enterprise_ingestion_summary", "local_graph", "enterprise_graph_before",
     "enterprise_graph_after", "catalog_selected_record", "live_detection_result",
 }
@@ -1489,7 +1536,9 @@ def _run_v3_diagram_intelligence(diagram_path: Path, diagram_id: str,
         "confidence_summary": conf_summary,
     }
     st.session_state.local_rca_result           = {}
+    st.session_state.local_incident             = {}
     st.session_state.enterprise_rca_result      = {}
+    st.session_state.enterprise_incident        = {}
     st.session_state.enterprise_ingestion_summary = {}
     st.session_state.enterprise_graph_before    = None
     st.session_state.enterprise_graph_after     = None
@@ -1681,6 +1730,207 @@ def _local_rca_ranking_reason(
     if outdeg.get(n_id, 0) > 2:
         return "Multiple downstream paths converge through this node"
     return "Peripheral node — no direct evidence of involvement in this incident"
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# INCIDENT HELPERS
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _render_alert_timeline(timeline: list[dict], show_diagram_col: bool = False) -> None:
+    """Render an alert timeline as styled event cards."""
+    if not timeline:
+        st.caption("No alert events in timeline.")
+        return
+
+    prev_diag = None
+    for ev in timeline:
+        sev      = ev.get("severity", "major")
+        sev_css  = "critical" if sev == "critical" else "major"
+        is_first = ev.get("is_first_observed", False)
+        is_root  = ev.get("is_root_signal", False)
+        diag     = ev.get("diagram_id", "")
+        node     = ev.get("node", "")
+        dtype    = ev.get("device_type", "")
+        msg      = ev.get("message", "")
+        atype    = ev.get("alert_type", "")
+        tlbl     = ev.get("time_label", "")
+
+        # Cross-diagram section header
+        if show_diagram_col and diag and diag != prev_diag:
+            prev_diag = diag
+            st.markdown(
+                f'<div class="timeline-diag-hdr">'
+                f'Diagram <span class="diag-label">{diag}</span>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+
+        badges = ""
+        if is_first:
+            badges += '<span class="badge badge-warn" style="margin-left:6px">FIRST OBSERVED</span>'
+        if is_root:
+            badges += '<span class="badge badge-critical" style="margin-left:6px">ROOT SIGNAL</span>'
+
+        st.markdown(
+            f'<div class="alert-item {sev_css}">'
+            f'<div class="alert-dot {sev_css}"></div>'
+            f'<div style="flex:1;min-width:0">'
+            f'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
+            f'<span class="alert-node">{node}</span>'
+            f'<span style="font-size:0.68rem;color:#64748b">{dtype}</span>'
+            f'{badges}'
+            f'</div>'
+            f'<div class="alert-msg">{msg}</div>'
+            f'<div style="font-size:0.69rem;color:#475569;margin-top:2px">'
+            f'Type: {atype}'
+            f'</div>'
+            f'</div>'
+            f'<span class="alert-time">{tlbl}</span>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+
+def _render_traversal_steps(impact_path: list[str], result: dict,
+                              slider_key: str = "traversal_slider") -> None:
+    """Render a step-by-step traversal control for an impact path."""
+    if len(impact_path) < 2:
+        return
+
+    st.markdown(
+        '<div class="section-label" style="margin-top:14px">'
+        'Step-by-step Traversal</div>',
+        unsafe_allow_html=True,
+    )
+
+    root      = result.get("root_cause", "")
+    first_obs = (result.get("first_observed_node") or result.get("first_observed", ""))
+    n_steps   = len(impact_path)
+
+    step_idx = st.slider(
+        "Traversal step",
+        min_value=1, max_value=n_steps, value=1, step=1,
+        key=slider_key,
+        help="Walk through the impact path one node at a time",
+    )
+    current = impact_path[step_idx - 1]
+
+    if current == root:
+        step_label = "Root Cause Confirmed"
+        step_color = "#10b981"
+        step_desc  = (
+            f"**{current}** identified as root cause — "
+            f"common upstream dependency for all impacted nodes."
+        )
+    elif current == first_obs:
+        step_label = "Initial Alert"
+        step_color = "#ef4444"
+        step_desc  = (
+            f"**{current}** reports the first symptom — "
+            f"first observed signal that triggers the incident."
+        )
+    else:
+        step_label = f"Propagation Step {step_idx}"
+        step_color = "#f59e0b"
+        step_desc  = (
+            f"Impact propagates through **{current}** — "
+            f"upstream dependency on the path to root cause."
+        )
+
+    st.markdown(
+        f'<div class="traversal-card">'
+        f'<div class="traversal-step-lbl" style="color:{step_color}">{step_label}</div>'
+        f'<div class="traversal-node">{current}</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(step_desc)
+
+    # Path chips with visited/current/unvisited states
+    chips = []
+    for i, n in enumerate(impact_path):
+        if i < step_idx - 1:
+            cls = "visited"
+        elif i == step_idx - 1:
+            cls = "current"
+        else:
+            base = "root" if n == root else ("alerting" if n == first_obs else "")
+            cls = base
+        chips.append(f'<span class="node-chip {cls}">{n}</span>')
+    st.markdown(
+        '<div style="padding:6px 0;line-height:2.4">'
+        + ' <span style="color:#334155;font-size:0.75rem">→</span> '.join(chips)
+        + '</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def _incident_to_local_rca(incident: dict) -> dict:
+    """Convert an IncidentScenario dict to the local_rca_result format."""
+    timeline   = incident.get("alert_timeline", [])
+    first_obs  = incident.get("first_observed_node", "")
+    alert_nodes = [e["node"] for e in timeline if e.get("node")]
+    steps       = incident.get("reasoning_steps", [])
+    why_root    = steps[2] if len(steps) > 2 else " ".join(steps)
+    return {
+        "mode":               "scenario_guided_graph_rca",
+        "root_cause":         incident.get("root_cause", ""),
+        "first_observed":     first_obs,
+        "first_observed_node": first_obs,
+        "alert_nodes":        alert_nodes,
+        "impacted_nodes":     incident.get("impacted_nodes", []),
+        "impact_path":        incident.get("impact_path", []),
+        "ranking":            incident.get("candidate_ranking", []),
+        "incident_title":     incident.get("incident_title", ""),
+        "severity":           incident.get("severity", "High"),
+        "alert_summary":      incident.get("alert_summary", ""),
+        "suspected_domain":   incident.get("suspected_domain", ""),
+        "symptoms":           [e.get("message", "") for e in timeline[:3]],
+        "why_root":           why_root,
+        "reasoning_steps":    steps,
+        "recommended_actions": incident.get("recommended_actions", []),
+        "path_note":          "",
+        "rca_source":         incident.get("rca_source", "Scenario-guided graph RCA"),
+    }
+
+
+def _incident_to_enterprise_rca(incident: dict) -> dict:
+    """Convert an enterprise IncidentScenario dict to the enterprise_rca_result format."""
+    mode = incident.get("rca_source", "Scenario-grounded RCA simulation")
+    gnn_src = ""
+    if mode == "Enterprise GNN RCA":
+        scen = incident.get("scenario_id", "")
+        gnn_src = str(
+            REPO_ROOT / "outputs" / "enterprise_gnn_rca" /
+            f"{scen}_enterprise_gnn_rca_result.json"
+        ) if scen else ""
+    return {
+        "mode":               mode,
+        "root_cause":         incident.get("root_cause", ""),
+        "root_cause_diagram": incident.get("root_cause_diagram", ""),
+        "impacted_diagrams":  incident.get("impacted_diagrams", []),
+        "alert_count":        len(incident.get("alert_timeline", [])),
+        "alert_nodes":        [e["node"] for e in incident.get("alert_timeline", []) if e.get("node")],
+        "impacted_nodes":     incident.get("impacted_nodes", []),
+        "impact_path":        incident.get("impact_path", []),
+        "ranking":            incident.get("candidate_ranking", []),
+        "enterprise_node_count": 0,
+        "gnn_source_file":    gnn_src,
+    }
+
+
+def _persist_incident(incident: dict, kind: str) -> Path | None:
+    """Write incident JSON to outputs/incident_runs/<hash>/."""
+    try:
+        raw     = json.dumps(incident, sort_keys=True)
+        run_id  = __import__("hashlib").sha1(raw.encode()).hexdigest()[:12]
+        out_dir = REPO_ROOT / "outputs" / "incident_runs" / run_id
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out_path = out_dir / f"{kind}_incident.json"
+        out_path.write_text(raw, encoding="utf-8")
+        return out_path
+    except Exception:
+        return None
 
 
 def _build_local_incident_story(
@@ -2306,7 +2556,9 @@ def _tab_onboard_new_diagram() -> None:
                 st.session_state.detected_image_path        = str(ingestion.get("detected_image", ""))
                 st.session_state.enterprise_absorbed        = False
                 st.session_state.local_rca_result           = {}
+                st.session_state.local_incident             = {}
                 st.session_state.enterprise_rca_result      = {}
+                st.session_state.enterprise_incident        = {}
                 st.session_state.enterprise_ingestion_summary = {}
                 st.session_state.enterprise_graph_before    = None
                 st.session_state.enterprise_graph_after     = None
@@ -2903,8 +3155,8 @@ def _tab_diagram_intelligence() -> None:
 def _tab_local_rca() -> None:
     st.markdown(
         '<div class="ws-title">Local RCA — Same Selected Diagram</div>'
-        '<div class="ws-desc">Run a scenario-guided root cause analysis on the currently loaded '
-        'local diagram topology.</div>',
+        '<div class="ws-desc">Simulate a realistic alert stream, then trace the root cause '
+        'through the local diagram topology.</div>',
         unsafe_allow_html=True,
     )
 
@@ -2924,7 +3176,7 @@ def _tab_local_rca() -> None:
     diagram_id = st.session_state.get("selected_diagram_id", "unknown")
     sel_path   = st.session_state.get("selected_diagram_path", "")
 
-    # Diagram summary header
+    # ── Diagram summary header ─────────────────────────────────────────────────
     c_thumb, c_info = st.columns([1, 3])
     with c_thumb:
         if sel_path and Path(sel_path).exists():
@@ -2944,12 +3196,11 @@ def _tab_local_rca() -> None:
             f'</div>',
             unsafe_allow_html=True,
         )
-
         local_model = _local_rca_model_available()
         if local_model:
             st.success("RCA source: trained local model output")
         else:
-            st.info("RCA source: scenario-guided graph RCA")
+            st.info("RCA source: Scenario-guided graph RCA")
             if _strict_mode() and not st.session_state.allow_local_simulation:
                 st.error("Strict mode: explicitly approve before using scenario-guided RCA.")
                 if st.button("Approve scenario-guided RCA", key="approve_local_sim"):
@@ -2957,81 +3208,128 @@ def _tab_local_rca() -> None:
                     st.rerun()
                 return
 
-        if st.button("Run Local RCA Scenario", type="primary", key="local_rca_btn"):
-            with st.spinner("Running local RCA..."):
-                sel_rec = _selected_enterprise_record()
-                st.session_state.local_rca_result = _build_local_incident_story(
-                    local_graph, diagram_id, sel_rec or None
-                )
+    st.markdown('<hr class="ws-rule" style="margin:12px 0">', unsafe_allow_html=True)
 
+    # ── Step 1: Generate Local Alert Stream ───────────────────────────────────
+    incident = st.session_state.get("local_incident") or {}
+
+    col_b1, col_b2 = st.columns([1, 1])
+    with col_b1:
+        if st.button(
+            "Generate Local Alert Stream",
+            type="primary" if not incident else "secondary",
+            key="gen_local_alerts_btn",
+            help="Analyse the diagram topology and produce a realistic alert timeline",
+        ):
+            with st.spinner("Analysing topology and generating alert stream…"):
+                if _INCIDENT_SIM_OK and _build_local_incident_pkg:
+                    inc = _build_local_incident_pkg(local_graph, diagram_id)
+                else:
+                    # Package not importable — derive from existing story builder
+                    story = _build_local_incident_story(local_graph, diagram_id, None)
+                    inc   = story
+                    inc["alert_timeline"] = []
+                st.session_state.local_incident   = inc
+                st.session_state.local_rca_result = {}
+            st.rerun()
+
+    if incident:
+        with col_b2:
+            if st.button(
+                "Find Local Root Cause",
+                type="primary",
+                key="local_rca_btn",
+                help="Run graph-traversal RCA and reveal the root cause node",
+            ):
+                with st.spinner("Running local RCA…"):
+                    rca = _incident_to_local_rca(incident)
+                    st.session_state.local_rca_result = rca
+                    _persist_incident(incident, "local")
+                st.rerun()
+
+    # ── Alert timeline display ────────────────────────────────────────────────
+    if incident:
+        timeline = incident.get("alert_timeline", [])
+        severity_inc = incident.get("severity", "High")
+        sev_color = {"Critical": "#ef4444", "High": "#f59e0b",
+                     "Medium": "#3b82f6", "Low": "#10b981"}.get(severity_inc, "#f59e0b")
+
+        st.markdown(
+            f'<div class="info-card" style="margin:12px 0 10px;border-left:4px solid {sev_color}">'
+            f'<div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;'
+            f'color:#94a3b8;margin-bottom:4px">Local Incident</div>'
+            f'<div style="font-size:1.05rem;font-weight:700;color:#f1f5f9;margin-bottom:8px">'
+            f'{incident.get("incident_title","Topology Incident")}</div>'
+            f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:0.78rem">'
+            f'<div><span style="color:#64748b">Severity</span>&nbsp;'
+            f'<span style="font-weight:700;color:{sev_color}">{severity_inc}</span></div>'
+            f'<div><span style="color:#64748b">Suspected domain</span>&nbsp;'
+            f'<span style="color:#e2e8f0">{incident.get("suspected_domain","—")}</span></div>'
+            f'<div><span style="color:#64748b">First observed</span>&nbsp;'
+            f'<code style="font-size:0.75rem;color:#67e8f9">'
+            f'{incident.get("first_observed_node","—")}</code></div>'
+            f'<div><span style="color:#64748b">Alert summary</span>&nbsp;'
+            f'<span style="color:#94a3b8">{incident.get("alert_summary","")[:80]}</span></div>'
+            f'</div></div>',
+            unsafe_allow_html=True,
+        )
+
+        if timeline:
+            st.markdown(
+                '<div class="section-label" style="margin-top:10px">Alert Stream</div>',
+                unsafe_allow_html=True,
+            )
+            _render_alert_timeline(timeline, show_diagram_col=False)
+        else:
+            st.caption("Alert timeline will appear here once generated.")
+
+    # ── Step 2 results: RCA output ─────────────────────────────────────────────
     result = st.session_state.get("local_rca_result")
     if not result:
-        st.info("Click 'Run Local RCA Scenario' above to run an RCA on this diagram.")
+        if not incident:
+            st.info("Click **Generate Local Alert Stream** to begin the incident simulation.")
+        else:
+            st.info("Click **Find Local Root Cause** to run RCA on this alert stream.")
         return
-
-    is_scenario_guided = result.get("mode") == "scenario_guided_graph_rca"
-    source_lbl = "Scenario-guided graph RCA" if is_scenario_guided else "Trained local model"
 
     st.markdown('<hr class="ws-rule">', unsafe_allow_html=True)
 
-    # ── Incident Context Card ──────────────────────────────────────────────────
     severity  = result.get("severity", "High")
     sev_color = {"Critical": "#ef4444", "High": "#f59e0b",
                  "Medium": "#3b82f6", "Low": "#10b981"}.get(severity, "#f59e0b")
-    st.markdown(
-        f'<div class="info-card" style="margin-bottom:18px;border-left:4px solid {sev_color}">'
-        f'<div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;'
-        f'color:#94a3b8;margin-bottom:6px">Local Incident Scenario</div>'
-        f'<div style="font-size:1.05rem;font-weight:700;color:#f1f5f9;margin-bottom:10px">'
-        f'{result.get("incident_title", "Topology Incident")}</div>'
-        f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;font-size:0.78rem">'
-        f'<div><span style="color:#64748b">Incident</span> &nbsp;'
-        f'<span style="font-weight:700;color:{sev_color}">{severity}</span></div>'
-        f'<div><span style="color:#64748b">First observed</span> &nbsp;'
-        f'<code style="font-size:0.75rem;color:#67e8f9">{result.get("first_observed","—")}</code></div>'
-        f'<div><span style="color:#64748b">Suspected domain</span> &nbsp;'
-        f'<span style="color:#e2e8f0">{result.get("suspected_domain","—")}</span></div>'
-        f'<div><span style="color:#64748b">Alert summary</span> &nbsp;'
-        f'<span style="color:#94a3b8">{result.get("alert_summary","")}</span></div>'
-        f'</div>'
-        f'</div>',
-        unsafe_allow_html=True,
-    )
 
-    # ── Symptoms ───────────────────────────────────────────────────────────────
-    symptoms = result.get("symptoms", [])
-    if symptoms:
-        st.markdown(
-            '<div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;'
-            'color:#64748b;margin-bottom:6px">Observed Symptoms</div>',
-            unsafe_allow_html=True,
-        )
-        for sym in symptoms:
-            st.markdown(
-                f'<div style="font-size:0.8rem;color:#cbd5e1;padding:3px 0 3px 8px;'
-                f'border-left:2px solid #f59e0b;margin-bottom:4px">· {sym}</div>',
-                unsafe_allow_html=True,
-            )
-
-    st.markdown('<hr class="ws-rule" style="margin:14px 0">', unsafe_allow_html=True)
-
-    # ── Root cause summary ─────────────────────────────────────────────────────
+    # ── Root cause ─────────────────────────────────────────────────────────────
     root = result.get("root_cause", "—")
     st.markdown(
-        f'<div style="margin-bottom:4px">'
-        f'<span style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;'
-        f'color:#64748b">Root cause</span></div>'
-        f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:1.1rem;'
-        f'font-weight:700;color:#ef4444;margin-bottom:6px">{root}</div>',
+        f'<div class="rca-winner">'
+        f'<div class="rca-winner-title">Root Cause Identified</div>'
+        f'<div class="rca-winner-sub">'
+        f'RCA source: {result.get("rca_source","Scenario-guided graph RCA")}</div>'
+        f'<div class="rca-winner-node">{root}</div>'
+        f'<div class="rca-winner-meta">'
+        f'Severity: {severity} &nbsp;·&nbsp; '
+        f'First observed: {result.get("first_observed","—")} &nbsp;·&nbsp; '
+        f'Impacted: {len(result.get("impacted_nodes",[]))}'
+        f'</div></div>',
         unsafe_allow_html=True,
     )
+
     why = result.get("why_root", "")
     if why:
         st.markdown(
-            f'<div style="font-size:0.78rem;color:#94a3b8;margin-bottom:4px">'
-            f'<strong style="color:#cbd5e1">Why this root:</strong><br>{why}</div>',
+            f'<div style="font-size:0.8rem;color:#94a3b8;margin-bottom:10px">'
+            f'<strong style="color:#cbd5e1">Why this root:</strong> {why}</div>',
             unsafe_allow_html=True,
         )
+
+    # Reasoning steps
+    with st.expander("Reasoning steps", expanded=True):
+        for step in result.get("reasoning_steps", []):
+            st.markdown(
+                f'<div style="font-size:0.8rem;color:#cbd5e1;padding:3px 0 3px 8px;'
+                f'border-left:2px solid #3b82f6;margin-bottom:4px">{step}</div>',
+                unsafe_allow_html=True,
+            )
 
     # ── Recommended actions ────────────────────────────────────────────────────
     actions = result.get("recommended_actions", [])
@@ -3050,17 +3348,45 @@ def _tab_local_rca() -> None:
 
     st.markdown('<hr class="ws-rule" style="margin:16px 0">', unsafe_allow_html=True)
 
-    # ── Metrics row ────────────────────────────────────────────────────────────
-    m1, m2, m3, m4 = st.columns(4)
-    m1.metric("Root Cause",     root)
-    m2.metric("First Observed", result.get("first_observed", "—"))
-    m3.metric("Impacted Nodes", len(result.get("impacted_nodes", [])))
-    m4.metric("Severity",       severity)
+    # ── Metrics ────────────────────────────────────────────────────────────────
+    _first_obs  = result.get("first_observed", "—")
+    _n_impacted = len(result.get("impacted_nodes", []))
+    _sev_color  = {"Critical": "#f87171", "High": "#fb923c", "Medium": "#fbbf24"}.get(severity, "#94a3b8")
+    st.markdown(
+        f'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:4px">'
+        f'<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);'
+        f'border-radius:8px;padding:10px 14px">'
+        f'<div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.08em;'
+        f'color:#64748b;margin-bottom:4px">Root Cause</div>'
+        f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:0.95rem;font-weight:700;'
+        f'color:#f1f5f9;word-break:break-all;overflow-wrap:anywhere;line-height:1.3">{root}</div>'
+        f'</div>'
+        f'<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);'
+        f'border-radius:8px;padding:10px 14px">'
+        f'<div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.08em;'
+        f'color:#64748b;margin-bottom:4px">First Observed</div>'
+        f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:0.95rem;font-weight:700;'
+        f'color:#f1f5f9;word-break:break-all;overflow-wrap:anywhere;line-height:1.3">{_first_obs}</div>'
+        f'</div>'
+        f'<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);'
+        f'border-radius:8px;padding:10px 14px">'
+        f'<div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.08em;'
+        f'color:#64748b;margin-bottom:4px">Impacted Nodes</div>'
+        f'<div style="font-size:1.5rem;font-weight:700;color:#f1f5f9;line-height:1.3">{_n_impacted}</div>'
+        f'</div>'
+        f'<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);'
+        f'border-radius:8px;padding:10px 14px">'
+        f'<div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.08em;'
+        f'color:#64748b;margin-bottom:4px">Severity</div>'
+        f'<div style="font-size:1.1rem;font-weight:700;color:{_sev_color};line-height:1.3">{severity}</div>'
+        f'</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
 
     # ── Graph overlay ──────────────────────────────────────────────────────────
     path = result.get("impact_path", [])
     path_disp = " → ".join(path[:6]) + ("…" if len(path) > 6 else "")
-
     st.markdown('<div class="section-label">Local Graph RCA Overlay</div>', unsafe_allow_html=True)
     if path_disp:
         st.markdown(
@@ -3072,11 +3398,6 @@ def _tab_local_rca() -> None:
         "Root cause: red  |  First observed: orange  |  "
         "Impacted: yellow  |  Impact path: cyan  |  Shared entities: cyan ring"
     )
-    st.markdown(
-        '<div style="font-size:0.73rem;color:#475569;margin-bottom:8px">'
-        'The path highlights how impact propagates from suspected root to observed symptom.</div>',
-        unsafe_allow_html=True,
-    )
     if not _pyvis_available():
         st.markdown(
             '<div class="warn-card" style="margin-bottom:8px">'
@@ -3084,6 +3405,9 @@ def _tab_local_rca() -> None:
             unsafe_allow_html=True,
         )
     _render_local_graph(local_graph, result)
+
+    # ── Traversal ──────────────────────────────────────────────────────────────
+    _render_traversal_steps(path, result, slider_key="local_traversal_slider")
 
     # ── Impact path chips ──────────────────────────────────────────────────────
     if path:
@@ -3119,12 +3443,10 @@ def _tab_local_rca() -> None:
     # ── Developer details ──────────────────────────────────────────────────────
     with st.expander("Developer details", expanded=False):
         st.caption(f"RCA mode: {result.get('mode', '—')}")
-        st.caption("Graph traversal: BFS directed → BFS undirected → topology inference")
+        st.caption("Graph traversal: BFS undirected (first_obs→root) + directed downstream BFS")
         st.caption("Scoring: out-degree × 0.11 + zero-in-degree +0.14 + root-match +0.20")
         if result.get("path_note"):
             st.caption(f"Path note: {result['path_note']}")
-        for step in result.get("reasoning_steps", []):
-            st.caption(step)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -3309,6 +3631,7 @@ def _tab_enterprise_graph_brain() -> None:
             st.session_state.enterprise_stitch_map_path   = _stitch_p
             st.session_state.allow_enterprise_simulation  = False
             st.session_state.enterprise_rca_result        = {}
+            st.session_state.enterprise_incident          = {}
             st.rerun()
         return
 
@@ -3724,7 +4047,7 @@ def _tab_enterprise_graph_brain() -> None:
                                 "return{id:x.id,label:''};"
                                 "}));"
                                 "n.on('zoom',function(e){"
-                                "var show=e.scale>=2;"
+                                "var show=e.scale>=0.5;"
                                 "ds.update(ds.get().map(function(x){"
                                 "return{id:x.id,label:show?(lb[x.id]||''):''};"
                                 "}));"
@@ -3891,8 +4214,9 @@ def _tab_enterprise_graph_brain() -> None:
 def _tab_gnn_rca() -> None:
     st.markdown(
         '<div class="ws-title">GNN RCA</div>'
-        '<div class="ws-desc">Enterprise GNN Root Cause Analysis — scenario-graph inference, '
-        'cross-diagram alert propagation, and interactive topology.</div>',
+        '<div class="ws-desc">Simulate cross-diagram alert propagation, then run enterprise '
+        'root cause analysis — GNN-powered when a trained result exists, '
+        'scenario-grounded otherwise.</div>',
         unsafe_allow_html=True,
     )
 
@@ -3960,8 +4284,8 @@ def _tab_gnn_rca() -> None:
         f'<div style="font-size:0.82rem;font-weight:700;color:{"#10b981" if _gnn_result_pre else "#f59e0b"}">{_rca_src_str}</div></div>'
         '</div>'
         '<div style="font-size:0.72rem;color:#475569;border-top:1px solid rgba(51,65,85,0.4);padding-top:8px">'
-        'Enterprise GNN is trained across many scenario graphs. Inference is displayed on the selected scenario graph. '
-        'A global galaxy view is used for graph-memory exploration.'
+        'Enterprise GNN is trained across many scenario graphs. Inference is displayed on the selected '
+        'scenario graph. The Global InfraGraph Galaxy is graph-memory exploration, not the RCA inference graph.'
         '</div></div>',
         unsafe_allow_html=True,
     )
@@ -4012,7 +4336,7 @@ def _tab_gnn_rca() -> None:
 
     st.markdown('<hr class="ws-rule">', unsafe_allow_html=True)
 
-    # ── Simulate Enterprise Alert ─────────────────────────────────────────────
+    # ── Strict mode gate ──────────────────────────────────────────────────────
     gnn_metrics_available = _enterprise_gnn_available()
     if not gnn_metrics_available and not _gnn_model_exists:
         if _strict_mode() and not st.session_state.allow_enterprise_simulation:
@@ -4022,15 +4346,92 @@ def _tab_gnn_rca() -> None:
                 st.rerun()
             return
 
-    if st.button("Simulate Enterprise Alert", type="primary", key="ent_alert_btn"):
-        with st.spinner("Running enterprise RCA..."):
-            st.session_state.enterprise_rca_result = _simulate_enterprise_rca(
-                alerts_data, enterprise_graph
+    # ── Step 1: Generate Cross-Diagram Alert Stream ───────────────────────────
+    ent_incident = st.session_state.get("enterprise_incident") or {}
+    diagram_id   = st.session_state.get("selected_diagram_id", "")
+
+    col_eb1, col_eb2 = st.columns([1, 1])
+    with col_eb1:
+        if st.button(
+            "Generate Cross-Diagram Alert Stream",
+            type="primary" if not ent_incident else "secondary",
+            key="gen_ent_alerts_btn",
+            help="Build a cross-diagram alert timeline from scenario evidence",
+        ):
+            with st.spinner("Building cross-diagram alert stream…"):
+                if _INCIDENT_SIM_OK and _build_enterprise_incident_pkg:
+                    ent_inc = _build_enterprise_incident_pkg(
+                        enterprise_graph,
+                        alerts_data,
+                        diagram_id,
+                        gnn_result=_gnn_result_pre,
+                    )
+                else:
+                    ent_inc = _simulate_enterprise_rca(alerts_data, enterprise_graph)
+                    ent_inc["alert_timeline"] = []
+                st.session_state.enterprise_incident   = ent_inc
+                st.session_state.enterprise_rca_result = {}
+            st.rerun()
+
+    if ent_incident:
+        with col_eb2:
+            rca_btn_lbl = ("Run Enterprise RCA"
+                           if not _gnn_result_pre
+                           else "Run Enterprise GNN RCA")
+            if st.button(
+                rca_btn_lbl,
+                type="primary",
+                key="ent_rca_run_btn",
+                help="Derive root cause from the alert stream",
+            ):
+                with st.spinner("Running enterprise RCA…"):
+                    if _INCIDENT_SIM_OK and isinstance(ent_incident, dict) and ent_incident.get("root_cause") is not None:
+                        rca_result = _incident_to_enterprise_rca(ent_incident)
+                    else:
+                        rca_result = _simulate_enterprise_rca(alerts_data, enterprise_graph)
+                    st.session_state.enterprise_rca_result = rca_result
+                    _persist_incident(ent_incident, "enterprise")
+                st.rerun()
+
+    # ── Cross-diagram alert timeline ──────────────────────────────────────────
+    if ent_incident:
+        ent_timeline = ent_incident.get("alert_timeline", [])
+        if ent_timeline:
+            _diag_set = sorted({e.get("diagram_id", "") for e in ent_timeline if e.get("diagram_id")})
+            _n_diags  = len(_diag_set)
+            st.markdown(
+                f'<div class="info-card" style="margin:10px 0">'
+                f'<div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;'
+                f'color:#94a3b8;margin-bottom:4px">Cross-Diagram Incident</div>'
+                f'<div style="font-size:1.0rem;font-weight:700;color:#f1f5f9;margin-bottom:6px">'
+                f'{ent_incident.get("incident_title","Enterprise Incident")}</div>'
+                f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px 16px;font-size:0.77rem">'
+                f'<div><span style="color:#64748b">Diagrams affected</span>&nbsp;'
+                f'<strong style="color:#f1f5f9">{_n_diags}</strong></div>'
+                f'<div><span style="color:#64748b">First observed</span>&nbsp;'
+                f'<code style="font-size:0.73rem;color:#67e8f9">'
+                f'{ent_incident.get("first_observed_node","—")}</code></div>'
+                f'<div><span style="color:#64748b">Suspected domain</span>&nbsp;'
+                f'<span style="color:#e2e8f0">{ent_incident.get("suspected_domain","—")}</span></div>'
+                f'<div style="grid-column:1/-1"><span style="color:#64748b">Diagrams:</span>&nbsp;'
+                + " ".join(f'<span class="diag-label">{d}</span>' for d in _diag_set[:5])
+                + f'</div>'
+                f'</div></div>',
+                unsafe_allow_html=True,
             )
+            st.markdown(
+                '<div class="section-label" style="margin-top:10px">'
+                'Cross-Diagram Alert Stream</div>',
+                unsafe_allow_html=True,
+            )
+            _render_alert_timeline(ent_timeline, show_diagram_col=True)
+        else:
+            st.caption("Alert timeline will appear here once generated.")
 
     rca = st.session_state.get("enterprise_rca_result")
 
     # ── Scenario Enterprise Graph — Interactive ───────────────────────────────
+    st.markdown('<hr class="ws-rule" style="margin:14px 0">', unsafe_allow_html=True)
     st.markdown(
         '<div class="section-label" style="margin-top:4px">'
         'Scenario Enterprise Graph — Interactive</div>'
@@ -4072,11 +4473,41 @@ def _tab_gnn_rca() -> None:
         st.markdown('<hr class="ws-rule">', unsafe_allow_html=True)
         st.markdown('<div class="section-label">Enterprise RCA Result</div>', unsafe_allow_html=True)
 
-        r1, r2, r3, r4 = st.columns(4)
-        r1.metric("Root Cause",         rca.get("root_cause", "—"))
-        r2.metric("Root Cause Diagram", rca.get("root_cause_diagram", "—"))
-        r3.metric("Impacted Diagrams",  len(rca.get("impacted_diagrams", [])))
-        r4.metric("Alert Count",        rca.get("alert_count", 0))
+        _ent_root  = rca.get("root_cause", "—")
+        _ent_diag  = rca.get("root_cause_diagram", "—")
+        _ent_nimp  = len(rca.get("impacted_diagrams", []))
+        _ent_alrt  = rca.get("alert_count", 0)
+        st.markdown(
+            f'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:8px">'
+            f'<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);'
+            f'border-radius:8px;padding:10px 14px">'
+            f'<div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.08em;'
+            f'color:#64748b;margin-bottom:4px">Root Cause</div>'
+            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:0.95rem;font-weight:700;'
+            f'color:#f1f5f9;word-break:break-all;overflow-wrap:anywhere;line-height:1.3">{_ent_root}</div>'
+            f'</div>'
+            f'<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);'
+            f'border-radius:8px;padding:10px 14px">'
+            f'<div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.08em;'
+            f'color:#64748b;margin-bottom:4px">Root Cause Diagram</div>'
+            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:0.95rem;font-weight:700;'
+            f'color:#f1f5f9;word-break:break-all;overflow-wrap:anywhere;line-height:1.3">{_ent_diag}</div>'
+            f'</div>'
+            f'<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);'
+            f'border-radius:8px;padding:10px 14px">'
+            f'<div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.08em;'
+            f'color:#64748b;margin-bottom:4px">Impacted Diagrams</div>'
+            f'<div style="font-size:1.5rem;font-weight:700;color:#f1f5f9;line-height:1.3">{_ent_nimp}</div>'
+            f'</div>'
+            f'<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);'
+            f'border-radius:8px;padding:10px 14px">'
+            f'<div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.08em;'
+            f'color:#64748b;margin-bottom:4px">Alert Count</div>'
+            f'<div style="font-size:1.5rem;font-weight:700;color:#f1f5f9;line-height:1.3">{_ent_alrt}</div>'
+            f'</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
 
         rca_mode = rca.get("mode", "")
         mode_badge_cls = "badge-success" if rca_mode == "Enterprise GNN RCA" else "badge-warn"
@@ -4089,8 +4520,20 @@ def _tab_gnn_rca() -> None:
             if src_file:
                 st.caption(f"GNN result loaded from: {Path(src_file).name}")
         else:
-            st.caption("Source: scenario alerts.json ground truth (no trained GNN result for this scenario)")
+            st.caption("Source: scenario alerts.json ground truth — no trained GNN result for this scenario")
 
+        # Reasoning steps (from enterprise incident if available)
+        _ent_steps = (ent_incident or {}).get("reasoning_steps", [])
+        if _ent_steps:
+            with st.expander("Reasoning steps", expanded=True):
+                for _rs in _ent_steps:
+                    st.markdown(
+                        f'<div style="font-size:0.8rem;color:#cbd5e1;padding:3px 0 3px 8px;'
+                        f'border-left:2px solid #3b82f6;margin-bottom:4px">{_rs}</div>',
+                        unsafe_allow_html=True,
+                    )
+
+        # Impact path
         path = rca.get("impact_path", [])
         if path:
             root_id   = rca.get("root_cause", "")
@@ -4106,9 +4549,34 @@ def _tab_gnn_rca() -> None:
                 unsafe_allow_html=True,
             )
 
+            # Traversal
+            _render_traversal_steps(path, rca, slider_key="ent_traversal_slider")
+
         ranking = rca.get("ranking", [])
         if ranking:
+            st.markdown(
+                '<div class="section-label" style="margin-top:10px">RCA Candidate Ranking</div>',
+                unsafe_allow_html=True,
+            )
             st.dataframe(pd.DataFrame(ranking), use_container_width=True, hide_index=True)
+
+        # Recommended actions
+        _ent_actions = (ent_incident or {}).get("recommended_actions", [])
+        if _ent_actions:
+            st.markdown(
+                '<div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;'
+                'color:#64748b;margin-top:12px;margin-bottom:6px">Recommended Actions</div>',
+                unsafe_allow_html=True,
+            )
+            for _act in _ent_actions:
+                st.markdown(
+                    f'<div style="font-size:0.8rem;color:#d1fae5;padding:3px 0 3px 8px;'
+                    f'border-left:2px solid #10b981;margin-bottom:4px">· {_act}</div>',
+                    unsafe_allow_html=True,
+                )
+
+    elif ent_incident and not rca:
+        st.info("Click **Run Enterprise RCA** to identify the root cause from the alert stream.")
 
     # ── Static RCA overlay ────────────────────────────────────────────────────
     _rca_preview_scen = _selected_scenario_path()
@@ -4136,6 +4604,8 @@ def _copilot_context() -> dict:
         if st.session_state.enterprise_scenario_path
         else V3_HERO_SCENARIO
     )
+    loc_inc  = _ss_dict("local_incident")
+    ent_inc  = _ss_dict("enterprise_incident")
     return {
         "selected_diagram_id":          st.session_state.selected_diagram_id,
         "detection_source":             st.session_state.detection_source,
@@ -4146,6 +4616,16 @@ def _copilot_context() -> dict:
         "enterprise_ingestion_summary": _ss_dict("enterprise_ingestion_summary"),
         "local_rca_result":             _ss_dict("local_rca_result"),
         "enterprise_rca_result":        _ss_dict("enterprise_rca_result"),
+        "local_incident":               loc_inc,
+        "enterprise_incident":          ent_inc,
+        "alert_timeline":               (
+            ent_inc.get("alert_timeline") or loc_inc.get("alert_timeline") or []
+        ),
+        "traversal_steps":              (
+            _ss_dict("enterprise_rca_result").get("impact_path")
+            or _ss_dict("local_rca_result").get("impact_path")
+            or []
+        ),
         "stitch_map":                   _safe_read_json(scenario / "stitch_map.json"),
         "alerts":                       _safe_read_json(scenario / "alerts.json"),
     }

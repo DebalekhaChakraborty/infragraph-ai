@@ -11,9 +11,11 @@ The Streamlit cockpit walks through a real-time ingestion journey:
 | Step | Tab | What happens |
 |------|-----|-------------|
 | 1. **Run Diagram Intelligence** | Diagram Intelligence | Loads the selected sample, resolves the detection source, writes `outputs/live_ingestion/` evidence |
-| 2. **Simulate Local RCA** | Local RCA | Runs deterministic BFS on the local graph to find root cause within the selected diagram |
-| 3. **Absorb into Enterprise Brain** | Enterprise Graph Brain | Absorbs the local graph into the enterprise galaxy graph, writes `outputs/live_absorption/`, shows before → after comparison |
-| 4. **Simulate Enterprise Alert** | Enterprise Graph Brain | Runs cross-diagram RCA (trained GNN result or scenario-grounded simulation); renders overlay on interactive PyVis graph |
+| 2a. **Generate Local Alert Stream** | Local RCA | Builds a realistic alert timeline for the selected diagram topology (T+00m → T+20m) |
+| 2b. **Find Local Root Cause** | Local RCA | Runs BFS graph-traversal RCA; shows root cause, reasoning, traversal slider, and graph overlay |
+| 3. **Absorb into Enterprise Brain** | Enterprise Graph Brain | Absorbs the local graph into the enterprise scenario graph; shows before → after PyVis comparison and Global InfraGraph Galaxy |
+| 4a. **Generate Cross-Diagram Alert Stream** | GNN RCA | Builds a cross-diagram alert timeline across all scenario diagrams, ordered by dependency |
+| 4b. **Run Enterprise RCA** | GNN RCA | Uses Enterprise GNN result if available; otherwise uses scenario-grounded evidence. Never fakes GNN output. |
 | 5. **Ask Graph Copilot** | Graph Copilot | Answers are grounded in the loaded graph evidence (live Qwen/vLLM when `QWEN_BASE_URL` is set) |
 
 ### Detection source labels
@@ -62,6 +64,42 @@ The gallery manifest lists up to 250 records (V3 > V2 > V1 priority). Each recor
 |--------|---------|
 | `outputs/live_ingestion/<scenario>__<diagram>/` | `original.png`, `detected_nodes.json`, `detected_edges.json`, `node_table.csv`, `edge_table.csv`, `graph_memory_packet.json` |
 | `outputs/live_absorption/<scenario>__<diagram>/` | `enterprise_before.json`, `enterprise_after.json`, `absorption_summary.json`, `alerts.json` |
+| `outputs/incident_runs/<hash>/` | `local_incident.json`, `enterprise_incident.json` — persisted incident simulation runs |
+
+---
+
+## Incident Simulation Layer
+
+`src/incident_simulation/` provides deterministic, topology-aware incident builders for both the Local RCA and GNN RCA workspaces.
+
+### Local RCA simulation (`local_incidents.py`)
+
+- Simulates alerts **within a single diagram**.
+- Detects topology type from the diagram ID (branch, WAN, datacenter, app/DB, shared services).
+- Uses node type priority to select the first-observed endpoint and the root-cause node.
+- Builds a BFS path from first-observed node to root cause.
+- Generates 3–5 `AlertTimelineEvent` records along the path (T+00m → T+20m).
+- Deterministic: the same graph always produces the same alert stream and root cause.
+- RCA source label: **"Scenario-guided graph RCA"** (never claimed as a trained model output).
+
+### Enterprise / GNN RCA simulation (`enterprise_incidents.py`)
+
+- Simulates **cross-diagram alert propagation** within a V3 scenario enterprise graph.
+- Priority chain:
+  1. `alerts.json` ground truth (real alert records per node and diagram).
+  2. Enterprise GNN RCA result (`predicted_root_cause`, `top_candidates`) if available.
+  3. Diagram-level template messages otherwise.
+- Diagram ordering: symptom diagrams first (branch, WAN), root-cause diagrams last (shared services, datacenter).
+- RCA source label: **"Enterprise GNN RCA"** only when a trained inference result exists for the selected scenario. Otherwise **"Scenario-grounded RCA simulation"**.
+- Never fakes GNN output.
+
+### Graph Memory vs. RCA inference
+
+| Concept | Where shown | Purpose |
+|---------|-------------|---------|
+| Local Graph | Diagram Intelligence, Local RCA | Single-diagram topology — one diagram's nodes and edges |
+| Scenario Enterprise Graph | GNN RCA — Interactive graph | Multi-diagram scenario stitched together — RCA inference target |
+| Global InfraGraph Galaxy | Enterprise Graph Brain | All scenarios combined — graph-memory exploration only, not RCA inference |
 
 ---
 

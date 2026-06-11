@@ -1,0 +1,29 @@
+{
+  "_comment": "Reference templates for enterprise cross-diagram incidents. The authoritative implementation is in enterprise_incidents.py.",
+  "diagram_dependency_order": [
+    "branch_topology",
+    "wan_topology",
+    "app_db_topology",
+    "datacenter_topology",
+    "shared_services_topology"
+  ],
+  "diagram_domains": {
+    "branch_topology":          "Branch Edge",
+    "wan_topology":             "WAN Transport",
+    "app_db_topology":          "Application / Database Tier",
+    "datacenter_topology":      "Data Center Fabric",
+    "shared_services_topology": "Shared Infrastructure"
+  },
+  "example_cross_diagram_timeline": [
+    { "step": 1, "time_label": "T+00m", "diagram_id": "branch_topology",          "severity": "critical", "alert_type": "Application timeout",  "is_first_observed": true  },
+    { "step": 2, "time_label": "T+05m", "diagram_id": "wan_topology",             "severity": "critical", "alert_type": "BGP instability",      "is_first_observed": false },
+    { "step": 3, "time_label": "T+10m", "diagram_id": "app_db_topology",          "severity": "critical", "alert_type": "Transaction errors",   "is_first_observed": false },
+    { "step": 4, "time_label": "T+15m", "diagram_id": "datacenter_topology",      "severity": "major",    "alert_type": "Fabric failure",       "is_first_observed": false },
+    { "step": 5, "time_label": "T+20m", "diagram_id": "shared_services_topology", "severity": "critical", "alert_type": "DNS failure",          "is_root_signal": true     }
+  ],
+  "rca_source_labels": {
+    "gnn_result_present":     "Enterprise GNN RCA",
+    "alerts_data_only":       "Scenario-grounded RCA simulation",
+    "topology_simulation":    "Scenario-grounded RCA simulation"
+  }
+}
