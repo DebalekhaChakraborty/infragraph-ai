@@ -11,10 +11,16 @@ Output schema
   "executive_summary":           str,
   "probable_root_cause":         str,
   "scope":                       "local" | "enterprise",
+  "risk_level":                  str,
+  "automation_eligibility":      str,
+  "blast_radius":                str,
   "evidence_from_graph":         [str, ...],
+  "pre_checks":                  [str, ...],
   "triage_steps":                [str, ...],
   "validation_steps":            [str, ...],
   "remediation_steps":           [str, ...],
+  "post_checks":                 [str, ...],
+  "do_not_execute_if":           [str, ...],
   "rollback_or_safety_notes":    [str, ...],
   "escalation_recommendation":   str,
   "servicenow_incident_summary": {
@@ -24,6 +30,7 @@ Output schema
       "priority":          str,
       "assignment_group":  str
   },
+  "audit_summary": str,
   "confidence_notes": str
 }
 """
@@ -86,10 +93,16 @@ def empty_remediation_output(scope: str = "enterprise") -> dict:
         "executive_summary":           "",
         "probable_root_cause":         "",
         "scope":                       scope,
+        "risk_level":                  "",
+        "automation_eligibility":      "",
+        "blast_radius":                "",
         "evidence_from_graph":         [],
+        "pre_checks":                  [],
         "triage_steps":                [],
         "validation_steps":            [],
         "remediation_steps":           [],
+        "post_checks":                 [],
+        "do_not_execute_if":           [],
         "rollback_or_safety_notes":    [],
         "escalation_recommendation":   "",
         "servicenow_incident_summary": {
@@ -99,6 +112,7 @@ def empty_remediation_output(scope: str = "enterprise") -> dict:
             "priority":          "",
             "assignment_group":  "",
         },
+        "audit_summary":               "",
         "confidence_notes":            "",
     }
 
@@ -108,13 +122,20 @@ def make_remediation_output(
     executive_summary: str = "",
     probable_root_cause: str = "",
     scope: str = "enterprise",
+    risk_level: str = "",
+    automation_eligibility: str = "",
+    blast_radius: str = "",
     evidence_from_graph: list[str] | None = None,
+    pre_checks: list[str] | None = None,
     triage_steps: list[str] | None = None,
     validation_steps: list[str] | None = None,
     remediation_steps: list[str] | None = None,
+    post_checks: list[str] | None = None,
+    do_not_execute_if: list[str] | None = None,
     rollback_or_safety_notes: list[str] | None = None,
     escalation_recommendation: str = "",
     servicenow_incident_summary: "dict | None" = None,
+    audit_summary: str = "",
     confidence_notes: str = "",
 ) -> dict:
     """Return a normalised remediation output dict."""
@@ -122,10 +143,16 @@ def make_remediation_output(
         "executive_summary":           executive_summary,
         "probable_root_cause":         probable_root_cause,
         "scope":                       scope,
+        "risk_level":                  risk_level,
+        "automation_eligibility":      automation_eligibility,
+        "blast_radius":                blast_radius,
         "evidence_from_graph":         evidence_from_graph or [],
+        "pre_checks":                  pre_checks or [],
         "triage_steps":                triage_steps or [],
         "validation_steps":            validation_steps or [],
         "remediation_steps":           remediation_steps or [],
+        "post_checks":                 post_checks or validation_steps or [],
+        "do_not_execute_if":           do_not_execute_if or [],
         "rollback_or_safety_notes":    rollback_or_safety_notes or [],
         "escalation_recommendation":   escalation_recommendation,
         "servicenow_incident_summary": servicenow_incident_summary or {
@@ -135,6 +162,7 @@ def make_remediation_output(
             "priority":          "",
             "assignment_group":  "",
         },
+        "audit_summary":               audit_summary,
         "confidence_notes":            confidence_notes,
     }
 
@@ -144,10 +172,16 @@ OUTPUT_SCHEMA_TEMPLATE: dict = {
     "executive_summary":        "<1-2 sentence summary of the incident and recommended action>",
     "probable_root_cause":      "<node-id or service identified as root cause>",
     "scope":                    "<local or enterprise>",
+    "risk_level":               "<low | medium | high | critical>",
+    "automation_eligibility":   "<safe_to_automate | human_approval_required | manual_only>",
+    "blast_radius":             "<local | single_diagram | cross_diagram | enterprise_wide>",
     "evidence_from_graph":      ["<evidence item 1>", "<evidence item 2>"],
+    "pre_checks":               ["<read-only check 1>", "<read-only check 2>"],
     "triage_steps":             ["<step 1>", "<step 2>"],
     "validation_steps":         ["<step 1>", "<step 2>"],
     "remediation_steps":        ["<step 1>", "<step 2>"],
+    "post_checks":              ["<post-change validation 1>", "<post-change validation 2>"],
+    "do_not_execute_if":        ["<condition that blocks execution>"],
     "rollback_or_safety_notes": ["<safety note 1>", "<safety note 2>"],
     "escalation_recommendation": "<when and to whom to escalate>",
     "servicenow_incident_summary": {
@@ -157,5 +191,6 @@ OUTPUT_SCHEMA_TEMPLATE: dict = {
         "priority":          "<1-Critical / 2-High / 3-Medium>",
         "assignment_group":  "<team responsible for resolution>",
     },
+    "audit_summary": "<operator-ready audit note with evidence IDs and approvals>",
     "confidence_notes": "<strength of evidence and known uncertainties>",
 }
