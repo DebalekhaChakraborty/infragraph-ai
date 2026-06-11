@@ -1,0 +1,57 @@
+{
+  "_comment": "Reference templates used by local_incidents.py. The Python module defines the authoritative copy; this file serves as human-readable documentation.",
+  "topologies": {
+    "branch_topology": {
+      "incident_title": "Branch application access degradation",
+      "severity": "High",
+      "suspected_domain": "WAN / Branch Edge",
+      "alert_summary": "Branch endpoints report application access failures and elevated packet loss.",
+      "root_preference": ["cloud_or_wan", "router", "firewall", "switch"],
+      "first_observed_preference": ["endpoint", "workstation", "pc", "server"],
+      "example_alert_stream": [
+        { "step": 1, "time_label": "T+00m", "device_type": "endpoint",    "severity": "critical", "alert_type": "Connection timeout",    "is_first_observed": true  },
+        { "step": 2, "time_label": "T+05m", "device_type": "switch",      "severity": "major",    "alert_type": "Interface down",        "is_first_observed": false },
+        { "step": 3, "time_label": "T+10m", "device_type": "firewall",    "severity": "critical", "alert_type": "Packet drops",          "is_first_observed": false },
+        { "step": 4, "time_label": "T+15m", "device_type": "router",      "severity": "critical", "alert_type": "BGP flap",              "is_first_observed": false },
+        { "step": 5, "time_label": "T+20m", "device_type": "cloud_or_wan","severity": "critical", "alert_type": "BGP session down",      "is_root_signal": true     }
+      ]
+    },
+    "app_db_topology": {
+      "incident_title": "Application transaction failure",
+      "severity": "Critical",
+      "suspected_domain": "Application / Database Tier",
+      "alert_summary": "Application layer reports transaction errors and elevated response latency.",
+      "root_preference": ["database", "load_balancer", "switch"],
+      "first_observed_preference": ["server", "web_server", "client", "endpoint"],
+      "example_alert_stream": [
+        { "step": 1, "time_label": "T+00m", "device_type": "server",        "severity": "critical", "alert_type": "Service down",         "is_first_observed": true  },
+        { "step": 2, "time_label": "T+05m", "device_type": "load_balancer", "severity": "critical", "alert_type": "Pool unhealthy",       "is_first_observed": false },
+        { "step": 3, "time_label": "T+10m", "device_type": "database",      "severity": "critical", "alert_type": "DB latency",           "is_root_signal": true     }
+      ]
+    },
+    "datacenter_topology": {
+      "incident_title": "Data center service degradation",
+      "severity": "High",
+      "suspected_domain": "Data Center Fabric",
+      "alert_summary": "Inter-service communication failures detected across the data center fabric.",
+      "root_preference": ["core_switch", "firewall", "load_balancer", "router", "switch"],
+      "first_observed_preference": ["server", "database", "vm", "application"]
+    },
+    "shared_services_topology": {
+      "incident_title": "Shared service dependency failure",
+      "severity": "High",
+      "suspected_domain": "Shared Infrastructure",
+      "alert_summary": "Shared infrastructure service failure is cascading to dependent workloads.",
+      "root_preference": ["dns_server", "ntp_server", "iam_server", "monitoring", "switch"],
+      "first_observed_preference": ["endpoint", "server", "workstation", "client"]
+    },
+    "wan_topology": {
+      "incident_title": "WAN backbone path degradation",
+      "severity": "High",
+      "suspected_domain": "WAN Transport",
+      "alert_summary": "Branch sites reporting high latency and packet loss toward the datacenter.",
+      "root_preference": ["cloud_or_wan", "router", "switch"],
+      "first_observed_preference": ["switch", "router", "endpoint", "server"]
+    }
+  }
+}
