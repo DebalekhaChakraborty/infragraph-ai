@@ -1,0 +1,14 @@
+{
+  "rendered": true,
+  "boxes_rendered": 9,
+  "boxes_skipped": 0,
+  "boxes_skipped_large": 0,
+  "connectors_rendered": 0,
+  "connectors_skipped": 9,
+  "connectors_skipped_long": 0,
+  "overlay_mode": "clean",
+  "draw_connectors": false,
+  "renderer_version": "v3_clean_overlay_v1",
+  "out_path": "D:\\My Folders\\Hackathons\\infragraph-ai\\outputs\\annotation_overlays\\DG-0003\\detected_clean.png",
+  "meta_path": "D:\\My Folders\\Hackathons\\infragraph-ai\\outputs\\annotation_overlays\\DG-0003\\detected_clean.meta.json"
+}
