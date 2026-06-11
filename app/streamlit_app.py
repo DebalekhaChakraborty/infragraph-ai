@@ -116,16 +116,23 @@ except Exception:
     _load_rfdetr_model_raw = None  # type: ignore
 
 # ── Incident simulation package ───────────────────────────────────────────────
+# Evict any stale cached version so the current on-disk code is always loaded.
+for _k in [k for k in _sys.modules if "incident_simulation" in k]:
+    _sys.modules.pop(_k, None)
+_INCIDENT_SIM_ERR: str = ""
 try:
     from incident_simulation import (                                         # type: ignore
-        build_local_incident     as _build_local_incident_pkg,
-        build_enterprise_incident as _build_enterprise_incident_pkg,
+        build_local_incident              as _build_local_incident_pkg,
+        build_enterprise_incident         as _build_enterprise_incident_pkg,
+        build_cross_diagram_hero_incident as _build_cross_hero_incident_pkg,
     )
     _INCIDENT_SIM_OK = True
-except Exception:
-    _INCIDENT_SIM_OK = False
-    _build_local_incident_pkg     = None  # type: ignore
+except Exception as _isim_exc:
+    _INCIDENT_SIM_OK  = False
+    _INCIDENT_SIM_ERR = str(_isim_exc)
+    _build_local_incident_pkg      = None  # type: ignore
     _build_enterprise_incident_pkg = None  # type: ignore
+    _build_cross_hero_incident_pkg = None  # type: ignore
 
 # ── FalconVue 3D WebGL renderer (optional — falls back to PyVis if missing) ──
 _app_dir = str(Path(__file__).parent)
@@ -1865,6 +1872,82 @@ def _render_traversal_steps(impact_path: list[str], result: dict,
     )
 
 
+def _render_propagation_steps_slider(
+    prop_steps: list[dict],
+    incident: dict | None = None,
+    slider_key: str = "ent_prop_slider",
+) -> tuple[str, list[str]]:
+    """Render a cross-diagram propagation step slider.
+
+    Returns (current_step_node, traversal_path_so_far) for graph rendering.
+    Returns ("", []) if prop_steps is empty.
+    """
+    if not prop_steps:
+        return "", []
+
+    st.markdown(
+        '<div class="section-label" style="margin-top:14px">'
+        'Propagation Steps</div>',
+        unsafe_allow_html=True,
+    )
+
+    n_steps = len(prop_steps)
+    step_idx = st.slider(
+        "Propagation step",
+        min_value=1, max_value=n_steps, value=1, step=1,
+        key=slider_key,
+        help="Step through the cross-diagram incident propagation",
+    )
+    current = prop_steps[step_idx - 1]
+    traversal_so_far = [s["node"] for s in prop_steps[:step_idx] if s.get("node")]
+    current_node     = current.get("node", "")
+    current_diag     = current.get("diagram_id", "")
+    current_title    = current.get("title", f"Step {step_idx}")
+    current_desc     = current.get("description", "")
+
+    # Step role colour
+    _role_colors = {
+        "First observed symptom":    "#ef4444",
+        "Local dependency expansion": "#f59e0b",
+        "Cross-diagram bridge":      "#22d3ee",
+        "Downstream enterprise impact": "#a78bfa",
+        "Root cause ranked":         "#10b981",
+    }
+    step_color = _role_colors.get(current_title, "#67e8f9")
+
+    st.markdown(
+        f'<div class="traversal-card">'
+        f'<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">'
+        f'<div class="traversal-step-lbl" style="color:{step_color}">{current_title}</div>'
+        f'<span class="diag-label">{current_diag}</span>'
+        f'</div>'
+        f'<div class="traversal-node">{current_node}</div>'
+        f'<div style="font-size:0.76rem;color:#94a3b8;margin-top:4px">{current_desc}</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    # Path chips
+    chips = []
+    for i, s in enumerate(prop_steps):
+        n = s.get("node", "")
+        if i < step_idx - 1:
+            cls = "visited"
+        elif i == step_idx - 1:
+            cls = "current"
+        else:
+            cls = ""
+        chips.append(f'<span class="node-chip {cls}">{n}</span>')
+    st.markdown(
+        '<div style="padding:6px 0;line-height:2.4">'
+        + ' <span style="color:#334155;font-size:0.75rem">→</span> '.join(chips)
+        + '</div>',
+        unsafe_allow_html=True,
+    )
+
+    return current_node, traversal_so_far
+
+
 def _incident_to_local_rca(incident: dict) -> dict:
     """Convert an IncidentScenario dict to the local_rca_result format."""
     timeline   = incident.get("alert_timeline", [])
@@ -3213,6 +3296,11 @@ def _tab_local_rca() -> None:
     # ── Step 1: Generate Local Alert Stream ───────────────────────────────────
     incident = st.session_state.get("local_incident") or {}
 
+    # Auto-clear stale incident stored by an older code path (empty timeline).
+    if incident and not incident.get("alert_timeline") and _INCIDENT_SIM_OK:
+        st.session_state.pop("local_incident", None)
+        incident = {}
+
     col_b1, col_b2 = st.columns([1, 1])
     with col_b1:
         if st.button(
@@ -4350,28 +4438,51 @@ def _tab_gnn_rca() -> None:
     ent_incident = st.session_state.get("enterprise_incident") or {}
     diagram_id   = st.session_state.get("selected_diagram_id", "")
 
+    # Auto-clear stale incident that was stored by an older code path (empty timeline).
+    # Only clear when the module is importable and no generation error is pending.
+    if (ent_incident
+            and not ent_incident.get("alert_timeline")
+            and _INCIDENT_SIM_OK
+            and not st.session_state.get("_ent_gen_error")):
+        st.session_state.pop("enterprise_incident", None)
+        ent_incident = {}
+
     col_eb1, col_eb2 = st.columns([1, 1])
     with col_eb1:
         if st.button(
             "Generate Cross-Diagram Alert Stream",
             type="primary" if not ent_incident else "secondary",
             key="gen_ent_alerts_btn",
-            help="Build a cross-diagram alert timeline from scenario evidence",
+            help="Build a cross-diagram hero incident from scenario evidence (3+ diagrams)",
         ):
             with st.spinner("Building cross-diagram alert stream…"):
-                if _INCIDENT_SIM_OK and _build_enterprise_incident_pkg:
-                    ent_inc = _build_enterprise_incident_pkg(
-                        enterprise_graph,
-                        alerts_data,
-                        diagram_id,
-                        gnn_result=_gnn_result_pre,
-                    )
+                if _INCIDENT_SIM_OK and _build_cross_hero_incident_pkg:
+                    try:
+                        ent_inc = _build_cross_hero_incident_pkg(
+                            enterprise_graph,
+                            alerts_data,
+                            diagram_id,
+                            gnn_result=_gnn_result_pre,
+                        )
+                        st.session_state.pop("_ent_gen_error", None)
+                    except Exception as _gen_exc:
+                        st.session_state["_ent_gen_error"] = str(_gen_exc)
+                        ent_inc = _simulate_enterprise_rca(alerts_data, enterprise_graph)
+                        ent_inc["alert_timeline"]    = []
+                        ent_inc["propagation_steps"] = []
                 else:
                     ent_inc = _simulate_enterprise_rca(alerts_data, enterprise_graph)
-                    ent_inc["alert_timeline"] = []
+                    ent_inc["alert_timeline"]    = []
+                    ent_inc["propagation_steps"] = []
                 st.session_state.enterprise_incident   = ent_inc
                 st.session_state.enterprise_rca_result = {}
             st.rerun()
+
+    # Surface any generation or import error
+    if _INCIDENT_SIM_ERR and not _INCIDENT_SIM_OK:
+        st.error(f"Incident simulation module unavailable: {_INCIDENT_SIM_ERR}")
+    elif st.session_state.get("_ent_gen_error"):
+        st.error(f"Alert stream error: {st.session_state['_ent_gen_error']}")
 
     if ent_incident:
         with col_eb2:
@@ -4385,7 +4496,9 @@ def _tab_gnn_rca() -> None:
                 help="Derive root cause from the alert stream",
             ):
                 with st.spinner("Running enterprise RCA…"):
-                    if _INCIDENT_SIM_OK and isinstance(ent_incident, dict) and ent_incident.get("root_cause") is not None:
+                    if (_INCIDENT_SIM_OK
+                            and isinstance(ent_incident, dict)
+                            and ent_incident.get("root_cause") is not None):
                         rca_result = _incident_to_enterprise_rca(ent_incident)
                     else:
                         rca_result = _simulate_enterprise_rca(alerts_data, enterprise_graph)
@@ -4393,50 +4506,95 @@ def _tab_gnn_rca() -> None:
                     _persist_incident(ent_incident, "enterprise")
                 st.rerun()
 
-    # ── Cross-diagram alert timeline ──────────────────────────────────────────
+    # ── Propagation slider state — must be captured before graph render ────────
+    _prop_step_node: str       = ""
+    _prop_trav_path: list[str] = []
+
+    # ── Cross-diagram incident card + timeline ────────────────────────────────
     if ent_incident:
         ent_timeline = ent_incident.get("alert_timeline", [])
         if ent_timeline:
-            _diag_set = sorted({e.get("diagram_id", "") for e in ent_timeline if e.get("diagram_id")})
-            _n_diags  = len(_diag_set)
+            _diag_set = list(dict.fromkeys(
+                e.get("diagram_id", "") for e in ent_timeline if e.get("diagram_id")
+            ))
+            _n_diags    = len(_diag_set)
+            _bridge_cnt = sum(
+                1 for e in ent_timeline if e.get("correlation_role") == "bridge"
+            )
+            _fst_ev_inc    = next((e for e in ent_timeline if e.get("is_first_observed")), ent_timeline[0])
+            _first_obs_diag = _fst_ev_inc.get("diagram_id", "—")
+
             st.markdown(
                 f'<div class="info-card" style="margin:10px 0">'
                 f'<div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;'
                 f'color:#94a3b8;margin-bottom:4px">Cross-Diagram Incident</div>'
-                f'<div style="font-size:1.0rem;font-weight:700;color:#f1f5f9;margin-bottom:6px">'
+                f'<div style="font-size:1.0rem;font-weight:700;color:#f1f5f9;margin-bottom:8px">'
                 f'{ent_incident.get("incident_title","Enterprise Incident")}</div>'
-                f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px 16px;font-size:0.77rem">'
-                f'<div><span style="color:#64748b">Diagrams affected</span>&nbsp;'
-                f'<strong style="color:#f1f5f9">{_n_diags}</strong></div>'
-                f'<div><span style="color:#64748b">First observed</span>&nbsp;'
+                f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;'
+                f'font-size:0.77rem;margin-bottom:8px">'
+                f'<div><span style="color:#64748b">First observed diagram</span>&nbsp;'
+                f'<code style="font-size:0.72rem;color:#a78bfa">{_first_obs_diag}</code></div>'
+                f'<div><span style="color:#64748b">First observed node</span>&nbsp;'
                 f'<code style="font-size:0.73rem;color:#67e8f9">'
                 f'{ent_incident.get("first_observed_node","—")}</code></div>'
-                f'<div><span style="color:#64748b">Suspected domain</span>&nbsp;'
+                f'<div><span style="color:#64748b">Suspected root domain</span>&nbsp;'
                 f'<span style="color:#e2e8f0">{ent_incident.get("suspected_domain","—")}</span></div>'
-                f'<div style="grid-column:1/-1"><span style="color:#64748b">Diagrams:</span>&nbsp;'
-                + " ".join(f'<span class="diag-label">{d}</span>' for d in _diag_set[:5])
-                + f'</div>'
-                f'</div></div>',
+                f'<div><span style="color:#64748b">Alert count</span>&nbsp;'
+                f'<strong style="color:#f1f5f9">{len(ent_timeline)}</strong></div>'
+                f'<div><span style="color:#64748b">Diagrams affected</span>&nbsp;'
+                f'<strong style="color:#f1f5f9">{_n_diags}</strong></div>'
+                f'<div><span style="color:#64748b">Cross-diagram bridges</span>&nbsp;'
+                f'<strong style="color:#22d3ee">{_bridge_cnt}</strong></div>'
+                f'</div>'
+                f'<div style="font-size:0.73rem">'
+                f'<span style="color:#64748b">Affected diagrams:</span>&nbsp;'
+                + " ".join(f'<span class="diag-label">{d}</span>' for d in _diag_set[:6])
+                + f'</div></div>',
                 unsafe_allow_html=True,
             )
+
+            if _n_diags < 2:
+                st.markdown(
+                    '<div class="warn-card" style="margin-top:8px">'
+                    'Selected scenario contains limited cross-diagram alert evidence. '
+                    'The simulation will automatically expand to cross-diagram mode on the '
+                    'next generation run.'
+                    '</div>',
+                    unsafe_allow_html=True,
+                )
+
             st.markdown(
                 '<div class="section-label" style="margin-top:10px">'
                 'Cross-Diagram Alert Stream</div>',
                 unsafe_allow_html=True,
             )
             _render_alert_timeline(ent_timeline, show_diagram_col=True)
+
+            # ── Propagation slider (must be before graph) ────────────────────
+            _prop_steps = ent_incident.get("propagation_steps", [])
+            if _prop_steps:
+                _prop_step_node, _prop_trav_path = _render_propagation_steps_slider(
+                    _prop_steps, ent_incident, slider_key="ent_prop_slider",
+                )
         else:
-            st.caption("Alert timeline will appear here once generated.")
+            if _INCIDENT_SIM_OK:
+                st.info(
+                    "Click **Generate Cross-Diagram Alert Stream** to build the "
+                    "cross-diagram incident story for this scenario.",
+                    icon="ℹ️",
+                )
+            else:
+                st.caption("Alert timeline will appear here once generated.")
 
     rca = st.session_state.get("enterprise_rca_result")
 
-    # ── Scenario Enterprise Graph — Interactive ───────────────────────────────
+    # ── Scenario Enterprise Graph — Alert Propagation ─────────────────────────
     st.markdown('<hr class="ws-rule" style="margin:14px 0">', unsafe_allow_html=True)
     st.markdown(
         '<div class="section-label" style="margin-top:4px">'
-        'Scenario Enterprise Graph — Interactive</div>'
+        'Scenario Enterprise Graph &#8212; Alert Propagation</div>'
         '<div style="font-size:0.75rem;color:#64748b;margin-bottom:8px">'
-        'Selected V3 scenario stitched from multiple local topology diagrams.</div>',
+        'Cross-diagram incident propagation across the selected scenario graph.</div>',
         unsafe_allow_html=True,
     )
     absorbed_ids = {n.get("canonical_id", n.get("id")) for n in local_graph.get("nodes", [])}
@@ -4444,7 +4602,14 @@ def _tab_gnn_rca() -> None:
     _fv_rendered = False
     if _FALCONVUE_OK and _render_falconvue_graph is not None:
         try:
-            _render_falconvue_graph(enterprise_graph, absorbed_ids, rca, height=800)
+            _render_falconvue_graph(
+                enterprise_graph, absorbed_ids, rca,
+                incident=ent_incident or {},
+                height=800,
+                mode="scenario",
+                current_step_node=_prop_step_node or None,
+                traversal_path=_prop_trav_path,
+            )
             _fv_rendered = True
         except Exception:
             pass
@@ -4453,8 +4618,8 @@ def _tab_gnn_rca() -> None:
         if _pyvis_available():
             st.caption(
                 "Drag nodes · zoom/pan · hover for details · "
-                + ("Root: red | Alert: orange | Impacted: yellow | Absorbed diagram: cyan | Shared: dashed ring"
-                   if rca else "Absorbed nodes shown in cyan")
+                + ("Root: red | Alert: orange | Impacted: yellow | Absorbed: cyan | Shared: ring"
+                   if rca else "Alert nodes: orange | Absorbed nodes: cyan")
             )
             _render_enterprise_pyvis(enterprise_graph, absorbed_ids, rca, height=800)
         else:

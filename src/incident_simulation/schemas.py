@@ -17,6 +17,7 @@ def make_alert_event(
     signal_strength: str = "medium",
     is_first_observed: bool = False,
     is_root_signal: bool = False,
+    correlation_role: str = "",
 ) -> dict:
     """Create an AlertTimelineEvent dict."""
     return {
@@ -31,6 +32,7 @@ def make_alert_event(
         "signal_strength": signal_strength,
         "is_first_observed": is_first_observed,
         "is_root_signal": is_root_signal,
+        "correlation_role": correlation_role,
     }
 
 
@@ -55,6 +57,7 @@ def make_incident(
     recommended_actions: list[str],
     rca_source: str,
     candidate_ranking: list[dict],
+    propagation_steps: list[dict] | None = None,
 ) -> dict:
     """Create an IncidentScenario dict."""
     return {
@@ -77,4 +80,5 @@ def make_incident(
         "recommended_actions": recommended_actions,
         "rca_source": rca_source,
         "candidate_ranking": candidate_ranking,
+        "propagation_steps": propagation_steps or [],
     }
