@@ -21,11 +21,13 @@ _LOCAL_SYSTEM = (
     "Generate targeted triage, validation, and remediation steps that are "
     "grounded exclusively in the devices, IPs, and topology present in this "
     "single-diagram context. "
-    "Do not invent devices, CLI commands, or services that are not referenced. "
+    "Every remediation, validation, rollback, pre-check, and post-check step must be grounded "
+    "in known node IDs, diagram IDs, alert timeline entries, RCA result, or retrieved graph evidence. "
+    "Do not invent devices, tools, commands, IPs, services, teams, or monitoring systems that are not referenced. "
     "Do not escalate to enterprise or cross-diagram operations unless the "
     "evidence explicitly shows inter-domain blast radius. "
-    "Respond with ONLY a single valid JSON object — no markdown fences, "
-    "no prose, no additional keys beyond the schema."
+    "Respond with ONLY a single valid JSON object matching the schema — no markdown fences, "
+    "no prose, and no additional keys."
 )
 
 _ENTERPRISE_SYSTEM = (
@@ -35,10 +37,12 @@ _ENTERPRISE_SYSTEM = (
     "spanning multiple topology domains. "
     "Generate enterprise-wide remediation steps that coordinate across all affected "
     "domains and diagram clusters. "
-    "Ground every recommendation in the provided node IDs and diagram identifiers. "
-    "Do not invent infrastructure. Include cross-team escalation and rollback plans. "
-    "Respond with ONLY a single valid JSON object — no markdown fences, "
-    "no prose, no additional keys beyond the schema."
+    "Ground every recommendation in the provided node IDs, diagram identifiers, alert timeline, "
+    "RCA result, GNN ranking, or retrieved graph evidence. "
+    "Do not invent devices, tools, commands, IPs, services, teams, or monitoring systems. "
+    "Include cross-diagram escalation, blast-radius reasoning, explicit approvals, and rollback plans. "
+    "Respond with ONLY a single valid JSON object matching the schema — no markdown fences, "
+    "no prose, and no additional keys."
 )
 
 
@@ -124,6 +128,25 @@ def _fmt_connectors(connectors: list) -> str:
     return "\n".join(lines)
 
 
+def _fmt_retrieved_evidence(evidence: list) -> str:
+    if not evidence:
+        return "  (none)"
+    lines = []
+    for i, item in enumerate(evidence[:8], 1):
+        meta = item.get("metadata", {}) if isinstance(item, dict) else {}
+        evidence_id = meta.get("evidence_id") or f"E{i}"
+        source_type = meta.get("source_type", "unknown")
+        scenario_id = meta.get("scenario_id", "")
+        diagram_id = meta.get("diagram_id", "")
+        node_id = meta.get("node_id", "")
+        text = item.get("text", "") if isinstance(item, dict) else str(item)
+        lines.append(
+            f"  - {evidence_id} | {source_type} | scenario={scenario_id} | "
+            f"diagram={diagram_id} | node={node_id}: {text}"
+        )
+    return "\n".join(lines)
+
+
 # ── Local user message ─────────────────────────────────────────────────────────
 
 def _build_local_user_message(ctx: dict) -> str:
@@ -149,8 +172,14 @@ def _build_local_user_message(ctx: dict) -> str:
         f"{_fmt_device_context(ctx.get('device_context', []))}\n\n"
         "--- Connector Context ---\n"
         f"{_fmt_connectors(ctx.get('connector_context', []))}\n\n"
+        "--- Retrieved Graph Memory Evidence ---\n"
+        f"{_fmt_retrieved_evidence(ctx.get('retrieved_graph_memory_evidence', []))}\n\n"
         "--- Graph Summary ---\n"
         f"{ctx.get('graph_memory_summary', '—')}\n\n"
+        "Grounding rules:\n"
+        "- Use only listed node IDs, diagram IDs, alerts, RCA results, and retrieved evidence IDs.\n"
+        "- Do not invent tools, commands, IPs, services, or devices.\n"
+        "- Include evidence IDs such as E1 or E2 whenever retrieved evidence supports a step.\n\n"
         "--- Output Schema (return ONLY this JSON shape) ---\n"
         f"{schema_json}\n\n"
         'Generate the remediation plan. Set "scope" to "local" in your response.'
@@ -190,8 +219,15 @@ def _build_enterprise_user_message(ctx: dict) -> str:
         f"{_fmt_device_context(ctx.get('device_context', []))}\n\n"
         "--- Connector Context ---\n"
         f"{_fmt_connectors(ctx.get('connector_context', []))}\n\n"
+        "--- Retrieved Graph Memory Evidence ---\n"
+        f"{_fmt_retrieved_evidence(ctx.get('retrieved_graph_memory_evidence', []))}\n\n"
         "--- Graph Memory Summary ---\n"
         f"{ctx.get('graph_memory_summary', '—')}\n\n"
+        "Enterprise grounding rules:\n"
+        "- Use only listed node IDs, diagram IDs, alerts, RCA results, GNN ranking, and retrieved evidence IDs.\n"
+        "- Do not invent tools, commands, IPs, services, or devices.\n"
+        "- Explain cross-diagram escalation and blast radius when more than one diagram is impacted.\n"
+        "- Include evidence IDs such as E1 or E2 whenever retrieved evidence supports a step.\n\n"
         "--- Output Schema (return ONLY this JSON shape) ---\n"
         f"{schema_json}\n\n"
         'Generate the enterprise remediation plan. Set "scope" to "enterprise" in your response.'
