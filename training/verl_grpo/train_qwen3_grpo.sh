@@ -20,6 +20,7 @@ TRAIN_PARQ="$DATA_DIR/verl_train.parquet"
 EVAL_PARQ="$DATA_DIR/verl_eval.parquet"
 RUN_DIR="$SCRIPT_DIR/runs/qwen3_4b_grpo_lora_amd"
 REWARD_MODULE="$SCRIPT_DIR/verl_reward.py"
+MODEL_ID="${MODEL_ID:-Qwen/Qwen3-4B}"
 
 echo "========================================================"
 echo " InfraGraph AI — Qwen3-4B LoRA + GRPO/vERL"
@@ -84,7 +85,7 @@ TRAIN_CMD="python -m verl.trainer.main_ppo \
   data.max_response_length=512 \
   custom_reward_function.path=$REWARD_MODULE \
   custom_reward_function.name=compute_score \
-  actor_rollout_ref.model.path=Qwen/Qwen3-4B-Instruct \
+  actor_rollout_ref.model.path=$MODEL_ID \
   actor_rollout_ref.model.lora_rank=16 \
   actor_rollout_ref.model.lora_alpha=32 \
   actor_rollout_ref.model.target_modules=all-linear \

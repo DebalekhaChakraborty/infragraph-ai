@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -155,7 +156,7 @@ Generated: {ts}
 ## Configuration
 
 {_md_table([
-    ("Base model",           "Qwen/Qwen3-4B-Instruct"),
+    ("Base model",           os.environ.get("MODEL_ID", "Qwen/Qwen3-4B")),
     ("Method",               "LoRA (rank=16, alpha=32, target=all-linear)"),
     ("Algorithm",            "GRPO via verl.trainer.main_ppo (algorithm.adv_estimator=grpo)"),
     ("Framework",            "vERL (https://github.com/volcengine/verl)"),
