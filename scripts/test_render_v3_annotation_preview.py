@@ -26,7 +26,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--limit", type=int, default=0,
                         help="Stop after this many annotation files (0 = all)")
-    parser.add_argument("--out-dir", default=str(REPO_ROOT / "outputs" / "debug_v3_annotation_previews"),
+    parser.add_argument("--out-dir", default=str(REPO_ROOT / "outputs" / "annotation_overlays_review" / "test_render"),
                         help="Directory to write rendered previews")
     args = parser.parse_args()
 
@@ -59,7 +59,13 @@ def main() -> int:
         out_path = out_dir / split / scenario_id / f"{diagram_id}.png"
 
         try:
-            meta = render_v3_annotation_preview(img_path, ann_path, out_path)
+            meta = render_v3_annotation_preview(
+                img_path,
+                ann_path,
+                out_path,
+                overlay_mode="clean",
+                draw_connectors=False,
+            )
         except Exception as exc:
             print(f"  UNEXPECTED EXCEPTION  {split}/{scenario_id}/{diagram_id}: {exc}")
             unexpected_exceptions += 1
