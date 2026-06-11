@@ -1,0 +1,503 @@
+"""
+FalconVue Graph — 3D WebGL galaxy renderer for InfraGraph AI enterprise graphs.
+
+Visual style matches the FalconVU reference (deep-space galaxy background,
+all-nodes-labelled, near-top-down slow orbit, large hub nodes, bright white edges).
+
+Uses 3d-force-graph + three-spritetext via CDN + streamlit.components.v1.html.
+Raises on Python-level failure so callers can fall back to PyVis.
+"""
+from __future__ import annotations
+
+import json
+import streamlit.components.v1 as components
+
+# ── Node colour palette ───────────────────────────────────────────────────────
+_DEVICE_COLORS: dict[str, str] = {
+    "router":        "#60a5fa",   # soft blue
+    "switch":        "#4ade80",   # soft green
+    "firewall":      "#fb923c",   # orange
+    "server":        "#cbd5e1",   # light slate
+    "database":      "#c084fc",   # purple
+    "load_balancer": "#fbbf24",   # amber
+    "cloud_or_wan":  "#67e8f9",   # cyan
+    "service":       "#34d399",   # emerald
+}
+_DEFAULT_COLOR = "#94a3b8"
+
+_LEGEND_ROWS: list[tuple[str, str]] = [
+    ("#ef4444", "Root Cause"),
+    ("#f97316", "Alert Node"),
+    ("#facc15", "Impacted"),
+    ("#22d3ee", "Absorbed / Path"),
+    ("#a855f7", "Shared Entity"),
+    ("#60a5fa", "Router"),
+    ("#4ade80", "Switch"),
+    ("#cbd5e1", "Server"),
+    ("#c084fc", "Database"),
+    ("#67e8f9", "Cloud / WAN"),
+    ("#34d399", "Service"),
+]
+
+# ── CSS template — __HEIGHT__ placeholder ────────────────────────────────────
+_CSS_TMPL = """\
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{
+  width:100%;height:__HEIGHT__px;overflow:hidden;
+  /* Deep space galaxy — layered gradients mimic Milky Way */
+  background:
+    radial-gradient(ellipse 120% 60% at 35% 55%,rgba(16,28,58,0.85) 0%,transparent 70%),
+    radial-gradient(ellipse 80% 40% at 70% 40%,rgba(10,20,50,0.60) 0%,transparent 60%),
+    radial-gradient(ellipse 200% 100% at 50% 50%,#050e20 0%,#030810 60%,#010508 100%);
+  font-family:system-ui,-apple-system,sans-serif;
+}
+/* Starfield canvas sits behind graph */
+#sf{position:fixed;top:0;left:0;width:100%;height:__HEIGHT__px;
+  pointer-events:none;z-index:0}
+#gc{position:relative;width:100%;height:__HEIGHT__px;z-index:1}
+/* ── Title overlay ── */
+#to{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);
+  z-index:10;pointer-events:none;text-align:center;white-space:nowrap
+}
+.mt{
+  font-size:1.05rem;font-weight:800;letter-spacing:.06em;
+  background:linear-gradient(130deg,#f8fafc 0%,#93c5fd 50%,#67e8f9 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text
+}
+.st{font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#334155;margin-top:3px}
+/* ── Legend ── */
+#lo{
+  position:absolute;top:14px;left:14px;z-index:10;
+  background:rgba(3,8,20,0.80);border:1px solid rgba(255,255,255,0.07);
+  border-radius:10px;padding:11px 14px;min-width:158px;backdrop-filter:blur(8px)
+}
+.ll{font-size:.57rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:#334155;margin-bottom:8px}
+.li{display:flex;align-items:center;gap:7px;margin:3px 0;font-size:.7rem;color:#94a3b8}
+.ld{width:9px;height:9px;border-radius:50%;flex-shrink:0;
+  box-shadow:0 0 5px currentColor}
+.rb{margin-top:9px;padding-top:9px;border-top:1px solid rgba(255,255,255,0.06)}
+.rl{font-size:.57rem;letter-spacing:.12em;text-transform:uppercase;color:#475569;margin-bottom:3px}
+.rv{font-family:monospace;font-size:.84rem;color:#ef4444;font-weight:700;word-break:break-all}
+/* ── Metrics ── */
+#mo{
+  position:absolute;top:14px;right:14px;z-index:10;
+  background:rgba(3,8,20,0.80);border:1px solid rgba(255,255,255,0.07);
+  border-radius:10px;padding:11px 16px;min-width:142px;backdrop-filter:blur(8px)
+}
+.mt2{font-size:.57rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:#334155;margin-bottom:8px}
+.mr{display:flex;justify-content:space-between;align-items:center;margin:3px 0;font-size:.72rem}
+.mlb{color:#475569}.mv{color:#e2e8f0;font-weight:700;font-family:monospace}
+.cyan{color:#22d3ee}.orange{color:#f97316}
+/* ── Hover tooltip ── */
+#tt{
+  position:absolute;z-index:20;pointer-events:none;display:none;
+  background:rgba(3,8,20,0.95);border:1px solid rgba(255,255,255,0.09);
+  border-radius:10px;padding:11px 14px;font-size:.73rem;max-width:230px;
+  backdrop-filter:blur(10px)
+}
+.tid{font-family:monospace;font-size:.9rem;font-weight:700;color:#f1f5f9;margin-bottom:6px}
+.tr{display:flex;gap:7px;margin:2px 0}
+.tk{color:#334155;min-width:50px;flex-shrink:0}
+/* Hide 3d-force-graph's default bottom hint text */
+#gm>div>div:last-child{display:none!important}
+"""
+
+# ── JS template — __GDATA__ and __HEIGHT__ placeholders ──────────────────────
+# Plain string (no f-prefix), so { } are literal — no escaping needed.
+_JS_TMPL = """\
+(function(){
+  /* ── Galaxy starfield ── */
+  var sf=document.getElementById('sf');
+  var ctx=sf.getContext('2d');
+  var W=window.innerWidth||900, H=__HEIGHT__;
+  sf.width=W; sf.height=H;
+
+  /* Nebula glow layer — rendered once */
+  var grad=ctx.createRadialGradient(W*0.38,H*0.52,0,W*0.38,H*0.52,W*0.55);
+  grad.addColorStop(0,'rgba(20,50,100,0.22)');
+  grad.addColorStop(0.4,'rgba(10,25,60,0.12)');
+  grad.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
+
+  /* Stars: regular + a few bright ones */
+  var stars=[];
+  for(var i=0;i<420;i++){
+    var bright=(i<18);
+    stars.push({
+      x:Math.random()*W, y:Math.random()*H,
+      r:bright?(Math.random()*1.6+0.7):(Math.random()*0.9+0.1),
+      o:bright?(Math.random()*0.55+0.45):(Math.random()*0.38+0.07),
+      d:Math.random()*.004+.0008,
+      ph:Math.random()*6.283,
+      bright:bright
+    });
+  }
+  var t0=null;
+  function drawStars(ts){
+    if(t0===null) t0=ts;
+    var t=ts-t0;
+    ctx.clearRect(0,0,W,H);
+    /* Re-draw nebula each frame so stars composite over it */
+    ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
+    for(var i=0;i<stars.length;i++){
+      var s=stars[i];
+      var op=s.o+Math.sin(t*s.d+s.ph)*0.15;
+      op=Math.max(0,Math.min(1,op));
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,6.283);
+      if(s.bright){
+        /* Bright star: core + tiny halo */
+        ctx.fillStyle='rgba(220,240,255,'+op+')';
+        ctx.fill();
+        ctx.beginPath(); ctx.arc(s.x,s.y,s.r*2.8,0,6.283);
+        ctx.fillStyle='rgba(180,210,255,'+(op*0.12)+')';
+        ctx.fill();
+      } else {
+        ctx.fillStyle='rgba(200,220,255,'+op+')';
+        ctx.fill();
+      }
+    }
+    requestAnimationFrame(drawStars);
+  }
+  requestAnimationFrame(drawStars);
+
+  /* ── Graph data ── */
+  var gData=__GDATA__;
+  var tt=document.getElementById('tt');
+  var gm=document.getElementById('gm');
+  var orbitOn=false;
+
+  /* ── 3D Force Graph ── */
+  var G=ForceGraph3D()(gm)
+    .width(gm.clientWidth||W)
+    .height(H)
+    .backgroundColor('rgba(0,0,0,0)')   /* transparent — CSS galaxy shows through */
+    .graphData(gData)
+    .nodeId('id')
+    .nodeLabel('')                        /* suppress default tooltip; we do our own */
+    .nodeColor(function(n){ return n.color; })
+    .nodeRelSize(3)
+    .nodeVal(function(n){ return n.size*n.size; })
+    .nodeOpacity(0.95)
+    /* Permanent labels via three-spritetext — always white, positioned above sphere */
+    .nodeThreeObject(function(node){
+      var sprite=new SpriteText(node.label);
+      sprite.color='#e8edf4';
+      sprite.textHeight=node.size>7?3.2:2.2;
+      sprite.fontFace='system-ui,-apple-system,sans-serif';
+      sprite.fontWeight='600';
+      sprite.material.depthWrite=false;
+      /* Position label to the right of the sphere (matching FalconVU label placement) */
+      var r=Math.cbrt(node.size*node.size)*3;
+      sprite.position.x=r+5;
+      return sprite;
+    })
+    .nodeThreeObjectExtend(true)
+    /* Links */
+    .linkSource('source')
+    .linkTarget('target')
+    .linkColor(function(l){ return l.color; })
+    .linkWidth(function(l){ return l.width; })
+    .linkOpacity(0.75)
+    .linkDirectionalParticles(function(l){ return l.particles; })
+    .linkDirectionalParticleSpeed(function(l){ return l.p_speed; })
+    .linkDirectionalParticleWidth(function(l){ return l.p_width; })
+    .linkDirectionalParticleColor(function(l){ return l.p_color; })
+    /* Hover tooltip */
+    .onNodeHover(function(node){
+      if(!node){ tt.style.display='none'; return; }
+      tt.innerHTML=
+        '<div class="tid">'+node.id+'</div>'
+        +'<div class="tr"><span class="tk">type</span><span>'+(node.type||'')+'</span></div>'
+        +'<div class="tr"><span class="tk">status</span><span>'+(node.status||'')+'</span></div>'
+        +'<div class="tr"><span class="tk">diagram</span><span>'+(node.diagram||'—')+'</span></div>'
+        +'<div class="tr"><span class="tk">zone</span><span>'+(node.zone||'—')+'</span></div>'
+        +'<div class="tr"><span class="tk">ip</span><span>'+(node.ip||'—')+'</span></div>';
+      tt.style.display='block';
+    })
+    /* Click-to-zoom */
+    .onNodeClick(function(node){
+      var dist=100;
+      var nx=node.x||0,ny=node.y||0,nz=node.z||0;
+      var hyp=Math.sqrt(nx*nx+ny*ny+nz*nz)||1;
+      var r=1+dist/hyp;
+      G.cameraPosition({x:nx*r,y:ny*r,z:nz*r},node,1200);
+      var c=G.controls(); if(c) c.autoRotate=false;
+    });
+
+  /* ── d3 force tuning: cross-diagram links spread wider ── */
+  try{
+    G.d3Force('link').distance(function(l){ return l.is_cross?240:90; });
+    G.d3Force('charge').strength(-120);
+  }catch(e){}
+
+  /* ── Start with a near-top-down view (FalconVU look) ── */
+  G.cameraPosition({x:0,y:0,z:580});
+
+  /* ── Tooltip follows mouse ── */
+  gm.addEventListener('mousemove',function(e){
+    if(tt.style.display==='none') return;
+    var r=gm.getBoundingClientRect();
+    var x=e.clientX-r.left+16, y=e.clientY-r.top+16;
+    if(x+238>r.width)  x=e.clientX-r.left-248;
+    if(y+210>r.height) y=e.clientY-r.top -214;
+    tt.style.left=x+'px'; tt.style.top=y+'px';
+  });
+
+  /* ── Auto-orbit: starts after simulation settles, slow & smooth ── */
+  setTimeout(function(){
+    var c=G.controls();
+    if(c&&!orbitOn){
+      c.autoRotate=true;
+      c.autoRotateSpeed=0.45;   /* gentle drift, like FalconVU */
+      orbitOn=true;
+    }
+  },3000);
+
+  /* ── Any user interaction kills orbit ── */
+  ['mousedown','touchstart','wheel'].forEach(function(ev){
+    gm.addEventListener(ev,function(){
+      var c=G.controls(); if(c) c.autoRotate=false;
+    },{passive:true});
+  });
+})();
+"""
+
+
+# ── Public API ────────────────────────────────────────────────────────────────
+
+def render_falconvue_graph(
+    enterprise_graph: dict,
+    absorbed_ids: "set[str] | None" = None,
+    rca: "dict | None" = None,
+    height: int = 800,
+) -> None:
+    """Render the enterprise graph as a 3D WebGL FalconVue galaxy.
+
+    Parameters
+    ----------
+    enterprise_graph : dict
+        Full enterprise graph with nodes, edges, cross_diagram_edges,
+        and diagram_clusters keys.
+    absorbed_ids : set[str] | None
+        Node IDs just absorbed (highlighted cyan).
+    rca : dict | None
+        RCA result with root_cause, alert_nodes, impacted_nodes, impact_path.
+    height : int
+        Iframe height in pixels.
+
+    Raises on any Python-level error so callers can fall back to PyVis.
+    """
+    absorbed_ids = absorbed_ids or set()
+    rca          = rca or {}
+
+    root_cause   = rca.get("root_cause", "")
+    alert_set    = set(rca.get("alert_nodes", []))
+    impacted_set = set(rca.get("impacted_nodes", []))
+    impact_path  = rca.get("impact_path", [])
+    path_edges: set[tuple[str, str]] = set(zip(impact_path, impact_path[1:]))
+
+    # ── node → diagram cluster (handles both list and dict schemas) ────────────
+    node_diag: dict[str, str] = {}
+    clusters = enterprise_graph.get("diagram_clusters", [])
+    if isinstance(clusters, list):
+        for c in clusters:
+            for nid in c.get("node_ids", []):
+                node_diag[nid] = c.get("diagram_id", "")
+    elif isinstance(clusters, dict):
+        for did, c in clusters.items():
+            nids = c if isinstance(c, list) else c.get("node_ids", [])
+            for nid in nids:
+                node_diag[nid] = did
+
+    # ── nodes ─────────────────────────────────────────────────────────────────
+    nodes_out: list[dict] = []
+    for n in enterprise_graph.get("nodes", []):
+        nid    = n.get("id", "")
+        ntype  = n.get("type", "server")
+        shared = n.get("is_shared_entity", False)
+
+        if nid == root_cause and root_cause:
+            color, sz, status = "#ef4444", 12.0, "root_cause"
+        elif nid in alert_set:
+            color, sz, status = "#f97316", 9.0,  "alert"
+        elif nid in impacted_set:
+            color, sz, status = "#facc15", 8.0,  "impacted"
+        elif nid in absorbed_ids:
+            color, sz, status = "#22d3ee", 9.0,  "absorbed"
+        elif shared:
+            color, sz, status = "#a855f7", 9.0,  "shared"
+        else:
+            color = _DEVICE_COLORS.get(ntype, _DEFAULT_COLOR)
+            # Type-based size hierarchy (hub types = bigger)
+            if ntype in ("router", "firewall", "cloud_or_wan"):
+                sz = 7.0
+            elif ntype in ("switch", "load_balancer"):
+                sz = 6.0
+            else:
+                sz = 5.0
+            status = "normal"
+
+        nodes_out.append({
+            "id":      nid,
+            "label":   nid,
+            "type":    ntype,
+            "status":  status,
+            "color":   color,
+            "size":    sz,
+            "ip":      n.get("ip_address", ""),
+            "zone":    n.get("zone", ""),
+            "diagram": node_diag.get(nid) or n.get("diagram_id", ""),
+        })
+
+    # ── links (local edges + cross_diagram_edges, deduplicated) ───────────────
+    seen_pairs: set[tuple[str, str]] = set()
+    links_out:  list[dict]           = []
+    valid_ids   = {n["id"] for n in nodes_out}
+
+    def _push(e: dict, force_cross: bool = False) -> None:
+        src, tgt = e.get("source", ""), e.get("target", "")
+        if not src or not tgt or src not in valid_ids or tgt not in valid_ids:
+            return
+        k = (src, tgt)
+        if k in seen_pairs:
+            return
+        seen_pairs.add(k)
+
+        is_cross = (
+            force_cross
+            or e.get("edge_scope") == "cross_diagram"
+            or e.get("edge_type")  == "cross_diagram"
+        )
+        is_path = k in path_edges
+
+        if is_path:
+            # Glowing cyan — impact path (InfraGraph feature)
+            color, w, parts, spd, pw, pc = "#22d3ee", 2.0, 5, 0.007, 2.0, "#22d3ee"
+        elif is_cross:
+            # Cross-diagram — bright white (FalconVU style)
+            color, w, parts, spd, pw, pc = "rgba(255,255,255,0.55)", 0.8, 0, 0.0, 0.0, "#fff"
+        else:
+            # Standard intra-diagram — thin bright white lines (FalconVU style)
+            color, w, parts, spd, pw, pc = "rgba(255,255,255,0.42)", 0.6, 0, 0.0, 0.0, "#fff"
+
+        links_out.append({
+            "source":    src,
+            "target":    tgt,
+            "label":     e.get("label", ""),
+            "is_cross":  is_cross,
+            "is_path":   is_path,
+            "color":     color,
+            "width":     w,
+            "particles": parts,
+            "p_speed":   spd,
+            "p_width":   pw,
+            "p_color":   pc,
+        })
+
+    for e in enterprise_graph.get("edges", []):
+        _push(e)
+    for e in enterprise_graph.get("cross_diagram_edges", []):
+        _push(e, force_cross=True)
+
+    # ── JSON payload ──────────────────────────────────────────────────────────
+    graph_json = json.dumps({"nodes": nodes_out, "links": links_out})
+
+    n_nodes  = len(nodes_out)
+    n_links  = len(links_out)
+    n_cross  = sum(1 for lk in links_out if lk["is_cross"])
+    n_path   = sum(1 for lk in links_out if lk["is_path"])
+    n_alerts = len(alert_set)
+    has_rca  = bool(root_cause)
+
+    html = _assemble_html(
+        graph_json, height,
+        n_nodes, n_links, n_cross, n_path, n_alerts,
+        has_rca, root_cause,
+    )
+    components.html(html, height=height + 10, scrolling=False)
+
+
+# ── HTML assembly ─────────────────────────────────────────────────────────────
+
+def _assemble_html(
+    graph_json: str,
+    height: int,
+    n_nodes: int, n_links: int, n_cross: int, n_path: int,
+    n_alerts: int, has_rca: bool, root_cause: str,
+) -> str:
+    h   = str(height)
+    css = _CSS_TMPL.replace("__HEIGHT__", h)
+    js  = _JS_TMPL.replace("__GDATA__", graph_json).replace("__HEIGHT__", h)
+
+    legend_rows = "".join(
+        f'<div class="li">'
+        f'<div class="ld" style="background:{c};box-shadow:0 0 5px {c}"></div>'
+        f'{lb}</div>'
+        for c, lb in _LEGEND_ROWS
+    )
+
+    rca_block = ""
+    if has_rca and root_cause:
+        rca_block = (
+            '<div class="rb">'
+            '<div class="rl">Root Cause</div>'
+            f'<div class="rv">{root_cause}</div>'
+            '</div>'
+        )
+
+    metrics_extra = ""
+    if has_rca:
+        metrics_extra = (
+            f'<div class="mr"><span class="mlb">Path links</span>'
+            f'<span class="mv cyan">{n_path}</span></div>'
+            f'<div class="mr"><span class="mlb">Alerts</span>'
+            f'<span class="mv orange">{n_alerts}</span></div>'
+        )
+
+    return (
+        "<!DOCTYPE html><html><head><meta charset='utf-8'>"
+        "<style>" + css + "</style>"
+        "</head><body>"
+
+        "<canvas id='sf'></canvas>"
+        "<div id='gc'>"
+
+        # Title
+        "<div id='to'>"
+        "<div class='mt'>InfraGraph AI &#8212; Enterprise Graph Galaxy</div>"
+        "<div class='st'>3D Topology &middot; Cross-Diagram RCA &middot; Live Graph Memory</div>"
+        "</div>"
+
+        # Legend (left)
+        "<div id='lo'>"
+        "<div class='ll'>Node Legend</div>"
+        + legend_rows + rca_block
+        + "</div>"
+
+        # Metrics (right)
+        "<div id='mo'>"
+        "<div class='mt2'>Graph Metrics</div>"
+        + f"<div class='mr'><span class='mlb'>Nodes</span><span class='mv'>{n_nodes}</span></div>"
+        + f"<div class='mr'><span class='mlb'>Links</span><span class='mv'>{n_links}</span></div>"
+        + f"<div class='mr'><span class='mlb'>Cross-diag</span>"
+          f"<span class='mv cyan'>{n_cross}</span></div>"
+        + metrics_extra
+        + "</div>"
+
+        "<div id='tt'></div>"
+        + f"<div id='gm' style='width:100%;height:{height}px'></div>"
+        + "</div>"
+
+        # ── CDN scripts ──
+        # three-spritetext must load BEFORE 3d-force-graph so SpriteText is available
+        "<script src='https://cdn.jsdelivr.net/npm/three-spritetext@1.9.0"
+        "/dist/three-spritetext.min.js'></script>"
+        "<script src='https://cdn.jsdelivr.net/npm/3d-force-graph@1.73.0"
+        "/dist/3d-force-graph.min.js'></script>"
+
+        "<script>" + js + "</script>"
+        "</body></html>"
+    )

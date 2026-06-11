@@ -1,0 +1,39 @@
+{
+  "absorbed_diagram_id": "branch_topology",
+  "run_id": "DG-0001",
+  "nodes_absorbed": 8,
+  "edges_absorbed": 7,
+  "shared_entities_matched": 8,
+  "cross_diagram_links_created": 2,
+  "matched_entities": [
+    "BR-APP-01",
+    "BR-FW-01",
+    "BR-RTR-01",
+    "BR-SW-01",
+    "BR-WRK-01",
+    "BR-WRK-02",
+    "BR-WRK-03",
+    "WAN-MPLS-CORE"
+  ],
+  "cross_diagram_links": [
+    {
+      "source": "BR-RTR-01",
+      "source_diagram": "branch_topology",
+      "target": "WAN-PE-01",
+      "target_diagram": "wan_topology",
+      "relationship": "connected_to",
+      "label": "MPLS-L3VPN"
+    },
+    {
+      "source": "WAN-MPLS-CORE",
+      "source_diagram": "branch_topology",
+      "target": "WAN-MPLS-CORE",
+      "target_diagram": "wan_topology",
+      "relationship": "shared_entity",
+      "label": "same-node"
+    }
+  ],
+  "before_node_count": 20,
+  "after_node_count": 28,
+  "status": "absorbed_into_enterprise_graph"
+}

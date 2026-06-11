@@ -358,6 +358,217 @@ def render_v3_annotation_preview(
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# GRAPH MEMORY TABLE BUILDERS  (public helpers, callable from the app layer)
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _evidence_src(detection_source: str) -> str:
+    if "Verified Annotation" in detection_source:
+        return "verified_metadata"
+    if "Live RF-DETR" in detection_source:
+        return "live_detector"
+    if "RF-DETR" in detection_source or "Trained" in detection_source:
+        return "trained_detector"
+    return "inferred"
+
+
+def _conf_str(raw, detection_source: str) -> str:
+    """Return confidence as a string; blank for annotation overlay (never fake it)."""
+    if "Verified Annotation" in detection_source:
+        return ""
+    if raw is None:
+        return ""
+    try:
+        return str(round(float(raw), 3))
+    except (TypeError, ValueError):
+        return ""
+
+
+def build_device_rows(
+    local_graph: dict,
+    annotation: dict,
+    detection_source: str = "Verified Annotation Overlay",
+) -> list[dict]:
+    """Normalized device rows for devices.csv and the evidence table."""
+    ev_src = _evidence_src(detection_source)
+    rows: list[dict] = []
+    seen: set[str] = set()
+
+    for n in local_graph.get("nodes", []):
+        nid = n.get("id") or n.get("node_id") or ""
+        if not nid or nid in seen:
+            continue
+        seen.add(nid)
+        bbox = n.get("bbox") or []
+        rows.append({
+            "node_id":         nid,
+            "device_type":     n.get("type", ""),
+            "display_label":   n.get("label", nid),
+            "canonical_id":    n.get("canonical_id", nid),
+            "ip_address":      n.get("ip_address", ""),
+            "zone":            n.get("zone", ""),
+            "interface":       n.get("interface", ""),
+            "vlan":            n.get("vlan", ""),
+            "is_shared_entity": str(n.get("is_shared_entity", False)),
+            "evidence_source": ev_src,
+            "confidence":      _conf_str(n.get("confidence"), detection_source),
+            "bbox":            str(bbox) if bbox else "",
+            "x1": str(bbox[0]) if len(bbox) > 0 else "",
+            "y1": str(bbox[1]) if len(bbox) > 1 else "",
+            "x2": str(bbox[2]) if len(bbox) > 2 else "",
+            "y2": str(bbox[3]) if len(bbox) > 3 else "",
+        })
+
+    for obj in annotation.get("objects", []):
+        nid = obj.get("object_id") or obj.get("node_id") or ""
+        if not nid or nid in seen:
+            continue
+        seen.add(nid)
+        bbox = obj.get("bbox") or []
+        rows.append({
+            "node_id":         nid,
+            "device_type":     obj.get("class_name", obj.get("type", "")),
+            "display_label":   obj.get("label", nid),
+            "canonical_id":    obj.get("canonical_id", nid),
+            "ip_address":      obj.get("ip_address", ""),
+            "zone":            obj.get("zone", ""),
+            "interface":       "",
+            "vlan":            "",
+            "is_shared_entity": str(obj.get("is_shared_entity", False)),
+            "evidence_source": ev_src,
+            "confidence":      _conf_str(obj.get("confidence"), detection_source),
+            "bbox":            str(bbox) if bbox else "",
+            "x1": str(bbox[0]) if len(bbox) > 0 else "",
+            "y1": str(bbox[1]) if len(bbox) > 1 else "",
+            "x2": str(bbox[2]) if len(bbox) > 2 else "",
+            "y2": str(bbox[3]) if len(bbox) > 3 else "",
+        })
+
+    return rows
+
+
+def build_connector_rows(
+    local_graph: dict,
+    annotation: dict,
+    detection_source: str = "Verified Annotation Overlay",
+) -> list[dict]:
+    """Normalized connector rows for connectors.csv and the evidence table."""
+    ev_src = _evidence_src(detection_source)
+    rows: list[dict] = []
+    seen: set[tuple] = set()
+
+    for e in local_graph.get("edges", []):
+        src = e.get("source", "")
+        tgt = e.get("target", "")
+        rel = e.get("relationship", "connected_to")
+        if not src or not tgt:
+            continue
+        key = (src, tgt, rel)
+        if key in seen:
+            continue
+        seen.add(key)
+        rows.append({
+            "edge_id":          e.get("edge_id", f"{src}→{tgt}"),
+            "source":           src,
+            "target":           tgt,
+            "relationship":     rel,
+            "protocol":         e.get("protocol", ""),
+            "label":            e.get("label", ""),
+            "source_interface": e.get("source_interface", e.get("src_interface", "")),
+            "target_interface": e.get("target_interface", e.get("tgt_interface", "")),
+            "vlan":             e.get("vlan", ""),
+            "scope":            e.get("edge_scope", e.get("scope", "")),
+            "direction":        "directed",
+            "evidence_source":  ev_src,
+            "confidence":       _conf_str(e.get("confidence"), detection_source),
+        })
+
+    for conn in annotation.get("connectors", []):
+        src = conn.get("source", conn.get("from_node", ""))
+        tgt = conn.get("target", conn.get("to_node", ""))
+        rel = conn.get("label", conn.get("relationship", "connected_to"))
+        if not src or not tgt:
+            continue
+        key = (src, tgt, rel)
+        if key in seen:
+            continue
+        seen.add(key)
+        rows.append({
+            "edge_id":          conn.get("connector_id", f"{src}→{tgt}"),
+            "source":           src,
+            "target":           tgt,
+            "relationship":     rel,
+            "protocol":         conn.get("protocol", ""),
+            "label":            conn.get("label", ""),
+            "source_interface": conn.get("source_interface", ""),
+            "target_interface": conn.get("target_interface", ""),
+            "vlan":             conn.get("vlan", ""),
+            "scope":            conn.get("scope", ""),
+            "direction":        "directed",
+            "evidence_source":  "verified_connector_metadata",
+            "confidence":       "",
+        })
+
+    return rows
+
+
+def build_interface_rows(local_graph: dict, annotation: dict) -> list[dict]:
+    """Normalized interface/IP rows for interfaces.csv and the evidence table."""
+    rows: list[dict] = []
+    node_map: dict[str, dict] = {}
+    for n in local_graph.get("nodes", []):
+        nid = n.get("id") or n.get("node_id") or ""
+        if nid:
+            node_map[nid] = {
+                "node_id":        nid,
+                "device_type":    n.get("type", ""),
+                "ip_address":     n.get("ip_address", ""),
+                "interface":      n.get("interface", ""),
+                "vlan":           n.get("vlan", ""),
+                "zone":           n.get("zone", ""),
+                "connected_to":   "",
+                "protocol":       "",
+                "port":           "",
+                "evidence_source": "verified_metadata",
+            }
+    for e in local_graph.get("edges", []):
+        src = e.get("source", "")
+        tgt = e.get("target", "")
+        si  = e.get("source_interface", e.get("src_interface", ""))
+        ti  = e.get("target_interface", e.get("tgt_interface", ""))
+        proto = e.get("protocol", e.get("label", ""))
+        if src in node_map and si and not node_map[src]["interface"]:
+            node_map[src]["interface"]   = si
+            node_map[src]["connected_to"] = tgt
+            node_map[src]["protocol"]    = proto
+        if tgt in node_map and ti and not node_map[tgt]["interface"]:
+            node_map[tgt]["interface"]   = ti
+            node_map[tgt]["connected_to"] = src
+            node_map[tgt]["protocol"]    = proto
+    rows = list(node_map.values())
+    return rows
+
+
+def build_ocr_rows(annotation: dict) -> list[dict]:
+    """Normalized OCR/text rows for ocr_text.csv and the evidence table."""
+    rows: list[dict] = []
+    for blk in annotation.get("text_blocks", []):
+        bbox = blk.get("bbox") or []
+        rows.append({
+            "text":           blk.get("text", ""),
+            "text_type":      blk.get("type", blk.get("role", "")),
+            "linked_node":    blk.get("linked_node", blk.get("node_id", "")),
+            "bbox":           str(bbox) if bbox else "",
+            "x1": str(bbox[0]) if len(bbox) > 0 else "",
+            "y1": str(bbox[1]) if len(bbox) > 1 else "",
+            "x2": str(bbox[2]) if len(bbox) > 2 else "",
+            "y2": str(bbox[3]) if len(bbox) > 3 else "",
+            "confidence":     "",
+            "evidence_source": "verified_text_metadata",
+        })
+    return rows
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # PUBLIC API
 # ══════════════════════════════════════════════════════════════════════════════
 def run_live_v3_ingestion(
@@ -520,39 +731,44 @@ def run_live_v3_ingestion(
                 "source_type":  "local_graph",
             })
 
-    # ── node / edge table rows (DataFrame-ready) ──────────────────────────────
-    graph_nodes = local_graph.get("nodes") or detected_nodes
-    node_table_rows: list[dict] = []
-    for n in graph_nodes:
-        node_table_rows.append({
-            "node_id":    n.get("id", n.get("node_id", "")),
-            "type":       n.get("type", "server"),
-            "ip_address": n.get("ip_address", ""),
-            "zone":       n.get("zone", ""),
-            "shared":     n.get("is_shared_entity", False),
-            "confidence": round(float(n.get("confidence", 0.88 if not is_rfdetr else 0.96)), 3),
-            "source":     detection_source,
-        })
+    # ── graph-memory table rows ───────────────────────────────────────────────
+    device_rows    = build_device_rows(local_graph, annotation, detection_source)
+    connector_rows = build_connector_rows(local_graph, annotation, detection_source)
+    interface_rows = build_interface_rows(local_graph, annotation)
+    ocr_rows       = build_ocr_rows(annotation)
 
+    # slim backward-compat tables (no fake confidence)
+    graph_nodes = local_graph.get("nodes") or detected_nodes
+    node_table_rows: list[dict] = [
+        {
+            "node_id":        n.get("id", n.get("node_id", "")),
+            "type":           n.get("type", "server"),
+            "ip_address":     n.get("ip_address", ""),
+            "zone":           n.get("zone", ""),
+            "shared":         n.get("is_shared_entity", False),
+            "evidence_source": _evidence_src(detection_source),
+        }
+        for n in graph_nodes
+    ]
     graph_edges = local_graph.get("edges") or detected_edges
-    edge_table_rows: list[dict] = []
-    for e in graph_edges:
-        edge_table_rows.append({
+    edge_table_rows: list[dict] = [
+        {
             "source":       e.get("source", ""),
             "target":       e.get("target", ""),
             "relationship": e.get("relationship", "connected_to"),
             "label":        e.get("label", ""),
-            "confidence":   round(float(e.get("confidence", 0.82)), 3),
-        })
+        }
+        for e in graph_edges
+    ]
 
-    # ── confidence summary ────────────────────────────────────────────────────
-    nc = [r["confidence"] for r in node_table_rows]
-    ec = [r["confidence"] for r in edge_table_rows]
+    # ── confidence summary (only real detector values) ────────────────────────
+    nc = [float(r["confidence"]) for r in device_rows if r.get("confidence")]
+    ec = [float(r["confidence"]) for r in connector_rows if r.get("confidence")]
     confidence_summary = {
-        "device_detection_avg": round(sum(nc) / max(len(nc), 1), 3),
-        "edge_extraction_avg":  round(sum(ec) / max(len(ec), 1), 3),
-        "ocr_text_blocks":      len(annotation.get("text_blocks", [])),
-        "connector_count":      len(annotation.get("connectors", [])),
+        "device_detection_avg": round(sum(nc) / len(nc), 3) if nc else "—",
+        "edge_extraction_avg":  round(sum(ec) / len(ec), 3) if ec else "—",
+        "ocr_text_blocks":      len(ocr_rows),
+        "connector_count":      len(connector_rows),
         "low_confidence_items": sum(1 for c in nc if c < 0.90),
     }
 
@@ -563,12 +779,17 @@ def run_live_v3_ingestion(
         "original_image":       str(orig_out),
         "detected_image":       str(detected_out),
         "detection_source":     detection_source,
+        "evidence_source":      _evidence_src(detection_source),
         "annotation_path":      str(ann_path) if ann_path.exists() else "",
         "local_graph_path":     str(lg_path)  if lg_path.exists()  else "",
-        "node_count":           len(node_table_rows),
-        "edge_count":           len(edge_table_rows),
-        "ocr_text_block_count": len(annotation.get("text_blocks", [])),
-        "connector_count":      len(annotation.get("connectors", [])),
+        "node_count":           len(device_rows),
+        "edge_count":           len(connector_rows),
+        "ocr_text_block_count": len(ocr_rows),
+        "connector_count":      len(connector_rows),
+        "devices":              device_rows,
+        "connectors":           connector_rows,
+        "interfaces":           interface_rows,
+        "ocr_text":             ocr_rows,
         "nodes":                node_table_rows,
         "edges":                edge_table_rows,
         "confidence_summary":   confidence_summary,
@@ -583,12 +804,16 @@ def run_live_v3_ingestion(
     _save_json(run_dir / "graph_memory_packet.json", packet)
     _save_csv(run_dir  / "node_table.csv",           node_table_rows)
     _save_csv(run_dir  / "edge_table.csv",           edge_table_rows)
+    _save_csv(run_dir  / "devices.csv",              device_rows)
+    _save_csv(run_dir  / "connectors.csv",           connector_rows)
+    _save_csv(run_dir  / "interfaces.csv",           interface_rows)
+    _save_csv(run_dir  / "ocr_text.csv",             ocr_rows)
     _save_json(run_dir / "ingestion_summary.json",   {
         "diagram_id":          diagram_id,
         "scenario_id":         scenario_id,
         "detection_source":    detection_source,
-        "node_count":          len(node_table_rows),
-        "edge_count":          len(edge_table_rows),
+        "node_count":          len(device_rows),
+        "edge_count":          len(connector_rows),
         "annotation_preview":  _render_meta,
         "rfdetr_inference_time_s": _rfdetr_time_s,
         "rfdetr_error":        _rfdetr_error,
@@ -608,6 +833,10 @@ def run_live_v3_ingestion(
         "detected_edges":        detected_edges,
         "node_table_rows":       node_table_rows,
         "edge_table_rows":       edge_table_rows,
+        "device_rows":           device_rows,
+        "connector_rows":        connector_rows,
+        "interface_rows":        interface_rows,
+        "ocr_rows":              ocr_rows,
         "packet":                packet,
         "confidence_summary":    confidence_summary,
     }
@@ -852,17 +1081,21 @@ def run_ingestion(
                 "source_type":  "local_graph",
             })
 
-    # ── tables ────────────────────────────────────────────────────────────────
+    # ── graph-memory table rows ───────────────────────────────────────────────
+    device_rows    = build_device_rows(local_graph, annotation, detection_source)
+    connector_rows = build_connector_rows(local_graph, annotation, detection_source)
+    interface_rows = build_interface_rows(local_graph, annotation)
+    ocr_rows       = build_ocr_rows(annotation)
+
     graph_nodes = local_graph.get("nodes") or detected_nodes
     node_table_rows: list[dict] = [
         {
-            "node_id":    n.get("id", n.get("node_id", "")),
-            "type":       n.get("type", "server"),
-            "ip_address": n.get("ip_address", ""),
-            "zone":       n.get("zone", ""),
-            "shared":     n.get("is_shared_entity", False),
-            "confidence": round(float(n.get("confidence", 0.88 if not is_live else 0.96)), 3),
-            "source":     detection_source,
+            "node_id":        n.get("id", n.get("node_id", "")),
+            "type":           n.get("type", "server"),
+            "ip_address":     n.get("ip_address", ""),
+            "zone":           n.get("zone", ""),
+            "shared":         n.get("is_shared_entity", False),
+            "evidence_source": _evidence_src(detection_source),
         }
         for n in graph_nodes
     ]
@@ -873,18 +1106,17 @@ def run_ingestion(
             "target":       e.get("target", ""),
             "relationship": e.get("relationship", "connected_to"),
             "label":        e.get("label", ""),
-            "confidence":   round(float(e.get("confidence", 0.82)), 3),
         }
         for e in graph_edges
     ]
 
-    nc = [r["confidence"] for r in node_table_rows]
-    ec = [r["confidence"] for r in edge_table_rows]
+    nc = [float(r["confidence"]) for r in device_rows if r.get("confidence")]
+    ec = [float(r["confidence"]) for r in connector_rows if r.get("confidence")]
     confidence_summary = {
-        "device_detection_avg": round(sum(nc) / max(len(nc), 1), 3),
-        "edge_extraction_avg":  round(sum(ec) / max(len(ec), 1), 3),
-        "ocr_text_blocks":      len(annotation.get("text_blocks", [])),
-        "connector_count":      len(annotation.get("connectors", [])),
+        "device_detection_avg": round(sum(nc) / len(nc), 3) if nc else "—",
+        "edge_extraction_avg":  round(sum(ec) / len(ec), 3) if ec else "—",
+        "ocr_text_blocks":      len(ocr_rows),
+        "connector_count":      len(connector_rows),
         "low_confidence_items": sum(1 for c in nc if c < 0.90),
     }
 
@@ -894,12 +1126,17 @@ def run_ingestion(
         "original_image":       str(orig_out),
         "detected_image":       str(detected_out),
         "detection_source":     detection_source,
+        "evidence_source":      _evidence_src(detection_source),
         "annotation_path":      str(ann_p) if ann_p.exists() else "",
         "local_graph_path":     str(lg_p)  if lg_p.exists()  else "",
-        "node_count":           len(node_table_rows),
-        "edge_count":           len(edge_table_rows),
-        "ocr_text_block_count": len(annotation.get("text_blocks", [])),
-        "connector_count":      len(annotation.get("connectors", [])),
+        "node_count":           len(device_rows),
+        "edge_count":           len(connector_rows),
+        "ocr_text_block_count": len(ocr_rows),
+        "connector_count":      len(connector_rows),
+        "devices":              device_rows,
+        "connectors":           connector_rows,
+        "interfaces":           interface_rows,
+        "ocr_text":             ocr_rows,
         "nodes":                node_table_rows,
         "edges":                edge_table_rows,
         "confidence_summary":   confidence_summary,
@@ -913,12 +1150,16 @@ def run_ingestion(
     _save_json(run_dir / "graph_memory_packet.json", packet)
     _save_csv(run_dir  / "node_table.csv",           node_table_rows)
     _save_csv(run_dir  / "edge_table.csv",           edge_table_rows)
+    _save_csv(run_dir  / "devices.csv",              device_rows)
+    _save_csv(run_dir  / "connectors.csv",           connector_rows)
+    _save_csv(run_dir  / "interfaces.csv",           interface_rows)
+    _save_csv(run_dir  / "ocr_text.csv",             ocr_rows)
     _save_json(run_dir / "ingestion_summary.json",   {
         "diagram_id":              diagram_id,
         "run_id":                  run_id,
         "detection_source":        detection_source,
-        "node_count":              len(node_table_rows),
-        "edge_count":              len(edge_table_rows),
+        "node_count":              len(device_rows),
+        "edge_count":              len(connector_rows),
         "annotation_preview":      _render_meta,
         "rfdetr_inference_time_s": _rfdetr_time_s,
         "rfdetr_error":            _rfdetr_error,
@@ -938,6 +1179,10 @@ def run_ingestion(
         "detected_edges":          detected_edges,
         "node_table_rows":         node_table_rows,
         "edge_table_rows":         edge_table_rows,
+        "device_rows":             device_rows,
+        "connector_rows":          connector_rows,
+        "interface_rows":          interface_rows,
+        "ocr_rows":                ocr_rows,
         "packet":                  packet,
         "confidence_summary":      confidence_summary,
     }
