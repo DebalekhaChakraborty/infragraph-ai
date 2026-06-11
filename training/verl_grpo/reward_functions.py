@@ -1,303 +1,221 @@
-"""
-GRPO reward functions for InfraGraph AI remediation fine-tuning.
-
-Scores model-generated remediation responses against ground-truth references
-built by build_rca_rl_dataset.py.  Supports both "local" and "enterprise" scope.
-
-Reward components (10 total, weights sum to 1.0 after penalty normalisation):
-    root_cause_match_reward              — 0.28
-    grounded_node_reward                 — 0.18
-    no_hallucinated_node_penalty         — 0.12  (can be negative)
-    includes_validation_steps_reward     — 0.10
-    action_specificity_reward            — 0.09
-    rollback_safety_reward               — 0.07
-    json_format_reward                   — 0.08
-    escalation_if_multi_diagram_reward   — 0.04
-    local_scope_precision_reward         — 0.04  (local only; 0 for enterprise)
-    enterprise_cross_diagram_reward      — 0.04  (enterprise only; 0 for local)
-    ─────────────────────────────────────────────
-    Weighted total ≈ [-0.12, 1.04]  (clamped to [-0.15, 1.0])
-
-Compatible with vERL reward_fn interface:
-    reward_fn(responses: list[str], references: list[dict]) -> list[float]
-"""
+"""Deterministic rewards for InfraGraph RCA remediation alignment records."""
 from __future__ import annotations
 
+import argparse
 import json
 import re
+from pathlib import Path
+from typing import Any
 
 
-# ── JSON parsing helpers ──────────────────────────────────────────────────────
-
-def _parse_response(text: str) -> dict:
-    """Parse model output as JSON; return {} on failure."""
-    text = text.strip()
-    fence = re.match(r"^```(?:json)?\s*\n?([\s\S]*?)```\s*$", text)
-    if fence:
-        text = fence.group(1).strip()
+def _parse(candidate: str | dict) -> tuple[dict, str]:
+    if isinstance(candidate, dict):
+        return candidate, json.dumps(candidate, sort_keys=True)
+    text = str(candidate).strip()
+    match = re.match(r"^```(?:json)?\s*\n?([\s\S]*?)```\s*$", text)
+    if match:
+        text = match.group(1).strip()
     start, end = text.find("{"), text.rfind("}")
     if start != -1 and end > start:
         text = text[start : end + 1]
     try:
-        return json.loads(text)
+        data = json.loads(text)
+        return data if isinstance(data, dict) else {}, text
     except Exception:
-        return {}
+        return {}, text
 
 
-def _collect_text(response: dict) -> str:
-    """Flatten all string and list values into a single searchable lowercase string."""
-    parts: list[str] = []
-    for v in response.values():
-        if isinstance(v, str):
-            parts.append(v)
-        elif isinstance(v, list):
-            parts.extend(str(i) for i in v)
-        elif isinstance(v, dict):
-            parts.extend(str(x) for x in v.values())
-    return " ".join(parts).lower()
+def _flat_text(candidate: str | dict) -> str:
+    data, raw = _parse(candidate)
+    parts = [raw]
+    for value in data.values():
+        if isinstance(value, str):
+            parts.append(value)
+        elif isinstance(value, list):
+            parts.extend(str(v) for v in value)
+        elif isinstance(value, dict):
+            parts.extend(str(v) for v in value.values())
+    return " ".join(parts)
 
 
-def _all_steps(response: dict) -> list[str]:
-    steps: list[str] = []
-    for key in ("triage_steps", "validation_steps", "remediation_steps"):
-        v = response.get(key, [])
-        if isinstance(v, list):
-            steps.extend(str(s) for s in v)
-    return steps
+def _score(value: float, reason: str) -> dict:
+    return {"score": round(max(-1.0, min(1.0, value)), 4), "reason": reason}
 
 
-# ── Individual reward functions ───────────────────────────────────────────────
-
-def root_cause_match_reward(response: dict, reference: dict) -> float:
-    """1.0 if the probable_root_cause field exactly names the correct node.
-    0.5 if correct node appears anywhere in the response. 0.0 otherwise.
-    """
-    expected = reference.get("root_cause", "")
-    if not expected:
-        return 0.5
-    probable = response.get("probable_root_cause", "")
-    if expected.lower() in probable.lower():
-        return 1.0
-    if expected.lower() in _collect_text(response):
-        return 0.5
-    return 0.0
+def json_format_reward(candidate_response: str | dict, reference_record: dict) -> dict:
+    data, _raw = _parse(candidate_response)
+    required = {
+        "executive_summary", "probable_root_cause", "scope", "risk_level",
+        "automation_eligibility", "blast_radius", "validation_steps",
+        "remediation_steps", "rollback_or_safety_notes", "servicenow_incident_summary",
+    }
+    if not data:
+        return _score(0.0, "response is not valid JSON")
+    present = required & set(data)
+    return _score(len(present) / len(required), f"{len(present)}/{len(required)} required keys present")
 
 
-def grounded_node_reward(response: dict, reference: dict) -> float:
-    """Fraction of required_nodes that appear anywhere in the response text."""
-    required = reference.get("required_nodes", [])
-    if not required:
-        return 0.5
-    all_text = _collect_text(response)
-    hits = sum(1 for n in required if n.lower() in all_text)
-    return hits / len(required)
+def root_cause_match_reward(candidate_response: str | dict, reference_record: dict) -> dict:
+    root = str(reference_record.get("root_cause", ""))
+    if not root:
+        return _score(0.5, "no reference root cause")
+    data, _ = _parse(candidate_response)
+    text = _flat_text(candidate_response).lower()
+    probable = str(data.get("probable_root_cause", "")).lower()
+    if root.lower() in probable:
+        return _score(1.0, "probable_root_cause matches reference")
+    if root.lower() in text:
+        return _score(0.5, "root cause appears outside probable_root_cause")
+    return _score(0.0, "root cause missing or incorrect")
 
 
-def no_hallucinated_node_penalty(response: dict, reference: dict) -> float:
-    """Penalty ∈ [-1.0, 0.0] proportional to fraction of mentioned node-like
-    tokens that are NOT in the valid_node_set.
-    """
-    valid_nodes: set[str] = {n.lower() for n in reference.get("valid_node_set", [])}
-    if not valid_nodes:
-        return 0.0
-    raw_values = " ".join(
-        v if isinstance(v, str) else " ".join(str(i) for i in v)
-        for v in response.values()
-        if isinstance(v, (str, list))
-    )
-    candidates = re.findall(r"\b[A-Z][A-Z0-9_\-]{2,}\b", raw_values)
-    if not candidates:
-        return 0.0
-    hallucinated = sum(1 for c in candidates if c.lower() not in valid_nodes)
-    return -(hallucinated / len(candidates))
+def grounded_node_reward(candidate_response: str | dict, reference_record: dict) -> dict:
+    nodes = {str(n) for n in reference_record.get("impacted_nodes", []) if str(n)}
+    root = str(reference_record.get("root_cause", ""))
+    if root:
+        nodes.add(root)
+    if not nodes:
+        return _score(0.5, "no reference nodes")
+    text = _flat_text(candidate_response)
+    hits = [node for node in nodes if node in text]
+    return _score(len(hits) / len(nodes), f"{len(hits)}/{len(nodes)} reference nodes cited")
 
 
-def includes_validation_steps_reward(response: dict, _reference: dict) -> float:
-    """1.0 if both validation_steps and remediation_steps are non-empty.
-    0.5 if only validation_steps is present. 0.0 otherwise.
-    (Renamed from validation_before_remediation_reward for clarity.)
-    """
-    v_steps = response.get("validation_steps", [])
-    r_steps = response.get("remediation_steps", [])
-    if v_steps and r_steps:
-        return 1.0
-    if v_steps:
-        return 0.5
-    return 0.0
+def no_hallucinated_device_reward(candidate_response: str | dict, reference_record: dict) -> dict:
+    valid = {str(n).upper() for n in reference_record.get("impacted_nodes", []) if str(n)}
+    root = str(reference_record.get("root_cause", "")).upper()
+    if root:
+        valid.add(root)
+    text = _flat_text(candidate_response)
+    mentioned = set(re.findall(r"\b[A-Z]{2,}(?:-[A-Z0-9]+){1,4}\b", text))
+    hallucinated = sorted(n for n in mentioned if n not in valid)
+    if not mentioned:
+        return _score(0.6, "no device-like tokens found")
+    if hallucinated:
+        return _score(max(0.0, 1.0 - len(hallucinated) / len(mentioned)), f"hallucinated devices: {', '.join(hallucinated[:5])}")
+    return _score(1.0, "all mentioned devices are in reference evidence")
 
 
-def action_specificity_reward(response: dict, _reference: dict) -> float:
-    """Reward for specific, actionable steps.
-    Score = min(1.0, n_steps_with_more_than_8_words / 5).
-    """
-    specific = sum(1 for s in _all_steps(response) if len(s.split()) > 8)
-    return min(1.0, specific / 5.0)
+def validation_before_remediation_reward(candidate_response: str | dict, _reference_record: dict) -> dict:
+    data, raw = _parse(candidate_response)
+    validation = data.get("validation_steps") or []
+    remediation = data.get("remediation_steps") or []
+    if not validation or not remediation:
+        return _score(0.0, "validation_steps or remediation_steps missing")
+    raw_lower = raw.lower()
+    v_pos = raw_lower.find("validation")
+    r_pos = raw_lower.find("remediation")
+    if v_pos != -1 and r_pos != -1 and v_pos < r_pos:
+        return _score(1.0, "validation appears before remediation")
+    return _score(0.7, "validation/remediation present but ordering is unclear")
 
 
-def rollback_safety_reward(response: dict, _reference: dict) -> float:
-    """1.0 if rollback_or_safety_notes is a non-empty list with substantive items.
-    0.5 if it is a non-empty string. 0.0 if absent.
-    """
-    notes = response.get("rollback_or_safety_notes")
-    if isinstance(notes, list) and len(notes) >= 1:
-        total_words = sum(len(str(n).split()) for n in notes)
-        return 1.0 if total_words >= 8 else 0.5
-    if isinstance(notes, str) and len(notes.split()) >= 8:
-        return 0.5
-    return 0.0
+def rollback_safety_reward(candidate_response: str | dict, _reference_record: dict) -> dict:
+    data, _ = _parse(candidate_response)
+    notes = data.get("rollback_or_safety_notes") or []
+    blockers = data.get("do_not_execute_if") or []
+    total = len(notes if isinstance(notes, list) else [notes]) + len(blockers if isinstance(blockers, list) else [blockers])
+    if total >= 3:
+        return _score(1.0, "rollback and do-not-execute safeguards present")
+    if total >= 1:
+        return _score(0.5, "some safety safeguards present")
+    return _score(0.0, "rollback/safety missing")
 
 
-def json_format_reward(raw_text: str, reference: dict) -> float:
-    """Fraction of required output keys present in the parsed response.
-
-    Uses reference["required_sections"] if available; falls back to the
-    standard 10-key schema.
-    """
-    required_keys = set(reference.get("required_sections") or [
-        "executive_summary", "probable_root_cause", "scope",
-        "evidence_from_graph", "triage_steps", "validation_steps",
-        "remediation_steps", "rollback_or_safety_notes",
-        "escalation_recommendation", "servicenow_incident_summary",
-        "confidence_notes",
-    ])
-    parsed = _parse_response(raw_text)
-    if not parsed:
-        return 0.0
-    present = {k for k in required_keys if k in parsed}
-    return len(present) / len(required_keys)
+def enterprise_escalation_reward(candidate_response: str | dict, reference_record: dict) -> dict:
+    diagrams = set(reference_record.get("impacted_diagrams", []) or [])
+    text = _flat_text(candidate_response).lower()
+    if len(diagrams) <= 1:
+        return _score(1.0, "single-diagram record does not require enterprise escalation")
+    if "escalat" in text and ("enterprise" in text or "noc" in text or "sre" in text or "network" in text):
+        return _score(1.0, "enterprise escalation present for cross-diagram incident")
+    return _score(0.0, "cross-diagram incident missing enterprise escalation")
 
 
-def escalation_if_multi_diagram_reward(response: dict, reference: dict) -> float:
-    """1.0 if escalation_recommendation is substantive for multi-diagram incidents.
-    0.3 for single-diagram; always 1.0 if enterprise scope and text is non-trivial.
-    """
-    req_diags   = reference.get("required_diagrams", [])
-    escalation  = response.get("escalation_recommendation", "")
-    word_count  = len(escalation.split())
-    if len(req_diags) >= 2 and word_count > 10:
-        return 1.0
-    if word_count > 10:
-        return 0.7
-    if word_count > 4:
-        return 0.3
-    return 0.0
+def servicenow_summary_reward(candidate_response: str | dict, _reference_record: dict) -> dict:
+    data, _ = _parse(candidate_response)
+    snow = data.get("servicenow_incident_summary")
+    if not isinstance(snow, dict):
+        return _score(0.0, "ServiceNow summary missing")
+    required = {"short_description", "description", "affected_ci", "priority", "assignment_group"}
+    present = {k for k in required if snow.get(k)}
+    return _score(len(present) / len(required), f"{len(present)}/{len(required)} ServiceNow fields present")
 
 
-def local_scope_precision_reward(response: dict, reference: dict) -> float:
-    """Local-only reward: 1.0 if scope == "local" and the response does NOT
-    reference diagram IDs outside the single required_diagram.
-
-    Returns 0.0 for enterprise records (wrong scope or multiple diagrams).
-    """
-    if reference.get("scope", "enterprise") != "local":
-        return 0.0
-    req_diags = reference.get("required_diagrams", [])
-    if len(req_diags) != 1:
-        return 0.0
-    correct_diag = req_diags[0].lower()
-    scope_field  = response.get("scope", "")
-    if scope_field and scope_field.lower() != "local":
-        return 0.0
-    all_text = _collect_text(response)
-    # Only reward if the correct diagram appears and no other diagram-like pattern does
-    if correct_diag not in all_text:
-        return 0.3
-    return 1.0
-
-
-def enterprise_cross_diagram_reasoning_reward(response: dict, reference: dict) -> float:
-    """Enterprise-only reward: 1.0 if the response references >= 2 of the
-    required_diagrams and sets scope = "enterprise".
-
-    Returns 0.0 for local records.
-    """
-    if reference.get("scope", "local") != "enterprise":
-        return 0.0
-    req_diags   = reference.get("required_diagrams", [])
-    if len(req_diags) < 2:
-        return 0.5
-    scope_field = response.get("scope", "")
-    if scope_field.lower() != "enterprise":
-        return 0.0
-    all_text = _collect_text(response)
-    mentioned = sum(1 for d in req_diags if d.lower() in all_text)
-    return min(1.0, mentioned / len(req_diags))
-
-
-# ── Composite reward ──────────────────────────────────────────────────────────
-
-REWARD_WEIGHTS: dict[str, float] = {
-    "root_cause_match":          0.28,
-    "grounded_node":             0.18,
-    "no_hallucination":          0.12,
-    "includes_validation":       0.10,
-    "action_specificity":        0.09,
-    "rollback_safety":           0.07,
-    "json_format":               0.08,
-    "escalation":                0.04,
-    "local_precision":           0.04,
-    "enterprise_cross_diagram":  0.04,
+REWARD_FNS = {
+    "json_format": json_format_reward,
+    "root_cause_match": root_cause_match_reward,
+    "grounded_node": grounded_node_reward,
+    "no_hallucinated_device": no_hallucinated_device_reward,
+    "validation_before_remediation": validation_before_remediation_reward,
+    "rollback_safety": rollback_safety_reward,
+    "enterprise_escalation": enterprise_escalation_reward,
+    "servicenow_summary": servicenow_summary_reward,
 }
 
-assert abs(sum(REWARD_WEIGHTS.values()) - 1.04) < 0.001, "weights must sum to ~1.04"
 
-
-def compute_composite_reward(raw_text: str, reference: dict) -> float:
-    """Weighted composite reward for a single model response.
-
-    Parameters
-    ----------
-    raw_text  : raw model output string
-    reference : dict from build_rca_rl_dataset
-
-    Returns
-    -------
-    float clamped to [-0.15, 1.0]
-    """
-    response = _parse_response(raw_text)
-    scope    = reference.get("scope", "enterprise")
-
-    scores: dict[str, float] = {
-        "root_cause_match":         root_cause_match_reward(response, reference),
-        "grounded_node":            grounded_node_reward(response, reference),
-        "no_hallucination":         no_hallucinated_node_penalty(response, reference),
-        "includes_validation":      includes_validation_steps_reward(response, reference),
-        "action_specificity":       action_specificity_reward(response, reference),
-        "rollback_safety":          rollback_safety_reward(response, reference),
-        "json_format":              json_format_reward(raw_text, reference),
-        "escalation":               escalation_if_multi_diagram_reward(response, reference),
-        "local_precision":          local_scope_precision_reward(response, reference),
-        "enterprise_cross_diagram": enterprise_cross_diagram_reasoning_reward(response, reference),
+def overall_reward(candidate_response: str | dict, reference_record: dict) -> dict:
+    weights = {
+        "json_format": 0.16,
+        "root_cause_match": 0.18,
+        "grounded_node": 0.14,
+        "no_hallucinated_device": 0.14,
+        "validation_before_remediation": 0.12,
+        "rollback_safety": 0.12,
+        "enterprise_escalation": 0.08,
+        "servicenow_summary": 0.06,
     }
+    details = {name: fn(candidate_response, reference_record) for name, fn in REWARD_FNS.items()}
+    total = sum(weights[name] * details[name]["score"] for name in weights)
+    return {"score": round(total, 4), "reason": "weighted deterministic reward", "details": details}
 
-    total = sum(REWARD_WEIGHTS[k] * v for k, v in scores.items())
-    return round(max(-0.15, min(1.0, total)), 4)
+
+def batch_reward_fn(responses: list[str], references: list[dict]) -> list[float]:
+    return [overall_reward(response, ref)["score"] for response, ref in zip(responses, references)]
 
 
-# ── vERL-compatible batch interface ───────────────────────────────────────────
+def _load_jsonl(path: Path) -> list[dict]:
+    rows = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line:
+            rows.append(json.loads(line))
+    return rows
 
-def batch_reward_fn(
-    responses: list[str],
-    references: list[dict],
-) -> list[float]:
-    """Compute composite rewards for a batch.
 
-    Signature matches the vERL reward_fn interface.
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Evaluate InfraGraph remediation reward functions.")
+    parser.add_argument("--data", default="training/verl_grpo/data/rca_remediation_rl_eval.jsonl")
+    parser.add_argument("--out", default="training/verl_grpo/reward_eval_report.json")
+    args = parser.parse_args()
 
-    Parameters
-    ----------
-    responses  : list of raw model output strings (one per sample)
-    references : list of reference dicts from the JSONL dataset
+    data_path = Path(args.data)
+    out_path = Path(args.out)
+    rows = _load_jsonl(data_path)
+    reports = []
+    for row in rows:
+        chosen = overall_reward(row.get("chosen_response", ""), row)
+        rejected = overall_reward(row.get("rejected_response", ""), row)
+        reports.append({
+            "id": row.get("id", ""),
+            "scenario_id": row.get("scenario_id", ""),
+            "chosen_score": chosen["score"],
+            "rejected_score": rejected["score"],
+            "margin": round(chosen["score"] - rejected["score"], 4),
+            "chosen_details": chosen["details"],
+            "rejected_details": rejected["details"],
+        })
+    summary = {
+        "records": len(reports),
+        "average_chosen_score": round(sum(r["chosen_score"] for r in reports) / max(len(reports), 1), 4),
+        "average_rejected_score": round(sum(r["rejected_score"] for r in reports) / max(len(reports), 1), 4),
+        "records_with_positive_margin": sum(1 for r in reports if r["margin"] > 0),
+    }
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps({"summary": summary, "records": reports}, indent=2), encoding="utf-8")
+    print(json.dumps(summary, indent=2))
+    print(f"report: {out_path}")
 
-    Returns
-    -------
-    list of float reward values (same length as inputs), each in [-0.15, 1.0]
-    """
-    assert len(responses) == len(references), (
-        f"batch_reward_fn: responses ({len(responses)}) and references "
-        f"({len(references)}) must have the same length"
-    )
-    return [
-        compute_composite_reward(r, ref)
-        for r, ref in zip(responses, references)
-    ]
+
+if __name__ == "__main__":
+    main()

@@ -9,7 +9,7 @@ Synthetic network-diagram dataset generator and AI pipeline for **automated topo
 InfraGraph AI uses a three-stage intelligence pipeline:
 
 1. **Diagram Intelligence** — RF-DETR extracts topology graph memory from network diagrams.
-2. **GNN RCA** — Enterprise GNN ranks root-cause nodes across scenario graphs.
+2. **Topology RCA + Enterprise GNN RCA** — single-diagram graph reasoning first, then cross-diagram GNN ranking across scenario graphs.
 3. **Qwen3 Remediation Agent** — served via vLLM and designed for LoRA/GRPO fine-tuning with vERL, generates grounded resolution plans from graph memory, alert timeline, RCA path, and GNN ranking.
 
 The GRPO reward functions align Qwen3 outputs to be:
@@ -54,6 +54,20 @@ streamlit run app/streamlit_app.py
 
 ---
 
+## AI Remediation + Qwen Alignment Pipeline
+
+InfraGraph AI now presents a full training + inference story:
+
+- **Topology RCA** handles single-diagram dependency reasoning and local remediation.
+- **Enterprise GNN RCA** handles cross-diagram graph reasoning and root-cause ranking when a matching GNN result exists.
+- **Qwen3/vLLM remediation** generates graph-grounded resolution plans from RCA context, alert timelines, GNN ranking, and retrieved vector evidence.
+- **Vector memory** uses ChromaDB to retrieve evidence IDs for Graph Copilot and remediation prompts.
+- **LoRA + GRPO/vERL scaffold** under `training/verl_grpo/` turns RCA/remediation records into sample alignment data with deterministic reward functions for AMD GPU fine-tuning.
+
+See [docs/ai_training_and_remediation_story.md](docs/ai_training_and_remediation_story.md) and [training/verl_grpo/README.md](training/verl_grpo/README.md).
+
+---
+
 ## Presentation Flow
 
 The Streamlit cockpit walks through a real-time ingestion journey:
@@ -61,12 +75,12 @@ The Streamlit cockpit walks through a real-time ingestion journey:
 | Step | Tab | What happens |
 |------|-----|-------------|
 | 1. **Run Diagram Intelligence** | Diagram Intelligence | Loads the selected sample, resolves the detection source, writes `outputs/live_ingestion/` evidence |
-| 2a. **Generate Local Alert Stream** | Local RCA | Builds a realistic alert timeline for the selected diagram topology (T+00m → T+20m) |
-| 2b. **Find Local Root Cause** | Local RCA | Runs BFS graph-traversal RCA; shows root cause, reasoning, traversal slider, and graph overlay |
+| 2a. **Generate Topology Alert Stream** | Topology RCA | Builds a realistic alert timeline for the selected diagram topology (T+00m → T+20m) |
+| 2b. **Find Topology Root Cause** | Topology RCA | Runs BFS graph-traversal RCA; shows root cause, reasoning, traversal slider, and graph overlay |
 | 3. **Absorb into Enterprise Brain** | Enterprise Graph Brain | Absorbs the local graph into the enterprise scenario graph; shows before → after PyVis comparison and Global InfraGraph Galaxy |
-| 4a. **Generate Cross-Diagram Alert Stream** | GNN RCA | Builds a cross-diagram alert timeline across all scenario diagrams, ordered by dependency |
-| 4b. **Run Enterprise RCA** | GNN RCA | Uses Enterprise GNN result if available; otherwise uses scenario-grounded evidence. Never fakes GNN output. |
-| 5. **Ask Graph Copilot** | Graph Copilot | Answers are grounded in the loaded graph evidence (live Qwen/vLLM when `QWEN_BASE_URL` is set) |
+| 4a. **Generate Cross-Diagram Alert Stream** | Enterprise GNN RCA | Builds a cross-diagram alert timeline across all scenario diagrams, ordered by dependency |
+| 4b. **Run Enterprise RCA** | Enterprise GNN RCA | Uses Enterprise GNN result if available; otherwise uses scenario-grounded evidence. Never fakes GNN output. |
+| 5. **Ask Graph Copilot** | Graph Copilot | Answers are grounded in the loaded graph evidence (live Qwen/vLLM when `INFRAGRAPH_QWEN_BASE_URL` or `QWEN_BASE_URL` is set) |
 
 ### Detection source labels
 
@@ -120,9 +134,9 @@ The gallery manifest lists up to 250 records (V3 > V2 > V1 priority). Each recor
 
 ## Incident Simulation Layer
 
-`src/incident_simulation/` provides deterministic, topology-aware incident builders for both the Local RCA and GNN RCA workspaces.
+`src/incident_simulation/` provides deterministic, topology-aware incident builders for both the Topology RCA and Enterprise GNN RCA workspaces.
 
-### Local RCA simulation (`local_incidents.py`)
+### Topology RCA simulation (`local_incidents.py`)
 
 - Simulates alerts **within a single diagram**.
 - Detects topology type from the diagram ID (branch, WAN, datacenter, app/DB, shared services).
@@ -147,8 +161,8 @@ The gallery manifest lists up to 250 records (V3 > V2 > V1 priority). Each recor
 
 | Concept | Where shown | Purpose |
 |---------|-------------|---------|
-| Local Graph | Diagram Intelligence, Local RCA | Single-diagram topology — one diagram's nodes and edges |
-| Scenario Enterprise Graph | GNN RCA — Interactive graph | Multi-diagram scenario stitched together — RCA inference target |
+| Local Graph | Diagram Intelligence, Topology RCA | Single-diagram topology — one diagram's nodes and edges |
+| Scenario Enterprise Graph | Enterprise GNN RCA — Interactive graph | Multi-diagram scenario stitched together — RCA inference target |
 | Global InfraGraph Galaxy | Enterprise Graph Brain | All scenarios combined — graph-memory exploration only, not RCA inference |
 
 ---
@@ -232,7 +246,7 @@ See: [docs/run_streamlit_in_jupyter.md](docs/run_streamlit_in_jupyter.md)
 | vLLM (Qwen) | 8000 | OpenAI-compatible inference endpoint |
 | Streamlit | 8501 | InfraGraph AI cockpit UI |
 
-`QWEN_BASE_URL` controls whether the cockpit uses live inference or deterministic graph-evidence answers:
+`INFRAGRAPH_QWEN_BASE_URL` and `INFRAGRAPH_QWEN_MODEL` are preferred for live inference. Legacy `QWEN_BASE_URL` and `QWEN_MODEL` are still supported:
 
 ```bash
 # Start vLLM on AMD
@@ -622,5 +636,3 @@ python data_generator/generate_infragraph_dataset.py \
 ## License
 
 MIT
-
-

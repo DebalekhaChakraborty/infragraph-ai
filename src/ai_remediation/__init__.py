@@ -6,6 +6,7 @@ Provides:
   build_remediation_prompt         — construct a Qwen3 chat prompt from RCA context
   generate_remediation_with_qwen   — call vLLM/OpenAI-compatible endpoint
   check_vllm_available             — health-check the local vLLM server
+  get_qwen_runtime_config          — resolve INFRAGRAPH_* / legacy QWEN_* env
   generate_template_remediation    — deterministic template mode (not model-generated)
   make_remediation_input           — normalise remediation input
   empty_remediation_output         — empty output skeleton
@@ -15,6 +16,7 @@ from .prompt_builder  import build_remediation_prompt
 from .qwen_client     import (
     generate_remediation_with_qwen,
     check_vllm_available,
+    get_qwen_runtime_config,
     generate_resolution_plan,
 )
 from .template_mode   import generate_template_remediation
@@ -29,6 +31,7 @@ __all__ = [
     "build_remediation_prompt",
     "generate_remediation_with_qwen",
     "check_vllm_available",
+    "get_qwen_runtime_config",
     "generate_template_remediation",
     "make_remediation_input",
     "empty_remediation_output",

@@ -13,10 +13,52 @@ generate_resolution_plan(context, scope, prefer_qwen, base_url, model, timeout) 
 from __future__ import annotations
 
 import json
+import os
 import re
 
 from .prompt_builder import build_remediation_prompt
 from .response_schema import empty_remediation_output
+
+
+DEFAULT_QWEN_BASE_URL = "http://localhost:8000/v1"
+DEFAULT_QWEN_MODEL = "Qwen/Qwen3-4B-Instruct"
+DEFAULT_QWEN_TIMEOUT = 60
+
+
+def get_qwen_runtime_config(
+    *,
+    base_url: str | None = None,
+    model: str | None = None,
+    timeout: int | str | None = None,
+) -> dict:
+    """Resolve Qwen/vLLM configuration with InfraGraph env vars preferred."""
+    resolved_base_url = (
+        base_url
+        or os.environ.get("INFRAGRAPH_QWEN_BASE_URL")
+        or os.environ.get("QWEN_BASE_URL")
+        or DEFAULT_QWEN_BASE_URL
+    )
+    resolved_model = (
+        model
+        or os.environ.get("INFRAGRAPH_QWEN_MODEL")
+        or os.environ.get("QWEN_MODEL")
+        or DEFAULT_QWEN_MODEL
+    )
+    timeout_raw = (
+        timeout
+        or os.environ.get("INFRAGRAPH_QWEN_TIMEOUT")
+        or os.environ.get("QWEN_TIMEOUT")
+        or DEFAULT_QWEN_TIMEOUT
+    )
+    try:
+        resolved_timeout = int(timeout_raw)
+    except Exception:
+        resolved_timeout = DEFAULT_QWEN_TIMEOUT
+    return {
+        "base_url": str(resolved_base_url).rstrip("/"),
+        "model": str(resolved_model),
+        "timeout": resolved_timeout,
+    }
 
 
 def _extract_json_from_text(text: str) -> dict:
@@ -38,9 +80,9 @@ def _extract_json_from_text(text: str) -> dict:
 
 def generate_remediation_with_qwen(
     context: dict,
-    base_url: str = "http://localhost:8000/v1",
-    model: str = "Qwen/Qwen3-4B-Instruct",
-    timeout: int = 60,
+    base_url: str | None = None,
+    model: str | None = None,
+    timeout: int | None = None,
 ) -> dict:
     """Call the vLLM endpoint to generate a remediation plan.
 
@@ -64,6 +106,10 @@ def generate_remediation_with_qwen(
     """
     import requests  # optional at module level; available via requirements.txt
 
+    config = get_qwen_runtime_config(base_url=base_url, model=model, timeout=timeout)
+    base_url = config["base_url"]
+    model = config["model"]
+    timeout = config["timeout"]
     messages = build_remediation_prompt(context)
 
     payload = {
@@ -117,6 +163,7 @@ def generate_remediation_with_qwen(
 
 def check_vllm_available(base_url: str, timeout: int = 4) -> bool:
     """Return True if the vLLM server responds at /models within timeout seconds."""
+    base_url = get_qwen_runtime_config(base_url=base_url)["base_url"]
     try:
         import requests
         r = requests.get(f"{base_url.rstrip('/')}/models", timeout=timeout)
@@ -129,9 +176,9 @@ def generate_resolution_plan(
     context: dict,
     scope: str = "enterprise",
     prefer_qwen: bool = True,
-    base_url: str = "http://localhost:8000/v1",
-    model: str = "Qwen/Qwen3-4B-Instruct",
-    timeout: int = 60,
+    base_url: str | None = None,
+    model: str | None = None,
+    timeout: int | None = None,
 ) -> dict:
     """Unified entry point for remediation plan generation.
 
@@ -154,6 +201,10 @@ def generate_resolution_plan(
 
     ctx = dict(context)
     ctx["scope"] = scope
+    config = get_qwen_runtime_config(base_url=base_url, model=model, timeout=timeout)
+    base_url = config["base_url"]
+    model = config["model"]
+    timeout = config["timeout"]
 
     if prefer_qwen and check_vllm_available(base_url, timeout=min(timeout, 5)):
         return generate_remediation_with_qwen(ctx, base_url=base_url, model=model, timeout=timeout)

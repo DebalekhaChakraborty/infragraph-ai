@@ -13,6 +13,74 @@ from .response_schema import make_remediation_output
 _SOURCE_LABEL = "template"
 
 
+def _unique_strings(values: list) -> list[str]:
+    seen: set[str] = set()
+    out: list[str] = []
+    for value in values or []:
+        text = str(value)
+        if text and text not in seen:
+            seen.add(text)
+            out.append(text)
+    return out
+
+
+def _evidence_ids(context: dict) -> list[str]:
+    ids: list[str] = []
+    for item in context.get("retrieved_graph_memory_evidence", []) or []:
+        if not isinstance(item, dict):
+            continue
+        meta = item.get("metadata") or {}
+        eid = meta.get("evidence_id")
+        if eid:
+            ids.append(str(eid))
+    return _unique_strings(ids)
+
+
+def _blast_radius(scope: str, impacted_diagrams: list[str], impacted_nodes: list[str]) -> str:
+    diagrams = _unique_strings(impacted_diagrams)
+    if scope == "enterprise":
+        if len(diagrams) >= 4:
+            return "enterprise_wide"
+        if len(diagrams) >= 2:
+            return "cross_diagram"
+    if len(diagrams) == 1:
+        return "single_diagram"
+    if len(_unique_strings(impacted_nodes)) <= 1:
+        return "single_node"
+    return "single_diagram"
+
+
+def _risk_level(scope: str, impacted_diagrams: list[str], alert_timeline: list[dict]) -> str:
+    severities = {str(a.get("severity", "")).lower() for a in alert_timeline or [] if isinstance(a, dict)}
+    n_diagrams = len(_unique_strings(impacted_diagrams))
+    if "critical" in severities or n_diagrams >= 4:
+        return "critical"
+    if scope == "enterprise" or n_diagrams >= 2 or len(alert_timeline or []) >= 5:
+        return "high"
+    if len(alert_timeline or []) >= 3:
+        return "medium"
+    return "low"
+
+
+def _automation_eligibility(scope: str, risk_level: str, impacted_diagrams: list[str]) -> str:
+    if scope == "enterprise" or len(_unique_strings(impacted_diagrams)) >= 2 or risk_level == "critical":
+        return "manual_only"
+    if risk_level in {"medium", "high"}:
+        return "human_approval_required"
+    return "safe_to_automate"
+
+
+def _do_not_execute(scope: str, root_cause: str) -> list[str]:
+    base = [
+        f"Do not execute changes if root cause {root_cause or 'node'} is not confirmed by graph evidence.",
+        "Do not execute if a rollback owner and maintenance window are not approved.",
+        "Do not execute if alert timestamps are stale or no longer match the active incident.",
+    ]
+    if scope == "enterprise":
+        base.append("Do not execute cross-domain changes without NOC and owning team approval.")
+    return base
+
+
 # ── Domain-specific triage templates ─────────────────────────────────────────
 
 _TRIAGE_BY_DIAGRAM: dict[str, list[str]] = {
@@ -97,6 +165,10 @@ def _generate_local_template(context: dict) -> dict:
     ranking           = context.get("candidate_ranking", [])
     rca_source        = context.get("rca_source", "")
     n_alerts          = len(alert_tl)
+    risk              = _risk_level("local", [diagram_id] if diagram_id else [], alert_tl)
+    blast             = _blast_radius("local", [diagram_id] if diagram_id else [], imp_nodes)
+    automation        = _automation_eligibility("local", risk, [diagram_id] if diagram_id else [])
+    evidence_ids      = _evidence_ids(context)
 
     root_str = root_cause or "undetermined root cause"
     path_str = " → ".join(str(n) for n in impact_path[:6]) if impact_path else "—"
@@ -170,18 +242,36 @@ def _generate_local_template(context: dict) -> dict:
         "Topology BFS traversal used — candidate ranking reflects single-diagram graph topology. "
         "Template mode: output is deterministic and not model-generated."
     )
+    pre_checks = [
+        f"Confirm current alerts still reference {root_cause or first_obs or diagram_id}.",
+        f"Review graph path evidence before touching {root_cause or 'the suspected root-cause node'}.",
+        "Run read-only reachability and health checks before applying any change.",
+    ]
+    audit = (
+        f"Template fallback generated a Topology RCA remediation plan for {diagram_id}; "
+        f"risk={risk}, blast_radius={blast}, automation={automation}. "
+        f"Evidence IDs used: {', '.join(evidence_ids) if evidence_ids else 'none'}."
+    )
 
     output = make_remediation_output(
         executive_summary=exec_sum,
         probable_root_cause=probable,
         scope="local",
+        risk_level=risk,
+        automation_eligibility=automation,
+        blast_radius=blast,
+        evidence_ids_used=evidence_ids,
         evidence_from_graph=evidence,
+        pre_checks=pre_checks,
         triage_steps=triage,
         validation_steps=validation,
         remediation_steps=remediation,
+        post_checks=validation,
+        do_not_execute_if=_do_not_execute("local", root_cause),
         rollback_or_safety_notes=_ROLLBACK_LOCAL,
         escalation_recommendation=escalation,
         servicenow_incident_summary=snow,
+        audit_summary=audit,
         confidence_notes=confidence,
     )
     output["source"] = _SOURCE_LABEL
@@ -203,6 +293,10 @@ def _generate_enterprise_template(context: dict) -> dict:
     diagram_id    = context.get("selected_diagram_id", "")
     n_alerts      = len(alert_tl)
     n_diags       = len(imp_diagrams)
+    risk          = _risk_level("enterprise", imp_diagrams, alert_tl)
+    blast         = _blast_radius("enterprise", imp_diagrams, imp_nodes)
+    automation    = _automation_eligibility("enterprise", risk, imp_diagrams)
+    evidence_ids  = _evidence_ids(context)
 
     diag_list = ", ".join(imp_diagrams[:4]) if imp_diagrams else "multiple diagrams"
     root_str  = root_cause or "undetermined root cause"
@@ -294,18 +388,37 @@ def _generate_enterprise_template(context: dict) -> dict:
            "No trained GNN result available — ranking derived from scenario ground truth. ")
         + "Template mode: output is deterministic and not model-generated."
     )
+    pre_checks = [
+        f"Confirm root-cause candidate {root_cause or 'unknown'} is present in enterprise graph memory.",
+        f"Validate impacted diagrams before any change: {diag_list}.",
+        "Confirm GNN ranking source and alert timeline freshness before remediation.",
+        "Run read-only reachability checks across diagram boundaries first.",
+    ]
+    audit = (
+        f"Template fallback generated an Enterprise remediation plan for scenario {scenario_id}; "
+        f"risk={risk}, blast_radius={blast}, automation={automation}, rca_source={rca_source}. "
+        f"Evidence IDs used: {', '.join(evidence_ids) if evidence_ids else 'none'}."
+    )
 
     output = make_remediation_output(
         executive_summary=exec_sum,
         probable_root_cause=probable,
         scope="enterprise",
+        risk_level=risk,
+        automation_eligibility=automation,
+        blast_radius=blast,
+        evidence_ids_used=evidence_ids,
         evidence_from_graph=evidence,
+        pre_checks=pre_checks,
         triage_steps=triage,
         validation_steps=validation,
         remediation_steps=remediation,
+        post_checks=validation,
+        do_not_execute_if=_do_not_execute("enterprise", root_cause),
         rollback_or_safety_notes=_ROLLBACK_ENTERPRISE,
         escalation_recommendation=escalation,
         servicenow_incident_summary=snow,
+        audit_summary=audit,
         confidence_notes=confidence,
     )
     output["source"] = _SOURCE_LABEL

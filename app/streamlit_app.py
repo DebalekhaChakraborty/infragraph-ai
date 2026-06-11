@@ -7,14 +7,15 @@ Two sections in Diagram Intelligence (Tab 1):
 
 Five workspaces (tabs):
   1. Diagram Intelligence   — image to local graph
-  2. Local RCA              — alert simulation on ingested diagram
+  2. Topology RCA           — single-diagram graph reasoning
   3. Enterprise Graph Brain — local graph absorbed into enterprise graph
-  4. GNN RCA                — enterprise GNN inference, alert simulation, interactive topology
+  4. Enterprise GNN RCA     — cross-diagram graph reasoning, alert simulation, interactive topology
   5. Graph Copilot          — ask the enterprise graph
 """
 from __future__ import annotations
 
 import json
+import html
 import math
 import os
 import re
@@ -136,9 +137,35 @@ except Exception as _isim_exc:
 
 # ── AI remediation package ───────────────────────────────────────────────────
 import os as _os
-_QWEN_BASE_URL  = _os.environ.get("INFRAGRAPH_QWEN_BASE_URL",  "http://localhost:8000/v1")
-_QWEN_MODEL     = _os.environ.get("INFRAGRAPH_QWEN_MODEL",     "Qwen/Qwen3-4B-Instruct")
-_QWEN_TIMEOUT   = int(_os.environ.get("INFRAGRAPH_QWEN_TIMEOUT", "60"))
+def _resolve_qwen_runtime_config() -> dict:
+    timeout_raw = (
+        _os.environ.get("INFRAGRAPH_QWEN_TIMEOUT")
+        or _os.environ.get("QWEN_TIMEOUT")
+        or "60"
+    )
+    try:
+        timeout = int(timeout_raw)
+    except Exception:
+        timeout = 60
+    return {
+        "base_url": (
+            _os.environ.get("INFRAGRAPH_QWEN_BASE_URL")
+            or _os.environ.get("QWEN_BASE_URL")
+            or "http://localhost:8000/v1"
+        ).rstrip("/"),
+        "model": (
+            _os.environ.get("INFRAGRAPH_QWEN_MODEL")
+            or _os.environ.get("QWEN_MODEL")
+            or "Qwen/Qwen3-4B-Instruct"
+        ),
+        "timeout": timeout,
+    }
+
+
+_QWEN_CONFIG    = _resolve_qwen_runtime_config()
+_QWEN_BASE_URL  = _QWEN_CONFIG["base_url"]
+_QWEN_MODEL     = _QWEN_CONFIG["model"]
+_QWEN_TIMEOUT   = _QWEN_CONFIG["timeout"]
 _LORA_ADAPTER   = _os.environ.get("INFRAGRAPH_LORA_ADAPTER_PATH", "")
 
 for _k in [k for k in _sys.modules if "ai_remediation" in k]:
@@ -151,6 +178,7 @@ try:
         generate_remediation_with_qwen  as _generate_qwen_remediation,
         check_vllm_available            as _check_vllm_available_fn,
         generate_template_remediation   as _generate_template_remediation,
+        get_qwen_runtime_config         as _get_qwen_runtime_config,
     )
     _AI_REM_OK = True
 except Exception:
@@ -159,6 +187,7 @@ except Exception:
     _generate_qwen_remediation      = None  # type: ignore
     _check_vllm_available_fn        = None  # type: ignore
     _generate_template_remediation  = None  # type: ignore
+    _get_qwen_runtime_config        = None  # type: ignore
 
 # ── FalconVue 3D WebGL renderer (optional; PyVis remains available) ──
 _app_dir = str(Path(__file__).parent)
@@ -630,7 +659,7 @@ Shortest path: FW-01 → SW-CORE → SW-APP → LB-01 → APP-01
 | Affected CI | FW-01 (firewall) |
 | Priority | P1 — {n} downstream nodes impacted |
 | Assignment group | Network Operations |
-| Root cause (automated) | FW-01 — GNN RCA, confidence HIGH |
+| Root cause (automated) | FW-01 — Enterprise GNN RCA, confidence HIGH |
 
 ---
 
@@ -1157,7 +1186,27 @@ def _render_local_graph(local_graph: dict, overlay: dict | None = None,
 # V3 CONSTANTS
 # ══════════════════════════════════════════════════════════════════════════════
 V3_DATASET_ROOT  = get_infragraph_v3_root(REPO_ROOT)
-V3_HERO_SCENARIO = V3_DATASET_ROOT / "scenarios" / "train" / "enterprise_v3_0000"
+V3_HERO_SELECTION = REPO_ROOT / "outputs" / "demo_hero" / "hero_scenario.json"
+
+
+def _resolve_v3_hero_scenario() -> Path:
+    default_path = V3_DATASET_ROOT / "scenarios" / "train" / "enterprise_v3_0000"
+    if V3_HERO_SELECTION.exists():
+        try:
+            data = json.loads(V3_HERO_SELECTION.read_text(encoding="utf-8"))
+            raw_path = data.get("scenario_path") or data.get("source_scenario_path") or data.get("path")
+            if raw_path:
+                candidate = Path(raw_path)
+                if not candidate.is_absolute():
+                    candidate = REPO_ROOT / candidate
+                if candidate.exists():
+                    return candidate
+        except Exception:
+            pass
+    return default_path
+
+
+V3_HERO_SCENARIO = _resolve_v3_hero_scenario()
 V3_DIAGRAM_IDS = {
     "Branch Office Topology":       "branch_topology",
     "WAN / MPLS Topology":          "wan_topology",
@@ -1390,7 +1439,7 @@ def _strict_mode() -> bool:
 
 
 def _qwen_configured() -> bool:
-    return bool(os.environ.get("QWEN_BASE_URL")) and bool(os.environ.get("QWEN_MODEL"))
+    return bool(_QWEN_BASE_URL and _QWEN_MODEL)
 
 
 def _pyvis_available() -> bool:
@@ -1914,87 +1963,162 @@ def _build_local_remediation_context(
 
 
 def _render_remediation_plan(plan: dict) -> None:
-    """Render a remediation plan dict in the Streamlit UI.
-
-    Handles both the new structured schema (evidence_from_graph as list,
-    rollback_or_safety_notes as list, servicenow_incident_summary as dict)
-    and legacy string values for backward compatibility.
-    """
+    """Render a remediation plan dict in the Streamlit UI."""
     resp = plan.get("response", {})
     if not resp:
         st.warning("Remediation plan is empty.")
         return
 
-    def _label(text: str) -> None:
+    def _esc(value: object) -> str:
+        return html.escape(str(value))
+
+    def _items(value: "str | list | None") -> list[str]:
+        if isinstance(value, list):
+            return [str(v) for v in value if str(v)]
+        if value:
+            return [str(value)]
+        return []
+
+    def _source_badge(result: dict) -> None:
+        src = result.get("source", "")
+        ok = bool(result.get("ok", False))
+        if src == "qwen_vllm" and ok:
+            text, color = "Live Qwen/vLLM", "#10b981"
+        elif src == "template":
+            text, color = "Template fallback — deterministic, not model-generated", "#f59e0b"
+        elif not ok:
+            text, color = "Strict mode blocked", "#ef4444"
+        else:
+            text, color = str(src or "Unknown source"), "#64748b"
         st.markdown(
-            f'<div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;'
-            f'color:#64748b;margin-top:14px;margin-bottom:4px">{text}</div>',
+            f'<span style="display:inline-block;margin:4px 0 10px 0;padding:4px 10px;'
+            f'border-radius:999px;border:1px solid {color};color:{color};'
+            f'background:rgba(15,23,42,0.45);font-size:0.72rem;font-weight:800">{_esc(text)}</span>',
             unsafe_allow_html=True,
         )
 
-    def _list_section(label: str, value: "str | list") -> None:
-        _label(label)
-        items = value if isinstance(value, list) else ([value] if value else [])
-        for i, item in enumerate(items, 1):
+    def _metric_cards() -> None:
+        cards = [
+            ("Risk Level", resp.get("risk_level", "unknown")),
+            ("Blast Radius", resp.get("blast_radius", "unknown")),
+            ("Automation Eligibility", resp.get("automation_eligibility", "unknown")),
+            ("Evidence IDs", ", ".join(_items(resp.get("evidence_ids_used"))) or "none"),
+        ]
+        st.markdown(
+            '<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:8px 0 12px">',
+            unsafe_allow_html=True,
+        )
+        for label, value in cards:
             st.markdown(
-                f'<div style="font-size:0.82rem;color:#d1fae5;padding:3px 0 3px 10px;'
-                f'border-left:2px solid #10b981;margin-bottom:3px">{i}. {item}</div>',
+                f'<div style="background:rgba(15,23,42,0.55);border:1px solid rgba(148,163,184,0.22);'
+                f'border-radius:8px;padding:10px 12px;min-height:68px">'
+                f'<div style="font-size:0.6rem;text-transform:uppercase;color:#94a3b8;margin-bottom:5px">{_esc(label)}</div>'
+                f'<div style="font-size:0.84rem;color:#f8fafc;font-weight:800;word-break:break-word">{_esc(value)}</div>'
+                f'</div>',
                 unsafe_allow_html=True,
             )
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    def _text_section(label: str, value: str) -> None:
-        if not value:
+    def _section_card(label: str, value: "str | list | None", *, accent: str = "#10b981") -> None:
+        items = _items(value)
+        if not items:
             return
-        _label(label)
-        st.markdown(
-            f'<div style="font-size:0.85rem;color:#e2e8f0;padding:4px 0">{value}</div>',
-            unsafe_allow_html=True,
+        body = "".join(
+            f'<li style="margin-bottom:5px;line-height:1.45">{_esc(item)}</li>'
+            for item in items
         )
-
-    # Executive summary card
-    exec_sum = resp.get("executive_summary", "")
-    if exec_sum:
         st.markdown(
-            f'<div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);'
-            f'border-radius:10px;padding:14px 16px;margin:10px 0">'
-            f'<div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;'
-            f'color:#10b981;margin-bottom:6px">Executive Summary</div>'
-            f'<div style="font-size:0.88rem;color:#f1f5f9;line-height:1.5">{exec_sum}</div>'
+            f'<div style="background:rgba(15,23,42,0.45);border:1px solid rgba(148,163,184,0.18);'
+            f'border-left:3px solid {accent};border-radius:8px;padding:12px 14px;margin:8px 0">'
+            f'<div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;'
+            f'color:#94a3b8;margin-bottom:8px">{_esc(label)}</div>'
+            f'<ol style="margin:0 0 0 18px;padding:0;color:#e2e8f0;font-size:0.84rem">{body}</ol>'
             f'</div>',
             unsafe_allow_html=True,
         )
 
-    _text_section("Probable Root Cause",      resp.get("probable_root_cause", ""))
-    _list_section("Evidence from Graph",       resp.get("evidence_from_graph", []))
-    _list_section("Triage Steps",              resp.get("triage_steps", []))
-    _list_section("Validation Steps",          resp.get("validation_steps", []))
-    _list_section("Remediation Steps",         resp.get("remediation_steps", []))
-    _list_section("Rollback / Safety Notes",   resp.get("rollback_or_safety_notes", []))
-    _text_section("Escalation Recommendation", resp.get("escalation_recommendation", ""))
+    def _text_card(label: str, value: object, *, accent: str = "#38bdf8") -> None:
+        if not value:
+            return
+        st.markdown(
+            f'<div style="background:rgba(15,23,42,0.45);border:1px solid rgba(148,163,184,0.18);'
+            f'border-left:3px solid {accent};border-radius:8px;padding:12px 14px;margin:8px 0">'
+            f'<div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;'
+            f'color:#94a3b8;margin-bottom:8px">{_esc(label)}</div>'
+            f'<div style="color:#e2e8f0;font-size:0.86rem;line-height:1.5">{_esc(value)}</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
 
-    # ServiceNow summary — structured dict or legacy string
+    _source_badge(plan)
+    _metric_cards()
+
+    exec_sum = resp.get("executive_summary", "")
+    if exec_sum:
+        _text_card("Executive Summary", exec_sum, accent="#10b981")
+
+    _text_card("Probable Root Cause", resp.get("probable_root_cause", ""))
+    _section_card("Graph Evidence", resp.get("evidence_from_graph", []), accent="#22c55e")
+    _section_card("Pre-checks", resp.get("pre_checks", []) or resp.get("triage_steps", []), accent="#38bdf8")
+    _section_card("Validation Steps", resp.get("validation_steps", []), accent="#0ea5e9")
+    _section_card("Remediation Steps", resp.get("remediation_steps", []), accent="#f59e0b")
+    _section_card("Post-checks", resp.get("post_checks", []) or resp.get("validation_steps", []), accent="#2dd4bf")
+    _section_card("Do Not Execute If", resp.get("do_not_execute_if", []), accent="#ef4444")
+    _section_card("Rollback / Safety", resp.get("rollback_or_safety_notes", []), accent="#f97316")
+    _text_card("Escalation Recommendation", resp.get("escalation_recommendation", ""), accent="#a78bfa")
+
     snow = resp.get("servicenow_incident_summary")
     if snow:
-        _label("ServiceNow Incident Summary")
         if isinstance(snow, dict):
             snow_lines = []
-            if snow.get("short_description"):
-                snow_lines.append(f"Short description : {snow['short_description']}")
-            if snow.get("description"):
-                snow_lines.append(f"Description       : {snow['description']}")
-            if snow.get("affected_ci"):
-                snow_lines.append(f"Affected CI       : {snow['affected_ci']}")
-            if snow.get("priority"):
-                snow_lines.append(f"Priority          : {snow['priority']}")
-            if snow.get("assignment_group"):
-                snow_lines.append(f"Assignment group  : {snow['assignment_group']}")
-            st.code("\n".join(snow_lines) if snow_lines else "(empty)", language="text")
+            for key, label in [
+                ("short_description", "Short description"),
+                ("description", "Description"),
+                ("affected_ci", "Affected CI"),
+                ("priority", "Priority"),
+                ("assignment_group", "Assignment group"),
+            ]:
+                if snow.get(key):
+                    snow_lines.append(f"{label}: {snow[key]}")
+            _section_card("ServiceNow Summary", snow_lines, accent="#64748b")
         else:
-            st.code(str(snow), language="text")
+            _text_card("ServiceNow Summary", snow, accent="#64748b")
 
-    conf = resp.get("confidence_notes", "")
-    if conf:
-        st.caption(f"Confidence notes: {conf}")
+    _text_card("Audit Summary", resp.get("audit_summary", ""), accent="#94a3b8")
+    _text_card("Confidence Notes", resp.get("confidence_notes", ""), accent="#94a3b8")
+
+
+def _render_ai_pipeline_trace(
+    *,
+    selected_diagram: str = "",
+    selected_scenario: str = "",
+    topology_rca_completed: bool = False,
+    enterprise_gnn_available: bool = False,
+    rca_source: str = "",
+    root_cause: str = "",
+    impacted_diagrams: list | None = None,
+    vector_evidence_count: int = 0,
+    response_source: str = "",
+) -> None:
+    impacted_diagrams = impacted_diagrams or []
+    training_path = REPO_ROOT / "training" / "verl_grpo" / "data" / "rca_remediation_rl_train.jsonl"
+    alignment_assets = (REPO_ROOT / "training" / "verl_grpo").exists()
+    rows = {
+        "Selected diagram": selected_diagram or "—",
+        "Selected scenario": selected_scenario or "—",
+        "Topology RCA completed": "yes" if topology_rca_completed else "no",
+        "Enterprise GNN result available": "yes" if enterprise_gnn_available else "no",
+        "RCA source": rca_source or "—",
+        "Root cause": root_cause or "—",
+        "Impacted diagram count": str(len(set(str(d) for d in impacted_diagrams if d))),
+        "Vector evidence retrieved": str(vector_evidence_count),
+        "Qwen configured": "yes" if _qwen_configured() else "no",
+        "Response source": response_source or "—",
+        "Alignment assets available": "yes" if alignment_assets else "no",
+        "Training dataset path": str(training_path) if training_path.exists() else "not generated",
+    }
+    with st.expander("AI Pipeline Trace", expanded=False):
+        st.table(pd.DataFrame([{"Signal": k, "Value": v} for k, v in rows.items()]))
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -2277,7 +2401,7 @@ def _build_local_incident_story(
     diagram_id: str,
     selected_record: dict | None = None,
 ) -> dict:
-    """Build a topology-aware incident story for Local RCA."""
+    """Build a topology-aware incident story for Topology RCA."""
     nodes_raw = local_graph.get("nodes", [])
     edges_raw = local_graph.get("edges", [])
 
@@ -3251,7 +3375,7 @@ def _tab_diagram_gallery() -> None:
     st.session_state.selected_diagram_path   = record.get("image_path", "")
     st.session_state.selected_diagram_id     = record.get("source_diagram_id", "")
 
-    # Auto-load local_graph on record selection so Local RCA and Enterprise Brain
+    # Auto-load local_graph on record selection so Topology RCA and Enterprise Brain
     # work immediately without requiring the "Load Graph Metadata" button click.
     _auto_lg_path = _resolve_manifest_path(record.get("local_graph_path", ""), REPO_ROOT)
     if _auto_lg_path and Path(_auto_lg_path).exists():
@@ -3489,13 +3613,13 @@ def _tab_diagram_intelligence() -> None:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 2 — LOCAL RCA
+# TAB 2 — TOPOLOGY RCA
 # ══════════════════════════════════════════════════════════════════════════════
 def _tab_local_rca() -> None:
     st.markdown(
-        '<div class="ws-title">Topology RCA — Same Selected Diagram</div>'
+        '<div class="ws-title">Topology RCA — single-diagram graph reasoning</div>'
         '<div class="ws-desc">Simulate a realistic alert stream, then trace the root cause '
-        'through the selected diagram topology.</div>',
+            'through one selected diagram topology. Enterprise GNN RCA handles cross-diagram graph reasoning.</div>',
         unsafe_allow_html=True,
     )
 
@@ -3586,7 +3710,7 @@ def _tab_local_rca() -> None:
                 key="local_rca_btn",
                 help="Run graph-traversal RCA and reveal the root cause node",
             ):
-                with st.spinner("Running local RCA…"):
+                with st.spinner("Running Topology RCA…"):
                     rca = _incident_to_local_rca(incident)
                     st.session_state.local_rca_result = rca
                     st.session_state.pop("local_ai_resolution_plan", None)
@@ -3797,7 +3921,7 @@ def _tab_local_rca() -> None:
     # ── AI Resolution Agent (Local) ────────────────────────────────────────────
     st.markdown('<hr class="ws-rule" style="margin:22px 0 14px 0">', unsafe_allow_html=True)
     st.markdown(
-        '<div class="section-label" style="margin-bottom:10px">AI Resolution Agent</div>',
+        '<div class="section-label" style="margin-bottom:10px">AI Resolution Agent — Topology Remediation</div>',
         unsafe_allow_html=True,
     )
 
@@ -3806,7 +3930,7 @@ def _tab_local_rca() -> None:
     else:
         _loc_vllm_ok     = _check_vllm_available()
         _loc_lora_exists = bool(_LORA_ADAPTER and Path(_LORA_ADAPTER).exists())
-        _loc_rem_src     = "Qwen3-4B via vLLM" if _loc_vllm_ok else "Template remediation mode"
+        _loc_rem_src     = "Qwen3-4B via vLLM" if _loc_vllm_ok else "Template fallback"
         _loc_plan        = st.session_state.get("local_ai_resolution_plan")
 
         # Status grid
@@ -3843,7 +3967,7 @@ def _tab_local_rca() -> None:
 
         if not _loc_vllm_ok:
             st.info(
-                "Qwen3 vLLM server is not reachable — generating from **template remediation mode**. "
+                "Qwen3 vLLM server is not reachable — generating from **Template fallback**. "
                 "Start a local vLLM server and set `INFRAGRAPH_QWEN_BASE_URL` to enable model inference.",
                 icon="ℹ️",
             )
@@ -3868,6 +3992,7 @@ def _tab_local_rca() -> None:
                         _root = (result or {}).get("root_cause", "")
                         _query = f"root cause {_root} diagram {diagram_id} impacted nodes remediation validation"
                         _vec_evidence, _vec_err = _retrieve_vector_evidence(_query, k=6)
+                        st.session_state.last_local_ai_vector_evidence_count = len(_vec_evidence)
                         if _vec_evidence:
                             _loc_ctx["retrieved_graph_memory_evidence"] = _vec_evidence
                             _loc_ctx["retrieved_graph_memory_label"] = "Retrieved graph memory evidence"
@@ -3908,7 +4033,7 @@ def _tab_local_rca() -> None:
                 st.markdown(
                     '<div style="background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.3);'
                     'border-radius:8px;padding:10px 14px;margin:10px 0;font-size:0.8rem;color:#fbbf24">'
-                    'Template remediation mode — output is deterministic and not model-generated. '
+                    'Template fallback — deterministic output, not model-generated. '
                     'Connect a vLLM server to enable Qwen3 AI inference.'
                     '</div>',
                     unsafe_allow_html=True,
@@ -3916,6 +4041,17 @@ def _tab_local_rca() -> None:
             if _loc_plan.get("error"):
                 st.warning(f"Inference error: {_loc_plan['error']}")
             _render_remediation_plan(_loc_plan)
+            _render_ai_pipeline_trace(
+                selected_diagram=str(diagram_id),
+                selected_scenario=str((incident or {}).get("scenario_id", "")),
+                topology_rca_completed=True,
+                enterprise_gnn_available=False,
+                rca_source=str((result or {}).get("mode") or (result or {}).get("rca_source") or "Topology BFS RCA"),
+                root_cause=str((result or {}).get("root_cause", "")),
+                impacted_diagrams=[diagram_id],
+                vector_evidence_count=int(st.session_state.get("last_local_ai_vector_evidence_count", 0)),
+                response_source=str(_loc_plan.get("source") or "—"),
+            )
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -4678,11 +4814,11 @@ def _tab_enterprise_graph_brain() -> None:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 4 — GNN RCA
+# TAB 4 — ENTERPRISE GNN RCA
 # ══════════════════════════════════════════════════════════════════════════════
 def _tab_gnn_rca() -> None:
     st.markdown(
-        '<div class="ws-title">GNN RCA</div>'
+        '<div class="ws-title">Enterprise GNN RCA — cross-diagram graph reasoning</div>'
         '<div class="ws-desc">Simulate cross-diagram alert propagation, then run enterprise '
         'root cause analysis — GNN-powered when a trained result exists, '
         'scenario-grounded otherwise.</div>',
@@ -4776,7 +4912,7 @@ def _tab_gnn_rca() -> None:
     elif not _gnn_result_pre and _rca_scenario_id != "—":
         st.info("Enterprise GNN model is available. Generate RCA result for this selected scenario.")
         if st.button(
-            "Generate GNN RCA for Selected Scenario",
+            "Generate Enterprise GNN RCA for Selected Scenario",
             type="primary",
             key="gen_gnn_rca_btn",
         ):
@@ -5140,7 +5276,7 @@ def _tab_gnn_rca() -> None:
     # ── AI Resolution Agent ───────────────────────────────────────────────────
     st.markdown('<hr class="ws-rule" style="margin:18px 0">', unsafe_allow_html=True)
     st.markdown(
-        '<div class="section-label">AI Resolution Agent</div>'
+        '<div class="section-label">AI Resolution Agent — Enterprise Remediation</div>'
         '<div style="font-size:0.75rem;color:#64748b;margin-bottom:10px">'
         'Qwen3 remediation agent — grounded in graph memory, alert timeline, '
         'RCA path, and GNN ranking.</div>',
@@ -5151,7 +5287,7 @@ def _tab_gnn_rca() -> None:
     _vllm_ok      = _check_vllm_available()
     _lora_path    = Path(_LORA_ADAPTER) if _LORA_ADAPTER else None
     _lora_exists  = bool(_lora_path and _lora_path.exists())
-    _rem_src_lbl  = "Qwen3 via vLLM" if _vllm_ok else "Template remediation mode"
+    _rem_src_lbl  = "Qwen3 via vLLM" if _vllm_ok else "Template fallback"
     _rca_src_disp = (rca or {}).get("mode", "—") if rca else "—"
 
     def _sbadge(ok: bool, yes_text: str, no_text: str) -> str:
@@ -5226,6 +5362,7 @@ def _tab_gnn_rca() -> None:
                         _impacted = " ".join((rca or {}).get("impacted_diagrams", []) or [])
                         _query = f"root cause {_root} impacted diagrams {_impacted} validation remediation"
                         _vec_evidence, _vec_err = _retrieve_vector_evidence(_query, k=6)
+                        st.session_state.last_enterprise_ai_vector_evidence_count = len(_vec_evidence)
                         if _vec_evidence:
                             _ctx["retrieved_graph_memory_evidence"] = _vec_evidence
                             _ctx["retrieved_graph_memory_label"] = "Retrieved graph memory evidence"
@@ -5274,7 +5411,7 @@ def _tab_gnn_rca() -> None:
             st.markdown(
                 '<div style="background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.3);'
                 'border-radius:8px;padding:10px 14px;margin:10px 0;font-size:0.8rem;color:#fbbf24">'
-                'Template remediation mode — deterministic output, not model-generated.</div>',
+                'Template fallback — deterministic output, not model-generated.</div>',
                 unsafe_allow_html=True,
             )
         elif _plan_src == "qwen_vllm" and _plan_ok:
@@ -5289,6 +5426,17 @@ def _tab_gnn_rca() -> None:
             st.error(f"Resolution plan error: {_rem_plan['error']}")
         else:
             _render_remediation_plan(_rem_plan)
+            _render_ai_pipeline_trace(
+                selected_diagram=str(diagram_id),
+                selected_scenario=str((ent_incident or {}).get("scenario_id") or (rca or {}).get("scenario_id") or ""),
+                topology_rca_completed=bool(st.session_state.get("local_rca_result")),
+                enterprise_gnn_available=bool(_gnn_result_pre),
+                rca_source=str((rca or {}).get("mode") or (rca or {}).get("rca_source") or _rca_src_disp),
+                root_cause=str((rca or {}).get("root_cause") or (ent_incident or {}).get("root_cause") or ""),
+                impacted_diagrams=list((rca or {}).get("impacted_diagrams") or (ent_incident or {}).get("impacted_diagrams") or []),
+                vector_evidence_count=int(st.session_state.get("last_enterprise_ai_vector_evidence_count", 0)),
+                response_source=str(_rem_plan.get("source") or "—"),
+            )
 
     # ── Static RCA overlay ────────────────────────────────────────────────────
     _rca_preview_scen = _selected_scenario_path()
@@ -5427,9 +5575,11 @@ def _format_retrieved_evidence(evidence: list[dict]) -> str:
     lines = []
     for idx, item in enumerate(evidence[:8], 1):
         meta = item.get("metadata") or {}
+        evidence_id = meta.get("evidence_id") or f"E{idx:03d}"
         lines.append(
-            f"{idx}. [{meta.get('source_type','unknown')}] "
+            f"{idx}. {evidence_id} [{meta.get('source_type','unknown')}] "
             f"scenario={meta.get('scenario_id','')} diagram={meta.get('diagram_id','')} "
+            f"node={meta.get('node_id','')} "
             f"text={item.get('text','')}"
         )
     return "\n".join(lines)
@@ -5540,7 +5690,7 @@ def _deterministic_graph_copilot(question: str, context: dict) -> str:
     if "path" in q:
         active_path = ent_path or local_path
         return (f"Impact path: {' → '.join(active_path)}" if active_path
-                else "No impact path loaded — run enterprise or local RCA first.")
+                else "No impact path loaded — run Enterprise GNN RCA or Topology RCA first.")
     if "servicenow" in q or "incident" in q or "snow" in q:
         root = ent_rca.get("root_cause", "unknown")
         return (
@@ -5580,11 +5730,13 @@ def _deterministic_graph_copilot(question: str, context: dict) -> str:
 
 
 def _qwen_or_deterministic(question: str, context: dict) -> str:
-    qwen_url = os.environ.get("QWEN_BASE_URL", "").rstrip("/")
+    qwen_url = _QWEN_BASE_URL.rstrip("/")
     if not qwen_url:
         if _strict_mode() and not st.session_state.allow_deterministic_copilot:
+            st.session_state.last_copilot_response_source = "strict_mode_blocked"
             return ("Strict mode + Qwen not configured. "
                     "Click 'Use deterministic graph response' to enable graph-evidence answers.")
+        st.session_state.last_copilot_response_source = "deterministic_fallback"
         return _deterministic_graph_copilot(question, context)
     try:
         import requests  # noqa: PLC0415
@@ -5595,11 +5747,11 @@ def _qwen_or_deterministic(question: str, context: dict) -> str:
             f"{qwen_url}/chat/completions",
             headers={"Content-Type": "application/json", "Bypass-Tunnel-Reminder": "true"},
             json={
-                "model": os.environ.get("QWEN_MODEL", "Qwen/Qwen2-7B-Instruct"),
+                "model": _QWEN_MODEL,
                 "messages": [
                     {"role": "system", "content": (
                         "You are InfraGraph AI Graph Copilot. Answer only from the supplied "
-                        "graph JSON evidence. Cite node IDs, diagram IDs, and paths. Be concise."
+                        "graph JSON evidence. Cite node IDs, diagram IDs, paths, and retrieved evidence IDs when present. Be concise."
                     )},
                     {"role": "user", "content": (
                         f"Graph evidence:\n{compact}\n\n"
@@ -5609,14 +5761,17 @@ def _qwen_or_deterministic(question: str, context: dict) -> str:
                 ],
                 "max_tokens": 700, "temperature": 0.1,
             },
-            timeout=30,
+            timeout=min(_QWEN_TIMEOUT, 60),
         )
         resp.raise_for_status()
         answer = resp.json()["choices"][0]["message"]["content"]
+        st.session_state.last_copilot_response_source = "qwen_vllm"
         return re.sub(r"<think>.*?</think>", "", answer, flags=re.DOTALL).strip()
     except Exception as exc:
         if _strict_mode() and not st.session_state.allow_deterministic_copilot:
+            st.session_state.last_copilot_response_source = "strict_mode_blocked"
             return f"Live Qwen failed in strict mode: `{exc}`. Enable deterministic graph response first."
+        st.session_state.last_copilot_response_source = "deterministic_fallback"
         return (f"> Live Qwen unavailable — graph-evidence answer. `{exc}`\n\n"
                 + _deterministic_graph_copilot(question, context))
 
@@ -5638,7 +5793,7 @@ def _tab_graph_copilot() -> None:
         return
 
     if _qwen_configured():
-        qwen_url = os.environ.get("QWEN_BASE_URL", "")
+        qwen_url = _QWEN_BASE_URL
         st.success(f"Copilot mode: Qwen/vLLM @ {qwen_url}")
     else:
         if _strict_mode() and not st.session_state.allow_deterministic_copilot:
@@ -5681,9 +5836,9 @@ def _tab_graph_copilot() -> None:
                 st.session_state.v3_chat_messages.append({"role": "assistant", "content": _answer_with_vector_context(question)})
                 st.rerun()
 
-    qwen_url = os.environ.get("QWEN_BASE_URL", "")
+    qwen_url = _QWEN_BASE_URL
     if _qwen_configured():
-        st.caption(f"Qwen: {qwen_url} · model={os.environ.get('QWEN_MODEL')}")
+        st.caption(f"Qwen: {qwen_url} · model={_QWEN_MODEL}")
     else:
         st.caption("Qwen not configured — answers use loaded graph JSON evidence only.")
 
@@ -5697,14 +5852,38 @@ def _tab_graph_copilot() -> None:
         with st.expander("Retrieved Graph Memory Evidence", expanded=bool(evidence)):
             if vector_err and not evidence:
                 st.info("Vector memory is not installed. Run pip install chromadb sentence-transformers.")
-            for item in evidence:
+            for idx, item in enumerate(evidence, 1):
                 meta = item.get("metadata") or {}
+                evidence_id = meta.get("evidence_id") or f"E{idx:03d}"
                 st.markdown(
-                    f"**{meta.get('source_type', 'unknown')}** · "
-                    f"scenario `{meta.get('scenario_id', '')}` · "
-                    f"diagram `{meta.get('diagram_id', '')}`"
+                    f"<div style='border:1px solid rgba(148,163,184,0.25);border-radius:8px;"
+                    f"padding:10px 12px;margin:8px 0;background:rgba(15,23,42,0.4)'>"
+                    f"<div style='font-weight:800;color:#e2e8f0'>{idx}. Evidence {html.escape(str(evidence_id))}</div>"
+                    f"<div style='font-size:0.75rem;color:#94a3b8;margin:4px 0'>"
+                    f"source={html.escape(str(meta.get('source_type', 'unknown')))} · "
+                    f"scenario={html.escape(str(meta.get('scenario_id', '')))} · "
+                    f"diagram={html.escape(str(meta.get('diagram_id', '')))} · "
+                    f"node={html.escape(str(meta.get('node_id', '')))}</div>"
+                    f"<div style='font-size:0.82rem;color:#cbd5e1;line-height:1.45'>"
+                    f"{html.escape(str(item.get('text', ''))[:900])}</div></div>",
+                    unsafe_allow_html=True,
                 )
-                st.caption(str(item.get("text", ""))[:600])
+
+    _trace_ctx = _copilot_context()
+    _trace_rca = _trace_ctx.get("enterprise_rca_result") or {}
+    _trace_local = _trace_ctx.get("local_rca_result") or {}
+    _trace_ing = _trace_ctx.get("enterprise_ingestion_summary") or {}
+    _render_ai_pipeline_trace(
+        selected_diagram=str(_trace_ctx.get("selected_diagram_id") or ""),
+        selected_scenario=str(_trace_ing.get("scenario_id") or _trace_rca.get("scenario_id") or ""),
+        topology_rca_completed=bool(_trace_local),
+        enterprise_gnn_available=bool((_trace_rca.get("mode") or "") == "Enterprise GNN RCA"),
+        rca_source=str(_trace_rca.get("mode") or _trace_rca.get("rca_source") or _trace_local.get("mode") or ""),
+        root_cause=str(_trace_rca.get("root_cause") or _trace_local.get("root_cause") or ""),
+        impacted_diagrams=list(_trace_rca.get("impacted_diagrams") or []),
+        vector_evidence_count=len(evidence),
+        response_source=str(st.session_state.get("last_copilot_response_source") or "—"),
+    )
 
     if prompt := st.chat_input("Ask the enterprise graph..."):
         st.session_state.v3_chat_messages.append({"role": "user",      "content": prompt})
@@ -5804,7 +5983,7 @@ The GNN identified **FW-01** as root cause with score **30.733** (margin +8.12 o
 | Affected CI | FW-01 (firewall) |
 | Priority | **P1** |
 | Assignment group | Network Operations |
-| Root cause (automated) | FW-01 — GNN RCA, HIGH confidence |"""
+| Root cause (automated) | FW-01 — Enterprise GNN RCA, HIGH confidence |"""
 
     return f"No pre-built answer for: *\"{question}\"*\n\nTry: **What is the root cause?**"
 
@@ -5842,7 +6021,7 @@ def _main_cockpit() -> None:
         "Diagram Intelligence",
         "Topology RCA",
         "Enterprise Graph Brain",
-        "GNN RCA",
+        "Enterprise GNN RCA",
         "Graph Copilot",
     ])
     with tabs[0]:
