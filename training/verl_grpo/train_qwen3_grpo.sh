@@ -1,48 +1,37 @@
 #!/usr/bin/env bash
-# ─────────────────────────────────────────────────────────────────────────────
-# InfraGraph AI — Qwen3 GRPO fine-tuning with vERL on AMD GPU
-#
-# This script has NOT been run.  It documents the intended training command
-# structure for the vERL workshop.
-#
-# Prerequisites
-# ─────────────────────────────────────────────────────────────────────────────
-#   pip install verl
-#   pip install vllm
-#   pip install torch --index-url https://download.pytorch.org/whl/rocm6.0
-#
-# Step 1: Build the RL training dataset
-# ─────────────────────────────────────────────────────────────────────────────
-python training/verl_grpo/build_rca_rl_dataset.py \
-    --dataset-root ./datasets/infragraph_v3 \
-    --gnn-results  ./outputs/enterprise_gnn_rca \
-    --out          ./data/rl_training/infragraph_rca_remediation_grpo.jsonl
+set -euo pipefail
 
-# Step 2: Launch local vLLM server for rollout generation
-# ─────────────────────────────────────────────────────────────────────────────
-# (Run in a separate terminal)
-#
-# python -m vllm.entrypoints.openai.api_server \
-#     --model Qwen/Qwen3-4B-Instruct \
-#     --host 0.0.0.0 \
-#     --port 8000
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$ROOT_DIR"
 
-# Step 3: Run GRPO training with vERL
-# ─────────────────────────────────────────────────────────────────────────────
+CONFIG="training/verl_grpo/sample_config.yaml"
+RUN_DIR="training/verl_grpo/runs"
+TRAIN_DATA="training/verl_grpo/data/rca_remediation_rl_train.jsonl"
+EVAL_DATA="training/verl_grpo/data/rca_remediation_rl_eval.jsonl"
+
+mkdir -p "$RUN_DIR"
+
+echo "InfraGraph AI Qwen3 GRPO/vERL scaffold"
+echo "Config: $CONFIG"
+echo "Run dir: $RUN_DIR"
+
+python training/verl_grpo/build_rca_rl_dataset.py
+
+if ! python -c "import verl" >/dev/null 2>&1; then
+  echo
+  echo "vERL is not installed. This scaffold did not start training."
+  echo "Install guidance:"
+  echo "  pip install verl vllm"
+  echo "  pip install torch --index-url https://download.pytorch.org/whl/rocm6.0"
+  echo
+  echo "Training command that would run:"
+  echo "python -m verl.trainer.main_grpo --config $CONFIG --data.train_files $TRAIN_DATA --data.val_files $EVAL_DATA --trainer.default_local_dir $RUN_DIR"
+  exit 0
+fi
+
+echo "vERL detected. Launching GRPO training scaffold."
 python -m verl.trainer.main_grpo \
-    --config training/verl_grpo/sample_config.yaml \
-    --data.train_files  ./data/rl_training/infragraph_rca_remediation_grpo.jsonl \
-    --data.val_files    ./data/rl_training/infragraph_rca_remediation_grpo.jsonl \
-    --actor_rollout_ref.model.path Qwen/Qwen3-4B-Instruct \
-    --actor_rollout_ref.actor.lora_rank 16 \
-    --actor_rollout_ref.actor.lora_alpha 32 \
-    --actor_rollout_ref.actor.target_modules q_proj,k_proj,v_proj,o_proj \
-    --trainer.total_epochs 3 \
-    --trainer.project_name infragraph_ai \
-    --trainer.experiment_name qwen3_grpo_rca_remediation \
-    --trainer.default_local_dir ./outputs/verl_grpo_checkpoints
-
-# Step 4: Set adapter path for Streamlit UI
-# ─────────────────────────────────────────────────────────────────────────────
-# export INFRAGRAPH_LORA_ADAPTER_PATH=./outputs/verl_grpo_checkpoints/qwen3_grpo_rca_remediation/latest
-# streamlit run app/streamlit_app.py
+  --config "$CONFIG" \
+  --data.train_files "$TRAIN_DATA" \
+  --data.val_files "$EVAL_DATA" \
+  --trainer.default_local_dir "$RUN_DIR"

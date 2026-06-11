@@ -29,6 +29,7 @@ def _clean_metadata(metadata: dict[str, Any]) -> dict[str, str | int | float | b
     cleaned: dict[str, str | int | float | bool] = {}
     for key in (
         "source_type",
+        "evidence_id",
         "scenario_id",
         "diagram_id",
         "node_id",

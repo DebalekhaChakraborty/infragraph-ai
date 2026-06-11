@@ -1,461 +1,316 @@
-"""
-Build GRPO RL training dataset for Qwen3 remediation fine-tuning.
-
-Reads V3 enterprise scenarios and per-diagram local sub-graphs,
-constructs prompt/reference pairs, and writes a JSONL file suitable
-for vERL/GRPO training.
-
-Each record includes a ``scope`` field ("local" or "enterprise"),
-``required_diagrams`` (for cross-diagram reward) and
-``required_sections`` (JSON output keys that must be present).
-
-Usage
------
-python training/verl_grpo/build_rca_rl_dataset.py \\
-    --dataset-root ./datasets/infragraph_v3 \\
-    --gnn-results  ./outputs/enterprise_gnn_rca \\
-    --out          ./data/rl_training/infragraph_rca_remediation_grpo.jsonl
-"""
+"""Build sample LoRA + GRPO/vERL alignment records from InfraGraph RCA artifacts."""
 from __future__ import annotations
 
 import argparse
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
-# Allow running from repo root
-_REPO = Path(__file__).resolve().parent.parent.parent
-if str(_REPO / "src") not in sys.path:
-    sys.path.insert(0, str(_REPO / "src"))
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT / "src"))
 
-from ai_remediation.prompt_builder  import build_remediation_prompt
-from ai_remediation.response_schema import make_remediation_input
+from ai_remediation.prompt_builder import build_remediation_prompt  # noqa: E402
+from ai_remediation.response_schema import make_remediation_input  # noqa: E402
 
-
-# ── Shared helpers ─────────────────────────────────────────────────────────────
 
 def _load_json(path: Path) -> dict:
-    with open(path, encoding="utf-8") as f:
-        return json.load(f)
-
-
-def _build_alert_timeline_from_alerts(ad: dict) -> list[dict]:
-    events = []
-    for i, a in enumerate(ad.get("alerts", []), 1):
-        events.append({
-            "step":             i,
-            "timestamp":        f"T+{(i-1)*4:02d}m",
-            "node_id":          a.get("node_id", a.get("node", "")),
-            "diagram_id":       a.get("diagram_id", a.get("source_diagram", "")),
-            "device_type":      a.get("class", a.get("type", "server")),
-            "alert_type":       a.get("alert_type", "Service alert"),
-            "message":          a.get("message", a.get("alert_message", "")),
-            "severity":         a.get("severity", "major"),
-            "correlation_role": "",
-        })
-    return events
-
-
-def _build_candidate_ranking_ent(gnn: "dict | None", ad: dict, root_cause: str) -> list[dict]:
-    if gnn:
-        ranking = []
-        for c in gnn.get("top_candidates", [])[:6]:
-            ranking.append({
-                "node_id": c.get("node_id", ""),
-                "score":   c.get("score", 0.0),
-                "reason":  f"GNN rank {c.get('rank','?')} type={c.get('type','?')}",
-            })
-        if ranking:
-            return ranking
-    ranking = [{"node_id": root_cause, "score": 0.97, "reason": "ground-truth root cause"}]
-    seen = {root_cause}
-    for a in ad.get("alerts", [])[:5]:
-        n = a.get("node_id", a.get("node", ""))
-        if n and n not in seen:
-            seen.add(n)
-            ranking.append({
-                "node_id": n,
-                "score":   round(0.70 - len(ranking) * 0.07, 3),
-                "reason":  "alert evidence",
-            })
-    return ranking[:6]
-
-
-def _build_device_context_from_graph(eg: dict, max_nodes: int = 20) -> list[dict]:
-    devices = []
-    for n in eg.get("nodes", [])[:max_nodes]:
-        devices.append({
-            "node_id":    n.get("id", n.get("node_id", "")),
-            "device_type": n.get("type", n.get("class_name", "")),
-            "ip_address": n.get("ip_address", ""),
-            "diagram_id": n.get("diagram_id", n.get("source_diagram", "")),
-        })
-    return devices
-
-
-def _build_connector_context_from_graph(eg: dict) -> list[dict]:
-    links = []
-    for e in eg.get("edges", [])[:15]:
-        links.append({
-            "source":     e.get("source", ""),
-            "target":     e.get("target", ""),
-            "type":       e.get("label", e.get("relationship", "")),
-            "diagram_id": e.get("diagram_id", ""),
-        })
-    for e in eg.get("cross_diagram_edges", [])[:5]:
-        links.append({
-            "source":     e.get("source", ""),
-            "target":     e.get("target", ""),
-            "type":       "cross_diagram",
-            "diagram_id": "",
-        })
-    return links
-
-
-def _find_gnn_result(gnn_root: Path, scenario_id: str) -> "dict | None":
-    if not gnn_root.exists():
-        return None
-    for p in gnn_root.glob(f"*{scenario_id}*.json"):
-        try:
-            return _load_json(p)
-        except Exception:
-            pass
-    return None
-
-
-_REQUIRED_SECTIONS = [
-    "executive_summary",
-    "probable_root_cause",
-    "scope",
-    "evidence_from_graph",
-    "triage_steps",
-    "validation_steps",
-    "remediation_steps",
-    "rollback_or_safety_notes",
-    "escalation_recommendation",
-    "servicenow_incident_summary",
-    "confidence_notes",
-]
-
-
-# ── Enterprise record ─────────────────────────────────────────────────────────
-
-def _build_enterprise_reference(ad: dict, root_cause: str) -> dict:
-    impact_paths = ad.get("impact_paths", [])
-    impact_path  = impact_paths[0] if impact_paths else []
-    all_nodes    = list({
-        a.get("node_id", a.get("node", ""))
-        for a in ad.get("alerts", [])
-        if a.get("node_id", a.get("node", ""))
-    })
-    imp_diagrams = list(ad.get("impacted_diagrams", []))
-    return {
-        "root_cause":         root_cause,
-        "required_nodes":     [root_cause] + [n for n in impact_path if n != root_cause],
-        "required_diagrams":  imp_diagrams,
-        "valid_node_set":     all_nodes,
-        "required_sections":  _REQUIRED_SECTIONS,
-        "scope":              "enterprise",
-        "required_steps": [
-            f"Investigate {root_cause} for connectivity or configuration fault.",
-            "Validate upstream path from affected nodes to root cause.",
-            "Restore service and confirm alert suppression.",
-        ],
-    }
-
-
-def process_enterprise_scenario(
-    scenario_dir: Path,
-    gnn_root: Path,
-) -> "dict | None":
-    eg_path = scenario_dir / "enterprise_graph.json"
-    ad_path = scenario_dir / "alerts.json"
-    if not eg_path.exists() or not ad_path.exists():
-        return None
-
     try:
-        eg = _load_json(eg_path)
-        ad = _load_json(ad_path)
-    except Exception as exc:
-        print(f"  skip {scenario_dir.name}: {exc}", file=sys.stderr)
-        return None
-
-    scenario_id   = ad.get("scenario_id", scenario_dir.name)
-    root_cause    = ad.get("root_cause", "")
-    rc_diagram    = ad.get("root_cause_diagram", "")
-    imp_diagrams  = list(ad.get("impacted_diagrams", []))
-    impact_paths  = ad.get("impact_paths", [])
-    impact_path   = impact_paths[0] if impact_paths else []
-
-    gnn           = _find_gnn_result(gnn_root, scenario_id)
-    gnn_available = gnn is not None
-    rca_source    = "Enterprise GNN RCA" if gnn_available else "Scenario-grounded RCA simulation"
-
-    clusters = eg.get("diagram_clusters", {})
-    n_diags  = len(clusters) if isinstance(clusters, dict) else len(clusters)
-    graph_summary = (
-        f"{len(eg.get('nodes',[]))} nodes, {len(eg.get('edges',[]))} edges, "
-        f"{len(eg.get('cross_diagram_edges',[]))} cross-diagram edges across {n_diags} domains."
-    )
-
-    context = make_remediation_input(
-        incident_id=f"ENT-{scenario_id}",
-        scope="enterprise",
-        selected_diagram_id=ad.get("selected_diagram_id", ""),
-        scenario_id=scenario_id,
-        alert_timeline=_build_alert_timeline_from_alerts(ad),
-        graph_memory_summary=graph_summary,
-        root_cause=root_cause,
-        root_cause_diagram=rc_diagram,
-        impacted_nodes=list({
-            a.get("node_id", a.get("node", ""))
-            for a in ad.get("alerts", [])
-            if a.get("node_id", a.get("node", ""))
-        }),
-        impacted_diagrams=imp_diagrams,
-        impact_path=impact_path,
-        candidate_ranking=_build_candidate_ranking_ent(gnn, ad, root_cause),
-        gnn_result_available=gnn_available,
-        rca_source=rca_source,
-        device_context=_build_device_context_from_graph(eg),
-        connector_context=_build_connector_context_from_graph(eg),
-    )
-
-    messages    = build_remediation_prompt(context)
-    prompt_text = "\n".join(f"[{m['role'].upper()}]\n{m['content']}" for m in messages)
-
-    return {
-        "prompt":    prompt_text,
-        "messages":  messages,
-        "reference": _build_enterprise_reference(ad, root_cause),
-        "metadata": {
-            "scope":              "enterprise",
-            "scenario_id":        scenario_id,
-            "root_cause":         root_cause,
-            "root_cause_diagram": rc_diagram,
-            "impacted_diagrams":  imp_diagrams,
-            "gnn_available":      gnn_available,
-            "rca_source":         rca_source,
-            "n_alerts":           len(ad.get("alerts", [])),
-            "n_nodes":            len(eg.get("nodes", [])),
-        },
-    }
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
 
 
-# ── Local record ──────────────────────────────────────────────────────────────
-
-def _extract_diagram_subgraph(eg: dict, diagram_id: str) -> dict:
-    """Extract nodes and edges belonging to a single diagram from enterprise_graph."""
-    nodes = [
-        n for n in eg.get("nodes", [])
-        if n.get("diagram_id", n.get("source_diagram", "")) == diagram_id
-    ]
-    node_ids = {n.get("id", n.get("node_id", "")) for n in nodes}
-    edges = [
-        e for e in eg.get("edges", [])
-        if e.get("source", "") in node_ids and e.get("target", "") in node_ids
-    ]
-    return {"nodes": nodes, "edges": edges}
-
-
-def _build_local_candidate_ranking(ad: dict, diagram_id: str, root_cause: str) -> list[dict]:
-    ranking = [{"node_id": root_cause, "score": 0.95, "reason": "ground-truth root cause"}]
-    seen = {root_cause}
-    for a in ad.get("alerts", []):
-        if a.get("diagram_id", a.get("source_diagram", "")) != diagram_id:
-            continue
-        n = a.get("node_id", a.get("node", ""))
-        if n and n not in seen:
-            seen.add(n)
-            ranking.append({
-                "node_id": n,
-                "score":   round(0.72 - len(ranking) * 0.08, 3),
-                "reason":  "local alert evidence",
-            })
-    return ranking[:6]
-
-
-def _build_local_reference(ad: dict, diagram_id: str, root_cause: str) -> dict:
-    local_alerts = [
-        a for a in ad.get("alerts", [])
-        if a.get("diagram_id", a.get("source_diagram", "")) == diagram_id
-    ]
-    all_nodes = list({
-        a.get("node_id", a.get("node", ""))
-        for a in local_alerts
-        if a.get("node_id", a.get("node", ""))
-    })
-    impact_paths = ad.get("impact_paths", [])
-    impact_path  = [n for p in impact_paths for n in p if n in set(all_nodes + [root_cause])]
-    return {
-        "root_cause":        root_cause,
-        "required_nodes":    [root_cause] + [n for n in impact_path if n != root_cause],
-        "required_diagrams": [diagram_id],
-        "valid_node_set":    all_nodes,
-        "required_sections": _REQUIRED_SECTIONS,
-        "scope":             "local",
-        "required_steps": [
-            f"Investigate {root_cause} on diagram {diagram_id}.",
-            "Validate local connectivity and service health.",
-            "Restore service and confirm alert suppression.",
-        ],
-    }
-
-
-def process_local_scenarios(
-    scenario_dir: Path,
-) -> list[dict]:
-    """Build one JSONL record per diagram from a scenario directory.
-
-    Returns an empty list if required files are missing.
-    """
-    eg_path = scenario_dir / "enterprise_graph.json"
-    ad_path = scenario_dir / "alerts.json"
-    if not eg_path.exists() or not ad_path.exists():
-        return []
-
-    try:
-        eg = _load_json(eg_path)
-        ad = _load_json(ad_path)
-    except Exception as exc:
-        print(f"  skip (local) {scenario_dir.name}: {exc}", file=sys.stderr)
-        return []
-
-    scenario_id  = ad.get("scenario_id", scenario_dir.name)
-    root_cause   = ad.get("root_cause", "")
-    rc_diagram   = ad.get("root_cause_diagram", "")
-    imp_diagrams = list(ad.get("impacted_diagrams", []))
-
-    records = []
-    # Only emit local records for diagrams mentioned in the scenario
-    target_diagrams = list({rc_diagram} | set(imp_diagrams)) if imp_diagrams else [rc_diagram]
-    target_diagrams = [d for d in target_diagrams if d]
-
-    for diagram_id in target_diagrams:
-        sub_graph = _extract_diagram_subgraph(eg, diagram_id)
-        if not sub_graph["nodes"]:
-            continue
-
-        local_alerts = [
-            a for a in ad.get("alerts", [])
-            if a.get("diagram_id", a.get("source_diagram", "")) == diagram_id
-        ]
-        timeline = _build_alert_timeline_from_alerts({"alerts": local_alerts})
-
-        # First observed node: earliest alert on this diagram
-        first_obs = local_alerts[0].get("node_id", local_alerts[0].get("node", "")) if local_alerts else ""
-
-        # For local records, root cause only applies if it's in this diagram
-        local_root = root_cause if diagram_id == rc_diagram else (
-            local_alerts[0].get("node_id", local_alerts[0].get("node", "")) if local_alerts else ""
-        )
-        if not local_root:
-            continue
-
-        imp_nodes = list({
-            a.get("node_id", a.get("node", ""))
-            for a in local_alerts
-            if a.get("node_id", a.get("node", ""))
-        })
-        n_sub = len(sub_graph["nodes"])
-        n_edge = len(sub_graph["edges"])
-        graph_summary = f"{n_sub} nodes, {n_edge} edges in {diagram_id}."
-
-        context = make_remediation_input(
-            incident_id=f"LOC-{scenario_id}-{diagram_id}",
-            scope="local",
-            selected_diagram_id=diagram_id,
-            diagram_type=diagram_id,
-            scenario_id=scenario_id,
-            alert_timeline=timeline,
-            graph_memory_summary=graph_summary,
-            root_cause=local_root,
-            root_cause_diagram=diagram_id,
-            first_observed_node=first_obs,
-            impacted_nodes=imp_nodes,
-            impacted_diagrams=[diagram_id],
-            impact_path=[],
-            candidate_ranking=_build_local_candidate_ranking(ad, diagram_id, local_root),
-            gnn_result_available=False,
-            rca_source="Topology BFS RCA",
-            device_context=_build_device_context_from_graph(sub_graph, max_nodes=12),
-            connector_context=_build_connector_context_from_graph(sub_graph),
-        )
-
-        messages    = build_remediation_prompt(context)
-        prompt_text = "\n".join(f"[{m['role'].upper()}]\n{m['content']}" for m in messages)
-
-        records.append({
-            "prompt":    prompt_text,
-            "messages":  messages,
-            "reference": _build_local_reference(ad, diagram_id, local_root),
-            "metadata": {
-                "scope":       "local",
-                "scenario_id": scenario_id,
-                "diagram_id":  diagram_id,
-                "root_cause":  local_root,
-                "rca_source":  "Topology BFS RCA",
-                "n_alerts":    len(local_alerts),
-                "n_nodes":     n_sub,
-            },
-        })
-
-    return records
-
-
-# ── Main ──────────────────────────────────────────────────────────────────────
-
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Build GRPO RL training dataset from V3 scenarios (local + enterprise)."
-    )
-    parser.add_argument("--dataset-root", required=True, help="Path to datasets/infragraph_v3")
-    parser.add_argument("--gnn-results",  default="outputs/enterprise_gnn_rca",
-                        help="Directory containing GNN result JSON files")
-    parser.add_argument("--out", required=True,
-                        help="Output JSONL path")
-    parser.add_argument("--no-local",     action="store_true",
-                        help="Skip local (per-diagram) records")
-    parser.add_argument("--no-enterprise", action="store_true",
-                        help="Skip enterprise (cross-diagram) records")
-    args = parser.parse_args()
-
-    dataset_root = Path(args.dataset_root)
-    gnn_root     = Path(args.gnn_results)
-    out_path     = Path(args.out)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-
-    scenario_dirs = sorted([
+def _scenario_dirs(dataset_root: Path) -> list[Path]:
+    return sorted({
         p.parent for p in dataset_root.rglob("enterprise_graph.json")
         if (p.parent / "alerts.json").exists()
-    ])
-    print(f"Found {len(scenario_dirs)} scenarios under {dataset_root}")
+    })
 
-    ent_count   = 0
-    local_count = 0
 
-    with open(out_path, "w", encoding="utf-8") as fout:
-        for sd in scenario_dirs:
-            if not args.no_enterprise:
-                rec = process_enterprise_scenario(sd, gnn_root)
-                if rec:
-                    fout.write(json.dumps(rec, ensure_ascii=False) + "\n")
-                    ent_count += 1
+def _alerts(alerts: dict) -> list[dict]:
+    return list(alerts.get("alerts") or alerts.get("alert_timeline") or [])
 
-            if not args.no_local:
-                for rec in process_local_scenarios(sd):
-                    fout.write(json.dumps(rec, ensure_ascii=False) + "\n")
-                    local_count += 1
 
-            total = ent_count + local_count
-            if total > 0 and total % 20 == 0:
-                print(f"  {total} records written (ent={ent_count}, local={local_count})…")
+def _timeline(alerts: dict) -> list[dict]:
+    rows = []
+    for idx, alert in enumerate(_alerts(alerts), 1):
+        rows.append({
+            "timestamp": alert.get("timestamp") or alert.get("time_label") or f"T+{(idx - 1) * 4:02d}m",
+            "node_id": alert.get("node_id") or alert.get("node") or "",
+            "diagram_id": alert.get("diagram_id") or alert.get("source_diagram") or "",
+            "severity": alert.get("severity") or "major",
+            "alert_type": alert.get("alert_type") or "alert",
+            "message": alert.get("message") or alert.get("alert_message") or "",
+        })
+    return rows
 
-    total = ent_count + local_count
-    print(
-        f"\nDataset complete: {total} records "
-        f"(enterprise={ent_count}, local={local_count}) → {out_path}"
+
+def _gnn_result(gnn_root: Path, scenario_id: str) -> dict:
+    for path in gnn_root.glob(f"*{scenario_id}*.json"):
+        data = _load_json(path)
+        if data:
+            return data
+    return {}
+
+
+def _candidate_ranking(gnn: dict, alerts: dict, root_cause: str) -> list[dict]:
+    candidates = list(gnn.get("top_candidates") or gnn.get("ranking") or [])
+    ranking = []
+    for rank, candidate in enumerate(candidates[:6], 1):
+        ranking.append({
+            "node_id": candidate.get("node_id") or candidate.get("node") or candidate.get("id") or "",
+            "score": candidate.get("score", candidate.get("rca_score", "")),
+            "reason": candidate.get("reason") or f"GNN rank {rank}",
+        })
+    if ranking:
+        return ranking
+    seen = {root_cause}
+    ranking.append({"node_id": root_cause, "score": 0.97, "reason": "reference root cause"})
+    for alert in _alerts(alerts):
+        node = alert.get("node_id") or alert.get("node") or ""
+        if node and node not in seen:
+            seen.add(node)
+            ranking.append({"node_id": node, "score": round(0.8 - len(ranking) * 0.08, 3), "reason": "alert evidence"})
+    return ranking[:6]
+
+
+def _device_context(graph: dict) -> list[dict]:
+    return [
+        {
+            "node_id": node.get("id") or node.get("node_id") or "",
+            "device_type": node.get("type") or node.get("class_name") or "",
+            "ip_address": node.get("ip_address") or "",
+            "diagram_id": node.get("diagram_id") or node.get("source_diagram") or "",
+        }
+        for node in list(graph.get("nodes") or [])[:24]
+        if isinstance(node, dict)
+    ]
+
+
+def _connector_context(graph: dict) -> list[dict]:
+    edges = list(graph.get("edges") or [])[:20] + list(graph.get("cross_diagram_edges") or [])[:8]
+    return [
+        {
+            "source": edge.get("source", ""),
+            "target": edge.get("target", ""),
+            "type": edge.get("relationship") or edge.get("label") or "connected_to",
+            "diagram_id": edge.get("diagram_id") or edge.get("source_diagram") or "",
+        }
+        for edge in edges
+        if isinstance(edge, dict)
+    ]
+
+
+def _chosen_response(record: dict) -> dict:
+    scope = record["scope"]
+    root = record["root_cause"]
+    diagrams = record["impacted_diagrams"]
+    evidence_ids = ["E001", "E002"]
+    blast = "enterprise_wide" if len(set(diagrams)) >= 4 else ("cross_diagram" if len(set(diagrams)) > 1 else "single_diagram")
+    return {
+        "executive_summary": f"{scope.title()} incident is graph-grounded to root cause {root}; validate before remediation.",
+        "probable_root_cause": root,
+        "scope": scope,
+        "risk_level": "critical" if blast == "enterprise_wide" else ("high" if blast == "cross_diagram" else "medium"),
+        "automation_eligibility": "manual_only" if scope == "enterprise" else "human_approval_required",
+        "blast_radius": blast,
+        "evidence_ids_used": evidence_ids,
+        "evidence_from_graph": record["graph_evidence"][:4],
+        "pre_checks": [
+            f"Confirm active alerts still reference {root}.",
+            "Validate graph evidence and RCA ranking before changes.",
+        ],
+        "triage_steps": [
+            f"Inspect {root} logs and health using only the loaded graph context.",
+            "Compare current alerts with the impact path before remediation.",
+        ],
+        "validation_steps": [
+            f"Validate reachability from impacted nodes to {root}.",
+            "Confirm alert timeline freshness before any change.",
+        ],
+        "remediation_steps": [
+            f"After validation, restore service on {root} using approved operational procedure.",
+            "Verify downstream nodes on the impact path recover before closing the incident.",
+        ],
+        "post_checks": [
+            "Confirm no new alerts fire for impacted nodes.",
+            "Re-run graph path validation across impacted diagrams.",
+        ],
+        "do_not_execute_if": [
+            f"Do not execute if {root} is not confirmed by graph evidence.",
+            "Do not execute without rollback owner approval.",
+        ],
+        "rollback_or_safety_notes": [
+            "Capture pre-change state and rollback owner before remediation.",
+            "Restore prior config/service state if post-checks fail.",
+        ],
+        "escalation_recommendation": (
+            "Escalate to enterprise network/SRE owners for cross-diagram impact."
+            if scope == "enterprise" else
+            "Escalate to network engineering if local validation does not confirm recovery."
+        ),
+        "servicenow_incident_summary": {
+            "short_description": f"InfraGraph RCA root cause {root}",
+            "description": f"Graph-grounded RCA found {root}; impacted diagrams: {', '.join(diagrams) or 'single diagram'}.",
+            "affected_ci": root,
+            "priority": "1-Critical" if scope == "enterprise" else "2-High",
+            "assignment_group": "Network Engineering",
+        },
+        "audit_summary": f"Chosen response validates before remediation, cites {', '.join(evidence_ids)}, and includes rollback.",
+        "confidence_notes": "Scenario-grounded alignment record; use graph evidence and RCA labels only.",
+    }
+
+
+def _rejected_response(record: dict, idx: int) -> str:
+    bad = [
+        '{"executive_summary": "Restart FAKE-RTR-99 immediately.", "probable_root_cause": "FAKE-RTR-99"}',
+        json.dumps({"probable_root_cause": record["root_cause"], "remediation_steps": ["Restart now"], "validation_steps": []}),
+        "not valid json: remediate first, rollback later",
+        json.dumps({"probable_root_cause": "WRONG-NODE", "validation_steps": ["check"], "remediation_steps": ["change"], "rollback_or_safety_notes": []}),
+    ]
+    return bad[idx % len(bad)]
+
+
+def _record_from_scenario(scenario_dir: Path, gnn_root: Path, idx: int) -> dict | None:
+    graph = _load_json(scenario_dir / "enterprise_graph.json")
+    alerts = _load_json(scenario_dir / "alerts.json")
+    if not graph or not alerts:
+        return None
+    scenario_id = str(alerts.get("scenario_id") or graph.get("scenario_id") or scenario_dir.name)
+    root = str(alerts.get("root_cause") or "")
+    root_diagram = str(alerts.get("root_cause_diagram") or "")
+    impacted_diagrams = list(alerts.get("impacted_diagrams") or [])
+    impact_paths = list(alerts.get("impact_paths") or [])
+    impact_path = impact_paths[0] if impact_paths else []
+    timeline = _timeline(alerts)
+    gnn = _gnn_result(gnn_root, scenario_id)
+    ranking = _candidate_ranking(gnn, alerts, root)
+    impacted_nodes = sorted({
+        alert.get("node_id") or alert.get("node") or ""
+        for alert in _alerts(alerts)
+        if alert.get("node_id") or alert.get("node")
+    })
+    graph_evidence = [
+        f"E001: Root cause {root} appears in diagram {root_diagram}.",
+        f"E002: Impacted diagrams are {', '.join(impacted_diagrams) or root_diagram}.",
+        f"E003: Impact path is {' -> '.join(map(str, impact_path)) or 'not provided'}.",
+        f"E004: Candidate ranking top node is {ranking[0]['node_id'] if ranking else root}.",
+    ]
+    scope = "enterprise" if len(set(impacted_diagrams)) > 1 else "local"
+    ctx = make_remediation_input(
+        incident_id=f"RL-{scenario_id}",
+        scope=scope,
+        selected_diagram_id=root_diagram,
+        scenario_id=scenario_id,
+        alert_timeline=timeline,
+        graph_memory_summary=f"{len(graph.get('nodes', []))} nodes and {len(graph.get('edges', []))} edges.",
+        root_cause=root,
+        root_cause_diagram=root_diagram,
+        impacted_nodes=impacted_nodes,
+        impacted_diagrams=impacted_diagrams,
+        impact_path=impact_path,
+        candidate_ranking=ranking,
+        gnn_result_available=bool(gnn),
+        rca_source="Enterprise GNN RCA" if gnn else "Scenario-grounded RCA simulation",
+        device_context=_device_context(graph),
+        connector_context=_connector_context(graph),
     )
+    prompt = "\n".join(f"[{m['role']}]\n{m['content']}" for m in build_remediation_prompt(ctx))
+    record = {
+        "id": f"rca_rl_{idx:05d}",
+        "scenario_id": scenario_id,
+        "scope": scope,
+        "root_cause": root,
+        "root_cause_diagram": root_diagram,
+        "impacted_nodes": impacted_nodes,
+        "impacted_diagrams": impacted_diagrams,
+        "impact_path": impact_path,
+        "alert_timeline": timeline,
+        "candidate_ranking": ranking,
+        "graph_evidence": graph_evidence,
+        "prompt": prompt,
+        "chosen_response": json.dumps(_chosen_response({
+            "scope": scope,
+            "root_cause": root,
+            "impacted_diagrams": impacted_diagrams,
+            "graph_evidence": graph_evidence,
+        }), ensure_ascii=False),
+        "rejected_response": _rejected_response({"root_cause": root}, idx),
+        "reward_tags": [
+            "graph_grounded",
+            "validation_before_remediation",
+            "rollback_required",
+            "enterprise_escalation_required" if scope == "enterprise" else "single_diagram_scope",
+        ],
+    }
+    return record
+
+
+def _write_jsonl(path: Path, rows: list[dict]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "\n".join(json.dumps(row, ensure_ascii=False) for row in rows) + ("\n" if rows else ""),
+        encoding="utf-8",
+    )
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Build sample RCA remediation RL JSONL files.")
+    parser.add_argument("--repo-root", default=str(REPO_ROOT))
+    parser.add_argument("--dataset-root", default="./datasets/infragraph_v3")
+    parser.add_argument("--gnn-results", default="./outputs/enterprise_gnn_rca")
+    parser.add_argument("--out-dir", default="./training/verl_grpo/data")
+    parser.add_argument("--max-records", type=int, default=80)
+    args = parser.parse_args()
+
+    repo = Path(args.repo_root)
+    dataset_root = (repo / args.dataset_root).resolve() if not Path(args.dataset_root).is_absolute() else Path(args.dataset_root)
+    gnn_root = (repo / args.gnn_results).resolve() if not Path(args.gnn_results).is_absolute() else Path(args.gnn_results)
+    out_dir = (repo / args.out_dir).resolve() if not Path(args.out_dir).is_absolute() else Path(args.out_dir)
+
+    rows = []
+    for idx, scenario_dir in enumerate(_scenario_dirs(dataset_root), 1):
+        record = _record_from_scenario(scenario_dir, gnn_root, idx)
+        if record:
+            rows.append(record)
+        if len(rows) >= args.max_records:
+            break
+
+    if not rows:
+        rows.append({
+            "id": "rca_rl_sample_00001",
+            "scenario_id": "sample_scenario",
+            "scope": "enterprise",
+            "root_cause": "APP-LB-01",
+            "root_cause_diagram": "app_db_topology",
+            "impacted_nodes": ["APP-01", "APP-02", "DB-01"],
+            "impacted_diagrams": ["branch_topology", "wan_topology", "app_db_topology"],
+            "impact_path": ["APP-LB-01", "APP-01", "DB-01"],
+            "alert_timeline": [],
+            "candidate_ranking": [{"node_id": "APP-LB-01", "score": 0.97, "reason": "sample"}],
+            "graph_evidence": ["E001: APP-LB-01 is the reference root cause."],
+            "prompt": "Return graph-grounded JSON remediation for APP-LB-01.",
+            "chosen_response": json.dumps(_chosen_response({
+                "scope": "enterprise",
+                "root_cause": "APP-LB-01",
+                "impacted_diagrams": ["branch_topology", "wan_topology", "app_db_topology"],
+                "graph_evidence": ["E001: APP-LB-01 is the reference root cause."],
+            })),
+            "rejected_response": '{"probable_root_cause":"FAKE-DEVICE","remediation_steps":["restart now"]}',
+            "reward_tags": ["sample", "graph_grounded"],
+        })
+
+    split = max(1, int(len(rows) * 0.8))
+    train_rows = rows[:split]
+    eval_rows = rows[split:] or rows[:1]
+    train_path = out_dir / "rca_remediation_rl_train.jsonl"
+    eval_path = out_dir / "rca_remediation_rl_eval.jsonl"
+    _write_jsonl(train_path, train_rows)
+    _write_jsonl(eval_path, eval_rows)
+    print(f"train records: {len(train_rows)} -> {train_path}")
+    print(f"eval records: {len(eval_rows)} -> {eval_path}")
 
 
 if __name__ == "__main__":

@@ -48,6 +48,23 @@ def _make_doc(text: str, metadata: dict[str, str]) -> dict[str, Any]:
     return {"id": _doc_id(metadata, text), "text": text, "metadata": metadata}
 
 
+def _assign_evidence_ids(docs: list[dict]) -> list[dict]:
+    assigned: list[dict] = []
+    for idx, doc in enumerate(docs, 1):
+        metadata = dict(doc.get("metadata") or {})
+        evidence_id = metadata.get("evidence_id") or f"E{idx:03d}"
+        metadata["evidence_id"] = str(evidence_id)
+        text = str(doc.get("text") or "")
+        if not text.startswith(f"{evidence_id}:"):
+            text = f"{evidence_id}: {text}"
+        assigned.append({
+            "id": _doc_id(metadata, text),
+            "text": text,
+            "metadata": metadata,
+        })
+    return assigned
+
+
 def _node_id(node: dict) -> str:
     return str(node.get("id") or node.get("node_id") or node.get("object_id") or "")
 
@@ -181,10 +198,11 @@ def build_vector_docs_from_graph_memory(
             text,
             _base_metadata("rca_result", scenario_id=scenario_id, diagram_id=diagram_id, node_id=root, rca_source=mode, scope=scope, path=run_id),
         ))
-        for rank, candidate in enumerate(_as_list(rca.get("top_candidates")), 1):
+        candidates = _as_list(rca.get("top_candidates")) or _as_list(rca.get("ranking"))
+        for rank, candidate in enumerate(candidates, 1):
             if not isinstance(candidate, dict):
                 continue
-            node = str(candidate.get("node_id") or candidate.get("id") or "")
+            node = str(candidate.get("node_id") or candidate.get("node") or candidate.get("id") or "")
             score = candidate.get("score", "")
             ctype = str(candidate.get("type") or "")
             docs.append(_make_doc(
@@ -202,6 +220,44 @@ def build_vector_docs_from_graph_memory(
             f"AI resolution plan for {diagram_id or scenario_id}: {plan_text}",
             _base_metadata("ai_resolution_plan", scenario_id=scenario_id, diagram_id=diagram_id, scope=str(ai_resolution_plan.get("scope") or ""), path=run_id),
         ))
+        section_map = {
+            "executive_summary": "AI resolution executive summary",
+            "risk_level": "AI resolution risk level",
+            "automation_eligibility": "AI resolution automation eligibility",
+            "blast_radius": "AI resolution blast radius",
+            "pre_checks": "AI resolution pre-checks",
+            "validation_steps": "AI resolution validation steps",
+            "remediation_steps": "AI resolution remediation steps",
+            "post_checks": "AI resolution post-checks",
+            "do_not_execute_if": "AI resolution do-not-execute conditions",
+            "rollback_or_safety_notes": "AI resolution rollback and safety notes",
+            "escalation_recommendation": "AI resolution escalation recommendation",
+            "servicenow_incident_summary": "AI resolution ServiceNow summary",
+            "audit_summary": "AI resolution audit summary",
+            "confidence_notes": "AI resolution confidence notes",
+        }
+        for key, label in section_map.items():
+            value = response.get(key)
+            if not value:
+                continue
+            if isinstance(value, list):
+                value_text = " ".join(str(v) for v in value)
+            elif isinstance(value, dict):
+                value_text = json.dumps(value, sort_keys=True)
+            else:
+                value_text = str(value)
+            docs.append(_make_doc(
+                f"{label}: {value_text}",
+                _base_metadata(
+                    f"ai_resolution_{key}",
+                    scenario_id=scenario_id,
+                    diagram_id=diagram_id,
+                    node_id=str(response.get("probable_root_cause") or ""),
+                    rca_source=str(ai_resolution_plan.get("source") or ""),
+                    scope=str(response.get("scope") or ai_resolution_plan.get("scope") or ""),
+                    path=run_id,
+                ),
+            ))
 
     if enterprise_graph:
         nodes = _as_list(enterprise_graph.get("nodes"))
@@ -212,4 +268,4 @@ def build_vector_docs_from_graph_memory(
             _base_metadata("scenario_summary", scenario_id=scenario_id, diagram_id=diagram_id, scope="enterprise", path=run_id),
         ))
 
-    return docs
+    return _assign_evidence_ids(docs)
