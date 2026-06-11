@@ -132,6 +132,10 @@ _CLS_COLORS: dict[str, tuple[int, int, int]] = {
 }
 _DEFAULT_COLOR: tuple[int, int, int] = (168, 168, 168)
 _OVERLAY_RENDERER_VERSION = "v3_clean_overlay_v1"
+_CLASS_DISPLAY: dict[str, str] = {
+    "cloud_or_wan": "cloud/WAN",
+    "load_balancer": "load balancer",
+}
 
 
 def _overlay_meta_path(out_path: Path) -> Path:
@@ -161,9 +165,9 @@ def render_v3_annotation_preview(
     """
     Draw a V3 annotation overlay onto a copy of the source image.
 
-    clean mode is intended for primary UI use: object outlines only, object ID
-    labels, no connector clutter, and no translucent fills. Debug mode can draw
-    connector polylines and class labels for inspection.
+    clean mode is intended for primary UI use: object outlines, identity + type
+    labels, optional subtle connectors, and no translucent fills. Debug mode can
+    include connector labels and class details for inspection.
 
     Returns a metadata dict:
         rendered, boxes_rendered, boxes_skipped, boxes_skipped_large,
@@ -223,9 +227,9 @@ def render_v3_annotation_preview(
                 font    = ImageFont.load_default()
                 font_sm = font
 
-        # ── connector polylines (debug only by default) ───────────────────────
+        # ── connector polylines (off by default) ──────────────────────────────
         connectors = annotation.get("connectors", [])
-        if draw_connectors or overlay_mode == "debug":
+        if draw_connectors:
             for conn in connectors:
                 try:
                     pts = conn.get("points") or []
@@ -251,20 +255,23 @@ def render_v3_annotation_preview(
                         meta["connectors_skipped"] += 1
                         meta["connectors_skipped_long"] += 1
                         continue
-                    draw.line(flat, fill=(30, 144, 255, 190), width=2)
-                    x1c, y1c = flat[-2]
-                    x2c, y2c = flat[-1]
-                    ang = math.atan2(y2c - y1c, x2c - x1c)
-                    for side in (0.45, -0.45):
-                        ax = max(0, min(img_w - 1, x2c - int(9 * math.cos(ang + side))))
-                        ay = max(0, min(img_h - 1, y2c - int(9 * math.sin(ang + side))))
-                        draw.line([(x2c, y2c), (ax, ay)], fill=(30, 144, 255, 210), width=2)
-                    lbl = conn.get("label_text", conn.get("relationship", ""))
-                    if lbl and flat:
-                        mid = flat[len(flat) // 2]
-                        tx  = max(0, min(img_w - 40, mid[0] + 3))
-                        ty  = max(0, min(img_h - 14, mid[1] - 14))
-                        draw.text((tx, ty), str(lbl), fill=(20, 90, 150), font=font_sm)
+                    if overlay_mode == "clean":
+                        draw.line(flat, fill=(37, 99, 235, 90), width=1)
+                    else:
+                        draw.line(flat, fill=(30, 144, 255, 190), width=2)
+                        x1c, y1c = flat[-2]
+                        x2c, y2c = flat[-1]
+                        ang = math.atan2(y2c - y1c, x2c - x1c)
+                        for side in (0.45, -0.45):
+                            ax = max(0, min(img_w - 1, x2c - int(8 * math.cos(ang + side))))
+                            ay = max(0, min(img_h - 1, y2c - int(8 * math.sin(ang + side))))
+                            draw.line([(x2c, y2c), (ax, ay)], fill=(30, 144, 255, 210), width=2)
+                        lbl = conn.get("label_text", conn.get("relationship", ""))
+                        if lbl and flat:
+                            mid = flat[len(flat) // 2]
+                            tx  = max(0, min(img_w - 40, mid[0] + 3))
+                            ty  = max(0, min(img_h - 14, mid[1] - 14))
+                            draw.text((tx, ty), str(lbl), fill=(20, 90, 150), font=font_sm)
                     meta["connectors_rendered"] += 1
                 except Exception:
                     meta["connectors_skipped"] += 1
@@ -292,7 +299,13 @@ def render_v3_annotation_preview(
                 draw.rectangle([x0, y0, x1, y1], outline=(r, g, b, 255), width=width)
 
                 node_id = obj.get("object_id") or obj.get("label_text") or ""
-                label   = str(node_id) if overlay_mode == "clean" else f"{node_id} [{cls}]"
+                cls_display = _CLASS_DISPLAY.get(str(cls), str(cls))
+                if overlay_mode == "clean":
+                    label = str(node_id or cls_display)
+                    if node_id and cls_display:
+                        label = f"{node_id} · {cls_display}"
+                else:
+                    label = f"{node_id or cls_display} [{cls_display}]"
                 lh_est  = 16
                 try:
                     tb = draw.textbbox((x0, 0), label, font=font)
