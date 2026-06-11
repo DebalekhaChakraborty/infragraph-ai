@@ -1,9 +1,1210 @@
 {
   "summary": {
-    "records": 0,
-    "average_chosen_score": 0.0,
-    "average_rejected_score": 0.0,
-    "records_with_positive_margin": 0
+    "records": 16,
+    "average_chosen_score": 0.8931,
+    "average_rejected_score": 0.2075,
+    "records_with_positive_margin": 16
   },
-  "records": []
+  "records": [
+    {
+      "id": "rca_rl_00065",
+      "scenario_id": "enterprise_v3_0056",
+      "chosen_score": 0.9173,
+      "rejected_score": 0.4947,
+      "margin": 0.4226,
+      "chosen_details": {
+        "json_format": {
+          "score": 1.0,
+          "reason": "10/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 1.0,
+          "reason": "probable_root_cause matches reference"
+        },
+        "grounded_node": {
+          "score": 0.6667,
+          "reason": "2/3 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 1.0,
+          "reason": "all mentioned devices are in reference evidence"
+        },
+        "validation_before_remediation": {
+          "score": 0.7,
+          "reason": "validation/remediation present but ordering is unclear"
+        },
+        "rollback_safety": {
+          "score": 1.0,
+          "reason": "rollback and do-not-execute safeguards present"
+        },
+        "enterprise_escalation": {
+          "score": 1.0,
+          "reason": "single-diagram record does not require enterprise escalation"
+        },
+        "servicenow_summary": {
+          "score": 1.0,
+          "reason": "5/5 ServiceNow fields present"
+        }
+      },
+      "rejected_details": {
+        "json_format": {
+          "score": 0.3,
+          "reason": "3/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 1.0,
+          "reason": "probable_root_cause matches reference"
+        },
+        "grounded_node": {
+          "score": 0.3333,
+          "reason": "1/3 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 1.0,
+          "reason": "all mentioned devices are in reference evidence"
+        },
+        "validation_before_remediation": {
+          "score": 0.0,
+          "reason": "validation_steps or remediation_steps missing"
+        },
+        "rollback_safety": {
+          "score": 0.0,
+          "reason": "rollback/safety missing"
+        },
+        "enterprise_escalation": {
+          "score": 1.0,
+          "reason": "single-diagram record does not require enterprise escalation"
+        },
+        "servicenow_summary": {
+          "score": 0.0,
+          "reason": "ServiceNow summary missing"
+        }
+      }
+    },
+    {
+      "id": "rca_rl_00066",
+      "scenario_id": "enterprise_v3_0057",
+      "chosen_score": 0.88,
+      "rejected_score": 0.084,
+      "margin": 0.796,
+      "chosen_details": {
+        "json_format": {
+          "score": 1.0,
+          "reason": "10/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 1.0,
+          "reason": "probable_root_cause matches reference"
+        },
+        "grounded_node": {
+          "score": 0.4,
+          "reason": "2/5 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 1.0,
+          "reason": "all mentioned devices are in reference evidence"
+        },
+        "validation_before_remediation": {
+          "score": 0.7,
+          "reason": "validation/remediation present but ordering is unclear"
+        },
+        "rollback_safety": {
+          "score": 1.0,
+          "reason": "rollback and do-not-execute safeguards present"
+        },
+        "enterprise_escalation": {
+          "score": 1.0,
+          "reason": "enterprise escalation present for cross-diagram incident"
+        },
+        "servicenow_summary": {
+          "score": 1.0,
+          "reason": "5/5 ServiceNow fields present"
+        }
+      },
+      "rejected_details": {
+        "json_format": {
+          "score": 0.0,
+          "reason": "response is not valid JSON"
+        },
+        "root_cause_match": {
+          "score": 0.0,
+          "reason": "root cause missing or incorrect"
+        },
+        "grounded_node": {
+          "score": 0.0,
+          "reason": "0/5 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 0.6,
+          "reason": "no device-like tokens found"
+        },
+        "validation_before_remediation": {
+          "score": 0.0,
+          "reason": "validation_steps or remediation_steps missing"
+        },
+        "rollback_safety": {
+          "score": 0.0,
+          "reason": "rollback/safety missing"
+        },
+        "enterprise_escalation": {
+          "score": 0.0,
+          "reason": "cross-diagram incident missing enterprise escalation"
+        },
+        "servicenow_summary": {
+          "score": 0.0,
+          "reason": "ServiceNow summary missing"
+        }
+      }
+    },
+    {
+      "id": "rca_rl_00067",
+      "scenario_id": "enterprise_v3_0058",
+      "chosen_score": 0.894,
+      "rejected_score": 0.264,
+      "margin": 0.63,
+      "chosen_details": {
+        "json_format": {
+          "score": 1.0,
+          "reason": "10/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 1.0,
+          "reason": "probable_root_cause matches reference"
+        },
+        "grounded_node": {
+          "score": 0.5,
+          "reason": "2/4 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 1.0,
+          "reason": "all mentioned devices are in reference evidence"
+        },
+        "validation_before_remediation": {
+          "score": 0.7,
+          "reason": "validation/remediation present but ordering is unclear"
+        },
+        "rollback_safety": {
+          "score": 1.0,
+          "reason": "rollback and do-not-execute safeguards present"
+        },
+        "enterprise_escalation": {
+          "score": 1.0,
+          "reason": "single-diagram record does not require enterprise escalation"
+        },
+        "servicenow_summary": {
+          "score": 1.0,
+          "reason": "5/5 ServiceNow fields present"
+        }
+      },
+      "rejected_details": {
+        "json_format": {
+          "score": 0.4,
+          "reason": "4/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 0.0,
+          "reason": "root cause missing or incorrect"
+        },
+        "grounded_node": {
+          "score": 0.0,
+          "reason": "0/4 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 0.0,
+          "reason": "hallucinated devices: WRONG-NODE"
+        },
+        "validation_before_remediation": {
+          "score": 1.0,
+          "reason": "validation appears before remediation"
+        },
+        "rollback_safety": {
+          "score": 0.0,
+          "reason": "rollback/safety missing"
+        },
+        "enterprise_escalation": {
+          "score": 1.0,
+          "reason": "single-diagram record does not require enterprise escalation"
+        },
+        "servicenow_summary": {
+          "score": 0.0,
+          "reason": "ServiceNow summary missing"
+        }
+      }
+    },
+    {
+      "id": "rca_rl_00068",
+      "scenario_id": "enterprise_v3_0059",
+      "chosen_score": 0.88,
+      "rejected_score": 0.032,
+      "margin": 0.848,
+      "chosen_details": {
+        "json_format": {
+          "score": 1.0,
+          "reason": "10/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 1.0,
+          "reason": "probable_root_cause matches reference"
+        },
+        "grounded_node": {
+          "score": 0.4,
+          "reason": "2/5 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 1.0,
+          "reason": "all mentioned devices are in reference evidence"
+        },
+        "validation_before_remediation": {
+          "score": 0.7,
+          "reason": "validation/remediation present but ordering is unclear"
+        },
+        "rollback_safety": {
+          "score": 1.0,
+          "reason": "rollback and do-not-execute safeguards present"
+        },
+        "enterprise_escalation": {
+          "score": 1.0,
+          "reason": "enterprise escalation present for cross-diagram incident"
+        },
+        "servicenow_summary": {
+          "score": 1.0,
+          "reason": "5/5 ServiceNow fields present"
+        }
+      },
+      "rejected_details": {
+        "json_format": {
+          "score": 0.2,
+          "reason": "2/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 0.0,
+          "reason": "root cause missing or incorrect"
+        },
+        "grounded_node": {
+          "score": 0.0,
+          "reason": "0/5 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 0.0,
+          "reason": "hallucinated devices: FAKE-RTR-99"
+        },
+        "validation_before_remediation": {
+          "score": 0.0,
+          "reason": "validation_steps or remediation_steps missing"
+        },
+        "rollback_safety": {
+          "score": 0.0,
+          "reason": "rollback/safety missing"
+        },
+        "enterprise_escalation": {
+          "score": 0.0,
+          "reason": "cross-diagram incident missing enterprise escalation"
+        },
+        "servicenow_summary": {
+          "score": 0.0,
+          "reason": "ServiceNow summary missing"
+        }
+      }
+    },
+    {
+      "id": "rca_rl_00069",
+      "scenario_id": "enterprise_v3_0060",
+      "chosen_score": 0.88,
+      "rejected_score": 0.396,
+      "margin": 0.484,
+      "chosen_details": {
+        "json_format": {
+          "score": 1.0,
+          "reason": "10/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 1.0,
+          "reason": "probable_root_cause matches reference"
+        },
+        "grounded_node": {
+          "score": 0.4,
+          "reason": "2/5 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 1.0,
+          "reason": "all mentioned devices are in reference evidence"
+        },
+        "validation_before_remediation": {
+          "score": 0.7,
+          "reason": "validation/remediation present but ordering is unclear"
+        },
+        "rollback_safety": {
+          "score": 1.0,
+          "reason": "rollback and do-not-execute safeguards present"
+        },
+        "enterprise_escalation": {
+          "score": 1.0,
+          "reason": "enterprise escalation present for cross-diagram incident"
+        },
+        "servicenow_summary": {
+          "score": 1.0,
+          "reason": "5/5 ServiceNow fields present"
+        }
+      },
+      "rejected_details": {
+        "json_format": {
+          "score": 0.3,
+          "reason": "3/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 1.0,
+          "reason": "probable_root_cause matches reference"
+        },
+        "grounded_node": {
+          "score": 0.2,
+          "reason": "1/5 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 1.0,
+          "reason": "all mentioned devices are in reference evidence"
+        },
+        "validation_before_remediation": {
+          "score": 0.0,
+          "reason": "validation_steps or remediation_steps missing"
+        },
+        "rollback_safety": {
+          "score": 0.0,
+          "reason": "rollback/safety missing"
+        },
+        "enterprise_escalation": {
+          "score": 0.0,
+          "reason": "cross-diagram incident missing enterprise escalation"
+        },
+        "servicenow_summary": {
+          "score": 0.0,
+          "reason": "ServiceNow summary missing"
+        }
+      }
+    },
+    {
+      "id": "rca_rl_00070",
+      "scenario_id": "enterprise_v3_0061",
+      "chosen_score": 0.88,
+      "rejected_score": 0.084,
+      "margin": 0.796,
+      "chosen_details": {
+        "json_format": {
+          "score": 1.0,
+          "reason": "10/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 1.0,
+          "reason": "probable_root_cause matches reference"
+        },
+        "grounded_node": {
+          "score": 0.4,
+          "reason": "2/5 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 1.0,
+          "reason": "all mentioned devices are in reference evidence"
+        },
+        "validation_before_remediation": {
+          "score": 0.7,
+          "reason": "validation/remediation present but ordering is unclear"
+        },
+        "rollback_safety": {
+          "score": 1.0,
+          "reason": "rollback and do-not-execute safeguards present"
+        },
+        "enterprise_escalation": {
+          "score": 1.0,
+          "reason": "enterprise escalation present for cross-diagram incident"
+        },
+        "servicenow_summary": {
+          "score": 1.0,
+          "reason": "5/5 ServiceNow fields present"
+        }
+      },
+      "rejected_details": {
+        "json_format": {
+          "score": 0.0,
+          "reason": "response is not valid JSON"
+        },
+        "root_cause_match": {
+          "score": 0.0,
+          "reason": "root cause missing or incorrect"
+        },
+        "grounded_node": {
+          "score": 0.0,
+          "reason": "0/5 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 0.6,
+          "reason": "no device-like tokens found"
+        },
+        "validation_before_remediation": {
+          "score": 0.0,
+          "reason": "validation_steps or remediation_steps missing"
+        },
+        "rollback_safety": {
+          "score": 0.0,
+          "reason": "rollback/safety missing"
+        },
+        "enterprise_escalation": {
+          "score": 0.0,
+          "reason": "cross-diagram incident missing enterprise escalation"
+        },
+        "servicenow_summary": {
+          "score": 0.0,
+          "reason": "ServiceNow summary missing"
+        }
+      }
+    },
+    {
+      "id": "rca_rl_00071",
+      "scenario_id": "enterprise_v3_0062",
+      "chosen_score": 0.88,
+      "rejected_score": 0.184,
+      "margin": 0.696,
+      "chosen_details": {
+        "json_format": {
+          "score": 1.0,
+          "reason": "10/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 1.0,
+          "reason": "probable_root_cause matches reference"
+        },
+        "grounded_node": {
+          "score": 0.4,
+          "reason": "2/5 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 1.0,
+          "reason": "all mentioned devices are in reference evidence"
+        },
+        "validation_before_remediation": {
+          "score": 0.7,
+          "reason": "validation/remediation present but ordering is unclear"
+        },
+        "rollback_safety": {
+          "score": 1.0,
+          "reason": "rollback and do-not-execute safeguards present"
+        },
+        "enterprise_escalation": {
+          "score": 1.0,
+          "reason": "enterprise escalation present for cross-diagram incident"
+        },
+        "servicenow_summary": {
+          "score": 1.0,
+          "reason": "5/5 ServiceNow fields present"
+        }
+      },
+      "rejected_details": {
+        "json_format": {
+          "score": 0.4,
+          "reason": "4/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 0.0,
+          "reason": "root cause missing or incorrect"
+        },
+        "grounded_node": {
+          "score": 0.0,
+          "reason": "0/5 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 0.0,
+          "reason": "hallucinated devices: WRONG-NODE"
+        },
+        "validation_before_remediation": {
+          "score": 1.0,
+          "reason": "validation appears before remediation"
+        },
+        "rollback_safety": {
+          "score": 0.0,
+          "reason": "rollback/safety missing"
+        },
+        "enterprise_escalation": {
+          "score": 0.0,
+          "reason": "cross-diagram incident missing enterprise escalation"
+        },
+        "servicenow_summary": {
+          "score": 0.0,
+          "reason": "ServiceNow summary missing"
+        }
+      }
+    },
+    {
+      "id": "rca_rl_00072",
+      "scenario_id": "enterprise_v3_0063",
+      "chosen_score": 0.894,
+      "rejected_score": 0.032,
+      "margin": 0.862,
+      "chosen_details": {
+        "json_format": {
+          "score": 1.0,
+          "reason": "10/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 1.0,
+          "reason": "probable_root_cause matches reference"
+        },
+        "grounded_node": {
+          "score": 0.5,
+          "reason": "2/4 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 1.0,
+          "reason": "all mentioned devices are in reference evidence"
+        },
+        "validation_before_remediation": {
+          "score": 0.7,
+          "reason": "validation/remediation present but ordering is unclear"
+        },
+        "rollback_safety": {
+          "score": 1.0,
+          "reason": "rollback and do-not-execute safeguards present"
+        },
+        "enterprise_escalation": {
+          "score": 1.0,
+          "reason": "enterprise escalation present for cross-diagram incident"
+        },
+        "servicenow_summary": {
+          "score": 1.0,
+          "reason": "5/5 ServiceNow fields present"
+        }
+      },
+      "rejected_details": {
+        "json_format": {
+          "score": 0.2,
+          "reason": "2/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 0.0,
+          "reason": "root cause missing or incorrect"
+        },
+        "grounded_node": {
+          "score": 0.0,
+          "reason": "0/4 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 0.0,
+          "reason": "hallucinated devices: FAKE-RTR-99"
+        },
+        "validation_before_remediation": {
+          "score": 0.0,
+          "reason": "validation_steps or remediation_steps missing"
+        },
+        "rollback_safety": {
+          "score": 0.0,
+          "reason": "rollback/safety missing"
+        },
+        "enterprise_escalation": {
+          "score": 0.0,
+          "reason": "cross-diagram incident missing enterprise escalation"
+        },
+        "servicenow_summary": {
+          "score": 0.0,
+          "reason": "ServiceNow summary missing"
+        }
+      }
+    },
+    {
+      "id": "rca_rl_00073",
+      "scenario_id": "enterprise_v3_0064",
+      "chosen_score": 0.9173,
+      "rejected_score": 0.4947,
+      "margin": 0.4226,
+      "chosen_details": {
+        "json_format": {
+          "score": 1.0,
+          "reason": "10/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 1.0,
+          "reason": "probable_root_cause matches reference"
+        },
+        "grounded_node": {
+          "score": 0.6667,
+          "reason": "2/3 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 1.0,
+          "reason": "all mentioned devices are in reference evidence"
+        },
+        "validation_before_remediation": {
+          "score": 0.7,
+          "reason": "validation/remediation present but ordering is unclear"
+        },
+        "rollback_safety": {
+          "score": 1.0,
+          "reason": "rollback and do-not-execute safeguards present"
+        },
+        "enterprise_escalation": {
+          "score": 1.0,
+          "reason": "single-diagram record does not require enterprise escalation"
+        },
+        "servicenow_summary": {
+          "score": 1.0,
+          "reason": "5/5 ServiceNow fields present"
+        }
+      },
+      "rejected_details": {
+        "json_format": {
+          "score": 0.3,
+          "reason": "3/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 1.0,
+          "reason": "probable_root_cause matches reference"
+        },
+        "grounded_node": {
+          "score": 0.3333,
+          "reason": "1/3 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 1.0,
+          "reason": "all mentioned devices are in reference evidence"
+        },
+        "validation_before_remediation": {
+          "score": 0.0,
+          "reason": "validation_steps or remediation_steps missing"
+        },
+        "rollback_safety": {
+          "score": 0.0,
+          "reason": "rollback/safety missing"
+        },
+        "enterprise_escalation": {
+          "score": 1.0,
+          "reason": "single-diagram record does not require enterprise escalation"
+        },
+        "servicenow_summary": {
+          "score": 0.0,
+          "reason": "ServiceNow summary missing"
+        }
+      }
+    },
+    {
+      "id": "rca_rl_00074",
+      "scenario_id": "enterprise_v3_0065",
+      "chosen_score": 0.894,
+      "rejected_score": 0.164,
+      "margin": 0.73,
+      "chosen_details": {
+        "json_format": {
+          "score": 1.0,
+          "reason": "10/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 1.0,
+          "reason": "probable_root_cause matches reference"
+        },
+        "grounded_node": {
+          "score": 0.5,
+          "reason": "2/4 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 1.0,
+          "reason": "all mentioned devices are in reference evidence"
+        },
+        "validation_before_remediation": {
+          "score": 0.7,
+          "reason": "validation/remediation present but ordering is unclear"
+        },
+        "rollback_safety": {
+          "score": 1.0,
+          "reason": "rollback and do-not-execute safeguards present"
+        },
+        "enterprise_escalation": {
+          "score": 1.0,
+          "reason": "single-diagram record does not require enterprise escalation"
+        },
+        "servicenow_summary": {
+          "score": 1.0,
+          "reason": "5/5 ServiceNow fields present"
+        }
+      },
+      "rejected_details": {
+        "json_format": {
+          "score": 0.0,
+          "reason": "response is not valid JSON"
+        },
+        "root_cause_match": {
+          "score": 0.0,
+          "reason": "root cause missing or incorrect"
+        },
+        "grounded_node": {
+          "score": 0.0,
+          "reason": "0/4 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 0.6,
+          "reason": "no device-like tokens found"
+        },
+        "validation_before_remediation": {
+          "score": 0.0,
+          "reason": "validation_steps or remediation_steps missing"
+        },
+        "rollback_safety": {
+          "score": 0.0,
+          "reason": "rollback/safety missing"
+        },
+        "enterprise_escalation": {
+          "score": 1.0,
+          "reason": "single-diagram record does not require enterprise escalation"
+        },
+        "servicenow_summary": {
+          "score": 0.0,
+          "reason": "ServiceNow summary missing"
+        }
+      }
+    },
+    {
+      "id": "rca_rl_00075",
+      "scenario_id": "enterprise_v3_0066",
+      "chosen_score": 0.88,
+      "rejected_score": 0.184,
+      "margin": 0.696,
+      "chosen_details": {
+        "json_format": {
+          "score": 1.0,
+          "reason": "10/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 1.0,
+          "reason": "probable_root_cause matches reference"
+        },
+        "grounded_node": {
+          "score": 0.4,
+          "reason": "2/5 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 1.0,
+          "reason": "all mentioned devices are in reference evidence"
+        },
+        "validation_before_remediation": {
+          "score": 0.7,
+          "reason": "validation/remediation present but ordering is unclear"
+        },
+        "rollback_safety": {
+          "score": 1.0,
+          "reason": "rollback and do-not-execute safeguards present"
+        },
+        "enterprise_escalation": {
+          "score": 1.0,
+          "reason": "enterprise escalation present for cross-diagram incident"
+        },
+        "servicenow_summary": {
+          "score": 1.0,
+          "reason": "5/5 ServiceNow fields present"
+        }
+      },
+      "rejected_details": {
+        "json_format": {
+          "score": 0.4,
+          "reason": "4/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 0.0,
+          "reason": "root cause missing or incorrect"
+        },
+        "grounded_node": {
+          "score": 0.0,
+          "reason": "0/5 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 0.0,
+          "reason": "hallucinated devices: WRONG-NODE"
+        },
+        "validation_before_remediation": {
+          "score": 1.0,
+          "reason": "validation appears before remediation"
+        },
+        "rollback_safety": {
+          "score": 0.0,
+          "reason": "rollback/safety missing"
+        },
+        "enterprise_escalation": {
+          "score": 0.0,
+          "reason": "cross-diagram incident missing enterprise escalation"
+        },
+        "servicenow_summary": {
+          "score": 0.0,
+          "reason": "ServiceNow summary missing"
+        }
+      }
+    },
+    {
+      "id": "rca_rl_00076",
+      "scenario_id": "enterprise_v3_0067",
+      "chosen_score": 0.894,
+      "rejected_score": 0.032,
+      "margin": 0.862,
+      "chosen_details": {
+        "json_format": {
+          "score": 1.0,
+          "reason": "10/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 1.0,
+          "reason": "probable_root_cause matches reference"
+        },
+        "grounded_node": {
+          "score": 0.5,
+          "reason": "2/4 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 1.0,
+          "reason": "all mentioned devices are in reference evidence"
+        },
+        "validation_before_remediation": {
+          "score": 0.7,
+          "reason": "validation/remediation present but ordering is unclear"
+        },
+        "rollback_safety": {
+          "score": 1.0,
+          "reason": "rollback and do-not-execute safeguards present"
+        },
+        "enterprise_escalation": {
+          "score": 1.0,
+          "reason": "enterprise escalation present for cross-diagram incident"
+        },
+        "servicenow_summary": {
+          "score": 1.0,
+          "reason": "5/5 ServiceNow fields present"
+        }
+      },
+      "rejected_details": {
+        "json_format": {
+          "score": 0.2,
+          "reason": "2/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 0.0,
+          "reason": "root cause missing or incorrect"
+        },
+        "grounded_node": {
+          "score": 0.0,
+          "reason": "0/4 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 0.0,
+          "reason": "hallucinated devices: FAKE-RTR-99"
+        },
+        "validation_before_remediation": {
+          "score": 0.0,
+          "reason": "validation_steps or remediation_steps missing"
+        },
+        "rollback_safety": {
+          "score": 0.0,
+          "reason": "rollback/safety missing"
+        },
+        "enterprise_escalation": {
+          "score": 0.0,
+          "reason": "cross-diagram incident missing enterprise escalation"
+        },
+        "servicenow_summary": {
+          "score": 0.0,
+          "reason": "ServiceNow summary missing"
+        }
+      }
+    },
+    {
+      "id": "rca_rl_00077",
+      "scenario_id": "enterprise_v3_0068",
+      "chosen_score": 0.9173,
+      "rejected_score": 0.4147,
+      "margin": 0.5026,
+      "chosen_details": {
+        "json_format": {
+          "score": 1.0,
+          "reason": "10/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 1.0,
+          "reason": "probable_root_cause matches reference"
+        },
+        "grounded_node": {
+          "score": 0.6667,
+          "reason": "2/3 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 1.0,
+          "reason": "all mentioned devices are in reference evidence"
+        },
+        "validation_before_remediation": {
+          "score": 0.7,
+          "reason": "validation/remediation present but ordering is unclear"
+        },
+        "rollback_safety": {
+          "score": 1.0,
+          "reason": "rollback and do-not-execute safeguards present"
+        },
+        "enterprise_escalation": {
+          "score": 1.0,
+          "reason": "enterprise escalation present for cross-diagram incident"
+        },
+        "servicenow_summary": {
+          "score": 1.0,
+          "reason": "5/5 ServiceNow fields present"
+        }
+      },
+      "rejected_details": {
+        "json_format": {
+          "score": 0.3,
+          "reason": "3/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 1.0,
+          "reason": "probable_root_cause matches reference"
+        },
+        "grounded_node": {
+          "score": 0.3333,
+          "reason": "1/3 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 1.0,
+          "reason": "all mentioned devices are in reference evidence"
+        },
+        "validation_before_remediation": {
+          "score": 0.0,
+          "reason": "validation_steps or remediation_steps missing"
+        },
+        "rollback_safety": {
+          "score": 0.0,
+          "reason": "rollback/safety missing"
+        },
+        "enterprise_escalation": {
+          "score": 0.0,
+          "reason": "cross-diagram incident missing enterprise escalation"
+        },
+        "servicenow_summary": {
+          "score": 0.0,
+          "reason": "ServiceNow summary missing"
+        }
+      }
+    },
+    {
+      "id": "rca_rl_00078",
+      "scenario_id": "enterprise_v3_0069",
+      "chosen_score": 0.894,
+      "rejected_score": 0.164,
+      "margin": 0.73,
+      "chosen_details": {
+        "json_format": {
+          "score": 1.0,
+          "reason": "10/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 1.0,
+          "reason": "probable_root_cause matches reference"
+        },
+        "grounded_node": {
+          "score": 0.5,
+          "reason": "2/4 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 1.0,
+          "reason": "all mentioned devices are in reference evidence"
+        },
+        "validation_before_remediation": {
+          "score": 0.7,
+          "reason": "validation/remediation present but ordering is unclear"
+        },
+        "rollback_safety": {
+          "score": 1.0,
+          "reason": "rollback and do-not-execute safeguards present"
+        },
+        "enterprise_escalation": {
+          "score": 1.0,
+          "reason": "single-diagram record does not require enterprise escalation"
+        },
+        "servicenow_summary": {
+          "score": 1.0,
+          "reason": "5/5 ServiceNow fields present"
+        }
+      },
+      "rejected_details": {
+        "json_format": {
+          "score": 0.0,
+          "reason": "response is not valid JSON"
+        },
+        "root_cause_match": {
+          "score": 0.0,
+          "reason": "root cause missing or incorrect"
+        },
+        "grounded_node": {
+          "score": 0.0,
+          "reason": "0/4 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 0.6,
+          "reason": "no device-like tokens found"
+        },
+        "validation_before_remediation": {
+          "score": 0.0,
+          "reason": "validation_steps or remediation_steps missing"
+        },
+        "rollback_safety": {
+          "score": 0.0,
+          "reason": "rollback/safety missing"
+        },
+        "enterprise_escalation": {
+          "score": 1.0,
+          "reason": "single-diagram record does not require enterprise escalation"
+        },
+        "servicenow_summary": {
+          "score": 0.0,
+          "reason": "ServiceNow summary missing"
+        }
+      }
+    },
+    {
+      "id": "rca_rl_00079",
+      "scenario_id": "enterprise_v3_0070",
+      "chosen_score": 0.894,
+      "rejected_score": 0.184,
+      "margin": 0.71,
+      "chosen_details": {
+        "json_format": {
+          "score": 1.0,
+          "reason": "10/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 1.0,
+          "reason": "probable_root_cause matches reference"
+        },
+        "grounded_node": {
+          "score": 0.5,
+          "reason": "2/4 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 1.0,
+          "reason": "all mentioned devices are in reference evidence"
+        },
+        "validation_before_remediation": {
+          "score": 0.7,
+          "reason": "validation/remediation present but ordering is unclear"
+        },
+        "rollback_safety": {
+          "score": 1.0,
+          "reason": "rollback and do-not-execute safeguards present"
+        },
+        "enterprise_escalation": {
+          "score": 1.0,
+          "reason": "enterprise escalation present for cross-diagram incident"
+        },
+        "servicenow_summary": {
+          "score": 1.0,
+          "reason": "5/5 ServiceNow fields present"
+        }
+      },
+      "rejected_details": {
+        "json_format": {
+          "score": 0.4,
+          "reason": "4/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 0.0,
+          "reason": "root cause missing or incorrect"
+        },
+        "grounded_node": {
+          "score": 0.0,
+          "reason": "0/4 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 0.0,
+          "reason": "hallucinated devices: WRONG-NODE"
+        },
+        "validation_before_remediation": {
+          "score": 1.0,
+          "reason": "validation appears before remediation"
+        },
+        "rollback_safety": {
+          "score": 0.0,
+          "reason": "rollback/safety missing"
+        },
+        "enterprise_escalation": {
+          "score": 0.0,
+          "reason": "cross-diagram incident missing enterprise escalation"
+        },
+        "servicenow_summary": {
+          "score": 0.0,
+          "reason": "ServiceNow summary missing"
+        }
+      }
+    },
+    {
+      "id": "rca_rl_00080",
+      "scenario_id": "enterprise_v3_0071",
+      "chosen_score": 0.894,
+      "rejected_score": 0.112,
+      "margin": 0.782,
+      "chosen_details": {
+        "json_format": {
+          "score": 1.0,
+          "reason": "10/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 1.0,
+          "reason": "probable_root_cause matches reference"
+        },
+        "grounded_node": {
+          "score": 0.5,
+          "reason": "2/4 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 1.0,
+          "reason": "all mentioned devices are in reference evidence"
+        },
+        "validation_before_remediation": {
+          "score": 0.7,
+          "reason": "validation/remediation present but ordering is unclear"
+        },
+        "rollback_safety": {
+          "score": 1.0,
+          "reason": "rollback and do-not-execute safeguards present"
+        },
+        "enterprise_escalation": {
+          "score": 1.0,
+          "reason": "single-diagram record does not require enterprise escalation"
+        },
+        "servicenow_summary": {
+          "score": 1.0,
+          "reason": "5/5 ServiceNow fields present"
+        }
+      },
+      "rejected_details": {
+        "json_format": {
+          "score": 0.2,
+          "reason": "2/10 required keys present"
+        },
+        "root_cause_match": {
+          "score": 0.0,
+          "reason": "root cause missing or incorrect"
+        },
+        "grounded_node": {
+          "score": 0.0,
+          "reason": "0/4 reference nodes cited"
+        },
+        "no_hallucinated_device": {
+          "score": 0.0,
+          "reason": "hallucinated devices: FAKE-RTR-99"
+        },
+        "validation_before_remediation": {
+          "score": 0.0,
+          "reason": "validation_steps or remediation_steps missing"
+        },
+        "rollback_safety": {
+          "score": 0.0,
+          "reason": "rollback/safety missing"
+        },
+        "enterprise_escalation": {
+          "score": 1.0,
+          "reason": "single-diagram record does not require enterprise escalation"
+        },
+        "servicenow_summary": {
+          "score": 0.0,
+          "reason": "ServiceNow summary missing"
+        }
+      }
+    }
+  ]
 }
