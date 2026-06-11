@@ -1,0 +1,20 @@
+{
+  "scenario_id": "enterprise_v3_0000",
+  "scenario_path": "datasets/infragraph_v3/scenarios/train/enterprise_v3_0000",
+  "diagram_count": 5,
+  "impacted_diagram_count": 4,
+  "impacted_diagrams": [
+    "app_db_topology",
+    "branch_topology",
+    "datacenter_topology",
+    "shared_services_topology"
+  ],
+  "alert_count": 7,
+  "cross_diagram_edge_count": 11,
+  "root_cause": "DC-FW-01",
+  "root_cause_diagram": "datacenter_topology",
+  "gnn_result_available": false,
+  "gnn_result_path": "",
+  "rca_label": "Scenario-grounded cross-diagram RCA simulation",
+  "score": 174
+}
