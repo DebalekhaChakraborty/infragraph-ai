@@ -127,11 +127,20 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
 def get_enterprise_graph_v1_root(repo_root: Path) -> Path:
+    """V1 root for backward compatibility — V3 is the preferred dataset."""
     preferred = repo_root / "datasets" / "infragraph_v1" / "enterprise_graph"
     legacy = repo_root / "datasets" / "enterprise_graph_v1"
     if preferred.exists():
         return preferred
     return legacy
+
+
+def get_default_dataset_root(repo_root: Path) -> Path:
+    """Return V3 dataset root if available, else fall back to V1."""
+    v3 = repo_root / "datasets" / "infragraph_v3"
+    if v3.exists():
+        return v3
+    return get_enterprise_graph_v1_root(repo_root)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -853,8 +862,9 @@ def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description="Enterprise GNN RCA -- train on stitched multi-diagram graphs"
     )
-    p.add_argument("--dataset-root", default=str(get_enterprise_graph_v1_root(REPO_ROOT)),
-                   help="Root of the V1 enterprise graph dataset")
+    p.add_argument("--dataset-root", default=str(get_default_dataset_root(REPO_ROOT)),
+                   help="Dataset root: V3 (datasets/infragraph_v3) preferred; "
+                        "V1 (datasets/infragraph_v1/enterprise_graph) supported for backward compat")
     p.add_argument("--out",  default="outputs/enterprise_gnn_rca",
                    help="Output directory")
     p.add_argument("--epochs",       type=int,   default=80)
@@ -862,7 +872,8 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument("--weight-decay", type=float, default=0.0001)
     p.add_argument("--hidden1",      type=int,   default=96)
     p.add_argument("--hidden2",      type=int,   default=48)
-    p.add_argument("--presentation-scenario", default="enterprise_0000")
+    p.add_argument("--presentation-scenario", default="enterprise_v3_0000",
+                   help="Scenario ID to use for inference visualisation output")
     p.add_argument("--presentation-split",    default="test",
                    choices=["train", "val", "test"])
     p.add_argument("--seed", type=int, default=2026)

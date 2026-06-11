@@ -1,0 +1,1131 @@
+[
+  {
+    "scenario_id": "enterprise_v3_0000",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0000\\enterprise_graph.json",
+    "node_count": 36,
+    "edge_count": 69,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0001",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0001\\enterprise_graph.json",
+    "node_count": 34,
+    "edge_count": 64,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0002",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0002\\enterprise_graph.json",
+    "node_count": 35,
+    "edge_count": 65,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0003",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0003\\enterprise_graph.json",
+    "node_count": 36,
+    "edge_count": 66,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0004",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0004\\enterprise_graph.json",
+    "node_count": 37,
+    "edge_count": 70,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0005",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0005\\enterprise_graph.json",
+    "node_count": 35,
+    "edge_count": 65,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0006",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0006\\enterprise_graph.json",
+    "node_count": 37,
+    "edge_count": 70,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0007",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0007\\enterprise_graph.json",
+    "node_count": 24,
+    "edge_count": 36,
+    "cross_diagram_edges": 6,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "branch_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0008",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0008\\enterprise_graph.json",
+    "node_count": 37,
+    "edge_count": 67,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0009",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0009\\enterprise_graph.json",
+    "node_count": 35,
+    "edge_count": 65,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0010",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0010\\enterprise_graph.json",
+    "node_count": 23,
+    "edge_count": 31,
+    "cross_diagram_edges": 6,
+    "diagrams": [
+      "datacenter_topology",
+      "branch_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0011",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0011\\enterprise_graph.json",
+    "node_count": 37,
+    "edge_count": 67,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0012",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0012\\enterprise_graph.json",
+    "node_count": 33,
+    "edge_count": 54,
+    "cross_diagram_edges": 16,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "branch_topology",
+      "shared_services_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0013",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0013\\enterprise_graph.json",
+    "node_count": 24,
+    "edge_count": 32,
+    "cross_diagram_edges": 6,
+    "diagrams": [
+      "datacenter_topology",
+      "branch_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0014",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0014\\enterprise_graph.json",
+    "node_count": 37,
+    "edge_count": 67,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0015",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0015\\enterprise_graph.json",
+    "node_count": 29,
+    "edge_count": 38,
+    "cross_diagram_edges": 8,
+    "diagrams": [
+      "datacenter_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0016",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0016\\enterprise_graph.json",
+    "node_count": 24,
+    "edge_count": 32,
+    "cross_diagram_edges": 6,
+    "diagrams": [
+      "datacenter_topology",
+      "branch_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0017",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0017\\enterprise_graph.json",
+    "node_count": 23,
+    "edge_count": 36,
+    "cross_diagram_edges": 8,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0018",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0018\\enterprise_graph.json",
+    "node_count": 37,
+    "edge_count": 67,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0019",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0019\\enterprise_graph.json",
+    "node_count": 23,
+    "edge_count": 39,
+    "cross_diagram_edges": 8,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0020",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0020\\enterprise_graph.json",
+    "node_count": 36,
+    "edge_count": 66,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0021",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0021\\enterprise_graph.json",
+    "node_count": 22,
+    "edge_count": 35,
+    "cross_diagram_edges": 8,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0022",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0022\\enterprise_graph.json",
+    "node_count": 31,
+    "edge_count": 52,
+    "cross_diagram_edges": 12,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "branch_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0023",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0023\\enterprise_graph.json",
+    "node_count": 37,
+    "edge_count": 70,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0024",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0024\\enterprise_graph.json",
+    "node_count": 35,
+    "edge_count": 68,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0025",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0025\\enterprise_graph.json",
+    "node_count": 25,
+    "edge_count": 37,
+    "cross_diagram_edges": 6,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "branch_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0026",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0026\\enterprise_graph.json",
+    "node_count": 22,
+    "edge_count": 35,
+    "cross_diagram_edges": 8,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0027",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0027\\enterprise_graph.json",
+    "node_count": 37,
+    "edge_count": 70,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0028",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0028\\enterprise_graph.json",
+    "node_count": 27,
+    "edge_count": 36,
+    "cross_diagram_edges": 8,
+    "diagrams": [
+      "datacenter_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0029",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0029\\enterprise_graph.json",
+    "node_count": 25,
+    "edge_count": 41,
+    "cross_diagram_edges": 8,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0030",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0030\\enterprise_graph.json",
+    "node_count": 33,
+    "edge_count": 57,
+    "cross_diagram_edges": 16,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "branch_topology",
+      "shared_services_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0031",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0031\\enterprise_graph.json",
+    "node_count": 23,
+    "edge_count": 36,
+    "cross_diagram_edges": 8,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0032",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0032\\enterprise_graph.json",
+    "node_count": 28,
+    "edge_count": 37,
+    "cross_diagram_edges": 8,
+    "diagrams": [
+      "datacenter_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0033",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0033\\enterprise_graph.json",
+    "node_count": 38,
+    "edge_count": 68,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0034",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0034\\enterprise_graph.json",
+    "node_count": 31,
+    "edge_count": 52,
+    "cross_diagram_edges": 12,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "branch_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0035",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0035\\enterprise_graph.json",
+    "node_count": 39,
+    "edge_count": 72,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0036",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0036\\enterprise_graph.json",
+    "node_count": 23,
+    "edge_count": 32,
+    "cross_diagram_edges": 6,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "branch_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0037",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0037\\enterprise_graph.json",
+    "node_count": 37,
+    "edge_count": 67,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0038",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0038\\enterprise_graph.json",
+    "node_count": 25,
+    "edge_count": 34,
+    "cross_diagram_edges": 6,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "branch_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0039",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0039\\enterprise_graph.json",
+    "node_count": 22,
+    "edge_count": 30,
+    "cross_diagram_edges": 6,
+    "diagrams": [
+      "datacenter_topology",
+      "branch_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0040",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0040\\enterprise_graph.json",
+    "node_count": 28,
+    "edge_count": 37,
+    "cross_diagram_edges": 8,
+    "diagrams": [
+      "datacenter_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0041",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0041\\enterprise_graph.json",
+    "node_count": 27,
+    "edge_count": 39,
+    "cross_diagram_edges": 6,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "branch_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0042",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0042\\enterprise_graph.json",
+    "node_count": 36,
+    "edge_count": 69,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0043",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0043\\enterprise_graph.json",
+    "node_count": 35,
+    "edge_count": 68,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0044",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0044\\enterprise_graph.json",
+    "node_count": 23,
+    "edge_count": 31,
+    "cross_diagram_edges": 6,
+    "diagrams": [
+      "datacenter_topology",
+      "branch_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0045",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0045\\enterprise_graph.json",
+    "node_count": 24,
+    "edge_count": 40,
+    "cross_diagram_edges": 8,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0046",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0046\\enterprise_graph.json",
+    "node_count": 35,
+    "edge_count": 65,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0047",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0047\\enterprise_graph.json",
+    "node_count": 23,
+    "edge_count": 36,
+    "cross_diagram_edges": 8,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0048",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0048\\enterprise_graph.json",
+    "node_count": 36,
+    "edge_count": 66,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0049",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0049\\enterprise_graph.json",
+    "node_count": 37,
+    "edge_count": 70,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0050",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0050\\enterprise_graph.json",
+    "node_count": 27,
+    "edge_count": 39,
+    "cross_diagram_edges": 6,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "branch_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0051",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0051\\enterprise_graph.json",
+    "node_count": 21,
+    "edge_count": 29,
+    "cross_diagram_edges": 6,
+    "diagrams": [
+      "datacenter_topology",
+      "branch_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0052",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0052\\enterprise_graph.json",
+    "node_count": 39,
+    "edge_count": 72,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0053",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0053\\enterprise_graph.json",
+    "node_count": 36,
+    "edge_count": 69,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0054",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0054\\enterprise_graph.json",
+    "node_count": 35,
+    "edge_count": 65,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0055",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0055\\enterprise_graph.json",
+    "node_count": 32,
+    "edge_count": 53,
+    "cross_diagram_edges": 12,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "branch_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0056",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0056\\enterprise_graph.json",
+    "node_count": 30,
+    "edge_count": 39,
+    "cross_diagram_edges": 8,
+    "diagrams": [
+      "datacenter_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0057",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0057\\enterprise_graph.json",
+    "node_count": 31,
+    "edge_count": 52,
+    "cross_diagram_edges": 12,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "branch_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0058",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0058\\enterprise_graph.json",
+    "node_count": 36,
+    "edge_count": 66,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0059",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0059\\enterprise_graph.json",
+    "node_count": 28,
+    "edge_count": 37,
+    "cross_diagram_edges": 8,
+    "diagrams": [
+      "datacenter_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0060",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0060\\enterprise_graph.json",
+    "node_count": 23,
+    "edge_count": 39,
+    "cross_diagram_edges": 8,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0061",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0061\\enterprise_graph.json",
+    "node_count": 32,
+    "edge_count": 53,
+    "cross_diagram_edges": 12,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "branch_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0062",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0062\\enterprise_graph.json",
+    "node_count": 36,
+    "edge_count": 66,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0063",
+    "split": "train",
+    "path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0063\\enterprise_graph.json",
+    "node_count": 39,
+    "edge_count": 72,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0064",
+    "split": "val",
+    "path": "datasets\\infragraph_v3\\scenarios\\val\\enterprise_v3_0064\\enterprise_graph.json",
+    "node_count": 24,
+    "edge_count": 32,
+    "cross_diagram_edges": 6,
+    "diagrams": [
+      "datacenter_topology",
+      "branch_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0065",
+    "split": "val",
+    "path": "datasets\\infragraph_v3\\scenarios\\val\\enterprise_v3_0065\\enterprise_graph.json",
+    "node_count": 37,
+    "edge_count": 70,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0066",
+    "split": "val",
+    "path": "datasets\\infragraph_v3\\scenarios\\val\\enterprise_v3_0066\\enterprise_graph.json",
+    "node_count": 34,
+    "edge_count": 64,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0067",
+    "split": "val",
+    "path": "datasets\\infragraph_v3\\scenarios\\val\\enterprise_v3_0067\\enterprise_graph.json",
+    "node_count": 29,
+    "edge_count": 50,
+    "cross_diagram_edges": 16,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "branch_topology",
+      "shared_services_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0068",
+    "split": "val",
+    "path": "datasets\\infragraph_v3\\scenarios\\val\\enterprise_v3_0068\\enterprise_graph.json",
+    "node_count": 21,
+    "edge_count": 34,
+    "cross_diagram_edges": 8,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0069",
+    "split": "val",
+    "path": "datasets\\infragraph_v3\\scenarios\\val\\enterprise_v3_0069\\enterprise_graph.json",
+    "node_count": 34,
+    "edge_count": 64,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0070",
+    "split": "val",
+    "path": "datasets\\infragraph_v3\\scenarios\\val\\enterprise_v3_0070\\enterprise_graph.json",
+    "node_count": 27,
+    "edge_count": 36,
+    "cross_diagram_edges": 8,
+    "diagrams": [
+      "datacenter_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0071",
+    "split": "val",
+    "path": "datasets\\infragraph_v3\\scenarios\\val\\enterprise_v3_0071\\enterprise_graph.json",
+    "node_count": 31,
+    "edge_count": 52,
+    "cross_diagram_edges": 12,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "branch_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0072",
+    "split": "test",
+    "path": "datasets\\infragraph_v3\\scenarios\\test\\enterprise_v3_0072\\enterprise_graph.json",
+    "node_count": 28,
+    "edge_count": 46,
+    "cross_diagram_edges": 12,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "branch_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0073",
+    "split": "test",
+    "path": "datasets\\infragraph_v3\\scenarios\\test\\enterprise_v3_0073\\enterprise_graph.json",
+    "node_count": 38,
+    "edge_count": 68,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0074",
+    "split": "test",
+    "path": "datasets\\infragraph_v3\\scenarios\\test\\enterprise_v3_0074\\enterprise_graph.json",
+    "node_count": 22,
+    "edge_count": 38,
+    "cross_diagram_edges": 8,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0075",
+    "split": "test",
+    "path": "datasets\\infragraph_v3\\scenarios\\test\\enterprise_v3_0075\\enterprise_graph.json",
+    "node_count": 28,
+    "edge_count": 37,
+    "cross_diagram_edges": 8,
+    "diagrams": [
+      "datacenter_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0076",
+    "split": "test",
+    "path": "datasets\\infragraph_v3\\scenarios\\test\\enterprise_v3_0076\\enterprise_graph.json",
+    "node_count": 22,
+    "edge_count": 30,
+    "cross_diagram_edges": 6,
+    "diagrams": [
+      "datacenter_topology",
+      "branch_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0077",
+    "split": "test",
+    "path": "datasets\\infragraph_v3\\scenarios\\test\\enterprise_v3_0077\\enterprise_graph.json",
+    "node_count": 25,
+    "edge_count": 41,
+    "cross_diagram_edges": 8,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0078",
+    "split": "test",
+    "path": "datasets\\infragraph_v3\\scenarios\\test\\enterprise_v3_0078\\enterprise_graph.json",
+    "node_count": 30,
+    "edge_count": 51,
+    "cross_diagram_edges": 12,
+    "diagrams": [
+      "app_db_topology",
+      "datacenter_topology",
+      "branch_topology",
+      "wan_topology"
+    ]
+  },
+  {
+    "scenario_id": "enterprise_v3_0079",
+    "split": "test",
+    "path": "datasets\\infragraph_v3\\scenarios\\test\\enterprise_v3_0079\\enterprise_graph.json",
+    "node_count": 37,
+    "edge_count": 70,
+    "cross_diagram_edges": 22,
+    "diagrams": [
+      "app_db_topology",
+      "branch_topology",
+      "shared_services_topology",
+      "wan_topology",
+      "datacenter_topology"
+    ]
+  }
+]
