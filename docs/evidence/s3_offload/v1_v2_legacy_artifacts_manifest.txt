@@ -1,0 +1,10 @@
+Bucket: s3://my-hackathons/infragraph-ai/
+Offload type: v1/v2 legacy DBs and generated artifacts
+Date: Fri Jun 12 11:38:42 UTC 2026
+
+Offloaded paths:
+graph_memory
+outputs/v1_test_predictions_cpu
+outputs/v2_test_predictions_cpu
+outputs/v2_test_predictions_cpu/labels
+training/verl_grpo/runs
