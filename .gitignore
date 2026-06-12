@@ -37,3 +37,13 @@ training_runs/
 
 # Keep datasets in git for submission
 # datasets/ is intentionally NOT ignored
+
+# Python/Jupyter generated files
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# Python/Jupyter generated files
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
