@@ -1,11 +1,11 @@
 # InfraGraph AI — vERL GRPO training configuration
-# Qwen3-4B-Instruct + LoRA + GRPO for RCA remediation alignment
+# Qwen3-4B + LoRA + GRPO for RCA remediation alignment
 #
 # This file documents the intended configuration.  Adapt paths and
 # hardware settings to your environment before running.
 
 data:
-  tokenizer:        Qwen/Qwen3-4B-Instruct
+  tokenizer:        Qwen/Qwen3-4B
   train_files:      ./training/verl_grpo/data/rca_remediation_rl_train.jsonl
   val_files:        ./training/verl_grpo/data/rca_remediation_rl_eval.jsonl
   prompt_key:       prompt
@@ -14,7 +14,7 @@ data:
 
 actor_rollout_ref:
   model:
-    path:            Qwen/Qwen3-4B-Instruct
+    path:            Qwen/Qwen3-4B
     use_lora:        true
   actor:
     strategy:        fsdp           # use deepspeed for multi-GPU
@@ -47,7 +47,7 @@ critic:
   optim:             adamw_torch
   lr:                1.0e-5
   model:
-    path:            Qwen/Qwen3-4B-Instruct
+    path:            Qwen/Qwen3-4B
 
 reward_model:
   # Uses custom reward functions from training/verl_grpo/reward_functions.py

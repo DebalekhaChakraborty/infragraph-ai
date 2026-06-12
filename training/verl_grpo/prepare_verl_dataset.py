@@ -11,11 +11,14 @@ Writes:
 
 Each parquet row follows the vERL dataset schema:
 
-    data_source   str     "infragraph_rca_remediation"
-    prompt        str     JSON list of chat messages — [{"role":"user","content":...}]
-    ability       str     "graph_grounded_remediation"
-    reward_model  str     JSON containing style + ground_truth dict
-    extra_info    str     JSON containing id, scenario_id, scope, root_cause, …
+    data_source   str                  "infragraph_rca_remediation"
+    prompt        str                  JSON list of chat messages — [{"role":"user","content":...}]
+    ability       str                  "graph_grounded_remediation"
+    reward_model  struct/dict          nested: {style: str, ground_truth: struct}
+    extra_info    struct/dict          nested: {index: int, id, scenario_id, scope, root_cause, …}
+
+reward_model and extra_info are written as nested struct columns (not JSON strings)
+so that vERL's rl_dataset.py can call row_dict["extra_info"].get("index", 0) directly.
 """
 from __future__ import annotations
 

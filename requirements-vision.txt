@@ -1,0 +1,26 @@
+# ============================================================
+# InfraGraph AI — vision / detector dependencies
+# ============================================================
+# Use for: RF-DETR / YOLO diagram detector, OCR extraction,
+#          image processing.
+#
+# Install:
+#   pip install -r requirements.txt
+#   pip install -r requirements-vision.txt
+#
+# PyTorch note:
+#   On AMD ROCm, do NOT install torch from PyPI.
+#   Use: pip install torch --index-url https://download.pytorch.org/whl/rocm6.0
+#   On CPU/NVIDIA: pip install torch (or use the appropriate wheel index).
+# ============================================================
+
+# --- Image processing / OCR ----------------------------------
+Pillow>=9.0.0
+opencv-python>=4.7.0
+pytesseract>=0.3.10
+
+# --- YOLO detector -------------------------------------------
+ultralytics>=8.0.0
+
+# --- PyTorch (CPU or GPU — see note above) -------------------
+# torch>=2.0.0
