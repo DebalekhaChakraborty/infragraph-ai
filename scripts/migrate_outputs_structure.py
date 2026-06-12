@@ -7,7 +7,7 @@ New layout
 ----------
 runtime_state/   live_ingestion, live_absorption, incident_runs,
                  vector_memory, global_graph_memory
-demo_assets/     demo_hero, enterprise_gnn_rca, gnn_rca, mlp_rca,
+assets/preloaded/     demo_hero, enterprise_gnn_rca, gnn_rca, mlp_rca,
                  qwen_explanation, annotation_overlays,
                  annotation_overlays_review, onboarded_diagrams
 model_artifacts/ rfdetr_v3, rfdetr_v3_smoke
@@ -42,15 +42,15 @@ MIGRATION_MAP: list[tuple[str, str]] = [
     ("outputs/incident_runs",               "runtime_state/incident_runs"),
     ("outputs/vector_memory",               "runtime_state/vector_memory"),
     ("outputs/global_graph_memory",         "runtime_state/global_graph_memory"),
-    # demo_assets/
-    ("outputs/demo_hero",                   "demo_assets/demo_hero"),
-    ("outputs/enterprise_gnn_rca",          "demo_assets/enterprise_gnn_rca"),
-    ("outputs/gnn_rca",                     "demo_assets/gnn_rca"),
-    ("outputs/mlp_rca",                     "demo_assets/mlp_rca"),
-    ("outputs/qwen_explanation",            "demo_assets/qwen_explanation"),
-    ("outputs/annotation_overlays",         "demo_assets/annotation_overlays"),
-    ("outputs/annotation_overlays_review",  "demo_assets/annotation_overlays_review"),
-    ("outputs/onboarded_diagrams",          "demo_assets/onboarded_diagrams"),
+    # assets/preloaded/
+    ("outputs/demo_hero",                   "assets/preloaded/demo_hero"),
+    ("outputs/enterprise_gnn_rca",          "assets/preloaded/enterprise_gnn_rca"),
+    ("outputs/gnn_rca",                     "assets/preloaded/gnn_rca"),
+    ("outputs/mlp_rca",                     "assets/preloaded/mlp_rca"),
+    ("outputs/qwen_explanation",            "assets/preloaded/qwen_explanation"),
+    ("outputs/annotation_overlays",         "assets/preloaded/annotation_overlays"),
+    ("outputs/annotation_overlays_review",  "assets/preloaded/annotation_overlays_review"),
+    ("outputs/onboarded_diagrams",          "assets/preloaded/onboarded_diagrams"),
     # model_artifacts/
     ("outputs/rfdetr_v3",                   "model_artifacts/rfdetr_v3"),
     ("outputs/rfdetr_v3_smoke",             "model_artifacts/rfdetr_v3_smoke"),

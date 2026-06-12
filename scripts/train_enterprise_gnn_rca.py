@@ -518,7 +518,7 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument("--dataset-root", default=str(get_default_dataset_root(REPO_ROOT)),
                    help="Dataset root: V3 (datasets/infragraph_v3) preferred; "
                         "V1 (datasets/infragraph_v1/enterprise_graph) supported for backward compat")
-    p.add_argument("--out",  default="demo_assets/enterprise_gnn_rca",
+    p.add_argument("--out",  default="assets/preloaded/enterprise_gnn_rca",
                    help="Output directory")
     p.add_argument("--epochs",       type=int,   default=80)
     p.add_argument("--lr",           type=float, default=0.001)

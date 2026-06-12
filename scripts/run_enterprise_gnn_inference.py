@@ -64,7 +64,7 @@ def _parse_args() -> argparse.Namespace:
     p.add_argument("--model-path",   default=None,
                    help="Path to enterprise_gnn_model.pt "
                         "(default: <out>/enterprise_gnn_model.pt)")
-    p.add_argument("--out",          default="./demo_assets/enterprise_gnn_rca",
+    p.add_argument("--out",          default="./assets/preloaded/enterprise_gnn_rca",
                    help="Output directory for inference result JSON")
     return p.parse_args()
 
