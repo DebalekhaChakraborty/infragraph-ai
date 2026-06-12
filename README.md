@@ -67,8 +67,8 @@ python -m vllm.entrypoints.openai.api_server \
 ```bash
 python training/verl_grpo/build_rca_rl_dataset.py \
     --dataset-root ./datasets/infragraph_v3 \
-    --gnn-results  ./outputs/enterprise_gnn_rca \
-    --out          ./data/rl_training/infragraph_rca_remediation_grpo.jsonl
+    --gnn-results  ./demo_assets/enterprise_gnn_rca \
+    --out          ./training/verl_grpo/data
 ```
 
 ### Run GRPO fine-tuning with vERL
@@ -77,10 +77,23 @@ python training/verl_grpo/build_rca_rl_dataset.py \
 bash training/verl_grpo/train_qwen3_grpo.sh
 ```
 
-### Point the app at the fine-tuned adapter
+### Point the app at the base model (current status)
+
+A real GRPO/vERL training run completed on AMD ROCm — see
+[training/verl_grpo/README.md](training/verl_grpo/README.md) for the honest
+status. The live demo uses base Qwen/Qwen3-4B unless a PEFT adapter is
+exported and served with `--enable-lora`.
 
 ```bash
-export INFRAGRAPH_LORA_ADAPTER_PATH=./outputs/verl_grpo_checkpoints/qwen3_grpo_rca_remediation/latest
+export INFRAGRAPH_QWEN_BASE_URL=http://localhost:8000/v1
+export INFRAGRAPH_QWEN_MODEL=Qwen/Qwen3-4B
+streamlit run app/streamlit_app.py
+```
+
+If a PEFT adapter is available (see `training/verl_grpo/export_lora_adapter.py`):
+
+```bash
+export INFRAGRAPH_LORA_ADAPTER_PATH=training/verl_grpo/exported_adapter
 export INFRAGRAPH_QWEN_BASE_URL=http://localhost:8000/v1
 export INFRAGRAPH_QWEN_MODEL=Qwen/Qwen3-4B
 streamlit run app/streamlit_app.py
@@ -110,7 +123,7 @@ The Streamlit cockpit walks through a real-time ingestion journey:
 
 | Step | Tab | What happens |
 |------|-----|-------------|
-| 1. **Run Diagram Intelligence** | Diagram Intelligence | Loads the selected sample, resolves the detection source, writes `outputs/live_ingestion/` evidence |
+| 1. **Run Diagram Intelligence** | Diagram Intelligence | Loads the selected sample, resolves the detection source, writes `runtime_state/live_ingestion/` evidence |
 | 2a. **Generate Topology Alert Stream** | Topology RCA | Builds a realistic alert timeline for the selected diagram topology (T+00m → T+20m) |
 | 2b. **Find Topology Root Cause** | Topology RCA | Runs BFS graph-traversal RCA; shows root cause, reasoning, traversal slider, and graph overlay |
 | 3. **Absorb into Enterprise Brain** | Enterprise Graph Brain | Absorbs the local graph into the enterprise scenario graph; shows before → after PyVis comparison and Global InfraGraph Galaxy |
@@ -344,11 +357,11 @@ pip install chromadb sentence-transformers
 
 python scripts/build_vector_memory.py \
     --repo-root . \
-    --persist-dir ./outputs/vector_memory/chroma \
+    --persist-dir ./runtime_state/vector_memory/chroma \
     --collection infragraph_memory
 ```
 
-Vector memory files are local runtime artifacts under `outputs/vector_memory/`
+Vector memory files are local runtime artifacts under `runtime_state/vector_memory/`
 and are intentionally ignored by git.
 
 ### RCA model architecture
@@ -379,13 +392,13 @@ propagates the root-cause signal through topology neighbours.
 # MLP node-ranker (learned non-graph baseline)
 python scripts/train_mlp_rca.py \
     --dataset-root datasets/infragraph_v2 \
-    --out outputs/mlp_rca \
+    --out demo_assets/mlp_rca \
     --presentation-diagram diagram_0373
 
 # GNN (topology-aware learned model)
 python scripts/train_gnn_rca.py \
     --dataset-root datasets/infragraph_v2 \
-    --out outputs/gnn_rca \
+    --out demo_assets/gnn_rca \
     --presentation-diagram diagram_0373
 ```
 
@@ -410,7 +423,7 @@ the root-cause node that triggered cross-diagram alert propagation.
 # Preferred: V3 multi-diagram enterprise scenarios
 python scripts/train_enterprise_gnn_rca.py \
     --dataset-root ./datasets/infragraph_v3 \
-    --out ./outputs/enterprise_gnn_rca \
+    --out ./demo_assets/enterprise_gnn_rca \
     --epochs 80 \
     --presentation-scenario enterprise_v3_0000 \
     --presentation-split test
@@ -421,11 +434,11 @@ python scripts/train_enterprise_gnn_rca.py \
 
 | Output | Description |
 |--------|-------------|
-| `outputs/enterprise_gnn_rca/enterprise_gnn_model.pt` | Trained GCN checkpoint |
-| `outputs/enterprise_gnn_rca/enterprise_gnn_metrics.json` | Top-1, Top-3, MRR across splits |
-| `outputs/enterprise_gnn_rca/enterprise_gnn_training_curve.png` | Loss and ranking curves |
-| `outputs/enterprise_gnn_rca/<scenario_id>_enterprise_gnn_rca_result.json` | Per-scenario inference result |
-| `outputs/enterprise_gnn_rca/<scenario_id>_enterprise_gnn_prediction.png` | Graph visualisation |
+| `demo_assets/enterprise_gnn_rca/enterprise_gnn_model.pt` | Trained GCN checkpoint |
+| `demo_assets/enterprise_gnn_rca/enterprise_gnn_metrics.json` | Top-1, Top-3, MRR across splits |
+| `demo_assets/enterprise_gnn_rca/enterprise_gnn_training_curve.png` | Loss and ranking curves |
+| `demo_assets/enterprise_gnn_rca/<scenario_id>_enterprise_gnn_rca_result.json` | Per-scenario inference result |
+| `demo_assets/enterprise_gnn_rca/<scenario_id>_enterprise_gnn_prediction.png` | Graph visualisation |
 
 The app UI shows **"Enterprise GNN RCA"** only when a result JSON exists for the
 **exact selected scenario**.  If no matching result is found, the UI shows
@@ -438,16 +451,16 @@ Builds a combined graph-memory index across all V3 scenarios for exploration and
 ```bash
 python scripts/build_global_infragraph_galaxy.py \
     --dataset-root ./datasets/infragraph_v3 \
-    --out ./outputs/global_graph_memory
+    --out ./runtime_state/global_graph_memory
 ```
 
 | Output | Description |
 |--------|-------------|
-| `outputs/global_graph_memory/infragraph_global_graph.json` | Full global node/edge list |
-| `outputs/global_graph_memory/nodes.csv` | One row per node (global_node_id = scenario::node_id) |
-| `outputs/global_graph_memory/edges.csv` | One row per edge |
-| `outputs/global_graph_memory/scenario_index.json` | Per-scenario metadata |
-| `outputs/global_graph_memory/summary.json` | Aggregate counts |
+| `runtime_state/global_graph_memory/infragraph_global_graph.json` | Full global node/edge list |
+| `runtime_state/global_graph_memory/nodes.csv` | One row per node (global_node_id = scenario::node_id) |
+| `runtime_state/global_graph_memory/edges.csv` | One row per edge |
+| `runtime_state/global_graph_memory/scenario_index.json` | Per-scenario metadata |
+| `runtime_state/global_graph_memory/summary.json` | Aggregate counts |
 
 See: [docs/enterprise_gnn_rca.md](docs/enterprise_gnn_rca.md)
 
@@ -500,7 +513,7 @@ python scripts/prepare_rfdetr_dataset.py \
 
 python scripts/train_rfdetr_diagram_detector.py \
     --dataset-root ./datasets/infragraph_v3/rfdetr \
-    --out ./outputs/rfdetr_v3 \
+    --out ./model_artifacts/rfdetr_v3 \
     --epochs 25
 ```
 
@@ -509,7 +522,7 @@ python scripts/train_rfdetr_diagram_detector.py \
 | `datasets/infragraph_v3/scenarios/` | Scenario-native source diagrams, annotations, local graphs, stitch maps, enterprise graphs, alerts, and previews |
 | `datasets/infragraph_v3/rfdetr/` | COCO-style RF-DETR export with metadata linking each image back to its scenario graphs |
 | `datasets/infragraph_v3/yolo/dataset.yaml` | YOLO-compatible export from the same annotations |
-| `outputs/rfdetr_v3/` | RF-DETR model outputs when the external RF-DETR package is installed |
+| `model_artifacts/rfdetr_v3/` | RF-DETR model outputs when the external RF-DETR package is installed |
 
 RF-DETR is the advanced V3 detector path. YOLO remains the stable baseline for
 comparison. The stitched enterprise graph is generated from the same local graphs
@@ -523,7 +536,7 @@ Run annotation QA before detector training:
 ```bash
 python scripts/qa_infragraph_v3_annotations.py \
     --dataset-root ./datasets/infragraph_v3 \
-    --out ./outputs/v3_annotation_qa
+    --out ./reports/v3_annotation_qa
 ```
 
 If QA reports `DISPLAY_ONLY_FIX`, the clean Verified Annotation Overlay is enough.
@@ -550,9 +563,9 @@ Onboard any topology diagram into graph memory with a single command:
 
 ```bash
 python scripts/onboard_diagram.py \
-    --image datasets/infragraph_v2/images/test/diagram_0373.png \
+    --image <path-to-diagram-image> \
     --diagram-id sample_onboard_0373 \
-    --out outputs/onboarded_diagrams
+    --out demo_assets/onboarded_diagrams
 ```
 
 Outputs: `original.png`, `detected.png`, `detected_nodes.json`, `local_graph.json`,
@@ -569,72 +582,46 @@ See: [docs/diagram_onboarding.md](docs/diagram_onboarding.md)
 
 ```
 infragraph-ai/
-├── data_generator/
-│   └── generate_infragraph_dataset.py   # Synthetic dataset generator
-│
+├── app/                          # Streamlit cockpit
+├── assets/                       # Product-facing gallery/onboarding manifests
 ├── datasets/
-│   └── infragraph_v1/                   # V1 dataset (images, labels, graphs, alerts)
-│       ├── images/{train,val,test}/
-│       ├── labels/{train,val,test}/
-│       ├── graphs/{train,val,test}/
-│       ├── alerts/{train,val,test}/
-│       ├── previews/                    # Contact sheets
-│       ├── dataset.yaml
-│       └── classes.txt
-│
-├── training_runs/
-│   └── infragraph_yolo_v1/              # YOLOv8 training artifacts
-│       ├── weights/
-│       │   ├── best.pt                  # Best checkpoint (canonical model path)
-│       │   └── last.pt                  # Final checkpoint
-│       ├── results.csv                  # Training metrics per epoch
-│       └── train_batch*.jpg             # Training batch visualisations
-│
-├── outputs/
-│   ├── v1_test_predictions_cpu/         # Detector output on test set
-│   ├── val_eval/                        # Validation curves and confusion matrix
-│   ├── topology_rca/                   # Stage 2: heuristic RCA outputs
-│   ├── mlp_rca/                         # Stage 3a: MLP model and metrics
-│   ├── gnn_rca/                         # Stage 3b: GNN model and metrics
-│   └── qwen_explanation/                # Stage 4: LLM explanation reports
-│
-├── scripts/
-│   ├── verify_repo_state.py             # Repo integrity checker
-│   ├── build_topology_rca_pipeline.py       # Stage 2: heuristic RCA + topology vis
-│   ├── train_mlp_rca.py                 # Stage 3a: MLP node-ranker (learned baseline)
-│   ├── train_gnn_rca.py                 # Stage 3b: GNN root cause ranking
-│   └── generate_qwen_rca_explanation.py # Stage 4: LLM explanation (mock/vLLM)
-│
+│   ├── infragraph_v1/            # V1 baseline topology dataset + enterprise_graph/
+│   ├── infragraph_v2/            # V2 improved topology dataset
+│   └── infragraph_v3/            # V3 scenario-native dataset (committed)
+├── docs/                         # Architecture and pipeline docs
 ├── notebooks/
-│   ├── 01_generate_dataset.ipynb        # Dataset generation walkthrough
-│   ├── 02_train_yolo_amd.ipynb          # YOLOv8 training (AMD / ROCm / CUDA)
-│   ├── 03_evaluate_detector.ipynb       # mAP, confusion matrix, per-class PR curves
-│   ├── 04_extract_topology_graph.ipynb  # Line detection + OCR → graph
-│   └── 05_rca_graph_walkthrough.ipynb          # Graph RCA & GNN RCA walkthrough
+├── requirements/                 # requirements-*.txt per environment tier
+├── scripts/                      # All CLI pipeline scripts
+├── src/                          # Core library (topology, rca, ai_remediation, …)
+├── training/
+│   └── verl_grpo/                # GRPO/vERL fine-tuning pipeline
 │
-├── src/
-│   ├── topology/
-│   │   ├── line_detection.py            # Hough-line connector detection
-│   │   ├── graph_builder.py             # Assemble NetworkX topology graph
-│   │   └── ocr_extractor.py             # Tesseract OCR label extraction
-│   ├── rca/
-│   │   ├── graph_rca.py                 # Rule-based graph traversal RCA
-│   │   ├── alert_simulator.py           # Synthetic alert sequence generator
-│   │   └── gnn_rca.py                   # GNN root-cause classifier
-│   └── utils/
-│       ├── visualization.py             # Diagram + graph overlay helpers
-│       └── yolo_utils.py                # YOLO label I/O utilities
+├── runtime_state/                # Live runtime outputs — NOT committed
+│   ├── live_ingestion/           # Per-diagram ingestion evidence
+│   ├── live_absorption/          # Enterprise graph absorption runs
+│   ├── incident_runs/            # Persisted incident simulation JSON
+│   ├── vector_memory/            # ChromaDB (gitignored)
+│   └── global_graph_memory/      # Global InfraGraph Galaxy index
 │
-├── configs/
-│   ├── dataset_config.yaml              # Dataset paths & class definitions
-│   └── train_config.yaml                # YOLO training hyperparameters
+├── demo_assets/                  # Curated artifacts used by the Streamlit cockpit
+│   ├── enterprise_gnn_rca/       # Trained GNN metrics + per-scenario RCA results
+│   ├── gnn_rca/                  # V2 GNN model + metrics
+│   ├── mlp_rca/                  # V2 MLP model + metrics
+│   ├── demo_hero/                # Hero scenario selection
+│   ├── onboarded_diagrams/       # Onboarded diagram output packages
+│   └── qwen_explanation/         # Qwen explanation reports
 │
-├── samples/
-│   ├── sample_diagrams/                 # Example generated PNGs
-│   └── sample_outputs/                  # Example detector / RCA outputs
+├── model_artifacts/              # Detector and model checkpoints — gitignored
+│   ├── rfdetr_v3/                # RF-DETR V3 checkpoint + outputs
+│   └── rfdetr_v3_smoke/          # Smoke-test run checkpoint
 │
-├── yolov8n.pt                           # YOLOv8n base weights
-└── requirements.txt
+├── reports/                      # Evaluation reports and annotation QA
+│   ├── val_eval/                 # Validation curves and confusion matrix
+│   ├── v3_annotation_qa/         # V3 annotation QA results
+│   └── hydra_runs/               # Hydra/dated run dirs — gitignored
+│
+└── outputs/                      # Legacy only — kept for backward compatibility
+    └── .gitkeep
 ```
 
 ### Dataset evolution
@@ -660,6 +647,48 @@ enterprise graphs, and RCA ground truth together inside each scenario.
 4. The diagram is absorbed into Enterprise Graph Brain.
 5. Enterprise RCA runs on the updated graph.
 6. Graph Copilot answers using graph evidence.
+
+---
+
+## Artifact layout policy
+
+| Write here | For |
+|------------|-----|
+| `runtime_state/` | Any file generated at runtime (ingestion, absorption, incidents, vector DB, global graph) |
+| `demo_assets/` | Curated, repeatable artifacts committed to the repo (GNN results, hero scenarios, Qwen explanations) |
+| `model_artifacts/` | Detector and model checkpoints (gitignored; large binaries) |
+| `reports/` | Evaluation reports and annotation QA — commit summary files, gitignore large artefacts |
+| `outputs/` | **Do not write here.** Legacy only. Existing files are accessible via `src/paths.py` fallback. |
+
+The `src/paths.py` helpers (`runtime_path()`, `demo_asset_path()`, `model_artifact_path()`,
+`report_path()`) return the canonical new path for writes and fall back to `outputs/<subpath>`
+for reads if the new path does not yet exist — so the cockpit runs on either layout.
+
+---
+
+## Qwen3-4B GRPO/vERL training status
+
+The project ships a full GRPO/vERL training pipeline under `training/verl_grpo/` for
+fine-tuning Qwen/Qwen3-4B on the InfraGraph RCA/remediation alignment dataset with
+deterministic reward functions on AMD ROCm.
+
+### Current honest status
+
+The project includes evidence of a completed real GRPO/vERL training run on AMD ROCm
+with Qwen/Qwen3-4B and LoRA configuration. The run reached `global_step_32` and
+persisted a vERL/FSDP actor checkpoint. However, the current public evidence does not
+include a standalone PEFT LoRA adapter folder containing `adapter_model.safetensors`
+and `adapter_config.json`.
+
+For this reason, the live demo should be presented as:
+- base Qwen3-4B served through vLLM for explanation generation;
+- plus completed GRPO/vERL training evidence for the InfraGraph RCA/remediation alignment workflow.
+
+Do not claim the fine-tuned LoRA is actively loaded in the live vLLM demo until a PEFT
+adapter is exported and served with `--enable-lora`.
+
+See [training/verl_grpo/README.md](training/verl_grpo/README.md) for the full training
+pipeline, checkpoint structure, and adapter export instructions.
 
 ---
 
