@@ -1,8 +1,277 @@
-# Enterprise GNN Root Cause Analysis
+# Enterprise GNN RCA Pipeline
 
-## Why enterprise GNN RCA is needed
+Graph neural network that predicts the root-cause node in an enterprise
+multi-diagram topology from observable event streams.
 
-Single-diagram RCA assumes all devices live in one topology diagram.
+Output: ranked node list with confidence scores.
+No remediation, no validation steps, no rollback, no ServiceNow output.
+Those are generated later by the AI Resolution Agent.
+
+---
+
+## What it does
+
+Given an enterprise scenario (events + stitched multi-diagram graph), the GNN
+ranks every node across all diagrams by its estimated probability of being
+the root cause.  A downstream Streamlit tab or AI Resolution Agent then takes
+`predicted_root_cause` as input to generate remediation.
+
+---
+
+## Architecture
+
+```
+scenario_library/enterprise_gnn_rca/
+  <case_id>/events.json          (observable events — no labels)
+  <case_id>/labels.json          (ground truth — never used as input at inference)
+  <case_id>/graph_ref.json
+<referenced enterprise_graph.json + stitch_map.json>
+
+        ▼  scripts/build_enterprise_gnn_dataset.py
+
+data/rca/enterprise_gnn/
+  graphs.pt              (list of graph dicts with torch tensors)
+  graph_index.json       (per-case metadata + node_id_to_index maps)
+  feature_columns.json   (34 feature names)
+  label_stats.json       (split distribution, graph sizes)
+
+        ▼  scripts/train_enterprise_gnn_rca.py
+
+model_artifacts/enterprise_gnn_rca/
+  enterprise_gnn_rca.pt          (best-checkpoint weights)
+  enterprise_gnn_config.json     (model hyperparameters)
+  feature_columns.json
+
+reports/enterprise_gnn_rca/
+  evaluation.json        (train/val/test top-1/top-3/MRR + baseline comparison)
+  predictions_test.json  (per-case ranked predictions, test split)
+  training_history.json  (loss + val metrics per epoch)
+
+        ▼  scripts/predict_enterprise_gnn_rca.py --scenario-id <id>
+
+assets/preloaded/enterprise_gnn_rca/
+  <scenario_id>.json     (prediction result consumed by Streamlit / AI Agent)
+```
+
+---
+
+## Input data
+
+### Enterprise case inputs
+
+| File | Purpose |
+|------|---------|
+| `events.json` | Observable alert events (node, severity, time_offset_min, diagram_id) |
+| `labels.json` | Ground truth: `root_cause_node`, `root_cause_diagram`, `impacted_diagrams` — private |
+| `graph_ref.json` | Paths to `enterprise_graph.json` and `stitch_map.json` |
+| `enterprise_graph.json` | Nodes + edges + cross_diagram_edges for the full enterprise graph |
+| `stitch_map.json` | Shared entity canonicalisation across diagrams |
+
+### Public vs private
+
+`events.json` is observable.  `labels.json` is never read as input at inference —
+only for optional evaluation comparison.
+
+---
+
+## Graph construction
+
+One PyG `Data` object per scenario:
+
+- **Nodes**: all nodes from `enterprise_graph["nodes"]`
+- **Edges**: all `edges` + `cross_diagram_edges` from the enterprise graph, bidirectional
+- **Node features**: 34-dimensional vector (see below)
+- **Label** (`y`): integer index of `labels["root_cause_node"]` in the node list
+
+---
+
+## Node features (34 total)
+
+| Group | Features | Dim |
+|-------|----------|-----|
+| Node type one-hot | router, switch, firewall, server, database, load_balancer, cloud, wan, service, unknown | 10 |
+| Diagram type one-hot | branch_topology, wan_topology, datacenter_topology, app_db_topology, shared_services_topology, unknown | 6 |
+| Alert activity | is_shared_entity, is_alerted, alert_count_norm, max_severity_score, first_alert_time_norm, mean_alert_time_norm, min_time_rank_norm | 7 |
+| Graph degree | degree_norm, in_degree_norm, out_degree_norm, cross_diagram_degree_norm | 4 |
+| Centrality | pagerank, betweenness_centrality, closeness_centrality | 3 |
+| Reachability | distance_to_alert_norm, reverse_reachability_norm | 2 |
+| Role | source_like_score, sink_like_score | 2 |
+| **Total** | | **34** |
+
+**Severity scores**: critical=1.0, high=0.8, warning=0.6, medium=0.5, low=0.3, info=0.1
+
+**Node type priority** (used in baseline): firewall=0.95, router=0.90, cloud/wan=0.85, load_balancer=0.80, switch=0.70, database=0.65, server=0.55, service=0.50
+
+---
+
+## Model
+
+`EnterpriseRcaGNN` — 3-layer GraphSAGE:
+
+```
+Linear(34 → hidden)       input projection
+SAGEConv(hidden → hidden)  x3 message-passing layers
+Linear(hidden → 1)         per-node logit
+softmax(logits)            → node probability scores
+```
+
+**Loss**: Negative log-likelihood of the root node: `-log_softmax(logits)[root_idx]`
+
+**Best checkpoint**: Selected by highest MRR on the validation split.
+
+---
+
+## Dependencies
+
+```
+torch       >= 2.0
+torch_geometric
+networkx    >= 3.0
+```
+
+If `torch_geometric` is not installed, all scripts exit with:
+```
+[ERROR] torch_geometric is required for enterprise GNN RCA.
+        Install with the correct torch/ROCm/CUDA wheel.
+```
+
+---
+
+## Step-by-step usage
+
+### 1. Build the graph dataset
+
+```bash
+python scripts/build_enterprise_gnn_dataset.py
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--scenario-library` | `scenario_library` | Path to scenario library root |
+| `--out-dir` | `data/rca/enterprise_gnn` | Where to write graphs.pt + index |
+
+### 2. Train
+
+```bash
+python scripts/train_enterprise_gnn_rca.py
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--epochs` | 80 | Training epochs |
+| `--lr` | 0.001 | Adam learning rate |
+| `--hidden-dim` | 64 | GNN hidden dimension |
+| `--num-layers` | 3 | SAGEConv layers |
+| `--dropout` | 0.2 | Dropout rate |
+| `--top-k` | 3 | Top-k for evaluation |
+| `--seed` | 42 | Random seed |
+| `--eval-every` | 10 | Val evaluation frequency |
+
+### 3. Predict one scenario
+
+```bash
+python scripts/predict_enterprise_gnn_rca.py --scenario-id enterprise_v3_0000
+python scripts/predict_enterprise_gnn_rca.py --case-id ent_enterprise_v3_0000
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--scenario-id` | — | scenario_id from manifest |
+| `--case-id` | — | case_id from manifest |
+| `--top-k` | 3 | Number of ranked candidates |
+| `--no-eval` | off | Skip ground-truth comparison |
+
+---
+
+## Evaluation metrics
+
+All metrics are **case-level**:
+
+| Metric | Definition |
+|--------|-----------|
+| **Top-1 accuracy** | Fraction of scenarios where #1 ranked node == ground-truth root |
+| **Top-3 accuracy** | Fraction where ground-truth root appears in top 3 |
+| **MRR** | Mean Reciprocal Rank = mean(1 / rank_of_true_root) |
+| **baseline_topology_score** | Heuristic: alert severity + node type priority + cross-diagram connectivity |
+
+---
+
+## Output format (`<scenario_id>.json`)
+
+```json
+{
+  "scenario_id":          "enterprise_v3_0000",
+  "case_id":              "ent_enterprise_v3_0000",
+  "mode":                 "enterprise_gnn_rca",
+  "rca_source":           "Enterprise GNN RCA",
+  "predicted_root_cause": "DC-FW-01",
+  "root_cause_diagram":   "datacenter_topology",
+  "confidence":           0.8743,
+  "top_candidates": [
+    {
+      "rank": 1,
+      "node_id": "DC-FW-01",
+      "diagram_id": "datacenter_topology",
+      "node_type": "firewall",
+      "score": 0.8743,
+      "evidence": ["alert_count=0.429", "cross_diagram_degree=0.083",
+                   "distance_to_alert=0.0", "shared_entity=True"]
+    }
+  ],
+  "impacted_diagrams": ["app_db_topology", "branch_topology", "datacenter_topology"],
+  "alert_count": 7,
+  "expected_root_cause": "DC-FW-01",
+  "correct": true,
+  "remediation": null
+}
+```
+
+The output never contains: `recommended_actions`, `remediation_steps`,
+`resolution_steps`, `rollback_steps`, `validation_steps`, `servicenow_incident_summary`.
+
+`"remediation": null` signals to the AI Resolution Agent that remediation
+must be generated by the agent, not pre-computed here.
+
+`"rca_source": "Enterprise GNN RCA"` is applied only when a trained model
+produces the prediction.
+
+---
+
+## Consumed by
+
+- **Streamlit demo** reads `assets/preloaded/enterprise_gnn_rca/<scenario_id>.json`.
+- **AI Resolution Agent** receives `predicted_root_cause` + `root_cause_diagram` +
+  `top_candidates` as context to generate remediation.
+
+---
+
+## Integrity constraints
+
+- `labels.json` is never read at inference.
+- No remediation content is written to any file in this pipeline.
+- Model checkpoints and generated datasets are not committed to Git.
+- `rca_source: "Enterprise GNN RCA"` only when a trained `.pt` model exists.
+
+---
+
+## Directory layout
+
+```
+src/rca_ml/
+  enterprise_gnn_dataset.py    graph construction, feature engineering
+  enterprise_gnn_model.py      GraphSAGE model, save/load
+  enterprise_gnn_inference.py  predict_one(), evaluate_dataset(), heuristic baseline
+
+scripts/
+  build_enterprise_gnn_dataset.py
+  train_enterprise_gnn_rca.py
+  predict_enterprise_gnn_rca.py
+
+data/rca/enterprise_gnn/             (gitignored)
+model_artifacts/enterprise_gnn_rca/  (gitignored)
+reports/enterprise_gnn_rca/          (gitignored)
+assets/preloaded/enterprise_gnn_rca/ (committed for Streamlit demo)
+```
 In a real enterprise, an alert on a branch office router might cascade
 to WAN routers, then to datacenter firewalls, then to application servers
 — each in a completely different diagram drawn by a different team.
