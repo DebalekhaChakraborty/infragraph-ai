@@ -4,19 +4,22 @@ predict_topology_rca.py — Run root-cause prediction for one topology RCA case.
 
 Reads:
   scenario_library/topology_rca/<case_id>/events.json
-  scenario_library/topology_rca/<case_id>/labels.json  (for ground-truth comparison)
   scenario_library/topology_rca/<case_id>/graph_ref.json
   model_artifacts/topology_rca/topology_rca_model.joblib
 
 Writes:
   assets/preloaded/topology_rca_results/<case_id>.json
 
-Output format contains only root-cause node ranking — no remediation content.
+Default output contains only root-cause node ranking — no evaluation fields
+and no remediation content.  Pass --with-eval to include ground-truth
+comparison (reads labels.json from the scenario library).
 
 Usage:
   python scripts/predict_topology_rca.py --case-id topo_enterprise_v3_0000_datacenter_topology
   python scripts/predict_topology_rca.py --case-id topo_enterprise_v3_0000_datacenter_topology \\
-      --top-k 5 --no-eval
+      --top-k 5 --with-eval
+  python scripts/predict_topology_rca.py --case-id topo_enterprise_v3_0000_datacenter_topology \\
+      --hybrid-score
 """
 from __future__ import annotations
 
@@ -42,6 +45,9 @@ _FORBIDDEN_KEYS = frozenset({
     "recommended_actions", "remediation_steps", "resolution_steps",
     "rollback_steps", "validation_steps", "servicenow_ticket",
     "remediation", "resolution", "rollback",
+    # top-level evaluation leakage (must be under "evaluation" key only)
+    "expected_root_cause", "ground_truth_node", "correct",
+    "correct_top1", "correct_top_k", "reciprocal_rank",
 })
 
 
@@ -49,6 +55,23 @@ def _assert_clean(obj: dict) -> None:
     for key in _FORBIDDEN_KEYS:
         if key in obj:
             raise ValueError(f"Output contains forbidden key: {key!r}")
+
+
+def _compute_alert_context_score(df: pd.DataFrame) -> pd.Series:
+    """Normalized alert-context score for hybrid ranking (0–1)."""
+    prop   = df.get("propagation_consistency_score",    pd.Series(0.0, index=df.index))
+    compat = df.get("node_alert_compatibility_score",   pd.Series(0.0, index=df.index))
+    seq    = df.get("alert_sequence_position_norm",     pd.Series(1.0, index=df.index))
+    first  = df.get("is_first_alerted_node",            pd.Series(0.0, index=df.index)).astype(float)
+
+    raw = (
+        prop   * 0.40
+        + compat * 0.25
+        + (1.0 - seq) * 0.25
+        + first * 0.10
+    )
+    mx = raw.max()
+    return raw / mx if mx > 0 else raw
 
 
 def main() -> None:
@@ -60,8 +83,11 @@ def main() -> None:
     parser.add_argument("--model-dir",         default="model_artifacts/topology_rca")
     parser.add_argument("--out-dir",           default="assets/preloaded/topology_rca_results")
     parser.add_argument("--top-k", type=int,   default=3)
-    parser.add_argument("--no-eval", action="store_true",
-                        help="Skip ground-truth comparison (labels.json not read)")
+    parser.add_argument("--with-eval", action="store_true",
+                        help="Include ground-truth comparison (reads labels.json)")
+    parser.add_argument("--hybrid-score", action="store_true",
+                        help="Combine model probability with alert-context score "
+                             "(0.75 x model + 0.25 x context)")
     args = parser.parse_args()
 
     repo_root   = REPO_ROOT
@@ -88,25 +114,24 @@ def main() -> None:
     def _r(name: str) -> dict:
         return json.loads((case_dir / name).read_text(encoding="utf-8"))
 
-    events_doc = _r("events.json")
-    graph_ref  = _r("graph_ref.json")
-    events     = events_doc.get("events", [])
+    events_doc  = _r("events.json")
+    graph_ref   = _r("graph_ref.json")
+    events      = events_doc.get("events", [])
 
-    lg_path    = normalize_repo_path(repo_root, graph_ref["local_graph_path"])
+    lg_path     = normalize_repo_path(repo_root, graph_ref["local_graph_path"])
     local_graph = json.loads(lg_path.read_text(encoding="utf-8"))
 
-    # Labels (ground truth) if available and not suppressed
+    # Ground truth — only read when --with-eval is explicitly requested
     ground_truth_node: str | None = None
     in_scope = False
-    if not args.no_eval:
+    if args.with_eval:
         label_path = case_dir / "labels.json"
         if label_path.exists():
-            labels    = json.loads(label_path.read_text(encoding="utf-8"))
-            in_scope  = bool(labels.get("root_cause_in_scope", False))
+            labels   = json.loads(label_path.read_text(encoding="utf-8"))
+            in_scope = bool(labels.get("root_cause_in_scope", False))
             ground_truth_node = labels.get("root_cause_node") if in_scope else None
 
     # Build features
-    manifest_row_meta = graph_ref.get("case_id", args.case_id)
     split       = graph_ref.get("split", "infer")
     scenario_id = graph_ref.get("scenario_id", "")
     diagram_id  = graph_ref.get("diagram_id", "")
@@ -118,7 +143,7 @@ def main() -> None:
         diagram_id=diagram_id,
         events=events,
         local_graph=local_graph,
-        root_cause_node=None,   # don't leak ground truth into features
+        root_cause_node=None,   # never leak ground truth into features
     )
 
     if not feature_rows:
@@ -133,36 +158,34 @@ def main() -> None:
 
     # Score
     scored = score_dataframe(pipeline, df)
-    ranked = scored.sort_values("prob_is_root", ascending=False).reset_index(drop=True)
+
+    # Hybrid scoring (Part F)
+    if args.hybrid_score:
+        ctx_score = _compute_alert_context_score(scored)
+        scored = scored.copy()
+        scored["_hybrid"] = 0.75 * scored["prob_is_root"] + 0.25 * ctx_score.values
+        score_col    = "_hybrid"
+        scoring_mode = "hybrid_alert_context"
+    else:
+        score_col    = "prob_is_root"
+        scoring_mode = "ml_only"
+
+    ranked = scored.sort_values(score_col, ascending=False).reset_index(drop=True)
 
     top_candidates = []
     for i, (_, row) in enumerate(ranked.head(args.top_k).iterrows()):
         top_candidates.append({
-            "rank":      i + 1,
-            "node_id":   row["node_id"],
-            "score":     round(float(row["prob_is_root"]), 4),
-            "node_type": row.get("node_type", ""),
-            "zone":      row.get("zone", ""),
-            "is_alerted":bool(row.get("is_alerted", False)),
+            "rank":       i + 1,
+            "node_id":    row["node_id"],
+            "score":      round(float(row[score_col]), 4),
+            "node_type":  row.get("node_type", ""),
+            "zone":       row.get("zone", ""),
+            "is_alerted": bool(row.get("is_alerted", False)),
         })
 
     predicted_root = ranked.iloc[0]["node_id"]
 
-    # Evaluation block (no remediation)
-    eval_block: dict = {}
-    if ground_truth_node:
-        top_k_nodes = [c["node_id"] for c in top_candidates]
-        ranks  = ranked.index[ranked["node_id"] == ground_truth_node].tolist()
-        rank   = ranks[0] + 1 if ranks else len(ranked)
-        eval_block = {
-            "ground_truth_node": ground_truth_node,
-            "correct_top1":      predicted_root == ground_truth_node,
-            "correct_top_k":     ground_truth_node in top_k_nodes,
-            "reciprocal_rank":   round(1.0 / rank, 4),
-            "rank":              rank,
-        }
-
-    result = {
+    result: dict = {
         "case_id":        args.case_id,
         "model":          "topology_rca_random_forest_v1",
         "top_k":          args.top_k,
@@ -170,9 +193,21 @@ def main() -> None:
         "top_candidates": top_candidates,
         "total_nodes":    len(ranked),
         "alert_count":    len(events),
+        "scoring_mode":   scoring_mode,
     }
-    if eval_block:
-        result["evaluation"] = eval_block
+
+    # Evaluation block — only when --with-eval
+    if args.with_eval and ground_truth_node:
+        top_k_nodes = [c["node_id"] for c in top_candidates]
+        ranks  = ranked.index[ranked["node_id"] == ground_truth_node].tolist()
+        rank   = ranks[0] + 1 if ranks else len(ranked)
+        result["evaluation"] = {
+            "ground_truth_node": ground_truth_node,
+            "correct_top1":      predicted_root == ground_truth_node,
+            "correct_top_k":     ground_truth_node in top_k_nodes,
+            "reciprocal_rank":   round(1.0 / rank, 4),
+            "rank":              rank,
+        }
 
     _assert_clean(result)
 
@@ -183,14 +218,17 @@ def main() -> None:
     # Human-readable summary
     print(f"Case             : {args.case_id}")
     print(f"Predicted root   : {predicted_root}")
+    print(f"Scoring mode     : {scoring_mode}")
     print(f"Top-{args.top_k} candidates :")
     for c in top_candidates:
         gt_marker = " <-- ground truth" if c["node_id"] == ground_truth_node else ""
-        print(f"  #{c['rank']:>2}  {c['node_id']:<40}  score={c['score']:.4f}  type={c['node_type']}{gt_marker}")
-    if eval_block:
-        print(f"Top-1 correct    : {eval_block['correct_top1']}")
-        print(f"Top-{args.top_k} correct    : {eval_block['correct_top_k']}")
-        print(f"Reciprocal rank  : {eval_block['reciprocal_rank']}")
+        print(f"  #{c['rank']:>2}  {c['node_id']:<40}  score={c['score']:.4f}  "
+              f"type={c['node_type']}{gt_marker}")
+    if "evaluation" in result:
+        ev = result["evaluation"]
+        print(f"Top-1 correct    : {ev['correct_top1']}")
+        print(f"Top-{args.top_k} correct    : {ev['correct_top_k']}")
+        print(f"Reciprocal rank  : {ev['reciprocal_rank']}")
     print(f"\nResult written   : {out_path}")
 
 

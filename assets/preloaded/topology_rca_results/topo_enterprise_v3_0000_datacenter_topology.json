@@ -14,28 +14,22 @@
     },
     {
       "rank": 2,
-      "node_id": "DC-FW-02",
-      "score": 0.0,
-      "node_type": "firewall",
-      "zone": "DC Edge",
-      "is_alerted": false
+      "node_id": "DC-CORE-SW-01",
+      "score": 0.015,
+      "node_type": "switch",
+      "zone": "DC Core",
+      "is_alerted": true
     },
     {
       "rank": 3,
-      "node_id": "DC-RTR-01",
+      "node_id": "DC-FW-02",
       "score": 0.0,
-      "node_type": "router",
+      "node_type": "firewall",
       "zone": "DC Edge",
       "is_alerted": false
     }
   ],
   "total_nodes": 9,
   "alert_count": 2,
-  "evaluation": {
-    "ground_truth_node": "DC-FW-01",
-    "correct_top1": true,
-    "correct_top_k": true,
-    "reciprocal_rank": 1.0,
-    "rank": 1
-  }
+  "scoring_mode": "ml_only"
 }

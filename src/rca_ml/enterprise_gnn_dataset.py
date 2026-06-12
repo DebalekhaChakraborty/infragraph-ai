@@ -16,7 +16,13 @@ from pathlib import Path
 
 import networkx as nx
 
-from .features import SEVERITY_SCORE, _LARGE, normalize_repo_path
+from .features import (
+    ALERT_TYPE_BUCKETS,
+    NODE_ALERT_COMPAT_MAP,
+    SEVERITY_SCORE,
+    _LARGE,
+    normalize_repo_path,
+)
 
 # ── Dependency check ────────────────────────────────────────────────────────────
 
@@ -45,12 +51,23 @@ _DIAG_TYPE_IDX: dict[str, int]  = {t: i for i, t in enumerate(DIAGRAM_TYPES)}
 NUM_NODE_TYPES    = len(NODE_TYPES)     # 10
 NUM_DIAGRAM_TYPES = len(DIAGRAM_TYPES)  # 6
 NUMERIC_DIM       = 18
-IN_DIM            = NUM_NODE_TYPES + NUM_DIAGRAM_TYPES + NUMERIC_DIM  # 34
+ALERT_TYPE_DIM    = 11   # multi-hot: 8 shared buckets + route_flap + dependency_error + other
+TEMPORAL_PROP_DIM = 9    # temporal + propagation + compat
+IN_DIM = NUM_NODE_TYPES + NUM_DIAGRAM_TYPES + NUMERIC_DIM + ALERT_TYPE_DIM + TEMPORAL_PROP_DIM  # 54
+
+# Enterprise-specific alert type order (must match _ent_alert_type_vec)
+ENT_ALERT_TYPES: list[str] = [
+    "cpu", "latency", "packet_drop", "link_errors", "connection_timeout",
+    "auth_errors", "backend_pool_unhealthy", "user_timeout",
+    "route_flap", "dependency_error", "other",
+]
+_ENT_AT_IDX: dict[str, int] = {t: i for i, t in enumerate(ENT_ALERT_TYPES)}
 
 FEATURE_NAMES: list[str] = (
     [f"nt_{t}" for t in NODE_TYPES]
     + [f"dt_{t}" for t in DIAGRAM_TYPES]
     + [
+        # original 18 numeric
         "is_shared_entity",
         "is_alerted",
         "alert_count_norm",
@@ -70,8 +87,66 @@ FEATURE_NAMES: list[str] = (
         "source_like_score",
         "sink_like_score",
     ]
+    + [f"at_{t}" for t in ENT_ALERT_TYPES]   # 11 alert-type multi-hot
+    + [
+        # 9 temporal + propagation + compat
+        "is_first_alerted_node",
+        "is_last_alerted_node",
+        "alert_sequence_position_norm",
+        "upstream_alert_count_norm",
+        "downstream_alert_count_norm",
+        "upstream_critical_count_norm",
+        "downstream_warning_count_norm",
+        "propagation_consistency_score",
+        "node_alert_compatibility_score",
+    ]
 )
 assert len(FEATURE_NAMES) == IN_DIM, f"{len(FEATURE_NAMES)} != {IN_DIM}"
+
+
+# ── Enterprise-specific alert type classifier ──────────────────────────────────
+
+_ENT_EXTRA_BUCKETS: dict[str, list[str]] = {
+    "route_flap":       ["route_flap", "bgp_flap", "ospf_flap", "routing_instability",
+                         "route_instability"],
+    "dependency_error": ["dependency_error", "downstream_failure", "service_dependency",
+                         "dependency_fail", "upstream_unavailable"],
+}
+
+
+def _classify_ent_alert_type(alert_type: str) -> str:
+    """Map alert_type string to one of ENT_ALERT_TYPES bucket names."""
+    at = alert_type.lower().replace("-", "_").replace(" ", "_")
+    for bucket, patterns in _ENT_EXTRA_BUCKETS.items():
+        if any(p in at for p in patterns):
+            return bucket
+    for bucket, patterns in ALERT_TYPE_BUCKETS.items():
+        if any(p in at for p in patterns):
+            return bucket
+    return "other"
+
+
+def _ent_alert_type_vec(at_counts: dict[str, int]) -> list[float]:
+    """Return 11-element multi-hot vector of alert type presence (0 or 1)."""
+    return [float(at_counts.get(t, 0) > 0) for t in ENT_ALERT_TYPES]
+
+
+def _ent_compat_score(node_type: str, at_counts: dict[str, int]) -> float:
+    """Fraction of present alert types that are compatible with node_type."""
+    present = {t for t, c in at_counts.items() if c > 0}
+    if not present:
+        return 0.0
+    nt = node_type.lower()
+    if nt not in NODE_ALERT_COMPAT_MAP:
+        for key in NODE_ALERT_COMPAT_MAP:
+            if key in nt:
+                nt = key
+                break
+    compat = NODE_ALERT_COMPAT_MAP.get(nt, frozenset())
+    if not compat:
+        return 0.0
+    # Map alert type bucket names to compat keys (same naming)
+    return sum(1 for t in present if t in compat) / len(present)
 
 
 # ── Graph construction helpers ─────────────────────────────────────────────────
@@ -82,25 +157,62 @@ def _build_enterprise_nx_graph(enterprise_graph: dict) -> nx.DiGraph:
         nid = node.get("id", "")
         if nid:
             G.add_node(nid, **{k: v for k, v in node.items() if k != "id"})
+
+    seen_edges: set[tuple[str, str]] = set()
+
+    # Primary edges
     for edge in enterprise_graph.get("edges", []):
         s, t = edge.get("source", ""), edge.get("target", "")
-        if s and t and s != t:
-            G.add_edge(s, t, edge_type="local")
+        if not (s and t and s != t):
+            continue
+        scope = edge.get("edge_scope", "") or edge.get("edge_type", "")
+        etype = "cross_diagram" if "cross_diagram" in scope else "local"
+        key = (s, t)
+        if key not in seen_edges:
+            seen_edges.add(key)
+            G.add_edge(s, t, edge_type=etype)
+
+    # Cross-diagram edges list (may duplicate entries already in edges[])
     for edge in enterprise_graph.get("cross_diagram_edges", []):
         s, t = edge.get("source", ""), edge.get("target", "")
-        if s and t and s != t:
+        if not (s and t and s != t):
+            continue
+        key = (s, t)
+        if key not in seen_edges:
+            seen_edges.add(key)
             G.add_edge(s, t, edge_type="cross_diagram")
+
     return G
 
 
 def _cross_diagram_degrees(enterprise_graph: dict) -> dict[str, int]:
-    deg: dict[str, int] = defaultdict(int)
+    """
+    Count cross-diagram edges per node (undirected degree).
+
+    Reads both:
+      - enterprise_graph["cross_diagram_edges"]
+      - enterprise_graph["edges"] where edge_scope or edge_type == "cross_diagram"
+
+    Deduplicates by (source, target) pair and filters self-loops.
+    """
+    seen: set[tuple[str, str]] = set()
+
+    def _add(s: str, t: str) -> None:
+        if s and t and s != t:
+            seen.add((min(s, t), max(s, t)))  # canonical order for dedup
+
     for edge in enterprise_graph.get("cross_diagram_edges", []):
-        s, t = edge.get("source", ""), edge.get("target", "")
-        if s:
-            deg[s] += 1
-        if t:
-            deg[t] += 1
+        _add(edge.get("source", ""), edge.get("target", ""))
+
+    for edge in enterprise_graph.get("edges", []):
+        scope = edge.get("edge_scope", "") or edge.get("edge_type", "")
+        if "cross_diagram" in scope:
+            _add(edge.get("source", ""), edge.get("target", ""))
+
+    deg: dict[str, int] = defaultdict(int)
+    for s, t in seen:
+        deg[s] += 1
+        deg[t] += 1
     return dict(deg)
 
 
@@ -147,30 +259,44 @@ def _normalise_diagram_type(raw: str) -> str:
     return "unknown"
 
 
-def _node_feature_vec(
-    node_data: dict,
-    alert_map: dict,
-    time_rank: dict,
-    num_alerted: int,
-    max_alert_count: int,
-    G: nx.DiGraph,
-    G_und: nx.Graph,
-    pr: dict, bc: dict, cl: dict,
-    alerted_set: set,
-    cross_diag_deg: dict,
-    total_nodes: int,
-) -> list[float]:
+def _node_feature_vec(node_data: dict, ctx: dict) -> list[float]:
+    """
+    Build a 54-dim feature vector for one node.
+
+    ctx must contain: alert_map, G, G_und, pr, bc, cl, alerted_set,
+    cross_diag_deg, total_nodes, time_rank, num_alerted, max_alert_count,
+    first_time_map, sev_map, global_first_alerted, global_last_alerted,
+    ancestor_map, descendant_map, alert_type_map.
+    """
     nid = node_data.get("id", "")
+
+    alert_map          = ctx["alert_map"]
+    G                  = ctx["G"]
+    G_und              = ctx["G_und"]
+    pr, bc, cl         = ctx["pr"], ctx["bc"], ctx["cl"]
+    alerted_set        = ctx["alerted_set"]
+    cross_diag_deg     = ctx["cross_diag_deg"]
+    total_nodes        = ctx["total_nodes"]
+    time_rank          = ctx["time_rank"]
+    num_alerted        = ctx["num_alerted"]
+    max_alert_count    = ctx["max_alert_count"]
+    first_time_map     = ctx["first_time_map"]
+    sev_map            = ctx["sev_map"]
+    global_first       = ctx["global_first_alerted"]
+    global_last        = ctx["global_last_alerted"]
+    ancestor_map       = ctx["ancestor_map"]
+    descendant_map     = ctx["descendant_map"]
+    alert_type_map     = ctx["alert_type_map"]   # {nid: {bucket: count}}
 
     # One-hot: node type
     nt_key = _normalise_node_type(node_data.get("type", "unknown"))
     nt_vec = [0.0] * NUM_NODE_TYPES
     nt_vec[_NODE_TYPE_IDX[nt_key]] = 1.0
 
-    # One-hot: diagram type (prefer diagram_type field, fall back to diagram_id)
-    dt_raw  = node_data.get("diagram_type", node_data.get("diagram_id", "unknown"))
-    dt_key  = _normalise_diagram_type(dt_raw)
-    dt_vec  = [0.0] * NUM_DIAGRAM_TYPES
+    # One-hot: diagram type
+    dt_raw = node_data.get("diagram_type", node_data.get("diagram_id", "unknown"))
+    dt_key = _normalise_diagram_type(dt_raw)
+    dt_vec = [0.0] * NUM_DIAGRAM_TYPES
     dt_vec[_DIAG_TYPE_IDX[dt_key]] = 1.0
 
     # Alert features
@@ -184,8 +310,8 @@ def _node_feature_vec(
     mean_t      = sum(times) / len(times) if times else 0
     rank        = time_rank.get(nid, num_alerted + 1)
 
-    # Structural features
-    n_scale = max(1, total_nodes)
+    # Structural
+    n_scale   = max(1, total_nodes)
     in_deg    = G.in_degree(nid)  if nid in G else 0
     out_deg   = G.out_degree(nid) if nid in G else 0
     total_deg = in_deg + out_deg
@@ -205,18 +331,18 @@ def _node_feature_vec(
                     pass
     min_dist = min(dists) if dists else _LARGE
 
-    # Reverse reachability: alerted ancestors
-    reverse_reach = 0
-    if nid in G:
-        reverse_reach = len(nx.ancestors(G, nid) & (alerted_set - {nid}))
+    # Reverse reachability
+    anc        = ancestor_map.get(nid, set())
+    desc       = descendant_map.get(nid, set())
+    rr_count   = len(anc & (alerted_set - {nid}))
 
-    # Normalize
-    denom_time = 1440.0  # 1 day in minutes
+    # Normalise base features
+    denom_time = 1440.0
     dist_norm  = min(1.0, min_dist / n_scale) if min_dist < _LARGE else 1.0
-    rr_norm    = reverse_reach / max(1, len(alerted_set))
+    rr_norm    = rr_count / max(1, len(alerted_set))
     rank_norm  = rank / max(1, num_alerted + 1)
 
-    numeric: list[float] = [
+    base_numeric: list[float] = [
         float(node_data.get("is_shared_entity", False)),
         float(is_alerted),
         alert_count / max(1, max_alert_count),
@@ -236,8 +362,66 @@ def _node_feature_vec(
         is_src,
         is_sink,
     ]
-    assert len(numeric) == NUMERIC_DIM
-    return nt_vec + dt_vec + numeric
+    assert len(base_numeric) == NUMERIC_DIM
+
+    # Alert-type multi-hot (11)
+    at_counts  = alert_type_map.get(nid, {})
+    at_vec     = _ent_alert_type_vec(at_counts)
+
+    # Temporal features
+    is_first = float(nid == global_first) if global_first else 0.0
+    is_last  = float(nid == global_last)  if global_last  else 0.0
+    if is_alerted and num_alerted > 1:
+        seq_pos = (rank - 1) / (num_alerted - 1)
+    elif is_alerted:
+        seq_pos = 0.0
+    else:
+        seq_pos = 1.0  # unalerted nodes treated as last
+
+    # Propagation features
+    upstream_alerted   = anc  & alerted_set
+    downstream_alerted = desc & alerted_set
+    up_count  = len(upstream_alerted)
+    dn_count  = len(downstream_alerted)
+
+    up_crit = sum(1 for a in upstream_alerted   if sev_map.get(a, 0.0) >= 1.0)
+    dn_warn = sum(1 for a in downstream_alerted if sev_map.get(a, 0.0) <= 0.6)
+
+    cand_t = first_time_map.get(nid, None)
+    if cand_t is not None:
+        dn_after = sum(
+            1 for dn in downstream_alerted
+            if first_time_map.get(dn, cand_t + 1) > cand_t
+        )
+    else:
+        dn_after = dn_count
+
+    if num_alerted > 0:
+        early_sc = (1.0 - (rank - 1) / max(1, num_alerted)) if is_alerted else 0.4
+        dn_frac  = dn_after / max(1, num_alerted)
+        up_clean = 1.0 - (up_count / max(1, num_alerted))
+        prop_cons = min(1.0, max(0.0,
+            early_sc * 0.35 + dn_frac * 0.45 + up_clean * 0.20
+        ))
+    else:
+        prop_cons = 0.0
+
+    compat = _ent_compat_score(node_data.get("type", "unknown"), at_counts)
+
+    prop_vec: list[float] = [
+        is_first,
+        is_last,
+        seq_pos,
+        up_count / max(1, num_alerted),
+        dn_count / max(1, num_alerted),
+        up_crit  / max(1, num_alerted),
+        dn_warn  / max(1, num_alerted),
+        prop_cons,
+        compat,
+    ]
+    assert len(prop_vec) == TEMPORAL_PROP_DIM
+
+    return nt_vec + dt_vec + base_numeric + at_vec + prop_vec
 
 
 # ── Graph dict builder ─────────────────────────────────────────────────────────
@@ -255,6 +439,9 @@ def build_graph_dict(
 
     Returns None if root_cause_node is provided but not present in the graph nodes.
     Does not include remediation content.
+
+    Adds alert_event_diagram_map: node_id -> time-sorted list of diagram_ids
+    from events (used by inference to pick root_cause_diagram for shared nodes).
     """
     import torch
 
@@ -290,19 +477,94 @@ def build_graph_dict(
          for n, ev_list in alert_map.items()],
         key=lambda x: x[1],
     )
-    time_rank   = {n: i + 1 for i, (n, _) in enumerate(first_times)}
-    num_alerted = len(alerted_set)
+    time_rank      = {n: i + 1 for i, (n, _) in enumerate(first_times)}
+    first_time_map = {n: t for n, t in first_times}
+    num_alerted    = len(alerted_set)
 
+    global_first_alerted = first_times[0][0]  if first_times else None
+    global_last_alerted  = first_times[-1][0] if first_times else None
+
+    sev_map: dict[str, float] = {
+        nid: max(SEVERITY_SCORE.get(e.get("severity", "").lower(), 0.0) for e in evts)
+        for nid, evts in alert_map.items()
+    }
+
+    # Alert type map per node
+    alert_type_map: dict[str, dict[str, int]] = {}
+    for nid, evts in alert_map.items():
+        counts: dict[str, int] = defaultdict(int)
+        for ev in evts:
+            counts[_classify_ent_alert_type(ev.get("alert_type", ""))] += 1
+        alert_type_map[nid] = dict(counts)
+
+    # Ancestors / descendants (precompute for propagation features)
+    ancestor_map:   dict[str, set[str]] = {}
+    descendant_map: dict[str, set[str]] = {}
+    for nid in G.nodes():
+        try:
+            ancestor_map[nid]   = nx.ancestors(G, nid)
+        except Exception:
+            ancestor_map[nid]   = set()
+        try:
+            descendant_map[nid] = nx.descendants(G, nid)
+        except Exception:
+            descendant_map[nid] = set()
+
+    # Alert event diagram map (Part B): node_id → sorted list of diagram_ids from events
     node_data_map = {n["id"]: n for n in raw_nodes if n.get("id")}
+    _aedm: dict[str, list[tuple[float, str]]] = defaultdict(list)  # (time, diagram_id)
+
+    for ev in events:
+        nid = ev.get("node", "")
+        if not nid:
+            continue
+        # Prefer explicit diagram_id on event, fall back to node's canonical diagram_id
+        diag = ev.get("diagram_id", "") or node_data_map.get(nid, {}).get("diagram_id", "")
+        if diag:
+            t = ev.get("time_offset_min", 0)
+            _aedm[nid].append((t, diag))
+
+    # Also include non-event nodes with a canonical diagram_id (not via events)
+    alert_event_diagram_map: dict[str, list[str]] = {}
+    for nid in node_ids:
+        if nid in _aedm:
+            seen_diags: list[str] = []
+            for _, d in sorted(_aedm[nid]):  # sort by time
+                if d not in seen_diags:
+                    seen_diags.append(d)
+            alert_event_diagram_map[nid] = seen_diags
+        else:
+            canonical = node_data_map.get(nid, {}).get("diagram_id", "")
+            alert_event_diagram_map[nid] = [canonical] if canonical else []
+
+    # Build feature context
+    ctx: dict = {
+        "alert_map":           alert_map,
+        "G":                   G,
+        "G_und":               G_und,
+        "pr":                  pr,
+        "bc":                  bc,
+        "cl":                  cl,
+        "alerted_set":         alerted_set,
+        "cross_diag_deg":      cross_deg,
+        "total_nodes":         num_nodes,
+        "time_rank":           time_rank,
+        "num_alerted":         num_alerted,
+        "max_alert_count":     max_alert_count,
+        "first_time_map":      first_time_map,
+        "sev_map":             sev_map,
+        "global_first_alerted": global_first_alerted,
+        "global_last_alerted":  global_last_alerted,
+        "ancestor_map":        ancestor_map,
+        "descendant_map":      descendant_map,
+        "alert_type_map":      alert_type_map,
+    }
 
     # Feature matrix
     x_rows = []
     for nid in node_ids:
         nd   = node_data_map[nid]
-        fvec = _node_feature_vec(
-            nd, alert_map, time_rank, num_alerted, max_alert_count,
-            G, G_und, pr, bc, cl, alerted_set, cross_deg, num_nodes,
-        )
+        fvec = _node_feature_vec(nd, ctx)
         x_rows.append(fvec)
 
     x = torch.FloatTensor(x_rows)  # [N, IN_DIM]
@@ -314,28 +576,27 @@ def build_graph_dict(
             fwd_edges.append((nid_to_idx[src], nid_to_idx[tgt]))
     all_edges = list(set(fwd_edges + [(t, s) for s, t in fwd_edges]))
     if all_edges:
-        import torch as _t
-        edge_index = _t.LongTensor(all_edges).t().contiguous()  # [2, E]
+        edge_index = torch.LongTensor(all_edges).t().contiguous()  # [2, E]
     else:
-        import torch as _t
-        edge_index = _t.zeros((2, 0), dtype=_t.long)
+        edge_index = torch.zeros((2, 0), dtype=torch.long)
 
     y = (torch.tensor(nid_to_idx[root_cause_node], dtype=torch.long)
          if root_cause_node else torch.tensor(-1, dtype=torch.long))
 
     return {
-        "x":               x,
-        "edge_index":      edge_index,
-        "y":               y,
-        "num_nodes":       num_nodes,
-        "case_id":         case_id,
-        "scenario_id":     scenario_id,
-        "split":           split,
-        "event_count":     len(events),
-        "node_ids":        node_ids,
-        "node_type_list":  [node_data_map[nid].get("type", "unknown") for nid in node_ids],
-        "diagram_id_list": [node_data_map[nid].get("diagram_id", "")   for nid in node_ids],
-        "root_cause_node": root_cause_node or "",
+        "x":                      x,
+        "edge_index":             edge_index,
+        "y":                      y,
+        "num_nodes":              num_nodes,
+        "case_id":                case_id,
+        "scenario_id":            scenario_id,
+        "split":                  split,
+        "event_count":            len(events),
+        "node_ids":               node_ids,
+        "node_type_list":         [node_data_map[nid].get("type", "unknown") for nid in node_ids],
+        "diagram_id_list":        [node_data_map[nid].get("diagram_id", "")   for nid in node_ids],
+        "root_cause_node":        root_cause_node or "",
+        "alert_event_diagram_map": alert_event_diagram_map,
     }
 
 

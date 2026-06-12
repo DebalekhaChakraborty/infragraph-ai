@@ -24,7 +24,10 @@ _FI_PAGERANK      = FEATURE_NAMES.index("pagerank")
 _FORBIDDEN_KEYS = frozenset({
     "recommended_actions", "remediation_steps", "resolution_steps",
     "rollback_steps", "validation_steps", "servicenow_incident_summary",
-    "remediation_steps", "resolution", "rollback",
+    "resolution", "rollback",
+    # evaluation leakage at top level (must be nested under "evaluation" key only)
+    "expected_root_cause", "correct",
+    "ground_truth_node", "correct_top1", "correct_top_k",
 })
 
 
@@ -84,7 +87,10 @@ def predict_one(
     """
     Run GNN inference on one graph_dict and return a result JSON dict.
 
-    Labels_dict is optional; if provided, ground-truth comparison is included.
+    labels_dict is optional.  When provided, ground-truth comparison is
+    included under an "evaluation" key.  Default output (no labels_dict)
+    contains NO evaluation fields — safe for production/demo use.
+
     Output never contains remediation content.
     """
     data    = graph_dict_to_pyg(graph_dict)
@@ -96,20 +102,28 @@ def predict_one(
     num_nodes    = graph_dict["num_nodes"]
     x            = graph_dict["x"].numpy()
 
-    ranked_idx   = np.argsort(-scores)
+    # alert_event_diagram_map: node_id -> time-sorted list of diagram_ids from events
+    aedm: dict[str, list[str]] = graph_dict.get("alert_event_diagram_map", {})
+
+    ranked_idx = np.argsort(-scores)
 
     top_candidates = []
     for rank, idx in enumerate(ranked_idx[:top_k], start=1):
         nid   = node_ids[idx]
         ntype = node_types[idx]
-        diag  = diagram_ids[idx]
         sc    = float(scores[idx])
+
+        # Use first event-based diagram for this node (handles shared entities)
+        observed_diags = aedm.get(nid, [diagram_ids[idx]])
+        candidate_diag = observed_diags[0] if observed_diags else diagram_ids[idx]
+
         top_candidates.append({
-            "rank":       rank,
-            "node_id":    nid,
-            "diagram_id": diag,
-            "node_type":  ntype,
-            "score":      round(sc, 4),
+            "rank":                   rank,
+            "node_id":                nid,
+            "diagram_id":             candidate_diag,
+            "node_observed_in_diagrams": observed_diags,
+            "node_type":              ntype,
+            "score":                  round(sc, 4),
             "evidence": [
                 f"alert_count={round(float(x[idx, _FI_ALERT_COUNT]), 3)}",
                 f"cross_diagram_degree={round(float(x[idx, _FI_CROSS_DIAG]), 3)}",
@@ -119,14 +133,19 @@ def predict_one(
         })
 
     predicted_root = node_ids[ranked_idx[0]]
-    predicted_diag = diagram_ids[ranked_idx[0]]
     confidence     = float(scores[ranked_idx[0]])
 
-    # Impacted diagrams: from labels if available, else unique alert node diagrams
-    alerted_diagrams = list(dict.fromkeys(
-        diagram_ids[i] for i in range(num_nodes)
-        if x[i, _FI_IS_ALERTED] > 0.5
-    ))
+    # Root-cause diagram: prefer event-based diagram over canonical node diagram
+    root_observed_diags = aedm.get(predicted_root, [diagram_ids[ranked_idx[0]]])
+    predicted_diag = root_observed_diags[0] if root_observed_diags else diagram_ids[ranked_idx[0]]
+
+    # Impacted diagrams: unique diagrams from alerted nodes (event-based)
+    alerted_diagrams: list[str] = []
+    for i in range(num_nodes):
+        if x[i, _FI_IS_ALERTED] > 0.5:
+            for d in aedm.get(node_ids[i], [diagram_ids[i]]):
+                if d and d not in alerted_diagrams:
+                    alerted_diagrams.append(d)
     impacted_diags = labels_dict.get("impacted_diagrams", alerted_diagrams) if labels_dict else alerted_diagrams
 
     result: dict = {
@@ -145,10 +164,19 @@ def predict_one(
 
     if labels_dict:
         gt = labels_dict.get("root_cause_node", "")
-        result["expected_root_cause"] = gt
-        result["correct"] = (predicted_root == gt) if gt else None
-    else:
-        result["correct"] = None
+        top_k_nodes = [c["node_id"] for c in top_candidates]
+        ranked_all = list(ranked_idx)  # already sorted by score
+        rank_val = next(
+            (i + 1 for i, idx in enumerate(ranked_all) if node_ids[idx] == gt),
+            num_nodes,
+        )
+        result["evaluation"] = {
+            "ground_truth_node": gt,
+            "correct_top1":      predicted_root == gt,
+            "correct_top_k":     gt in top_k_nodes,
+            "reciprocal_rank":   round(1.0 / rank_val, 4),
+            "rank":              rank_val,
+        }
 
     _assert_clean(result)
     return result
