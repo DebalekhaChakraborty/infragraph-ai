@@ -22,6 +22,19 @@ from pathlib import Path
 
 SCRIPT_DIR    = Path(__file__).resolve().parent
 REPO_ROOT     = SCRIPT_DIR.parent.parent
+
+
+def _display_path(p: Path) -> str:
+    """Return repo-relative path when possible, otherwise absolute path.
+
+    Training runs may live outside the repo, for example under /tmp,
+    to avoid filling /workspace/shared. pathlib.relative_to() raises
+    ValueError for those paths, so summary generation must handle both.
+    """
+    try:
+        return str(p.resolve().relative_to(REPO_ROOT))
+    except ValueError:
+        return str(p.resolve())
 DEFAULT_RUN_DIR = SCRIPT_DIR / "runs" / "qwen3_4b_grpo_lora_amd"
 DATA_DIR        = SCRIPT_DIR / "data"
 
@@ -65,9 +78,9 @@ def _find_artifacts(run_dir: Path) -> dict[str, list[str]]:
 
     if run_dir.exists():
         for pat in ckpt_patterns:
-            checkpoints.extend(str(p.relative_to(REPO_ROOT)) for p in run_dir.rglob(pat))
+            checkpoints.extend(_display_path(p) for p in run_dir.rglob(pat))
         for pat in config_patterns:
-            configs.extend(str(p.relative_to(REPO_ROOT)) for p in run_dir.rglob(pat))
+            configs.extend(_display_path(p) for p in run_dir.rglob(pat))
 
     return {"checkpoints": sorted(checkpoints), "configs": sorted(configs)}
 
@@ -162,7 +175,7 @@ Generated: {ts}
     ("Framework",            "vERL (https://github.com/volcengine/verl)"),
     ("Rollout backend",      "vLLM"),
     ("Actor strategy",       "FSDP"),
-    ("Run directory",        str(run_dir.relative_to(REPO_ROOT))),
+    ("Run directory",        _display_path(run_dir)),
 ])}
 
 ---

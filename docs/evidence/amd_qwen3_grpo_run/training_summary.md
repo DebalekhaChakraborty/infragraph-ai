@@ -1,6 +1,6 @@
 # InfraGraph AI — Qwen3-4B LoRA + GRPO/vERL Training Summary
 
-Generated: 2026-06-12 00:01 UTC
+Generated: 2026-06-12 13:57 UTC
 
 ---
 
@@ -9,8 +9,6 @@ Generated: 2026-06-12 00:01 UTC
 **Real vERL training run completed**
 
 > **Honest status:** A real training run completed.  Verify adapter/checkpoint files below before making fine-tuning claims.
->
-> ⚠️  No adapter files detected — verify run completed successfully.
 
 ---
 
@@ -24,7 +22,7 @@ Generated: 2026-06-12 00:01 UTC
 | Framework       | vERL (https://github.com/volcengine/verl)                     |
 | Rollout backend | vLLM                                                          |
 | Actor strategy  | FSDP                                                          |
-| Run directory   | training/verl_grpo/runs/qwen3_4b_grpo_lora_amd                |
+| Run directory   | /tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved        |
 
 ---
 
@@ -71,11 +69,14 @@ Reward entry point: `training/verl_grpo/verl_reward.py::compute_score`
 
 ## Adapter / Checkpoint Artifacts
 
-_No checkpoint files found in run directory._
+- `/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/extra_state_world_size_1_rank_0.pt`
+- `/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/model_world_size_1_rank_0.pt`
+- `/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/optim_world_size_1_rank_0.pt`
+- `/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/data.pt`
 
 ### Config files
 
-_No config files found._
+- `/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/huggingface/config.json`
 
 ---
 
