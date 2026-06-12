@@ -24,11 +24,11 @@ if ! command -v "$PYTHON" >/dev/null 2>&1; then
   echo "[ERROR] Python not found. Set PYTHON= to the correct interpreter."
   exit 1
 fi
-echo "[1/6] Python: $($PYTHON --version)"
+echo "[1/7] Python: $($PYTHON --version)"
 echo
 
 # ── 2. PyTorch ROCm ───────────────────────────────────────────────────────────
-echo "[2/6] Checking PyTorch / ROCm ..."
+echo "[2/7] Checking PyTorch / ROCm ..."
 if "$PYTHON" -c "import torch; assert torch.cuda.is_available()" >/dev/null 2>&1; then
   TORCH_VER=$("$PYTHON" -c "import torch; print(torch.__version__)")
   HIP_VER=$("$PYTHON" -c "import torch; print(getattr(torch.version, 'hip', None))")
@@ -36,7 +36,7 @@ if "$PYTHON" -c "import torch; assert torch.cuda.is_available()" >/dev/null 2>&1
 else
   echo "  torch not found or CUDA/ROCm unavailable."
   echo "  Installing ROCm 6.0 wheel ..."
-  pip install torch --index-url https://download.pytorch.org/whl/rocm6.0
+  "$PYTHON" -m pip install torch --index-url https://download.pytorch.org/whl/rocm6.0
   if "$PYTHON" -c "import torch; assert torch.cuda.is_available()" >/dev/null 2>&1; then
     echo "  torch installed and ROCm available."
   else
@@ -50,21 +50,21 @@ echo
 # These pins are required on the AMD hackathon environment:
 #   starlette<0.49.0  — compatibility with the installed uvicorn
 #   protobuf<7.0.0    — avoids binary incompatibility with torch/grpc
-#   numpy<2.3         — required by several packages that haven't updated yet
-echo "[3/6] Installing Streamlit and pinned base deps ..."
-pip install streamlit --ignore-installed blinker
-pip install "starlette<0.49.0" "protobuf<7.0.0" "numpy<2.3"
+#   numpy==2.2.6      — vLLM's numba dependency requires NumPy <= 2.2
+echo "[3/7] Installing Streamlit and pinned base deps ..."
+"$PYTHON" -m pip install streamlit --ignore-installed blinker
+"$PYTHON" -m pip install "starlette<0.49.0" "protobuf<7.0.0" "numpy==2.2.6"
 echo "  Done."
 echo
 
 # ── 4. vERL training utilities ────────────────────────────────────────────────
-echo "[4/6] Installing vERL training utilities ..."
-pip install --no-cache-dir \
+echo "[4/7] Installing vERL training utilities ..."
+"$PYTHON" -m pip install --no-cache-dir \
   tensordict torchdata codetiming hydra-core omegaconf \
   ray pandas pyarrow datasets accelerate peft
 
 # Specific version range for transformers that is stable on the AMD hackathon env
-pip install --no-cache-dir \
+"$PYTHON" -m pip install --no-cache-dir \
   "transformers>=4.46.0,<4.57.0" \
   "peft>=0.14.0" \
   "accelerate>=1.0.0"
@@ -72,24 +72,24 @@ echo "  Done."
 echo
 
 # ── 5. vLLM ───────────────────────────────────────────────────────────────────
-echo "[5/6] Checking vLLM ..."
+echo "[5/7] Checking vLLM ..."
 if "$PYTHON" -c "import vllm" >/dev/null 2>&1; then
   VLLM_VER=$("$PYTHON" -c "import vllm; print(vllm.__version__)")
   echo "  vLLM $VLLM_VER — already installed, skipping"
 else
   echo "  Installing vLLM ..."
-  pip install vllm
+  "$PYTHON" -m pip install vllm
   echo "  Done."
 fi
 echo
 
 # ── 6. vERL ───────────────────────────────────────────────────────────────────
-echo "[6/6] Checking vERL ..."
+echo "[6/7] Checking vERL ..."
 if "$PYTHON" -c "import verl" >/dev/null 2>&1; then
   echo "  vERL — already installed"
 else
   echo "  Installing vERL from source (--no-deps to avoid clobbering torch/vLLM) ..."
-  pip install --no-cache-dir --no-deps "git+https://github.com/volcengine/verl.git"
+  "$PYTHON" -m pip install --no-cache-dir --no-deps "git+https://github.com/volcengine/verl.git"
   if ! "$PYTHON" -c "import verl" >/dev/null 2>&1; then
     echo "  [ERROR] vERL install failed."
     exit 1
@@ -101,8 +101,17 @@ if "$PYTHON" -c "import verl.trainer.main_ppo" >/dev/null 2>&1; then
   echo "  verl.trainer.main_ppo: available"
 else
   echo "  [WARN] verl.trainer.main_ppo not found in installed vERL."
-  echo "         Try: pip install --force-reinstall --no-deps git+https://github.com/volcengine/verl.git"
+  echo "         Try: $PYTHON -m pip install --force-reinstall --no-deps git+https://github.com/volcengine/verl.git"
 fi
+echo
+
+# ── 7. Force-pin NumPy 2.2.6 ─────────────────────────────────────────────────
+# vLLM's numba dependency requires NumPy <= 2.2.  Any of the packages installed
+# above may have pulled in a newer numpy.  Force-reinstall last to guarantee
+# the pin regardless of what the other packages requested.
+echo "[7/7] Force-pinning numpy==2.2.6 (numba/vLLM requirement) ..."
+"$PYTHON" -m pip install --no-cache-dir --force-reinstall "numpy==2.2.6"
+echo "  Done."
 echo
 
 # ── Summary ───────────────────────────────────────────────────────────────────
@@ -120,6 +129,16 @@ try:
         print(f"  device:   {torch.cuda.get_device_name(0)}")
 except ImportError:
     print("  torch:    NOT installed")
+try:
+    import numpy
+    print(f"  numpy:    {numpy.__version__}")
+except ImportError:
+    print("  numpy:    NOT installed")
+try:
+    import numba
+    print(f"  numba:    {numba.__version__}")
+except ImportError:
+    print("  numba:    NOT installed (ok if vLLM does not use it on this platform)")
 try:
     import vllm
     print(f"  vLLM:     {vllm.__version__}")

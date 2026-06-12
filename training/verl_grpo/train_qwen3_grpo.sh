@@ -18,8 +18,8 @@ TRAIN_JSONL="$DATA_DIR/rca_remediation_rl_train.jsonl"
 EVAL_JSONL="$DATA_DIR/rca_remediation_rl_eval.jsonl"
 TRAIN_PARQ="$DATA_DIR/verl_train.parquet"
 EVAL_PARQ="$DATA_DIR/verl_eval.parquet"
-SAVE_FREQ="${SAVE_FREQ:-8}"
-TEST_FREQ="${TEST_FREQ:-8}"
+SAVE_FREQ="${SAVE_FREQ:-32}"
+TEST_FREQ="${TEST_FREQ:-32}"
 RUN_DIR="${RUN_DIR:-$SCRIPT_DIR/runs/qwen3_4b_grpo_lora_amd}"
 REWARD_MODULE="$SCRIPT_DIR/verl_reward.py"
 MODEL_ID="${MODEL_ID:-Qwen/Qwen3-4B}"
@@ -167,6 +167,25 @@ fi
 if [ "$TRAINER_AVAILABLE" -eq 0 ]; then
   echo "[ERROR] verl.trainer.main_ppo is not available in the installed vERL."
   echo "        Install from source: pip install git+https://github.com/volcengine/verl.git"
+  exit 1
+fi
+
+# NumPy preflight: vLLM's numba dependency requires NumPy <= 2.2
+if ! python - <<'NUMPY_CHECK'
+import sys, importlib.metadata
+try:
+    v = importlib.metadata.version("numpy")
+    parts = v.split(".")
+    major, minor = int(parts[0]), int(parts[1])
+    if (major, minor) > (2, 2):
+        print(f"[ERROR] NumPy {v} is too new for vLLM/numba (needs <= 2.2).")
+        print("        Fix:  python -m pip install --force-reinstall numpy==2.2.6")
+        sys.exit(1)
+    print(f"  numpy {v} — OK for vLLM/numba")
+except Exception as exc:
+    print(f"  [WARN] Could not check numpy version: {exc}")
+NUMPY_CHECK
+then
   exit 1
 fi
 
