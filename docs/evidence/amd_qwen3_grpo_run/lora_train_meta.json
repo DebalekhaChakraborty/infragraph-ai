@@ -1,0 +1,5 @@
+{
+    "r": 16,
+    "lora_alpha": 32,
+    "task_type": "CAUSAL_LM"
+}
