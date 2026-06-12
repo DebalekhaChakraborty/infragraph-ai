@@ -20,6 +20,50 @@ in `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/`.**
 
 ---
 
+## Installation
+
+Three dependency tiers — install only what you need.
+
+### 1. App / demo only (no training)
+
+```bash
+pip install -r requirements.txt
+```
+
+Covers the Streamlit cockpit, graph RCA, topology analysis, and non-GPU usage.
+`pip install -r requirements.txt` alone **cannot** reproduce the AMD training run.
+
+### 2. Dataset conversion and reward evaluation
+
+```bash
+pip install -r requirements.txt
+pip install -r requirements-training.txt
+```
+
+Adds `datasets`, `transformers`, `peft`, `accelerate`, and `pyarrow`.
+Required before running `build_rca_rl_dataset.py`, `prepare_verl_dataset.py`,
+and `reward_functions.py`.
+
+### 3. AMD ROCm vERL/GRPO training
+
+```bash
+bash scripts/amd_rocm/bootstrap_grpo_env.sh
+bash scripts/amd_rocm/patch_verl_runtime_for_rocm.sh
+```
+
+The bootstrap script installs ROCm torch, vLLM, and vERL **only if not already
+present** — it does not blindly reinstall a working ROCm environment.
+
+The patch script verifies that all known ROCm workarounds are in place:
+- `free_cache_engine=False` — prevents vLLM `--enable_sleep_mode` on ROCm
+- `enforce_eager=True` — skips CUDA graph capture (safe on ROCm)
+- `extra_info` written as struct columns, not JSON strings
+
+`requirements-amd-rocm.txt` documents the full stack for reference but should
+not be installed with `pip install -r` directly.
+
+---
+
 ## Files
 
 | File | Purpose |

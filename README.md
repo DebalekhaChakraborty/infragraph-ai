@@ -4,6 +4,40 @@ Synthetic network-diagram dataset generator and AI pipeline for **automated topo
 
 ---
 
+## Installation
+
+Three dependency tiers — install only what you need.
+
+| Tier | Command | Use case |
+|------|---------|----------|
+| **App / demo** | `pip install -r requirements.txt` | Streamlit cockpit, graph RCA, topology, non-GPU |
+| **Training prep** | + `pip install -r requirements-training.txt` | Dataset conversion, reward evaluation, parquet |
+| **AMD GRPO training** | `bash scripts/amd_rocm/bootstrap_grpo_env.sh` | ROCm torch + vLLM + vERL |
+
+> `pip install -r requirements.txt` alone **cannot** reproduce the AMD ROCm GRPO
+> training run and does not install vERL, vLLM, or ROCm torch.
+
+### AMD ROCm GRPO training setup
+
+```bash
+# 1. Install ROCm torch, vLLM, vERL (checks existing install before touching anything)
+bash scripts/amd_rocm/bootstrap_grpo_env.sh
+
+# 2. Verify all ROCm runtime patches are in place
+bash scripts/amd_rocm/patch_verl_runtime_for_rocm.sh
+
+# 3. Dry-run (no GPU needed — prints the full training command)
+bash training/verl_grpo/train_qwen3_grpo.sh
+
+# 4. Real training run
+INFRAGRAPH_RUN_REAL_VERL=1 bash training/verl_grpo/train_qwen3_grpo.sh
+```
+
+See [training/verl_grpo/README.md](training/verl_grpo/README.md) for the full
+GRPO pipeline, reward functions, and honest status levels.
+
+---
+
 ## AI Remediation Agent: Qwen3 + vLLM + vERL/GRPO
 
 InfraGraph AI uses a three-stage intelligence pipeline:
@@ -198,8 +232,10 @@ The gallery manifest lists up to 250 records (V3 > V2 > V1 priority). Each recor
 ## Quick start
 
 ```bash
-# 1. Install dependencies
+# 1. Install base dependencies (app / non-GPU)
 pip install -r requirements.txt
+# For training data prep: pip install -r requirements-training.txt
+# For AMD ROCm GRPO training: bash scripts/amd_rocm/bootstrap_grpo_env.sh
 
 # 2. Generate a 300-image dataset
 python data_generator/generate_infragraph_dataset.py \

@@ -1,0 +1,33 @@
+# ============================================================
+# InfraGraph AI — training data prep dependencies
+# ============================================================
+# Use this layer for:
+#   - JSONL → parquet conversion  (prepare_verl_dataset.py)
+#   - Reward function evaluation  (reward_functions.py)
+#   - LoRA adapter loading in the Streamlit app
+#   - Enterprise GNN training     (train_enterprise_gnn_rca.py)
+#
+# Install order:
+#   pip install -r requirements.txt
+#   pip install -r requirements-training.txt
+#
+# This file does NOT include vERL, vLLM, Ray, or ROCm torch.
+# For the AMD GRPO training stack:
+#   bash scripts/amd_rocm/bootstrap_grpo_env.sh
+# ============================================================
+
+# --- Parquet serialisation (used by prepare_verl_dataset.py) -
+datasets>=2.18.0
+
+# --- Transformer model utilities -----------------------------
+transformers>=4.40.0
+peft>=0.10.0
+accelerate>=0.29.0
+
+# --- GNN training (torch-geometric) -------------------------
+# torch-geometric has special install requirements; install
+# separately after torch is present:
+#   pip install torch-geometric
+# Uncomment the line below only if torch-geometric is already
+# installed in your environment:
+# torch-geometric>=2.5.0

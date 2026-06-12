@@ -1,38 +1,55 @@
-# Image generation
-Pillow>=9.0.0
+# ============================================================
+# InfraGraph AI — base / app dependencies
+# ============================================================
+# Suitable for: Streamlit cockpit, graph RCA, diagram
+# intelligence, topology analysis, and non-GPU usage.
+#
+# For training data prep and reward evaluation:
+#   pip install -r requirements-training.txt
+#
+# For AMD ROCm vERL/GRPO training:
+#   bash scripts/amd_rocm/bootstrap_grpo_env.sh
+# ============================================================
 
-# YOLO training (Ultralytics)
-ultralytics>=8.0.0
+# --- Streamlit UI --------------------------------------------
+streamlit>=1.32.0
+plotly>=5.18.0
+pyvis>=0.3.2
+requests>=2.28.0
 
-# Graph / topology
+# --- Graph / topology ----------------------------------------
 networkx>=3.0
 
-# PyTorch (CPU build — install with the CPU wheel index to avoid CUDA deps):
+# --- Image processing / OCR ----------------------------------
+Pillow>=9.0.0
+opencv-python>=4.7.0
+pytesseract>=0.3.10
+
+# --- Detector training (YOLO baseline) -----------------------
+ultralytics>=8.0.0
+
+# --- PyTorch (CPU build — avoids pulling CUDA/ROCm binaries)
+# Install via the CPU wheel index to keep the environment lean:
 #   pip install torch --index-url https://download.pytorch.org/whl/cpu
 torch>=2.0.0
 
-# OCR
-pytesseract>=0.3.10
-opencv-python>=4.7.0
-
-# Notebooks & viz
-matplotlib>=3.7.0
+# --- Data / numerics -----------------------------------------
 numpy>=1.24.0
 pandas>=2.0.0
+pyarrow>=14.0.0
+scikit-learn>=1.2.0
 tqdm>=4.65.0
+
+# --- Visualisation -------------------------------------------
+matplotlib>=3.7.0
+
+# --- Notebooks -----------------------------------------------
 ipykernel>=6.0.0
 ipywidgets>=8.0.0
 
-# Utilities
+# --- Utilities -----------------------------------------------
 pyyaml>=6.0
-scikit-learn>=1.2.0
 
-# Streamlit UI
-streamlit>=1.32.0
-requests>=2.28.0
-plotly>=5.18.0
-pyvis>=0.3.2
-
-# Vector memory
+# --- Vector memory -------------------------------------------
 chromadb
 sentence-transformers

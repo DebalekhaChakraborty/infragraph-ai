@@ -1,0 +1,44 @@
+# ============================================================
+# InfraGraph AI — AMD ROCm / vERL GRPO training dependencies
+# ============================================================
+#
+# WARNING: Do NOT pip install this file directly.
+#
+# This file documents the AMD GPU training stack for reference.
+# The correct install path is:
+#
+#   bash scripts/amd_rocm/bootstrap_grpo_env.sh
+#
+# That script checks what is already installed before touching
+# torch, vLLM, or vERL, and installs only what is missing.
+# Blindly running pip install -r requirements-amd-rocm.txt
+# on an existing ROCm environment will likely break torch.
+#
+# After install, apply runtime patches:
+#   bash scripts/amd_rocm/patch_verl_runtime_for_rocm.sh
+# ============================================================
+
+# --- PyTorch ROCm --------------------------------------------
+# Must be installed via the ROCm wheel index, NOT from PyPI:
+#   pip install torch --index-url https://download.pytorch.org/whl/rocm6.0
+# torch>=2.2.0
+
+# --- vLLM ----------------------------------------------------
+# Install after ROCm torch is present:
+#   pip install vllm
+# vllm>=0.4.0
+
+# --- vERL ----------------------------------------------------
+# Install from source — the PyPI release may not include
+# verl.trainer.main_ppo used for GRPO:
+#   pip install git+https://github.com/volcengine/verl.git
+# verl
+
+# --- Ray (vERL dependency) -----------------------------------
+# ray[default]>=2.10.0
+
+# --- Training utilities (same as requirements-training.txt) --
+datasets>=2.18.0
+transformers>=4.40.0
+peft>=0.10.0
+accelerate>=0.29.0
