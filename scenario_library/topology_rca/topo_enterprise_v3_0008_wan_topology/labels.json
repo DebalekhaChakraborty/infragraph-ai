@@ -1,0 +1,29 @@
+{
+  "case_id": "topo_enterprise_v3_0008_wan_topology",
+  "root_cause_in_scope": true,
+  "severity": "critical",
+  "impacted_nodes": [
+    "WAN-PE-02"
+  ],
+  "root_cause_node": "WAN-PE-01",
+  "root_cause_diagram": "wan_topology",
+  "root_cause_pattern": "wan_failure",
+  "impact_paths": [
+    [
+      "WAN-PE-01",
+      "WAN-PE-02"
+    ],
+    [
+      "WAN-PE-01",
+      "BR-RTR-01"
+    ],
+    [
+      "WAN-PE-01",
+      "BR-FW-01"
+    ],
+    [
+      "WAN-PE-01",
+      "APP-LB-01"
+    ]
+  ]
+}

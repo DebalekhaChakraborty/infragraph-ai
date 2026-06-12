@@ -1,0 +1,16 @@
+{
+  "case_id": "topo_enterprise_v3_0004_wan_topology",
+  "mode": "topology_rca",
+  "scenario_id": "enterprise_v3_0004",
+  "diagram_id": "wan_topology",
+  "events": [
+    {
+      "event_id": "EVT-0001",
+      "time_offset_min": 16,
+      "node": "WAN-PE-01",
+      "diagram_id": "wan_topology",
+      "alert_type": "connection_timeout",
+      "severity": "warning"
+    }
+  ]
+}

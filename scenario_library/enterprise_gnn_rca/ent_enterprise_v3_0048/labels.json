@@ -1,0 +1,29 @@
+{
+  "case_id": "ent_enterprise_v3_0048",
+  "root_cause_node": "APP-LB-01",
+  "root_cause_diagram": "app_db_topology",
+  "root_cause_pattern": "lb_failure",
+  "impacted_nodes": [
+    "APP-01",
+    "APP-02",
+    "DB-MASTER"
+  ],
+  "impacted_diagrams": [
+    "app_db_topology"
+  ],
+  "impact_paths": [
+    [
+      "APP-LB-01",
+      "APP-01"
+    ],
+    [
+      "APP-LB-01",
+      "APP-02"
+    ],
+    [
+      "APP-LB-01",
+      "DB-MASTER"
+    ]
+  ],
+  "severity": "critical"
+}

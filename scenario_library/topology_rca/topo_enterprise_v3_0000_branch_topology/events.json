@@ -1,0 +1,16 @@
+{
+  "case_id": "topo_enterprise_v3_0000_branch_topology",
+  "mode": "topology_rca",
+  "scenario_id": "enterprise_v3_0000",
+  "diagram_id": "branch_topology",
+  "events": [
+    {
+      "event_id": "EVT-0001",
+      "time_offset_min": 18,
+      "node": "BR-APP-01",
+      "diagram_id": "branch_topology",
+      "alert_type": "user_timeout",
+      "severity": "warning"
+    }
+  ]
+}

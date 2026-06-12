@@ -1,0 +1,9 @@
+{
+  "case_id": "topo_enterprise_v3_0061_wan_topology",
+  "root_cause_in_scope": false,
+  "severity": "critical",
+  "impacted_nodes": [
+    "WAN-PE-01"
+  ],
+  "expected_behavior": "escalate_or_unknown"
+}

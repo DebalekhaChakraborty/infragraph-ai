@@ -1,0 +1,41 @@
+{
+  "case_id": "ent_enterprise_v3_0022",
+  "root_cause_node": "WAN-MPLS-CORE",
+  "root_cause_diagram": "wan_topology",
+  "root_cause_pattern": "wan_failure",
+  "impacted_nodes": [
+    "WAN-PE-01",
+    "WAN-PE-02",
+    "BR-RTR-01",
+    "BR-FW-01",
+    "APP-LB-01"
+  ],
+  "impacted_diagrams": [
+    "app_db_topology",
+    "branch_topology",
+    "wan_topology"
+  ],
+  "impact_paths": [
+    [
+      "WAN-MPLS-CORE",
+      "WAN-PE-01"
+    ],
+    [
+      "WAN-MPLS-CORE",
+      "WAN-PE-02"
+    ],
+    [
+      "WAN-MPLS-CORE",
+      "BR-RTR-01"
+    ],
+    [
+      "WAN-MPLS-CORE",
+      "BR-FW-01"
+    ],
+    [
+      "WAN-MPLS-CORE",
+      "APP-LB-01"
+    ]
+  ],
+  "severity": "critical"
+}

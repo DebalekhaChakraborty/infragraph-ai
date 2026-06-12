@@ -1,0 +1,31 @@
+{
+  "case_id": "ent_enterprise_v3_0053",
+  "root_cause_node": "IAM-01",
+  "root_cause_diagram": "shared_services_topology",
+  "root_cause_pattern": "shared_id_failure",
+  "impacted_nodes": [
+    "MON-01",
+    "BR-WRK-01",
+    "APP-01"
+  ],
+  "impacted_diagrams": [
+    "shared_services_topology",
+    "app_db_topology",
+    "branch_topology"
+  ],
+  "impact_paths": [
+    [
+      "IAM-01",
+      "MON-01"
+    ],
+    [
+      "IAM-01",
+      "BR-WRK-01"
+    ],
+    [
+      "IAM-01",
+      "APP-01"
+    ]
+  ],
+  "severity": "critical"
+}

@@ -1,0 +1,35 @@
+{
+  "case_id": "ent_enterprise_v3_0054",
+  "root_cause_node": "DC-FW-01",
+  "root_cause_diagram": "datacenter_topology",
+  "root_cause_pattern": "dc_fw_failure",
+  "impacted_nodes": [
+    "DC-CORE-SW-01",
+    "DC-AGG-SW-01",
+    "APP-LB-01",
+    "APP-01"
+  ],
+  "impacted_diagrams": [
+    "datacenter_topology",
+    "app_db_topology"
+  ],
+  "impact_paths": [
+    [
+      "DC-FW-01",
+      "DC-CORE-SW-01"
+    ],
+    [
+      "DC-FW-01",
+      "DC-AGG-SW-01"
+    ],
+    [
+      "DC-FW-01",
+      "APP-LB-01"
+    ],
+    [
+      "DC-FW-01",
+      "APP-01"
+    ]
+  ],
+  "severity": "critical"
+}

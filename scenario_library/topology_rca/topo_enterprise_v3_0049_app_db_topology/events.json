@@ -1,0 +1,16 @@
+{
+  "case_id": "topo_enterprise_v3_0049_app_db_topology",
+  "mode": "topology_rca",
+  "scenario_id": "enterprise_v3_0049",
+  "diagram_id": "app_db_topology",
+  "events": [
+    {
+      "event_id": "EVT-0001",
+      "time_offset_min": 19,
+      "node": "APP-LB-01",
+      "diagram_id": "app_db_topology",
+      "alert_type": "error_rate",
+      "severity": "warning"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "case_id": "topo_enterprise_v3_0029_app_db_topology",
+  "mode": "topology_rca",
+  "scenario_id": "enterprise_v3_0029",
+  "diagram_id": "app_db_topology",
+  "events": [
+    {
+      "event_id": "EVT-0001",
+      "time_offset_min": 0,
+      "node": "APP-LB-01",
+      "diagram_id": "app_db_topology",
+      "alert_type": "link_down",
+      "severity": "critical"
+    },
+    {
+      "event_id": "EVT-0002",
+      "time_offset_min": 1,
+      "node": "APP-01",
+      "diagram_id": "app_db_topology",
+      "alert_type": "packet_loss",
+      "severity": "high"
+    },
+    {
+      "event_id": "EVT-0003",
+      "time_offset_min": 3,
+      "node": "APP-02",
+      "diagram_id": "app_db_topology",
+      "alert_type": "packet_loss",
+      "severity": "high"
+    },
+    {
+      "event_id": "EVT-0004",
+      "time_offset_min": 10,
+      "node": "DB-MASTER",
+      "diagram_id": "app_db_topology",
+      "alert_type": "latency",
+      "severity": "warning"
+    }
+  ]
+}

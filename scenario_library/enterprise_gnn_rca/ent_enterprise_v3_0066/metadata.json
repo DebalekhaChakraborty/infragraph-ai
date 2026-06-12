@@ -1,0 +1,15 @@
+{
+  "case_id": "ent_enterprise_v3_0066",
+  "mode": "enterprise_gnn_rca",
+  "split": "val",
+  "source_scenario_id": "enterprise_v3_0066",
+  "diagram_ids": [
+    "app_db_topology",
+    "datacenter_topology"
+  ],
+  "alert_count": 5,
+  "node_count": 34,
+  "edge_count": 64,
+  "created_from": "datasets\\infragraph_v3\\scenarios\\val\\enterprise_v3_0066\\alerts.json",
+  "version": "1.0"
+}

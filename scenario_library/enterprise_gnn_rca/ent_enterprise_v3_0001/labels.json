@@ -1,0 +1,35 @@
+{
+  "case_id": "ent_enterprise_v3_0001",
+  "root_cause_node": "BR-RTR-01",
+  "root_cause_diagram": "branch_topology",
+  "root_cause_pattern": "branch_rtr_failure",
+  "impacted_nodes": [
+    "BR-FW-01",
+    "BR-SW-01",
+    "BR-WRK-01",
+    "WAN-PE-01"
+  ],
+  "impacted_diagrams": [
+    "branch_topology",
+    "wan_topology"
+  ],
+  "impact_paths": [
+    [
+      "BR-RTR-01",
+      "BR-FW-01"
+    ],
+    [
+      "BR-RTR-01",
+      "BR-SW-01"
+    ],
+    [
+      "BR-RTR-01",
+      "BR-WRK-01"
+    ],
+    [
+      "BR-RTR-01",
+      "WAN-PE-01"
+    ]
+  ],
+  "severity": "critical"
+}

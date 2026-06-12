@@ -1,0 +1,31 @@
+{
+  "case_id": "ent_enterprise_v3_0074",
+  "mode": "enterprise_gnn_rca",
+  "scenario_id": "enterprise_v3_0074",
+  "events": [
+    {
+      "event_id": "EVT-0001",
+      "time_offset_min": 0,
+      "node": "WAN-PE-01",
+      "diagram_id": "wan_topology",
+      "alert_type": "link_down",
+      "severity": "critical"
+    },
+    {
+      "event_id": "EVT-0002",
+      "time_offset_min": 1,
+      "node": "WAN-PE-02",
+      "diagram_id": "wan_topology",
+      "alert_type": "error_rate",
+      "severity": "high"
+    },
+    {
+      "event_id": "EVT-0003",
+      "time_offset_min": 5,
+      "node": "APP-LB-01",
+      "diagram_id": "app_db_topology",
+      "alert_type": "connection_timeout",
+      "severity": "warning"
+    }
+  ]
+}

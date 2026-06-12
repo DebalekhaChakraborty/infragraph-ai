@@ -1,0 +1,34 @@
+{
+  "case_id": "topo_enterprise_v3_0002_wan_topology",
+  "root_cause_in_scope": true,
+  "severity": "critical",
+  "impacted_nodes": [
+    "WAN-PE-01",
+    "WAN-PE-02"
+  ],
+  "root_cause_node": "WAN-MPLS-CORE",
+  "root_cause_diagram": "wan_topology",
+  "root_cause_pattern": "wan_failure",
+  "impact_paths": [
+    [
+      "WAN-MPLS-CORE",
+      "WAN-PE-01"
+    ],
+    [
+      "WAN-MPLS-CORE",
+      "WAN-PE-02"
+    ],
+    [
+      "WAN-MPLS-CORE",
+      "BR-RTR-01"
+    ],
+    [
+      "WAN-MPLS-CORE",
+      "BR-FW-01"
+    ],
+    [
+      "WAN-MPLS-CORE",
+      "APP-LB-01"
+    ]
+  ]
+}

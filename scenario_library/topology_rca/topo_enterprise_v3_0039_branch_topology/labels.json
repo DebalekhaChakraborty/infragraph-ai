@@ -1,0 +1,10 @@
+{
+  "case_id": "topo_enterprise_v3_0039_branch_topology",
+  "root_cause_in_scope": false,
+  "severity": "critical",
+  "impacted_nodes": [
+    "BR-RTR-01",
+    "BR-FW-01"
+  ],
+  "expected_behavior": "escalate_or_unknown"
+}

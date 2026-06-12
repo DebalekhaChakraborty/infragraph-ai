@@ -1,0 +1,14 @@
+{
+  "case_id": "topo_enterprise_v3_0066_datacenter_topology",
+  "mode": "topology_rca",
+  "split": "val",
+  "source_scenario_id": "enterprise_v3_0066",
+  "diagram_ids": [
+    "datacenter_topology"
+  ],
+  "alert_count": 3,
+  "node_count": 9,
+  "edge_count": 9,
+  "created_from": "datasets\\infragraph_v3\\scenarios\\val\\enterprise_v3_0066\\alerts.json",
+  "version": "1.0"
+}
