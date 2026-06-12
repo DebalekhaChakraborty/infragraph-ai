@@ -47,3 +47,21 @@ __pycache__/
 __pycache__/
 *.py[cod]
 .ipynb_checkpoints/
+
+# Generated training/checkpoint artifacts
+training/verl_grpo/runs/
+training_runs/
+node_modules/
+
+# Legacy/offloaded outputs
+outputs/v1/
+outputs/v2/
+outputs/*v1*/
+outputs/*v2*/
+
+# Model/checkpoint binaries
+*.safetensors
+*.pt
+*.pth
+*.bin
+*.ckpt
