@@ -11,13 +11,14 @@ Reads:
 Writes:
   assets/preloaded/enterprise_gnn_rca/<scenario_id>.json
 
-Output contains predicted root-cause ranking only.
-No remediation content is produced here.
+Default output contains predicted root-cause ranking only — no evaluation fields
+and no remediation content.  Pass --with-eval to include ground-truth comparison
+(reads labels.json from the scenario library).
 
 Usage:
   python scripts/predict_enterprise_gnn_rca.py --scenario-id enterprise_v3_0000
   python scripts/predict_enterprise_gnn_rca.py --case-id ent_enterprise_v3_0000
-  python scripts/predict_enterprise_gnn_rca.py --scenario-id enterprise_v3_0000 --top-k 5 --no-eval
+  python scripts/predict_enterprise_gnn_rca.py --scenario-id enterprise_v3_0000 --top-k 5 --with-eval
 """
 from __future__ import annotations
 
@@ -35,6 +36,7 @@ from rca_ml.enterprise_gnn_model import (  # noqa: E402
     load_gnn,
 )
 from rca_ml.enterprise_gnn_dataset import (  # noqa: E402
+    IN_DIM,
     build_graph_dict,
     load_enterprise_case,
 )
@@ -68,8 +70,8 @@ def main() -> None:
     parser.add_argument("--config",          default="model_artifacts/enterprise_gnn_rca/enterprise_gnn_config.json")
     parser.add_argument("--out",             default="assets/preloaded/enterprise_gnn_rca")
     parser.add_argument("--top-k",  type=int, default=3)
-    parser.add_argument("--no-eval", action="store_true",
-                        help="Skip ground-truth comparison (don't read labels.json)")
+    parser.add_argument("--with-eval", action="store_true",
+                        help="Include ground-truth comparison (reads labels.json)")
     args = parser.parse_args()
 
     if not args.scenario_id and not args.case_id:
@@ -77,11 +79,11 @@ def main() -> None:
 
     check_torch_geo_requirement()
 
-    repo_root  = REPO_ROOT
-    lib_root   = (repo_root / args.scenario_library).resolve()
-    model_path = (repo_root / args.model).resolve()
+    repo_root   = REPO_ROOT
+    lib_root    = (repo_root / args.scenario_library).resolve()
+    model_path  = (repo_root / args.model).resolve()
     config_path = Path(args.config) if Path(args.config).is_absolute() else (repo_root / args.config).resolve()
-    out_dir    = (repo_root / args.out).resolve()
+    out_dir     = (repo_root / args.out).resolve()
 
     if not model_path.exists():
         print(f"[ERROR] Model not found: {model_path}")
@@ -113,8 +115,6 @@ def main() -> None:
         load_enterprise_case(lib_root, row, repo_root)
     )
 
-    root_cause_node = labels.get("root_cause_node", "") if not args.no_eval else None
-
     case_id     = row["case_id"]
     scenario_id = row.get("scenario_id", "")
 
@@ -131,11 +131,24 @@ def main() -> None:
         print(f"[ERROR] Failed to build graph for case {case_id}. Check enterprise_graph.json.")
         sys.exit(1)
 
-    # Load model
+    # Load model and check feature dimension
     model, config = load_gnn(model_path, config_path)
 
-    # Predict
-    labels_for_eval = labels if not args.no_eval else None
+    model_in_channels = config.get("in_channels", IN_DIM)
+    if model_in_channels != IN_DIM:
+        print(
+            f"[ERROR] Feature dimension mismatch: model expects {model_in_channels} features, "
+            f"but dataset produces {IN_DIM} features."
+        )
+        print(
+            "        Rebuild the dataset and retrain the Enterprise GNN RCA model:\n"
+            "          python scripts/build_enterprise_gnn_dataset.py\n"
+            "          python scripts/train_enterprise_gnn_rca.py"
+        )
+        sys.exit(1)
+
+    # Predict — pass labels only when --with-eval is explicitly requested
+    labels_for_eval = labels if args.with_eval else None
     result = predict_one(model, graph_dict, labels_dict=labels_for_eval, top_k=args.top_k)
 
     # Print summary
@@ -145,13 +158,16 @@ def main() -> None:
     print(f"Confidence       : {result['confidence']}")
     print(f"Top-{args.top_k} candidates :")
     for c in result["top_candidates"]:
-        gt_marker = " <-- expected" if c["node_id"] == result.get("expected_root_cause") else ""
+        observed = ", ".join(c.get("node_observed_in_diagrams", [c["diagram_id"]]))
         print(f"  #{c['rank']:>2}  {c['node_id']:<40}  score={c['score']:.4f}  "
-              f"diag={c['diagram_id']}  type={c['node_type']}{gt_marker}")
-    if "correct" in result and result["correct"] is not None:
-        print(f"Correct          : {result['correct']}")
-    if "expected_root_cause" in result:
-        print(f"Expected root    : {result['expected_root_cause']}")
+              f"diag={c['diagram_id']}  type={c['node_type']}  "
+              f"observed_in=[{observed}]")
+    if "evaluation" in result:
+        ev = result["evaluation"]
+        print(f"Ground truth     : {ev['ground_truth_node']}")
+        print(f"Correct top-1    : {ev['correct_top1']}")
+        print(f"Correct top-{args.top_k}    : {ev['correct_top_k']}")
+        print(f"Reciprocal rank  : {ev['reciprocal_rank']}")
 
     # Write output
     out_dir.mkdir(parents=True, exist_ok=True)

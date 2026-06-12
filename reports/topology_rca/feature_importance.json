@@ -1,122 +1,122 @@
 [
   {
+    "feature": "min_time_rank",
+    "importance": 0.13217
+  },
+  {
+    "feature": "is_first_alerted_node",
+    "importance": 0.111143
+  },
+  {
     "feature": "severity_weighted_alert_score",
-    "importance": 0.178902
+    "importance": 0.108696
+  },
+  {
+    "feature": "alert_sequence_position_norm",
+    "importance": 0.092347
   },
   {
     "feature": "max_severity_score",
-    "importance": 0.157213
-  },
-  {
-    "feature": "min_time_rank",
-    "importance": 0.141162
+    "importance": 0.089489
   },
   {
     "feature": "mean_alert_time",
-    "importance": 0.122239
+    "importance": 0.088068
   },
   {
     "feature": "first_alert_time",
-    "importance": 0.101076
+    "importance": 0.086719
   },
   {
-    "feature": "alert_count",
-    "importance": 0.050594
+    "feature": "propagation_consistency_score",
+    "importance": 0.037518
   },
   {
-    "feature": "is_alerted",
-    "importance": 0.048911
+    "feature": "alert_burst_score",
+    "importance": 0.034556
   },
   {
     "feature": "min_undirected_distance_to_alert",
-    "importance": 0.040298
+    "importance": 0.030417
   },
   {
-    "feature": "betweenness_centrality",
-    "importance": 0.035019
+    "feature": "alert_count",
+    "importance": 0.029172
+  },
+  {
+    "feature": "is_alerted",
+    "importance": 0.02309
+  },
+  {
+    "feature": "upstream_critical_alert_count",
+    "importance": 0.02256
   },
   {
     "feature": "mean_undirected_distance_to_alert",
-    "importance": 0.026913
+    "importance": 0.016889
+  },
+  {
+    "feature": "upstream_alert_count",
+    "importance": 0.015325
+  },
+  {
+    "feature": "betweenness_centrality",
+    "importance": 0.013547
   },
   {
     "feature": "reverse_reachability_from_alert_count",
-    "importance": 0.024959
+    "importance": 0.012126
+  },
+  {
+    "feature": "alerts_reachable_upstream_before_candidate",
+    "importance": 0.006389
   },
   {
     "feature": "node_type_priority_score",
-    "importance": 0.014249
+    "importance": 0.006188
   },
   {
-    "feature": "directed_reachability_to_alert_count",
-    "importance": 0.009832
-  },
-  {
-    "feature": "out_degree",
-    "importance": 0.007408
+    "feature": "downstream_after_candidate_count",
+    "importance": 0.006128
   },
   {
     "feature": "total_degree",
-    "importance": 0.007071
+    "importance": 0.004815
   },
   {
-    "feature": "closeness_centrality",
-    "importance": 0.006388
-  },
-  {
-    "feature": "node_type_server",
-    "importance": 0.004185
-  },
-  {
-    "feature": "pagerank",
-    "importance": 0.00409
+    "feature": "alerts_reachable_downstream_after_candidate",
+    "importance": 0.004346
   },
   {
     "feature": "is_sink_node",
-    "importance": 0.003293
+    "importance": 0.003699
   },
   {
-    "feature": "node_type_switch",
-    "importance": 0.002685
+    "feature": "alert_type_count_link_errors",
+    "importance": 0.003181
   },
   {
-    "feature": "zone_Branch Edge",
-    "importance": 0.002142
+    "feature": "out_degree",
+    "importance": 0.003087
   },
   {
-    "feature": "zone_App Tier",
-    "importance": 0.002021
+    "feature": "downstream_alert_count",
+    "importance": 0.002367
   },
   {
     "feature": "in_degree",
-    "importance": 0.001734
+    "importance": 0.002285
   },
   {
-    "feature": "is_source_node",
-    "importance": 0.001402
+    "feature": "is_last_alerted_node",
+    "importance": 0.00196
   },
   {
-    "feature": "zone_DB Tier",
-    "importance": 0.0011
+    "feature": "directed_reachability_to_alert_count",
+    "importance": 0.001766
   },
   {
-    "feature": "node_type_database",
-    "importance": 0.000955
-  },
-  {
-    "feature": "zone_WAN PE",
-    "importance": 0.000941
-  },
-  {
-    "feature": "is_shared_entity",
-    "importance": 0.000579
-  },
-  {
-    "feature": "node_type_firewall",
-    "importance": 0.000556
-  },
-  {
-    "feature": "zone_DC Aggregation",
-    "importance": 0.000498
+    "feature": "closeness_centrality",
+    "importance": 0.001569
   }
 ]
