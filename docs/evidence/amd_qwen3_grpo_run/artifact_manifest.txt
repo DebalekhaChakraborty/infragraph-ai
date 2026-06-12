@@ -1,0 +1,2 @@
+training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/completion_evidence.md
+training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/training_summary.md
