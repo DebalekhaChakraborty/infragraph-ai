@@ -3823,20 +3823,8 @@ def _tab_local_rca() -> None:
                 unsafe_allow_html=True,
             )
 
-    # ── Recommended actions ────────────────────────────────────────────────────
-    actions = result.get("recommended_actions", [])
-    if actions:
-        st.markdown(
-            '<div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;'
-            'color:#64748b;margin-top:12px;margin-bottom:6px">Recommended Actions</div>',
-            unsafe_allow_html=True,
-        )
-        for action in actions:
-            st.markdown(
-                f'<div style="font-size:0.8rem;color:#d1fae5;padding:3px 0 3px 8px;'
-                f'border-left:2px solid #10b981;margin-bottom:4px">· {action}</div>',
-                unsafe_allow_html=True,
-            )
+    # Do not render RCA recommended_actions here.
+    # Remediation must come from the AI Resolution Agent to avoid hardcoded-looking output.
 
     st.markdown('<hr class="ws-rule" style="margin:16px 0">', unsafe_allow_html=True)
 
@@ -5277,20 +5265,8 @@ def _tab_gnn_rca() -> None:
             )
             st.dataframe(pd.DataFrame(ranking), use_container_width=True, hide_index=True)
 
-        # Recommended actions
-        _ent_actions = (ent_incident or {}).get("recommended_actions", [])
-        if _ent_actions:
-            st.markdown(
-                '<div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;'
-                'color:#64748b;margin-top:12px;margin-bottom:6px">Recommended Actions</div>',
-                unsafe_allow_html=True,
-            )
-            for _act in _ent_actions:
-                st.markdown(
-                    f'<div style="font-size:0.8rem;color:#d1fae5;padding:3px 0 3px 8px;'
-                    f'border-left:2px solid #10b981;margin-bottom:4px">· {_act}</div>',
-                    unsafe_allow_html=True,
-                )
+        # Do not render RCA recommended_actions here.
+        # Remediation must come from the AI Resolution Agent to avoid hardcoded-looking output.
 
     elif ent_incident and not rca:
         st.info("Click **Run Enterprise RCA** to identify the root cause from the alert stream.")
