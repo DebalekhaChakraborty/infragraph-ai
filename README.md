@@ -67,7 +67,7 @@ python -m vllm.entrypoints.openai.api_server \
 ```bash
 python training/verl_grpo/build_rca_rl_dataset.py \
     --dataset-root ./datasets/infragraph_v3 \
-    --gnn-results  ./demo_assets/enterprise_gnn_rca \
+    --gnn-results  ./assets/preloaded/enterprise_gnn_rca \
     --out          ./training/verl_grpo/data
 ```
 
@@ -149,16 +149,23 @@ The `assets/` layer provides a clean product-facing identity for datasets, decou
 assets/
 ├── gallery/
 │   └── manifest.json        # DG-0001 … DG-0250 — known diagrams in graph memory
-└── onboarding/
-    ├── manifest.json        # ONB-001 … ONB-020 — curated samples for live ingestion
-    ├── ONB-001/
-    │   ├── original.png
-    │   ├── annotation.json
-    │   ├── local_graph.json
-    │   ├── enterprise_graph.json
-    │   ├── stitch_map.json
-    │   └── alerts.json
-    └── ONB-002/ …
+├── onboarding/
+│   ├── manifest.json        # ONB-001 … ONB-020 — curated samples for live ingestion
+│   ├── ONB-001/
+│   │   ├── original.png
+│   │   ├── annotation.json
+│   │   ├── local_graph.json
+│   │   ├── enterprise_graph.json
+│   │   ├── stitch_map.json
+│   │   └── alerts.json
+│   └── ONB-002/ …
+└── preloaded/               # Curated ML artifacts used by the Streamlit cockpit
+    ├── enterprise_gnn_rca/  # GNN metrics + per-scenario RCA result JSON
+    ├── gnn_rca/             # V2 GNN model + metrics
+    ├── mlp_rca/             # V2 MLP model + metrics
+    ├── demo_hero/           # Hero scenario selection JSON
+    ├── onboarded_diagrams/  # Onboarded diagram output packages
+    └── qwen_explanation/    # Qwen explanation reports
 ```
 
 Build the asset layer from the raw datasets:
@@ -176,7 +183,7 @@ The gallery manifest lists up to 250 records (V3 > V2 > V1 priority). Each recor
 | Directory | Purpose | Notes |
 |-----------|---------|-------|
 | `runtime_state/` | Live/generated runtime state | Not committed. Contains ingestion runs, absorption runs, incident JSON, vector memory, global graph memory. |
-| `demo_assets/` | Curated demo artifacts used by the Streamlit app | Committed where small. GNN results, hero scenario selection, Qwen explanations, RCA model outputs. |
+| `assets/preloaded/` | Curated demo artifacts used by the Streamlit app | Committed where small. GNN results, hero scenario selection, Qwen explanations, RCA model outputs. |
 | `model_artifacts/` | Detector and model checkpoints | Ignored in git (large binaries). RF-DETR V3 weights, trained GNN models. |
 | `reports/` | Evaluation reports and annotation QA | `val_eval/`, `v3_annotation_qa/`, `hydra_runs/` (ignored). |
 | `outputs/` | **Legacy only** — do not use for new writes | Kept for backward compatibility. The app falls back to `outputs/<subpath>` if the new canonical path does not exist. Run `python scripts/migrate_outputs_structure.py --apply` to move existing files. |
@@ -392,13 +399,13 @@ propagates the root-cause signal through topology neighbours.
 # MLP node-ranker (learned non-graph baseline)
 python scripts/train_mlp_rca.py \
     --dataset-root datasets/infragraph_v2 \
-    --out demo_assets/mlp_rca \
+    --out assets/preloaded/mlp_rca \
     --presentation-diagram diagram_0373
 
 # GNN (topology-aware learned model)
 python scripts/train_gnn_rca.py \
     --dataset-root datasets/infragraph_v2 \
-    --out demo_assets/gnn_rca \
+    --out assets/preloaded/gnn_rca \
     --presentation-diagram diagram_0373
 ```
 
@@ -423,7 +430,7 @@ the root-cause node that triggered cross-diagram alert propagation.
 # Preferred: V3 multi-diagram enterprise scenarios
 python scripts/train_enterprise_gnn_rca.py \
     --dataset-root ./datasets/infragraph_v3 \
-    --out ./demo_assets/enterprise_gnn_rca \
+    --out ./assets/preloaded/enterprise_gnn_rca \
     --epochs 80 \
     --presentation-scenario enterprise_v3_0000 \
     --presentation-split test
@@ -434,11 +441,11 @@ python scripts/train_enterprise_gnn_rca.py \
 
 | Output | Description |
 |--------|-------------|
-| `demo_assets/enterprise_gnn_rca/enterprise_gnn_model.pt` | Trained GCN checkpoint |
-| `demo_assets/enterprise_gnn_rca/enterprise_gnn_metrics.json` | Top-1, Top-3, MRR across splits |
-| `demo_assets/enterprise_gnn_rca/enterprise_gnn_training_curve.png` | Loss and ranking curves |
-| `demo_assets/enterprise_gnn_rca/<scenario_id>_enterprise_gnn_rca_result.json` | Per-scenario inference result |
-| `demo_assets/enterprise_gnn_rca/<scenario_id>_enterprise_gnn_prediction.png` | Graph visualisation |
+| `assets/preloaded/enterprise_gnn_rca/enterprise_gnn_model.pt` | Trained GCN checkpoint |
+| `assets/preloaded/enterprise_gnn_rca/enterprise_gnn_metrics.json` | Top-1, Top-3, MRR across splits |
+| `assets/preloaded/enterprise_gnn_rca/enterprise_gnn_training_curve.png` | Loss and ranking curves |
+| `assets/preloaded/enterprise_gnn_rca/<scenario_id>_enterprise_gnn_rca_result.json` | Per-scenario inference result |
+| `assets/preloaded/enterprise_gnn_rca/<scenario_id>_enterprise_gnn_prediction.png` | Graph visualisation |
 
 The app UI shows **"Enterprise GNN RCA"** only when a result JSON exists for the
 **exact selected scenario**.  If no matching result is found, the UI shows
@@ -565,7 +572,7 @@ Onboard any topology diagram into graph memory with a single command:
 python scripts/onboard_diagram.py \
     --image <path-to-diagram-image> \
     --diagram-id sample_onboard_0373 \
-    --out demo_assets/onboarded_diagrams
+    --out assets/preloaded/onboarded_diagrams
 ```
 
 Outputs: `original.png`, `detected.png`, `detected_nodes.json`, `local_graph.json`,
@@ -583,7 +590,16 @@ See: [docs/diagram_onboarding.md](docs/diagram_onboarding.md)
 ```
 infragraph-ai/
 ├── app/                          # Streamlit cockpit
-├── assets/                       # Product-facing gallery/onboarding manifests
+├── assets/                       # Product-facing manifests and curated artifacts
+│   ├── gallery/                  # Gallery manifest (DG-0001 … DG-0250)
+│   ├── onboarding/               # Onboarding manifest + ONB-XXX sample packages
+│   └── preloaded/                # Curated artifacts used by the Streamlit cockpit
+│       ├── enterprise_gnn_rca/   # Trained GNN metrics + per-scenario RCA results
+│       ├── gnn_rca/              # V2 GNN model + metrics
+│       ├── mlp_rca/              # V2 MLP model + metrics
+│       ├── demo_hero/            # Hero scenario selection
+│       ├── onboarded_diagrams/   # Onboarded diagram output packages
+│       └── qwen_explanation/     # Qwen explanation reports
 ├── datasets/
 │   ├── infragraph_v1/            # V1 baseline topology dataset + enterprise_graph/
 │   ├── infragraph_v2/            # V2 improved topology dataset
@@ -602,14 +618,6 @@ infragraph-ai/
 │   ├── incident_runs/            # Persisted incident simulation JSON
 │   ├── vector_memory/            # ChromaDB (gitignored)
 │   └── global_graph_memory/      # Global InfraGraph Galaxy index
-│
-├── demo_assets/                  # Curated artifacts used by the Streamlit cockpit
-│   ├── enterprise_gnn_rca/       # Trained GNN metrics + per-scenario RCA results
-│   ├── gnn_rca/                  # V2 GNN model + metrics
-│   ├── mlp_rca/                  # V2 MLP model + metrics
-│   ├── demo_hero/                # Hero scenario selection
-│   ├── onboarded_diagrams/       # Onboarded diagram output packages
-│   └── qwen_explanation/         # Qwen explanation reports
 │
 ├── model_artifacts/              # Detector and model checkpoints — gitignored
 │   ├── rfdetr_v3/                # RF-DETR V3 checkpoint + outputs
@@ -655,7 +663,7 @@ enterprise graphs, and RCA ground truth together inside each scenario.
 | Write here | For |
 |------------|-----|
 | `runtime_state/` | Any file generated at runtime (ingestion, absorption, incidents, vector DB, global graph) |
-| `demo_assets/` | Curated, repeatable artifacts committed to the repo (GNN results, hero scenarios, Qwen explanations) |
+| `assets/preloaded/` | Curated, repeatable artifacts committed to the repo (GNN results, hero scenarios, Qwen explanations) |
 | `model_artifacts/` | Detector and model checkpoints (gitignored; large binaries) |
 | `reports/` | Evaluation reports and annotation QA — commit summary files, gitignore large artefacts |
 | `outputs/` | **Do not write here.** Legacy only. Existing files are accessible via `src/paths.py` fallback. |

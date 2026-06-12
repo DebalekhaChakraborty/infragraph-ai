@@ -5,7 +5,7 @@ New canonical layout
 --------------------
 runtime_state/    Live/generated runtime state (ingestion runs, absorption,
                   incidents, vector memory, global graph memory).
-demo_assets/      Curated demo artifacts consumed by the Streamlit app
+assets/preloaded/ Curated demo artifacts consumed by the Streamlit app
                   (GNN results, hero scenario, Qwen explanations, etc.).
 model_artifacts/  Detector and model checkpoints (RF-DETR, GNN weights).
 reports/          Evaluation reports, annotation QA, Hydra run logs.
@@ -31,7 +31,7 @@ REPO_ROOT: Path = Path(__file__).resolve().parent.parent
 
 # ── New canonical top-level directories ───────────────────────────────────────
 RUNTIME_STATE_DIR:   Path = REPO_ROOT / "runtime_state"
-DEMO_ASSETS_DIR:     Path = REPO_ROOT / "demo_assets"
+DEMO_ASSETS_DIR:     Path = REPO_ROOT / "assets" / "preloaded"
 MODEL_ARTIFACTS_DIR: Path = REPO_ROOT / "model_artifacts"
 REPORTS_DIR:         Path = REPO_ROOT / "reports"
 
@@ -70,7 +70,7 @@ def runtime_path(*parts: str) -> Path:
 
 def demo_asset_path(*parts: str) -> Path:
     """
-    Canonical path under ``demo_assets/``.
+    Canonical path under ``assets/preloaded/``.
 
     Falls back to ``outputs/<parts>`` if the new path does not exist yet.
     Use for: demo_hero, enterprise_gnn_rca, gnn_rca, mlp_rca,

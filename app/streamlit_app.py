@@ -4926,7 +4926,7 @@ def _tab_gnn_rca() -> None:
         st.code(
             "python scripts/train_enterprise_gnn_rca.py "
             "--dataset-root ./datasets/infragraph_v3 "
-            "--out ./demo_assets/enterprise_gnn_rca --epochs 80",
+            "--out ./assets/preloaded/enterprise_gnn_rca --epochs 80",
             language="bash",
         )
 

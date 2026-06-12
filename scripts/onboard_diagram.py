@@ -476,7 +476,7 @@ def run_onboarding(
     image_path: str | Path,
     diagram_id: str,
     model_path: str | Path | None = None,
-    out_dir: str | Path = "demo_assets/onboarded_diagrams",
+    out_dir: str | Path = "assets/preloaded/onboarded_diagrams",
     on_step: Callable[[str], None] | None = None,
 ) -> dict:
     """
@@ -644,8 +644,8 @@ def main() -> None:
         default=str(REPO_ROOT / "training_runs" / "infragraph_yolo_v2" / "weights" / "best.pt"),
         help="YOLO model weights path (default: infragraph_yolo_v2/best.pt, uses v1)",
     )
-    p.add_argument("--out", default="demo_assets/onboarded_diagrams",
-                   help="Root output directory (default: demo_assets/onboarded_diagrams)")
+    p.add_argument("--out", default="assets/preloaded/onboarded_diagrams",
+                   help="Root output directory (default: assets/preloaded/onboarded_diagrams)")
     args = p.parse_args()
 
     _p = lambda s: print(s, file=sys.stdout)  # noqa: E731

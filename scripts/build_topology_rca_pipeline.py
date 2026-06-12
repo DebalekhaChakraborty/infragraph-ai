@@ -494,7 +494,7 @@ def main() -> None:
                     help="Diagram ID, e.g. diagram_0373")
     ap.add_argument("--dataset-root", default="./datasets/infragraph_v2")
     ap.add_argument("--pred-root",    default="./outputs/v2_test_predictions_cpu")
-    ap.add_argument("--out",          default="./demo_assets/topology_demo")
+    ap.add_argument("--out",          default="./assets/preloaded/topology_demo")
     args = ap.parse_args()
 
     did  = args.diagram_id

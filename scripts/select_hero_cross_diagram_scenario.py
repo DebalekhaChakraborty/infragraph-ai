@@ -63,8 +63,8 @@ def _scenario_score(scenario_dir: Path, gnn_dir: Path) -> tuple[int, dict]:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Select best V3 cross-diagram hero scenario.")
     parser.add_argument("--dataset-root", default="./datasets/infragraph_v3")
-    parser.add_argument("--gnn-results", default="./demo_assets/enterprise_gnn_rca")
-    parser.add_argument("--out", default="./demo_assets/demo_hero/hero_scenario.json")
+    parser.add_argument("--gnn-results", default="./assets/preloaded/enterprise_gnn_rca")
+    parser.add_argument("--out", default="./assets/preloaded/demo_hero/hero_scenario.json")
     args = parser.parse_args()
 
     dataset_root = Path(args.dataset_root)
