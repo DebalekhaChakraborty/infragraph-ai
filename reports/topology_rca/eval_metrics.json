@@ -1,0 +1,48 @@
+{
+  "case_count": 16,
+  "node_row_count": 150,
+  "top1_accuracy": 1.0,
+  "top3_accuracy": 1.0,
+  "mrr": 1.0,
+  "classification_report": {
+    "0": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 134.0
+    },
+    "1": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 16.0
+    },
+    "accuracy": 1.0,
+    "macro avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 150.0
+    },
+    "weighted avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 150.0
+    }
+  },
+  "per_split_metrics": {
+    "val": {
+      "case_count": 8,
+      "top1_accuracy": 1.0,
+      "top3_accuracy": 1.0,
+      "mrr": 1.0
+    },
+    "test": {
+      "case_count": 8,
+      "top1_accuracy": 1.0,
+      "top3_accuracy": 1.0,
+      "mrr": 1.0
+    }
+  }
+}

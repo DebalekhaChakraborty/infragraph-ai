@@ -1,0 +1,466 @@
+[
+  {
+    "case_id": "topo_enterprise_v3_0064_datacenter_topology",
+    "split": "val",
+    "predicted_root": "DC-FW-01",
+    "expected_root": "DC-FW-01",
+    "correct_top1": true,
+    "correct_top3": true,
+    "rr": 1.0,
+    "top_candidates": [
+      {
+        "rank": 1,
+        "node_id": "DC-FW-01",
+        "score": 1.0,
+        "node_type": "firewall"
+      },
+      {
+        "rank": 2,
+        "node_id": "DC-FW-02",
+        "score": 0.0,
+        "node_type": "firewall"
+      },
+      {
+        "rank": 3,
+        "node_id": "DC-RTR-01",
+        "score": 0.0,
+        "node_type": "router"
+      }
+    ]
+  },
+  {
+    "case_id": "topo_enterprise_v3_0065_app_db_topology",
+    "split": "val",
+    "predicted_root": "DB-MASTER",
+    "expected_root": "DB-MASTER",
+    "correct_top1": true,
+    "correct_top3": true,
+    "rr": 1.0,
+    "top_candidates": [
+      {
+        "rank": 1,
+        "node_id": "DB-MASTER",
+        "score": 1.0,
+        "node_type": "database"
+      },
+      {
+        "rank": 2,
+        "node_id": "APP-LB-01",
+        "score": 0.005,
+        "node_type": "load_balancer"
+      },
+      {
+        "rank": 3,
+        "node_id": "APP-01",
+        "score": 0.0,
+        "node_type": "server"
+      }
+    ]
+  },
+  {
+    "case_id": "topo_enterprise_v3_0066_datacenter_topology",
+    "split": "val",
+    "predicted_root": "DC-FW-01",
+    "expected_root": "DC-FW-01",
+    "correct_top1": true,
+    "correct_top3": true,
+    "rr": 1.0,
+    "top_candidates": [
+      {
+        "rank": 1,
+        "node_id": "DC-FW-01",
+        "score": 1.0,
+        "node_type": "firewall"
+      },
+      {
+        "rank": 2,
+        "node_id": "DC-FW-02",
+        "score": 0.0,
+        "node_type": "firewall"
+      },
+      {
+        "rank": 3,
+        "node_id": "DC-RTR-01",
+        "score": 0.0,
+        "node_type": "router"
+      }
+    ]
+  },
+  {
+    "case_id": "topo_enterprise_v3_0067_shared_services_topology",
+    "split": "val",
+    "predicted_root": "IAM-01",
+    "expected_root": "IAM-01",
+    "correct_top1": true,
+    "correct_top3": true,
+    "rr": 1.0,
+    "top_candidates": [
+      {
+        "rank": 1,
+        "node_id": "IAM-01",
+        "score": 1.0,
+        "node_type": "service"
+      },
+      {
+        "rank": 2,
+        "node_id": "AD-01",
+        "score": 0.0,
+        "node_type": "service"
+      },
+      {
+        "rank": 3,
+        "node_id": "DNS-01",
+        "score": 0.0,
+        "node_type": "service"
+      }
+    ]
+  },
+  {
+    "case_id": "topo_enterprise_v3_0068_wan_topology",
+    "split": "val",
+    "predicted_root": "WAN-PE-01",
+    "expected_root": "WAN-PE-01",
+    "correct_top1": true,
+    "correct_top3": true,
+    "rr": 1.0,
+    "top_candidates": [
+      {
+        "rank": 1,
+        "node_id": "WAN-PE-01",
+        "score": 0.885,
+        "node_type": "router"
+      },
+      {
+        "rank": 2,
+        "node_id": "WAN-ISP-01",
+        "score": 0.0,
+        "node_type": "cloud_or_wan"
+      },
+      {
+        "rank": 3,
+        "node_id": "WAN-ISP-02",
+        "score": 0.0,
+        "node_type": "cloud_or_wan"
+      }
+    ]
+  },
+  {
+    "case_id": "topo_enterprise_v3_0069_app_db_topology",
+    "split": "val",
+    "predicted_root": "DB-MASTER",
+    "expected_root": "DB-MASTER",
+    "correct_top1": true,
+    "correct_top3": true,
+    "rr": 1.0,
+    "top_candidates": [
+      {
+        "rank": 1,
+        "node_id": "DB-MASTER",
+        "score": 0.995,
+        "node_type": "database"
+      },
+      {
+        "rank": 2,
+        "node_id": "APP-LB-01",
+        "score": 0.0,
+        "node_type": "load_balancer"
+      },
+      {
+        "rank": 3,
+        "node_id": "APP-01",
+        "score": 0.0,
+        "node_type": "server"
+      }
+    ]
+  },
+  {
+    "case_id": "topo_enterprise_v3_0070_wan_topology",
+    "split": "val",
+    "predicted_root": "WAN-PE-01",
+    "expected_root": "WAN-PE-01",
+    "correct_top1": true,
+    "correct_top3": true,
+    "rr": 1.0,
+    "top_candidates": [
+      {
+        "rank": 1,
+        "node_id": "WAN-PE-01",
+        "score": 1.0,
+        "node_type": "router"
+      },
+      {
+        "rank": 2,
+        "node_id": "WAN-ISP-01",
+        "score": 0.0,
+        "node_type": "cloud_or_wan"
+      },
+      {
+        "rank": 3,
+        "node_id": "WAN-ISP-02",
+        "score": 0.0,
+        "node_type": "cloud_or_wan"
+      }
+    ]
+  },
+  {
+    "case_id": "topo_enterprise_v3_0071_app_db_topology",
+    "split": "val",
+    "predicted_root": "APP-LB-01",
+    "expected_root": "APP-LB-01",
+    "correct_top1": true,
+    "correct_top3": true,
+    "rr": 1.0,
+    "top_candidates": [
+      {
+        "rank": 1,
+        "node_id": "APP-LB-01",
+        "score": 1.0,
+        "node_type": "load_balancer"
+      },
+      {
+        "rank": 2,
+        "node_id": "APP-01",
+        "score": 0.0,
+        "node_type": "server"
+      },
+      {
+        "rank": 3,
+        "node_id": "APP-02",
+        "score": 0.0,
+        "node_type": "server"
+      }
+    ]
+  },
+  {
+    "case_id": "topo_enterprise_v3_0072_app_db_topology",
+    "split": "test",
+    "predicted_root": "APP-LB-01",
+    "expected_root": "APP-LB-01",
+    "correct_top1": true,
+    "correct_top3": true,
+    "rr": 1.0,
+    "top_candidates": [
+      {
+        "rank": 1,
+        "node_id": "APP-LB-01",
+        "score": 1.0,
+        "node_type": "load_balancer"
+      },
+      {
+        "rank": 2,
+        "node_id": "APP-01",
+        "score": 0.0,
+        "node_type": "server"
+      },
+      {
+        "rank": 3,
+        "node_id": "APP-02",
+        "score": 0.0,
+        "node_type": "server"
+      }
+    ]
+  },
+  {
+    "case_id": "topo_enterprise_v3_0073_app_db_topology",
+    "split": "test",
+    "predicted_root": "DB-MASTER",
+    "expected_root": "DB-MASTER",
+    "correct_top1": true,
+    "correct_top3": true,
+    "rr": 1.0,
+    "top_candidates": [
+      {
+        "rank": 1,
+        "node_id": "DB-MASTER",
+        "score": 1.0,
+        "node_type": "database"
+      },
+      {
+        "rank": 2,
+        "node_id": "APP-LB-01",
+        "score": 0.0,
+        "node_type": "load_balancer"
+      },
+      {
+        "rank": 3,
+        "node_id": "APP-01",
+        "score": 0.0,
+        "node_type": "server"
+      }
+    ]
+  },
+  {
+    "case_id": "topo_enterprise_v3_0074_wan_topology",
+    "split": "test",
+    "predicted_root": "WAN-PE-01",
+    "expected_root": "WAN-PE-01",
+    "correct_top1": true,
+    "correct_top3": true,
+    "rr": 1.0,
+    "top_candidates": [
+      {
+        "rank": 1,
+        "node_id": "WAN-PE-01",
+        "score": 0.885,
+        "node_type": "router"
+      },
+      {
+        "rank": 2,
+        "node_id": "WAN-ISP-01",
+        "score": 0.0,
+        "node_type": "cloud_or_wan"
+      },
+      {
+        "rank": 3,
+        "node_id": "WAN-ISP-02",
+        "score": 0.0,
+        "node_type": "cloud_or_wan"
+      }
+    ]
+  },
+  {
+    "case_id": "topo_enterprise_v3_0075_wan_topology",
+    "split": "test",
+    "predicted_root": "WAN-PE-01",
+    "expected_root": "WAN-PE-01",
+    "correct_top1": true,
+    "correct_top3": true,
+    "rr": 1.0,
+    "top_candidates": [
+      {
+        "rank": 1,
+        "node_id": "WAN-PE-01",
+        "score": 1.0,
+        "node_type": "router"
+      },
+      {
+        "rank": 2,
+        "node_id": "WAN-ISP-01",
+        "score": 0.0,
+        "node_type": "cloud_or_wan"
+      },
+      {
+        "rank": 3,
+        "node_id": "WAN-ISP-02",
+        "score": 0.0,
+        "node_type": "cloud_or_wan"
+      }
+    ]
+  },
+  {
+    "case_id": "topo_enterprise_v3_0076_datacenter_topology",
+    "split": "test",
+    "predicted_root": "DC-FW-01",
+    "expected_root": "DC-FW-01",
+    "correct_top1": true,
+    "correct_top3": true,
+    "rr": 1.0,
+    "top_candidates": [
+      {
+        "rank": 1,
+        "node_id": "DC-FW-01",
+        "score": 1.0,
+        "node_type": "firewall"
+      },
+      {
+        "rank": 2,
+        "node_id": "DC-FW-02",
+        "score": 0.0,
+        "node_type": "firewall"
+      },
+      {
+        "rank": 3,
+        "node_id": "DC-RTR-01",
+        "score": 0.0,
+        "node_type": "router"
+      }
+    ]
+  },
+  {
+    "case_id": "topo_enterprise_v3_0077_wan_topology",
+    "split": "test",
+    "predicted_root": "WAN-PE-01",
+    "expected_root": "WAN-PE-01",
+    "correct_top1": true,
+    "correct_top3": true,
+    "rr": 1.0,
+    "top_candidates": [
+      {
+        "rank": 1,
+        "node_id": "WAN-PE-01",
+        "score": 0.885,
+        "node_type": "router"
+      },
+      {
+        "rank": 2,
+        "node_id": "WAN-ISP-01",
+        "score": 0.0,
+        "node_type": "cloud_or_wan"
+      },
+      {
+        "rank": 3,
+        "node_id": "WAN-ISP-02",
+        "score": 0.0,
+        "node_type": "cloud_or_wan"
+      }
+    ]
+  },
+  {
+    "case_id": "topo_enterprise_v3_0078_app_db_topology",
+    "split": "test",
+    "predicted_root": "APP-LB-01",
+    "expected_root": "APP-LB-01",
+    "correct_top1": true,
+    "correct_top3": true,
+    "rr": 1.0,
+    "top_candidates": [
+      {
+        "rank": 1,
+        "node_id": "APP-LB-01",
+        "score": 1.0,
+        "node_type": "load_balancer"
+      },
+      {
+        "rank": 2,
+        "node_id": "APP-01",
+        "score": 0.0,
+        "node_type": "server"
+      },
+      {
+        "rank": 3,
+        "node_id": "APP-02",
+        "score": 0.0,
+        "node_type": "server"
+      }
+    ]
+  },
+  {
+    "case_id": "topo_enterprise_v3_0079_datacenter_topology",
+    "split": "test",
+    "predicted_root": "DC-FW-01",
+    "expected_root": "DC-FW-01",
+    "correct_top1": true,
+    "correct_top3": true,
+    "rr": 1.0,
+    "top_candidates": [
+      {
+        "rank": 1,
+        "node_id": "DC-FW-01",
+        "score": 1.0,
+        "node_type": "firewall"
+      },
+      {
+        "rank": 2,
+        "node_id": "DC-FW-02",
+        "score": 0.0,
+        "node_type": "firewall"
+      },
+      {
+        "rank": 3,
+        "node_id": "DC-RTR-01",
+        "score": 0.0,
+        "node_type": "router"
+      }
+    ]
+  }
+]

@@ -1,0 +1,41 @@
+{
+  "case_id": "topo_enterprise_v3_0000_datacenter_topology",
+  "model": "topology_rca_random_forest_v1",
+  "top_k": 3,
+  "predicted_root": "DC-FW-01",
+  "top_candidates": [
+    {
+      "rank": 1,
+      "node_id": "DC-FW-01",
+      "score": 1.0,
+      "node_type": "firewall",
+      "zone": "DC Edge",
+      "is_alerted": true
+    },
+    {
+      "rank": 2,
+      "node_id": "DC-FW-02",
+      "score": 0.0,
+      "node_type": "firewall",
+      "zone": "DC Edge",
+      "is_alerted": false
+    },
+    {
+      "rank": 3,
+      "node_id": "DC-RTR-01",
+      "score": 0.0,
+      "node_type": "router",
+      "zone": "DC Edge",
+      "is_alerted": false
+    }
+  ],
+  "total_nodes": 9,
+  "alert_count": 2,
+  "evaluation": {
+    "ground_truth_node": "DC-FW-01",
+    "correct_top1": true,
+    "correct_top_k": true,
+    "reciprocal_rank": 1.0,
+    "rank": 1
+  }
+}
