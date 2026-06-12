@@ -1,0 +1,5 @@
+torch: 2.8.0+gitb2fb688
+hip: 7.0.51831-a3e329ad8
+cuda_available: True
+device_count: 1
+device: 
