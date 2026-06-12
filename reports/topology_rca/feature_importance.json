@@ -1,0 +1,122 @@
+[
+  {
+    "feature": "severity_weighted_alert_score",
+    "importance": 0.178902
+  },
+  {
+    "feature": "max_severity_score",
+    "importance": 0.157213
+  },
+  {
+    "feature": "min_time_rank",
+    "importance": 0.141162
+  },
+  {
+    "feature": "mean_alert_time",
+    "importance": 0.122239
+  },
+  {
+    "feature": "first_alert_time",
+    "importance": 0.101076
+  },
+  {
+    "feature": "alert_count",
+    "importance": 0.050594
+  },
+  {
+    "feature": "is_alerted",
+    "importance": 0.048911
+  },
+  {
+    "feature": "min_undirected_distance_to_alert",
+    "importance": 0.040298
+  },
+  {
+    "feature": "betweenness_centrality",
+    "importance": 0.035019
+  },
+  {
+    "feature": "mean_undirected_distance_to_alert",
+    "importance": 0.026913
+  },
+  {
+    "feature": "reverse_reachability_from_alert_count",
+    "importance": 0.024959
+  },
+  {
+    "feature": "node_type_priority_score",
+    "importance": 0.014249
+  },
+  {
+    "feature": "directed_reachability_to_alert_count",
+    "importance": 0.009832
+  },
+  {
+    "feature": "out_degree",
+    "importance": 0.007408
+  },
+  {
+    "feature": "total_degree",
+    "importance": 0.007071
+  },
+  {
+    "feature": "closeness_centrality",
+    "importance": 0.006388
+  },
+  {
+    "feature": "node_type_server",
+    "importance": 0.004185
+  },
+  {
+    "feature": "pagerank",
+    "importance": 0.00409
+  },
+  {
+    "feature": "is_sink_node",
+    "importance": 0.003293
+  },
+  {
+    "feature": "node_type_switch",
+    "importance": 0.002685
+  },
+  {
+    "feature": "zone_Branch Edge",
+    "importance": 0.002142
+  },
+  {
+    "feature": "zone_App Tier",
+    "importance": 0.002021
+  },
+  {
+    "feature": "in_degree",
+    "importance": 0.001734
+  },
+  {
+    "feature": "is_source_node",
+    "importance": 0.001402
+  },
+  {
+    "feature": "zone_DB Tier",
+    "importance": 0.0011
+  },
+  {
+    "feature": "node_type_database",
+    "importance": 0.000955
+  },
+  {
+    "feature": "zone_WAN PE",
+    "importance": 0.000941
+  },
+  {
+    "feature": "is_shared_entity",
+    "importance": 0.000579
+  },
+  {
+    "feature": "node_type_firewall",
+    "importance": 0.000556
+  },
+  {
+    "feature": "zone_DC Aggregation",
+    "importance": 0.000498
+  }
+]
