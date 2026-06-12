@@ -18,7 +18,9 @@ TRAIN_JSONL="$DATA_DIR/rca_remediation_rl_train.jsonl"
 EVAL_JSONL="$DATA_DIR/rca_remediation_rl_eval.jsonl"
 TRAIN_PARQ="$DATA_DIR/verl_train.parquet"
 EVAL_PARQ="$DATA_DIR/verl_eval.parquet"
-RUN_DIR="$SCRIPT_DIR/runs/qwen3_4b_grpo_lora_amd"
+SAVE_FREQ="${SAVE_FREQ:-8}"
+TEST_FREQ="${TEST_FREQ:-8}"
+RUN_DIR="${RUN_DIR:-$SCRIPT_DIR/runs/qwen3_4b_grpo_lora_amd}"
 REWARD_MODULE="$SCRIPT_DIR/verl_reward.py"
 MODEL_ID="${MODEL_ID:-Qwen/Qwen3-4B}"
 
@@ -114,6 +116,8 @@ TRAIN_CMD="python -m verl.trainer.main_ppo \
   trainer.n_gpus_per_node=1 \
   trainer.total_epochs=1 \
   trainer.logger=[console] \
+  trainer.save_freq=${SAVE_FREQ} \
+  trainer.test_freq=${TEST_FREQ} \
   trainer.default_local_dir=$RUN_DIR"
 
 # ── Step 4: Run or dry-run ────────────────────────────────────────────────────
@@ -167,6 +171,9 @@ if [ "$TRAINER_AVAILABLE" -eq 0 ]; then
 fi
 
 mkdir -p "$RUN_DIR"
+echo "  Run directory : $RUN_DIR"
+echo "  Save freq     : every ${SAVE_FREQ} steps"
+echo "  Test freq     : every ${TEST_FREQ} steps"
 echo "  Launching: $TRAIN_CMD"
 echo
 eval "$TRAIN_CMD"
@@ -174,4 +181,9 @@ eval "$TRAIN_CMD"
 echo
 echo "Training complete. Writing summary ..."
 python "$SCRIPT_DIR/write_training_summary.py" --run-dir "$RUN_DIR"
+
+echo
+echo "Run directory: $RUN_DIR"
+echo "Scan for LoRA adapter artifacts:"
+echo "  python $SCRIPT_DIR/find_lora_adapter_artifacts.py --run-dir $RUN_DIR"
 echo "Done."
