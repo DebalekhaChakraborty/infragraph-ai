@@ -1,0 +1,9 @@
+{
+  "case_id": "topo_enterprise_v3_0077_app_db_topology",
+  "root_cause_in_scope": false,
+  "severity": "critical",
+  "impacted_nodes": [
+    "APP-LB-01"
+  ],
+  "expected_behavior": "escalate_or_unknown"
+}

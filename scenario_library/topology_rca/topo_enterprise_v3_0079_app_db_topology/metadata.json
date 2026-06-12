@@ -1,0 +1,14 @@
+{
+  "case_id": "topo_enterprise_v3_0079_app_db_topology",
+  "mode": "topology_rca",
+  "split": "test",
+  "source_scenario_id": "enterprise_v3_0079",
+  "diagram_ids": [
+    "app_db_topology"
+  ],
+  "alert_count": 2,
+  "node_count": 12,
+  "edge_count": 17,
+  "created_from": "datasets\\infragraph_v3\\scenarios\\test\\enterprise_v3_0079\\alerts.json",
+  "version": "1.0"
+}

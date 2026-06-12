@@ -1,0 +1,6 @@
+{
+  "case_id": "ent_enterprise_v3_0063",
+  "enterprise_graph_path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0063\\enterprise_graph.json",
+  "stitch_map_path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0063\\stitch_map.json",
+  "local_graphs_dir": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0063\\local_graphs"
+}

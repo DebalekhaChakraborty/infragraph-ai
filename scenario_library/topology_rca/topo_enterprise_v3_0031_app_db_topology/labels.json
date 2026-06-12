@@ -1,0 +1,27 @@
+{
+  "case_id": "topo_enterprise_v3_0031_app_db_topology",
+  "root_cause_in_scope": true,
+  "severity": "critical",
+  "impacted_nodes": [
+    "APP-01",
+    "APP-02",
+    "DB-MASTER"
+  ],
+  "root_cause_node": "APP-LB-01",
+  "root_cause_diagram": "app_db_topology",
+  "root_cause_pattern": "lb_failure",
+  "impact_paths": [
+    [
+      "APP-LB-01",
+      "APP-01"
+    ],
+    [
+      "APP-LB-01",
+      "APP-02"
+    ],
+    [
+      "APP-LB-01",
+      "DB-MASTER"
+    ]
+  ]
+}

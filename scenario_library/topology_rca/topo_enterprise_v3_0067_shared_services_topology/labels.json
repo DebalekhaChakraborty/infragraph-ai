@@ -1,0 +1,25 @@
+{
+  "case_id": "topo_enterprise_v3_0067_shared_services_topology",
+  "root_cause_in_scope": true,
+  "severity": "critical",
+  "impacted_nodes": [
+    "MON-01"
+  ],
+  "root_cause_node": "IAM-01",
+  "root_cause_diagram": "shared_services_topology",
+  "root_cause_pattern": "shared_id_failure",
+  "impact_paths": [
+    [
+      "IAM-01",
+      "MON-01"
+    ],
+    [
+      "IAM-01",
+      "BR-WRK-01"
+    ],
+    [
+      "IAM-01",
+      "APP-01"
+    ]
+  ]
+}

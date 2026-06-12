@@ -1,0 +1,15 @@
+{
+  "case_id": "ent_enterprise_v3_0055",
+  "mode": "enterprise_gnn_rca",
+  "split": "train",
+  "source_scenario_id": "enterprise_v3_0055",
+  "diagram_ids": [
+    "branch_topology",
+    "wan_topology"
+  ],
+  "alert_count": 5,
+  "node_count": 32,
+  "edge_count": 53,
+  "created_from": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0055\\alerts.json",
+  "version": "1.0"
+}

@@ -1,0 +1,22 @@
+{
+  "case_id": "topo_enterprise_v3_0064_datacenter_topology",
+  "root_cause_in_scope": true,
+  "severity": "critical",
+  "impacted_nodes": [
+    "DC-CORE-SW-01",
+    "DC-AGG-SW-01"
+  ],
+  "root_cause_node": "DC-FW-01",
+  "root_cause_diagram": "datacenter_topology",
+  "root_cause_pattern": "dc_fw_failure",
+  "impact_paths": [
+    [
+      "DC-FW-01",
+      "DC-CORE-SW-01"
+    ],
+    [
+      "DC-FW-01",
+      "DC-AGG-SW-01"
+    ]
+  ]
+}

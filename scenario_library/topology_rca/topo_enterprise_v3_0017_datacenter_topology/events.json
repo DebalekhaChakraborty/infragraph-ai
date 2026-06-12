@@ -1,0 +1,32 @@
+{
+  "case_id": "topo_enterprise_v3_0017_datacenter_topology",
+  "mode": "topology_rca",
+  "scenario_id": "enterprise_v3_0017",
+  "diagram_id": "datacenter_topology",
+  "events": [
+    {
+      "event_id": "EVT-0001",
+      "time_offset_min": 0,
+      "node": "DC-FW-01",
+      "diagram_id": "datacenter_topology",
+      "alert_type": "cpu_spike",
+      "severity": "critical"
+    },
+    {
+      "event_id": "EVT-0002",
+      "time_offset_min": 1,
+      "node": "DC-CORE-SW-01",
+      "diagram_id": "datacenter_topology",
+      "alert_type": "connection_timeout",
+      "severity": "high"
+    },
+    {
+      "event_id": "EVT-0003",
+      "time_offset_min": 6,
+      "node": "DC-AGG-SW-01",
+      "diagram_id": "datacenter_topology",
+      "alert_type": "packet_loss",
+      "severity": "warning"
+    }
+  ]
+}

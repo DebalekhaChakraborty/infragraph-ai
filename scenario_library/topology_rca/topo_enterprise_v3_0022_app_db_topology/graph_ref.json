@@ -1,0 +1,5 @@
+{
+  "case_id": "topo_enterprise_v3_0022_app_db_topology",
+  "diagram_id": "app_db_topology",
+  "local_graph_path": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0022\\local_graphs\\app_db_topology.json"
+}

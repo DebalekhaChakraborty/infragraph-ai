@@ -1,0 +1,5 @@
+{
+  "case_id": "topo_enterprise_v3_0075_branch_topology",
+  "diagram_id": "branch_topology",
+  "local_graph_path": "datasets\\infragraph_v3\\scenarios\\test\\enterprise_v3_0075\\local_graphs\\branch_topology.json"
+}

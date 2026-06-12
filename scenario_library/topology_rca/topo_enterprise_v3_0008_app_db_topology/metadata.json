@@ -1,0 +1,14 @@
+{
+  "case_id": "topo_enterprise_v3_0008_app_db_topology",
+  "mode": "topology_rca",
+  "split": "train",
+  "source_scenario_id": "enterprise_v3_0008",
+  "diagram_ids": [
+    "app_db_topology"
+  ],
+  "alert_count": 1,
+  "node_count": 12,
+  "edge_count": 14,
+  "created_from": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0008\\alerts.json",
+  "version": "1.0"
+}

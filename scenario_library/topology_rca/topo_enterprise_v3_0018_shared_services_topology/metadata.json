@@ -1,0 +1,14 @@
+{
+  "case_id": "topo_enterprise_v3_0018_shared_services_topology",
+  "mode": "topology_rca",
+  "split": "train",
+  "source_scenario_id": "enterprise_v3_0018",
+  "diagram_ids": [
+    "shared_services_topology"
+  ],
+  "alert_count": 2,
+  "node_count": 8,
+  "edge_count": 6,
+  "created_from": "datasets\\infragraph_v3\\scenarios\\train\\enterprise_v3_0018\\alerts.json",
+  "version": "1.0"
+}

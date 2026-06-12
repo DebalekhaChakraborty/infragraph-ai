@@ -1,0 +1,16 @@
+{
+  "case_id": "topo_enterprise_v3_0000_shared_services_topology",
+  "mode": "topology_rca",
+  "scenario_id": "enterprise_v3_0000",
+  "diagram_id": "shared_services_topology",
+  "events": [
+    {
+      "event_id": "EVT-0001",
+      "time_offset_min": 15,
+      "node": "IAM-01",
+      "diagram_id": "shared_services_topology",
+      "alert_type": "auth_errors",
+      "severity": "warning"
+    }
+  ]
+}

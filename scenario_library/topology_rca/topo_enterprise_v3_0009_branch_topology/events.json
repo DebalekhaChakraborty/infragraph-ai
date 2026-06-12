@@ -1,0 +1,24 @@
+{
+  "case_id": "topo_enterprise_v3_0009_branch_topology",
+  "mode": "topology_rca",
+  "scenario_id": "enterprise_v3_0009",
+  "diagram_id": "branch_topology",
+  "events": [
+    {
+      "event_id": "EVT-0001",
+      "time_offset_min": 8,
+      "node": "BR-RTR-01",
+      "diagram_id": "branch_topology",
+      "alert_type": "latency",
+      "severity": "high"
+    },
+    {
+      "event_id": "EVT-0002",
+      "time_offset_min": 14,
+      "node": "BR-FW-01",
+      "diagram_id": "branch_topology",
+      "alert_type": "packet_loss",
+      "severity": "warning"
+    }
+  ]
+}

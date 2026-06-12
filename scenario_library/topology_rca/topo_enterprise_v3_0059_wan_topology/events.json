@@ -1,0 +1,32 @@
+{
+  "case_id": "topo_enterprise_v3_0059_wan_topology",
+  "mode": "topology_rca",
+  "scenario_id": "enterprise_v3_0059",
+  "diagram_id": "wan_topology",
+  "events": [
+    {
+      "event_id": "EVT-0001",
+      "time_offset_min": 0,
+      "node": "WAN-MPLS-CORE",
+      "diagram_id": "wan_topology",
+      "alert_type": "interface_flap",
+      "severity": "critical"
+    },
+    {
+      "event_id": "EVT-0002",
+      "time_offset_min": 1,
+      "node": "WAN-PE-01",
+      "diagram_id": "wan_topology",
+      "alert_type": "packet_loss",
+      "severity": "high"
+    },
+    {
+      "event_id": "EVT-0003",
+      "time_offset_min": 6,
+      "node": "WAN-PE-02",
+      "diagram_id": "wan_topology",
+      "alert_type": "latency",
+      "severity": "high"
+    }
+  ]
+}

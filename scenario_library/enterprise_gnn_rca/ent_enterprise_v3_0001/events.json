@@ -1,0 +1,47 @@
+{
+  "case_id": "ent_enterprise_v3_0001",
+  "mode": "enterprise_gnn_rca",
+  "scenario_id": "enterprise_v3_0001",
+  "events": [
+    {
+      "event_id": "EVT-0001",
+      "time_offset_min": 0,
+      "node": "BR-RTR-01",
+      "diagram_id": "branch_topology",
+      "alert_type": "cpu_spike",
+      "severity": "critical"
+    },
+    {
+      "event_id": "EVT-0002",
+      "time_offset_min": 1,
+      "node": "BR-FW-01",
+      "diagram_id": "branch_topology",
+      "alert_type": "latency",
+      "severity": "high"
+    },
+    {
+      "event_id": "EVT-0003",
+      "time_offset_min": 7,
+      "node": "BR-SW-01",
+      "diagram_id": "branch_topology",
+      "alert_type": "error_rate",
+      "severity": "warning"
+    },
+    {
+      "event_id": "EVT-0004",
+      "time_offset_min": 9,
+      "node": "BR-WRK-01",
+      "diagram_id": "branch_topology",
+      "alert_type": "latency",
+      "severity": "medium"
+    },
+    {
+      "event_id": "EVT-0005",
+      "time_offset_min": 11,
+      "node": "WAN-PE-01",
+      "diagram_id": "wan_topology",
+      "alert_type": "packet_loss",
+      "severity": "warning"
+    }
+  ]
+}

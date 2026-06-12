@@ -1,0 +1,23 @@
+{
+  "case_id": "topo_enterprise_v3_0000_datacenter_topology",
+  "root_cause_in_scope": true,
+  "severity": "critical",
+  "impacted_nodes": [
+    "DC-CORE-SW-01"
+  ],
+  "root_cause_node": "DC-FW-01",
+  "root_cause_diagram": "datacenter_topology",
+  "root_cause_pattern": "hero_dc_fw_to_app_db_identity",
+  "impact_paths": [
+    [
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "DC-AGG-SW-01",
+      "APP-LB-01",
+      "APP-01",
+      "SERVICE-API-01",
+      "DB-MASTER",
+      "IAM-01"
+    ]
+  ]
+}
