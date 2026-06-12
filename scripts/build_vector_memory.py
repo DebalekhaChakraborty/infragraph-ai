@@ -113,7 +113,7 @@ def main() -> int:
     )
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--collection", default="infragraph_memory")
-    parser.add_argument("--persist-dir", default="./outputs/vector_memory/chroma")
+    parser.add_argument("--persist-dir", default="./runtime_state/vector_memory/chroma")
     parser.add_argument("--skip-v3-scenarios", action="store_true")
     args = parser.parse_args()
 

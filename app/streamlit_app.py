@@ -70,6 +70,28 @@ except Exception:
 _src_dir = str(REPO_ROOT / "src")
 if _src_dir not in _sys.path:
     _sys.path.insert(0, _src_dir)
+
+# ── Centralized path helpers (src/paths.py) ───────────────────────────────────
+try:
+    from paths import (  # type: ignore
+        demo_asset_path as _demo_asset_path,
+        runtime_path as _runtime_path,
+        model_artifact_path as _model_artifact_path,
+        report_path as _report_path,
+        RUNTIME_STATE_DIR as _RUNTIME_STATE_DIR,
+        DEMO_ASSETS_DIR as _DEMO_ASSETS_DIR,
+    )
+except ImportError:
+    # Fallback: route everything through legacy outputs/ so the app never crashes
+    def _demo_asset_path(*parts):       # type: ignore[misc]
+        return REPO_ROOT / "outputs" / Path(*parts)
+    def _runtime_path(*parts):          # type: ignore[misc]
+        return REPO_ROOT / "outputs" / Path(*parts)
+    def _model_artifact_path(*parts):   # type: ignore[misc]
+        return REPO_ROOT / "outputs" / Path(*parts)
+    def _report_path(*parts):           # type: ignore[misc]
+        return REPO_ROOT / "outputs" / Path(*parts)
+
 # Force-evict any stale cached module so we always load from the current file on disk.
 _sys.modules.pop("runtime_ingestion", None)
 _RUNTIME_INGESTION_ERR = ""
@@ -1186,7 +1208,7 @@ def _render_local_graph(local_graph: dict, overlay: dict | None = None,
 # V3 CONSTANTS
 # ══════════════════════════════════════════════════════════════════════════════
 V3_DATASET_ROOT  = get_infragraph_v3_root(REPO_ROOT)
-V3_HERO_SELECTION = REPO_ROOT / "outputs" / "demo_hero" / "hero_scenario.json"
+V3_HERO_SELECTION = _demo_asset_path("demo_hero") / "hero_scenario.json"
 
 
 def _resolve_v3_hero_scenario() -> Path:
@@ -1215,8 +1237,8 @@ V3_DIAGRAM_IDS = {
     "Shared Services Topology":     "shared_services_topology",
 }
 V3_REQUIRED_DIAGRAMS = list(V3_DIAGRAM_IDS.values())
-V3_ENTERPRISE_GNN_METRICS = REPO_ROOT / "outputs" / "enterprise_gnn_rca" / "enterprise_gnn_metrics.json"
-V3_ENTERPRISE_GNN_MODEL   = REPO_ROOT / "outputs" / "enterprise_gnn_rca" / "enterprise_gnn_model.pt"
+V3_ENTERPRISE_GNN_METRICS = _demo_asset_path("enterprise_gnn_rca") / "enterprise_gnn_metrics.json"
+V3_ENTERPRISE_GNN_MODEL   = _demo_asset_path("enterprise_gnn_rca") / "enterprise_gnn_model.pt"
 V3_ONBOARDING_SCRIPT = REPO_ROOT / "scripts" / "onboard_diagram_v3.py"
 
 _V3_DIAG_COLORS = {
@@ -1457,8 +1479,8 @@ def _enterprise_gnn_available() -> bool:
 def _local_rca_model_available() -> bool:
     selected = st.session_state.get("selected_diagram_id", "")
     for p in [
-        REPO_ROOT / "outputs" / "v3_local_rca" / "local_rca_result.json",
-        REPO_ROOT / "outputs" / "gnn_rca" / f"{selected}_gnn_rca_result.json",
+        _demo_asset_path("v3_local_rca") / "local_rca_result.json",
+        _demo_asset_path("gnn_rca") / f"{selected}_gnn_rca_result.json",
     ]:
         if p.exists():
             return True
@@ -2364,7 +2386,7 @@ def _incident_to_enterprise_rca(incident: dict) -> dict:
     if mode == "Enterprise GNN RCA":
         scen = incident.get("scenario_id", "")
         gnn_src = str(
-            REPO_ROOT / "outputs" / "enterprise_gnn_rca" /
+            _demo_asset_path("enterprise_gnn_rca") /
             f"{scen}_enterprise_gnn_rca_result.json"
         ) if scen else ""
     return {
@@ -2383,11 +2405,11 @@ def _incident_to_enterprise_rca(incident: dict) -> dict:
 
 
 def _persist_incident(incident: dict, kind: str) -> Path | None:
-    """Write incident JSON to outputs/incident_runs/<hash>/."""
+    """Write incident JSON to runtime_state/incident_runs/<hash>/."""
     try:
         raw     = json.dumps(incident, sort_keys=True)
         run_id  = __import__("hashlib").sha1(raw.encode()).hexdigest()[:12]
-        out_dir = REPO_ROOT / "outputs" / "incident_runs" / run_id
+        out_dir = _runtime_path("incident_runs") / run_id
         out_dir.mkdir(parents=True, exist_ok=True)
         out_path = out_dir / f"{kind}_incident.json"
         out_path.write_text(raw, encoding="utf-8")
@@ -2576,7 +2598,7 @@ def _load_gnn_rca_result(scenario_id: str) -> dict | None:
     """
     if not scenario_id or scenario_id == "—":
         return None
-    candidate = REPO_ROOT / "outputs" / "enterprise_gnn_rca" / f"{scenario_id}_enterprise_gnn_rca_result.json"
+    candidate = _demo_asset_path("enterprise_gnn_rca") / f"{scenario_id}_enterprise_gnn_rca_result.json"
     if candidate.exists():
         try:
             return json.loads(candidate.read_text(encoding="utf-8"))
@@ -2618,7 +2640,7 @@ def _simulate_enterprise_rca(alerts: dict, enterprise_graph: dict) -> dict:
             "ranking":            ranking,
             "enterprise_node_count": gnn.get("node_count", len(enterprise_graph.get("nodes", []))),
             "gnn_source_file":    str(
-                REPO_ROOT / "outputs" / "enterprise_gnn_rca" /
+                _demo_asset_path("enterprise_gnn_rca") /
                 f"{scenario_id}_enterprise_gnn_rca_result.json"
             ),
         }
@@ -4394,10 +4416,10 @@ def _tab_enterprise_graph_brain() -> None:
                     st.caption(f"Static preview not generated for this selected scenario: {name}")
 
     # ── Global InfraGraph Galaxy ──────────────────────────────────────────────
-    _GLOBAL_GRAPH_PATH   = REPO_ROOT / "outputs" / "global_graph_memory" / "infragraph_global_graph.json"
-    _GLOBAL_SUMMARY_PATH = REPO_ROOT / "outputs" / "global_graph_memory" / "summary.json"
-    _GLOBAL_EDGES_CSV    = REPO_ROOT / "outputs" / "global_graph_memory" / "edges.csv"
-    _GLOBAL_NODES_CSV    = REPO_ROOT / "outputs" / "global_graph_memory" / "nodes.csv"
+    _GLOBAL_GRAPH_PATH   = _runtime_path("global_graph_memory") / "infragraph_global_graph.json"
+    _GLOBAL_SUMMARY_PATH = _runtime_path("global_graph_memory") / "summary.json"
+    _GLOBAL_EDGES_CSV    = _runtime_path("global_graph_memory") / "edges.csv"
+    _GLOBAL_NODES_CSV    = _runtime_path("global_graph_memory") / "nodes.csv"
     with st.expander("Global InfraGraph Galaxy", expanded=False):
         st.markdown(
             '<div style="font-size:0.75rem;color:#64748b;margin-bottom:10px">'
@@ -4411,7 +4433,7 @@ def _tab_enterprise_graph_brain() -> None:
                 "Global graph not built yet. Run:\n\n"
                 "```\npython scripts/build_global_infragraph_galaxy.py "
                 "--dataset-root ./datasets/infragraph_v3 "
-                "--out ./outputs/global_graph_memory\n```"
+                "--out ./runtime_state/global_graph_memory\n```"
             )
         else:
             _gsum = _safe_read_json(_GLOBAL_SUMMARY_PATH) if _GLOBAL_SUMMARY_PATH.exists() else {}
@@ -4695,7 +4717,7 @@ def _tab_enterprise_graph_brain() -> None:
                 "Edge data not available. Build the global graph first:\n\n"
                 "```\npython scripts/build_global_infragraph_galaxy.py "
                 "--dataset-root ./datasets/infragraph_v3 "
-                "--out ./outputs/global_graph_memory\n```"
+                "--out ./runtime_state/global_graph_memory\n```"
             )
         else:
             # Load edges (prefer CSV; synthesise from JSON if CSV missing)
@@ -4809,7 +4831,7 @@ def _tab_enterprise_graph_brain() -> None:
                     "Edge data not available. Rebuild the global graph:\n\n"
                     "```\npython scripts/build_global_infragraph_galaxy.py "
                     "--dataset-root ./datasets/infragraph_v3 "
-                    "--out ./outputs/global_graph_memory\n```"
+                    "--out ./runtime_state/global_graph_memory\n```"
                 )
 
 
@@ -4904,7 +4926,7 @@ def _tab_gnn_rca() -> None:
         st.code(
             "python scripts/train_enterprise_gnn_rca.py "
             "--dataset-root ./datasets/infragraph_v3 "
-            "--out ./outputs/enterprise_gnn_rca --epochs 80",
+            "--out ./demo_assets/enterprise_gnn_rca --epochs 80",
             language="bash",
         )
 
@@ -5549,7 +5571,7 @@ def _index_current_context_to_vector_memory() -> tuple[int, str]:
     if not docs:
         return 0, "No graph memory evidence is loaded for indexing."
     try:
-        collection = mods["get_or_create_collection"]("infragraph_memory", "./outputs/vector_memory/chroma")
+        collection = mods["get_or_create_collection"]("infragraph_memory", str(_runtime_path("vector_memory", "chroma")))
         count = mods["upsert_documents"](collection, docs)
         return count, ""
     except Exception as exc:
@@ -5565,7 +5587,7 @@ def _retrieve_vector_evidence(query: str, k: int = 8) -> tuple[list[dict], str]:
             query,
             k=k,
             collection_name="infragraph_memory",
-            persist_dir="./outputs/vector_memory/chroma",
+            persist_dir=str(_runtime_path("vector_memory", "chroma")),
         ), ""
     except Exception as exc:
         return [], f"{_VECTOR_SETUP_MESSAGE} ({exc})"

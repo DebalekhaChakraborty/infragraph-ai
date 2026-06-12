@@ -26,6 +26,7 @@ outputs/rfdetr_v3/
 outputs/rfdetr_v3_smoke/
 outputs/vector_memory/
 outputs/**/model/
+model_artifacts/
 .chroma/
 data/vector_memory/
 runs/
@@ -34,6 +35,20 @@ training_runs/
 *.pth
 *.pt
 *.onnx
+
+# New canonical runtime directories (generated, not committed)
+runtime_state/live_ingestion/
+runtime_state/live_absorption/
+runtime_state/incident_runs/
+runtime_state/vector_memory/
+reports/hydra_runs/
+
+# Model checkpoint binaries (new canonical locations)
+model_artifacts/**/*.pth
+model_artifacts/**/*.pt
+model_artifacts/**/*.ckpt
+model_artifacts/**/*.safetensors
+model_artifacts/**/*.bin
 
 # Keep datasets in git for submission
 # datasets/ is intentionally NOT ignored
@@ -65,3 +80,11 @@ outputs/*v2*/
 *.pth
 *.bin
 *.ckpt
+
+# Legacy outputs/ — kept for backward compatibility; new writes go to canonical dirs
+# outputs/ itself is NOT ignored so committed demo assets remain accessible.
+# Specific legacy paths that were always generated (not curated):
+outputs/live_ingestion/
+outputs/live_absorption/
+outputs/incident_runs/
+outputs/vector_memory/

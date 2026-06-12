@@ -597,7 +597,7 @@ def run_live_v3_ingestion(
         node_table_rows, edge_table_rows, packet, confidence_summary
     """
     scenario_id = scenario_path.name
-    run_dir = repo_root / "outputs" / "live_ingestion" / f"{scenario_id}__{diagram_id}"
+    run_dir = repo_root / "runtime_state" / "live_ingestion" / f"{scenario_id}__{diagram_id}"
     run_dir.mkdir(parents=True, exist_ok=True)
 
     # ── original image ────────────────────────────────────────────────────────
@@ -859,7 +859,7 @@ def run_enterprise_absorption(
         run_dir, enterprise_before, enterprise_after, stitch_map, alerts, summary
     """
     scenario_id = scenario_path.name
-    run_dir = repo_root / "outputs" / "live_absorption" / f"{scenario_id}__{diagram_id}"
+    run_dir = repo_root / "runtime_state" / "live_absorption" / f"{scenario_id}__{diagram_id}"
     run_dir.mkdir(parents=True, exist_ok=True)
 
     eg_path = scenario_path / "enterprise_graph.json"
@@ -958,7 +958,7 @@ def run_ingestion(
 
     Returns the same dict structure as run_live_v3_ingestion().
     """
-    run_dir = repo_root / "outputs" / "live_ingestion" / run_id
+    run_dir = repo_root / "runtime_state" / "live_ingestion" / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
 
     # ── original image ────────────────────────────────────────────────────────
@@ -1209,7 +1209,7 @@ def run_absorption(
 
     Returns the same dict structure as run_enterprise_absorption().
     """
-    run_dir = repo_root / "outputs" / "live_absorption" / run_id
+    run_dir = repo_root / "runtime_state" / "live_absorption" / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
 
     eg_p = enterprise_graph_path if enterprise_graph_path else Path("/nonexistent")

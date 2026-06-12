@@ -107,7 +107,7 @@ def filtered_kwargs(callable_obj, candidates):
 def main():
     parser = argparse.ArgumentParser(description="Train RF-DETR on Diagram Intelligence V3")
     parser.add_argument("--dataset-root", default="./datasets/infragraph_v3/rfdetr")
-    parser.add_argument("--out", default="./outputs/rfdetr_v3")
+    parser.add_argument("--out", default="./model_artifacts/rfdetr_v3")
     parser.add_argument("--epochs", type=int, default=25)
     parser.add_argument("--batch-size", type=int, default=2)
     parser.add_argument("--grad-accum-steps", type=int, default=4)

@@ -470,7 +470,7 @@ def main():
         description="Train MLP node-ranker RCA model on the InfraGraph v2 dataset."
     )
     parser.add_argument("--dataset-root", default="datasets/infragraph_v2")
-    parser.add_argument("--out", default="outputs/mlp_rca")
+    parser.add_argument("--out", default="demo_assets/mlp_rca")
     parser.add_argument("--epochs", type=int, default=80)
     parser.add_argument("--Presentation-diagram", default="diagram_0373")
     parser.add_argument("--Presentation-split", default="test")

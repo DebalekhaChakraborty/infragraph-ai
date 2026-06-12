@@ -158,13 +158,33 @@ python scripts/build_presentation_assets.py \
 
 The gallery manifest lists up to 250 records (V3 > V2 > V1 priority). Each record carries a `gallery_id` (e.g. `DG-0001`), display name, source metadata, and resolved paths. The onboarding manifest lists 20 curated samples (4 per diagram type, test > val > train) with files copied into `assets/onboarding/ONB-XXX/`.
 
-### Runtime output folders
+### Directory structure
+
+| Directory | Purpose | Notes |
+|-----------|---------|-------|
+| `runtime_state/` | Live/generated runtime state | Not committed. Contains ingestion runs, absorption runs, incident JSON, vector memory, global graph memory. |
+| `demo_assets/` | Curated demo artifacts used by the Streamlit app | Committed where small. GNN results, hero scenario selection, Qwen explanations, RCA model outputs. |
+| `model_artifacts/` | Detector and model checkpoints | Ignored in git (large binaries). RF-DETR V3 weights, trained GNN models. |
+| `reports/` | Evaluation reports and annotation QA | `val_eval/`, `v3_annotation_qa/`, `hydra_runs/` (ignored). |
+| `outputs/` | **Legacy only** — do not use for new writes | Kept for backward compatibility. The app falls back to `outputs/<subpath>` if the new canonical path does not exist. Run `python scripts/migrate_outputs_structure.py --apply` to move existing files. |
+
+#### Runtime output folders
 
 | Folder | Contents |
 |--------|---------|
-| `outputs/live_ingestion/<scenario>__<diagram>/` | `original.png`, `detected_nodes.json`, `detected_edges.json`, `node_table.csv`, `edge_table.csv`, `graph_memory_packet.json` |
-| `outputs/live_absorption/<scenario>__<diagram>/` | `enterprise_before.json`, `enterprise_after.json`, `absorption_summary.json`, `alerts.json` |
-| `outputs/incident_runs/<hash>/` | `local_incident.json`, `enterprise_incident.json` — persisted incident simulation runs |
+| `runtime_state/live_ingestion/<scenario>__<diagram>/` | `original.png`, `detected_nodes.json`, `detected_edges.json`, `node_table.csv`, `edge_table.csv`, `graph_memory_packet.json` |
+| `runtime_state/live_absorption/<scenario>__<diagram>/` | `enterprise_before.json`, `enterprise_after.json`, `absorption_summary.json`, `alerts.json` |
+| `runtime_state/incident_runs/<hash>/` | `local_incident.json`, `enterprise_incident.json` — persisted incident simulation runs |
+
+#### Migrate legacy outputs/ to new structure
+
+```bash
+# Preview (no changes made):
+python scripts/migrate_outputs_structure.py --dry-run
+
+# Apply:
+python scripts/migrate_outputs_structure.py --apply
+```
 
 ---
 
