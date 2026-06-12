@@ -414,7 +414,7 @@ def main() -> int:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument("--dataset-root", default="./datasets/infragraph_v3")
-    parser.add_argument("--out", default="./outputs/v3_annotation_qa")
+    parser.add_argument("--out", default="./reports/v3_annotation_qa")
     args = parser.parse_args()
 
     dataset_root = Path(args.dataset_root)

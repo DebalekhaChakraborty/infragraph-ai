@@ -423,7 +423,7 @@ def main():
         description="Train GNN for root cause ranking on the InfraGraph v2 dataset."
     )
     parser.add_argument("--dataset-root", default="datasets/infragraph_v2")
-    parser.add_argument("--out", default="outputs/gnn_rca",
+    parser.add_argument("--out", default="demo_assets/gnn_rca",
                         help="Output directory for model, metrics, and curve")
     parser.add_argument("--epochs", type=int, default=80)
     parser.add_argument("--Presentation-diagram", default="diagram_0373",

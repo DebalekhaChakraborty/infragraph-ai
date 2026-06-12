@@ -207,7 +207,7 @@ def main() -> None:
     p = argparse.ArgumentParser(description="Build Global InfraGraph Galaxy index")
     p.add_argument("--dataset-root", default="./datasets/infragraph_v3",
                    help="Root of V3 dataset (must contain scenarios/train|val|test/)")
-    p.add_argument("--out", default="./outputs/global_graph_memory",
+    p.add_argument("--out", default="./runtime_state/global_graph_memory",
                    help="Output directory for galaxy files")
     args = p.parse_args()
 

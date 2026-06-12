@@ -260,7 +260,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Build sample RCA remediation RL JSONL files.")
     parser.add_argument("--repo-root", default=str(REPO_ROOT))
     parser.add_argument("--dataset-root", default="./datasets/infragraph_v3")
-    parser.add_argument("--gnn-results", default="./outputs/enterprise_gnn_rca")
+    parser.add_argument("--gnn-results", default="./demo_assets/enterprise_gnn_rca")
     parser.add_argument("--out-dir", default="./training/verl_grpo/data")
     parser.add_argument("--max-records", type=int, default=80)
     args = parser.parse_args()

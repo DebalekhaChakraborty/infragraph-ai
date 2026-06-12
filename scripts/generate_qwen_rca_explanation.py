@@ -518,9 +518,9 @@ def main():
                         help="Model name passed to vLLM (ignored in mock mode)")
     parser.add_argument("--base-url", default="http://localhost:8000/v1",
                         help="vLLM OpenAI-compatible API base URL")
-    parser.add_argument("--topo-dir", default="outputs/topology_demo")
-    parser.add_argument("--gnn-dir", default="outputs/gnn_rca")
-    parser.add_argument("--out", default="outputs/qwen_explanation")
+    parser.add_argument("--topo-dir", default="demo_assets/topology_demo")
+    parser.add_argument("--gnn-dir", default="demo_assets/gnn_rca")
+    parser.add_argument("--out", default="demo_assets/qwen_explanation")
     parser.add_argument("--dataset-root", default="datasets/infragraph_v2",
                         help="Root of the infragraph dataset (for loading original alert JSON)")
     parser.add_argument("--split", default="test",

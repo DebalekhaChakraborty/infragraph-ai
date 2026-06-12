@@ -7,7 +7,18 @@ from typing import Any
 
 from .embeddings import EmbeddingModel, SETUP_MESSAGE
 
-DEFAULT_PERSIST_DIR = "./outputs/vector_memory/chroma"
+try:
+    from pathlib import Path as _Path
+    _REPO_ROOT = _Path(__file__).resolve().parent.parent.parent
+    _new_chroma = _REPO_ROOT / "runtime_state" / "vector_memory" / "chroma"
+    _legacy_chroma = _REPO_ROOT / "outputs" / "vector_memory" / "chroma"
+    DEFAULT_PERSIST_DIR = str(
+        _new_chroma if _new_chroma.exists()
+        else (_legacy_chroma if _legacy_chroma.exists() else _new_chroma)
+    )
+    del _Path, _REPO_ROOT, _new_chroma, _legacy_chroma
+except Exception:
+    DEFAULT_PERSIST_DIR = "./runtime_state/vector_memory/chroma"
 DEFAULT_COLLECTION = "infragraph_memory"
 
 

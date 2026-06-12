@@ -67,8 +67,8 @@ DATASET_DIRS: dict[str, Path] = {
     "v2": REPO_ROOT / "datasets" / "infragraph_v2",
 }
 OUTPUT_DIRS: dict[str, Path] = {
-    "v1": REPO_ROOT / "outputs" / "rfdetr_v1",
-    "v2": REPO_ROOT / "outputs" / "rfdetr_v2",
+    "v1": REPO_ROOT / "model_artifacts" / "rfdetr_v1",
+    "v2": REPO_ROOT / "model_artifacts" / "rfdetr_v2",
 }
 SPLITS = ("train", "val", "test")
 

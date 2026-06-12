@@ -31,7 +31,15 @@ from pathlib import Path
 from typing import Any
 
 # ── checkpoint priority ────────────────────────────────────────────────────────
+# New canonical locations checked first; legacy outputs/ checked as fallback.
 _CHECKPOINT_PRIORITY: list[str] = [
+    "model_artifacts/rfdetr_v3/model/checkpoint_best_total.pth",
+    "model_artifacts/rfdetr_v3/model/checkpoint_best_ema.pth",
+    "model_artifacts/rfdetr_v3/model/checkpoint_best_regular.pth",
+    "model_artifacts/rfdetr_v3/model/last.ckpt",
+    "model_artifacts/rfdetr_v3_smoke/model/checkpoint_best_total.pth",
+    "model_artifacts/rfdetr_v3_smoke/model/checkpoint_best_ema.pth",
+    # legacy paths — backward compatibility
     "outputs/rfdetr_v3/model/checkpoint_best_total.pth",
     "outputs/rfdetr_v3/model/checkpoint_best_ema.pth",
     "outputs/rfdetr_v3/model/checkpoint_best_regular.pth",
@@ -78,9 +86,13 @@ def find_best_rfdetr_checkpoint(repo_root: Path) -> "Path | None":
         p = repo_root / rel
         if p.exists():
             return p
-    # alternate path: any .pth under outputs/rfdetr_v3/model/
-    for p in sorted((repo_root / "outputs" / "rfdetr_v3" / "model").glob("*.pth")):
-        return p
+    # alternate: any .pth under new canonical or legacy model dir
+    for search_dir in [
+        repo_root / "model_artifacts" / "rfdetr_v3" / "model",
+        repo_root / "outputs" / "rfdetr_v3" / "model",  # legacy
+    ]:
+        for p in sorted(search_dir.glob("*.pth")):
+            return p
     return None
 
 
