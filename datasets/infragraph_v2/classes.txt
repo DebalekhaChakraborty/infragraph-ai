@@ -1,7 +1,0 @@
-router
-switch
-firewall
-server
-database
-load_balancer
-cloud_or_wan

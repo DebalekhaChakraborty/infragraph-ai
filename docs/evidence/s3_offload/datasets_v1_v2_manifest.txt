@@ -1,0 +1,7 @@
+Bucket: s3://my-hackathons/infragraph-ai/
+Offload type: legacy dataset versions
+Date: Fri Jun 12 11:59:44 UTC 2026
+
+Offloaded paths:
+datasets/infragraph_v1
+datasets/infragraph_v2
