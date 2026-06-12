@@ -1,24 +1,24 @@
 """
 export_lora_adapter.py — Convert a vERL GRPO actor checkpoint to a PEFT LoRA adapter.
 
-vERL's FSDP actor strategy saves per-rank sharded weight files rather than
-standard PEFT adapter_model.safetensors.  This script attempts to:
+vERL's FSDP actor strategy saves per-rank sharded weight files (.pt) rather than
+standard PEFT adapter_model.safetensors.  This script:
 
-  1. Locate the latest actor checkpoint under --run-dir.
-  2. Try to load it as a PEFT PeftModel directly (works if vERL already merged
-     adapter weights into the checkpoint).
-  3. If that fails, attempt to merge sharded FSDP state dicts with
-     torch.distributed.fsdp utilities and extract only LoRA delta weights.
-  4. Save adapter_model.safetensors + adapter_config.json to --output-dir.
+  1. Locates the latest actor checkpoint under --run-dir.
+  2. Tries to load it as a PeftModel directly (works if vERL already wrote
+     adapter_config.json alongside the weights).
+  3. If that fails, loads all .pt/.safetensors/.bin rank shards, extracts
+     keys matching LoRA patterns (lora_A / lora_B), normalises them to PEFT
+     format, and saves adapter_model.safetensors + adapter_config.json.
 
-Fails gracefully with a clear message if the checkpoint format is not
-recognised — it does NOT fabricate adapter files.
+Fails with a clear message if no LoRA tensors are found — does NOT fabricate
+adapter files.
 
 Usage:
     python training/verl_grpo/export_lora_adapter.py \\
-        --run-dir training/verl_grpo/runs/qwen3_4b_grpo_lora_amd \\
+        --run-dir  /tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved \\
         --base-model Qwen/Qwen3-4B \\
-        --output-dir training/verl_grpo/exported_adapter
+        --output-dir /tmp/infragraph_qwen3_grpo_lora_adapter
 
 Exit codes:
     0  — adapter exported successfully
@@ -28,6 +28,7 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -36,7 +37,7 @@ from pathlib import Path
 
 def _check_prerequisites() -> None:
     missing = []
-    for pkg in ("torch", "transformers", "peft"):
+    for pkg in ("torch", "safetensors"):
         try:
             __import__(pkg)
         except ImportError:
@@ -50,11 +51,10 @@ def _check_prerequisites() -> None:
 # ── Checkpoint discovery ──────────────────────────────────────────────────────
 
 def _find_latest_actor_dir(run_dir: Path) -> Path | None:
-    """Return the most recent actor checkpoint directory under run_dir."""
+    """Return the actor directory from the highest global_step_N checkpoint."""
     candidates: list[tuple[int, Path]] = []
     for d in run_dir.rglob("actor"):
         if d.is_dir():
-            # Parent name is typically global_step_N or step_N
             parent_name = d.parent.name
             step = 0
             for part in parent_name.replace("global_step_", "").replace("step_", "").split("_"):
@@ -71,25 +71,78 @@ def _find_latest_actor_dir(run_dir: Path) -> Path | None:
 
 
 def _list_weight_files(directory: Path) -> list[Path]:
-    files = sorted(directory.glob("*.safetensors")) + sorted(directory.glob("*.bin"))
+    """Return all weight files (.pt, .safetensors, .bin) in directory."""
+    files: list[Path] = []
+    files += sorted(directory.glob("*.pt"))
+    files += sorted(directory.glob("*.safetensors"))
+    files += sorted(directory.glob("*.bin"))
     return files
 
 
-# ── Export paths ──────────────────────────────────────────────────────────────
+# ── Tensor loading helpers ────────────────────────────────────────────────────
+
+def _load_pt_file(path: Path) -> dict:
+    """Load a .pt checkpoint, trying mmap first then weights_only fallback."""
+    import torch
+    try:
+        state = torch.load(str(path), map_location="cpu", mmap=True)
+    except TypeError:
+        # older torch versions do not support mmap=
+        try:
+            state = torch.load(str(path), map_location="cpu", weights_only=False)
+        except Exception:
+            state = torch.load(str(path), map_location="cpu")
+    return state
+
+
+def _unwrap_nested(state: object) -> dict:
+    """Unwrap common nesting keys: module, model, state_dict."""
+    if not isinstance(state, dict):
+        return {}
+    for key in ("module", "model", "state_dict"):
+        if key in state and isinstance(state[key], dict):
+            return state[key]
+    return state
+
+
+def _load_shard(path: Path) -> dict:
+    """Load one weight shard regardless of format."""
+    if path.suffix == ".safetensors":
+        from safetensors.torch import load_file
+        return load_file(str(path), device="cpu")
+    return _unwrap_nested(_load_pt_file(path))
+
+
+# ── Key normalisation ─────────────────────────────────────────────────────────
+
+def _normalise_lora_key(key: str) -> str:
+    """Normalise vERL LoRA key to PEFT format.
+
+    vERL stores:  ...lora_A.default.weight
+    PEFT expects: ...lora_A.weight
+    """
+    return key.replace(".default.weight", ".weight")
+
+
+def _is_lora_key(key: str) -> bool:
+    return "lora_A" in key or "lora_B" in key
+
+
+# ── Strategy 1: PeftModel direct load ────────────────────────────────────────
 
 def _try_peft_load(actor_dir: Path, base_model: str, output_dir: Path) -> bool:
-    """Attempt to load actor_dir directly as a PeftModel and save adapter."""
-    import torch
-    from transformers import AutoModelForCausalLM, AutoTokenizer
-    from peft import PeftModel
-
-    weight_files = _list_weight_files(actor_dir)
-    if not weight_files:
+    """Attempt PeftModel.from_pretrained if adapter_config.json is present."""
+    if not (actor_dir / "adapter_config.json").exists():
+        return False
+    if not _list_weight_files(actor_dir):
         return False
 
-    # Check if actor_config.json or adapter_config.json exists
-    has_adapter_config = (actor_dir / "adapter_config.json").exists()
-    if not has_adapter_config:
+    try:
+        import torch
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+        from peft import PeftModel
+    except ImportError as exc:
+        print(f"  [skip] peft/transformers not available: {exc}")
         return False
 
     print(f"  adapter_config.json found — attempting PeftModel load from {actor_dir} ...")
@@ -112,43 +165,28 @@ def _try_peft_load(actor_dir: Path, base_model: str, output_dir: Path) -> bool:
         return False
 
 
+# ── Strategy 2: FSDP shard extraction ────────────────────────────────────────
+
 def _try_fsdp_merge(actor_dir: Path, base_model: str, output_dir: Path) -> bool:
-    """
-    Attempt to merge FSDP sharded state dicts and extract LoRA weights.
-
-    vERL's FSDP actor saves one file per GPU rank.  This path:
-      - Loads all rank shards with torch.load
-      - Looks for keys matching typical LoRA patterns (lora_A, lora_B)
-      - Saves only the LoRA delta keys to adapter_model.safetensors
-
-    This is a best-effort heuristic — it may fail on unusual shard layouts.
-    """
-    import torch
-    try:
-        from safetensors.torch import save_file as safetensors_save
-    except ImportError:
-        safetensors_save = None
+    """Extract LoRA tensors from vERL FSDP shards and build a PEFT adapter."""
+    from safetensors.torch import save_file as safetensors_save
 
     weight_files = _list_weight_files(actor_dir)
     if not weight_files:
+        print(f"  No weight files found in {actor_dir}")
         return False
 
-    print(f"  Attempting FSDP shard merge from {len(weight_files)} file(s) ...")
-    merged: dict[str, "torch.Tensor"] = {}
+    print(f"  Loading {len(weight_files)} shard file(s) from {actor_dir} ...")
+
+    merged: dict = {}
     for wf in weight_files:
         try:
-            if wf.suffix == ".safetensors":
-                from safetensors.torch import load_file
-                shard = load_file(str(wf), device="cpu")
-            else:
-                shard = torch.load(str(wf), map_location="cpu", weights_only=True)
+            shard = _load_shard(wf)
             if isinstance(shard, dict):
-                # state_dict may be nested under "module" or "model"
-                if "module" in shard and isinstance(shard["module"], dict):
-                    shard = shard["module"]
-                elif "model" in shard and isinstance(shard["model"], dict):
-                    shard = shard["model"]
                 merged.update(shard)
+                print(f"    loaded {wf.name}: {len(shard)} keys")
+            else:
+                print(f"    [warn] {wf.name}: unexpected type {type(shard)}")
         except Exception as exc:
             print(f"    [warn] could not load {wf.name}: {exc}")
 
@@ -156,42 +194,93 @@ def _try_fsdp_merge(actor_dir: Path, base_model: str, output_dir: Path) -> bool:
         print("  No tensors loaded from shards.")
         return False
 
-    lora_keys = {k: v for k, v in merged.items() if "lora_A" in k or "lora_B" in k}
-    if not lora_keys:
-        print(f"  Merged {len(merged)} keys but none match LoRA patterns (lora_A/lora_B).")
-        print("  vERL FSDP may have saved full model weights rather than LoRA deltas.")
-        print("  Manual inspection required — see 'Limitations' in export_lora_adapter.py.")
+    print(f"  Total keys in merged state: {len(merged)}")
+
+    # Extract and normalise LoRA tensors
+    lora_tensors: dict = {}
+    for key, tensor in merged.items():
+        if _is_lora_key(key):
+            normalised = _normalise_lora_key(key)
+            lora_tensors[normalised] = tensor
+
+    if not lora_tensors:
+        print(f"  Merged {len(merged)} keys but none match LoRA patterns.")
+        print("  Sample keys:")
+        for k in list(merged.keys())[:10]:
+            print(f"    {k}")
         return False
 
-    print(f"  Found {len(lora_keys)} LoRA weight tensors.")
+    print(f"  Extracted {len(lora_tensors)} LoRA tensors.")
 
-    # Write adapter_config.json (minimal PEFT v2 format)
-    import json
+    # Infer rank from first lora_A tensor shape
+    rank = 16
+    for key, tensor in lora_tensors.items():
+        if "lora_A" in key and hasattr(tensor, "shape") and len(tensor.shape) == 2:
+            rank = int(tensor.shape[0])
+            break
+
+    # Write adapter_config.json
     output_dir.mkdir(parents=True, exist_ok=True)
     adapter_config = {
         "base_model_name_or_path": base_model,
         "bias": "none",
         "fan_in_fan_out": False,
         "inference_mode": True,
+        "init_lora_weights": True,
+        "layers_pattern": None,
+        "layers_to_transform": None,
+        "loftq_config": {},
         "lora_alpha": 32,
         "lora_dropout": 0.0,
+        "megatron_config": None,
+        "megatron_core": "megatron.core",
         "modules_to_save": None,
         "peft_type": "LORA",
-        "r": 16,
-        "target_modules": "all-linear",
+        "r": rank,
+        "rank_pattern": {},
+        "revision": None,
+        "target_modules": [
+            "q_proj",
+            "k_proj",
+            "v_proj",
+            "o_proj",
+            "gate_proj",
+            "up_proj",
+            "down_proj",
+        ],
         "task_type": "CAUSAL_LM",
+        "use_rslora": False,
     }
-    with open(output_dir / "adapter_config.json", "w") as f:
+    with open(output_dir / "adapter_config.json", "w", encoding="utf-8") as f:
         json.dump(adapter_config, f, indent=2)
 
-    if safetensors_save is not None:
-        safetensors_save(lora_keys, str(output_dir / "adapter_model.safetensors"))
-        print(f"  Saved adapter_model.safetensors ({len(lora_keys)} tensors) to {output_dir}")
-    else:
-        torch.save(lora_keys, str(output_dir / "adapter_model.bin"))
-        print(f"  Saved adapter_model.bin ({len(lora_keys)} tensors) to {output_dir}")
-        print("  (Install safetensors for the preferred format: pip install safetensors)")
+    # Write adapter_model.safetensors
+    safetensors_save(lora_tensors, str(output_dir / "adapter_model.safetensors"))
 
+    # Write README.md
+    readme = (
+        f"# InfraGraph GRPO LoRA Adapter\n\n"
+        f"Exported from a vERL/FSDP actor checkpoint.\n\n"
+        f"| Field | Value |\n"
+        f"|-------|-------|\n"
+        f"| Base model | `{base_model}` |\n"
+        f"| Rank (r) | {rank} |\n"
+        f"| Alpha | 32 |\n"
+        f"| Target modules | q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj |\n"
+        f"| Tensor count | {len(lora_tensors)} |\n\n"
+        f"## vLLM serving\n\n"
+        f"```bash\n"
+        f"vllm serve {base_model} \\\\\n"
+        f"  --served-model-name Qwen3-4B \\\\\n"
+        f"  --enable-lora \\\\\n"
+        f"  --lora-modules infragraph={output_dir} \\\\\n"
+        f"  --host 0.0.0.0 --port 8000 \\\\\n"
+        f"  --gpu-memory-utilization 0.55 --max-model-len 2048\n"
+        f"```\n"
+    )
+    (output_dir / "README.md").write_text(readme, encoding="utf-8")
+
+    print(f"  Saved adapter_model.safetensors ({len(lora_tensors)} tensors) to {output_dir}")
     return True
 
 
@@ -203,7 +292,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--run-dir",
-        default="training/verl_grpo/runs/qwen3_4b_grpo_lora_amd",
+        default="/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved",
         help="vERL run/output directory (default: %(default)s)",
     )
     parser.add_argument(
@@ -214,7 +303,7 @@ def main() -> None:
     parser.add_argument(
         "--output-dir",
         default=None,
-        help="Where to write the exported adapter (default: <run-dir>/exported_adapter)",
+        help="Where to write the exported adapter (default: /tmp/infragraph_qwen3_grpo_lora_adapter)",
     )
     args = parser.parse_args()
 
@@ -222,8 +311,12 @@ def main() -> None:
 
     import os
     base_model = args.base_model or os.environ.get("MODEL_ID", "Qwen/Qwen3-4B")
-    run_dir = Path(args.run_dir).resolve()
-    output_dir = Path(args.output_dir).resolve() if args.output_dir else run_dir / "exported_adapter"
+    run_dir    = Path(args.run_dir).resolve()
+    output_dir = (
+        Path(args.output_dir).resolve()
+        if args.output_dir
+        else Path("/tmp/infragraph_qwen3_grpo_lora_adapter")
+    )
 
     print(f"Run directory : {run_dir}")
     print(f"Base model    : {base_model}")
@@ -240,61 +333,51 @@ def main() -> None:
         print("[ERROR] No 'actor' checkpoint directory found under the run directory.")
         print("  Expected layout: <run-dir>/global_step_N/actor/")
         print()
-        print("  Possible causes:")
-        print("  1. save_freq was not set — re-run with SAVE_FREQ=8.")
-        print("  2. Training did not complete enough steps to trigger a save.")
-        print("  3. vERL used a different checkpoint layout for this version.")
-        print()
         print("  Directory contents:")
         for p in sorted(run_dir.rglob("*"))[:40]:
             print(f"    {p.relative_to(run_dir)}")
         sys.exit(1)
 
-    print(f"Actor checkpoint: {actor_dir}")
+    print(f"Actor checkpoint : {actor_dir}")
     print()
 
-    # Try PeftModel load first (cleanest path)
+    # Strategy 1: PeftModel direct load (only if adapter_config.json present)
     if _try_peft_load(actor_dir, base_model, output_dir):
-        print()
-        print("[SUCCESS] Adapter exported via PeftModel.from_pretrained.")
-        _print_next_steps(output_dir)
+        _print_success(output_dir)
         sys.exit(0)
 
-    # Fall back to FSDP shard merge
+    # Strategy 2: FSDP shard extraction
     if _try_fsdp_merge(actor_dir, base_model, output_dir):
-        print()
-        print("[SUCCESS] Adapter exported via FSDP shard merge (heuristic).")
-        print("  Verify the adapter loads cleanly before use:")
-        print(f"    python -c \"from peft import PeftModel; print('OK')\"")
-        _print_next_steps(output_dir)
+        _print_success(output_dir)
         sys.exit(0)
 
     print()
-    print("[FAILED] Could not export adapter from the checkpoint.")
+    print("[FAILED] Could not export LoRA adapter from the checkpoint.")
     print()
-    print("Limitations of this script:")
-    print("  - Requires LoRA delta weights to be present as separate tensors.")
-    print("  - FSDP may have merged LoRA weights into base model weights.")
-    print("    In that case, the full model must be loaded and LoRA re-extracted.")
-    print("  - Consult vERL documentation for checkpoint format details:")
-    print("    https://github.com/volcengine/verl")
+    print("Possible causes:")
+    print("  - The checkpoint contains full merged weights, not separate LoRA deltas.")
+    print("  - The shard files could not be read (corrupted or unexpected format).")
+    print("  - vERL used a different checkpoint layout for this version.")
+    print()
+    print("Manual inspection:")
+    print(f"  python -c \"import torch; sd = torch.load('{actor_dir}/model_world_size_1_rank_0.pt', map_location='cpu'); print(list(sd.keys())[:20])\"")
     sys.exit(1)
 
 
-def _print_next_steps(output_dir: Path) -> None:
+def _print_success(output_dir: Path) -> None:
+    from safetensors.torch import load_file
+    weights = load_file(str(output_dir / "adapter_model.safetensors"))
+    tensor_count = len(weights)
+
+    print()
+    print("[SUCCESS] Exported PEFT LoRA adapter")
+    print(f"  adapter_config.json       : {output_dir / 'adapter_config.json'}")
+    print(f"  adapter_model.safetensors : {output_dir / 'adapter_model.safetensors'}")
+    print(f"  tensor_count              : {tensor_count}")
     print()
     print("Next steps:")
     print(f"  export INFRAGRAPH_LORA_ADAPTER_PATH={output_dir}")
     print("  streamlit run app/streamlit_app.py")
-    print()
-    print("  Or verify loading:")
-    print("  python -c \"")
-    print(f"    from peft import PeftModel")
-    print(f"    from transformers import AutoModelForCausalLM")
-    print(f"    import torch")
-    print(f"    base = AutoModelForCausalLM.from_pretrained('Qwen/Qwen3-4B', device_map='cpu')")
-    print(f"    model = PeftModel.from_pretrained(base, '{output_dir}')")
-    print(f"    print('Adapter loaded successfully')\"")
 
 
 if __name__ == "__main__":
