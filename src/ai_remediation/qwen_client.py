@@ -21,7 +21,7 @@ from .response_schema import empty_remediation_output
 
 
 DEFAULT_QWEN_BASE_URL = "http://localhost:8000/v1"
-DEFAULT_QWEN_MODEL = "Qwen/Qwen3-4B"
+DEFAULT_QWEN_MODEL = "infragraph"
 DEFAULT_QWEN_TIMEOUT = 60
 
 

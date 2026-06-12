@@ -65,7 +65,7 @@ Set environment variables before running Streamlit to enable real LLM responses 
 
 ```bash
 export QWEN_BASE_URL=http://localhost:8000/v1
-export QWEN_MODEL=Qwen/Qwen3-4B
+export QWEN_MODEL=infragraph
 
 streamlit run app/streamlit_app.py
 ```
