@@ -76,6 +76,8 @@ not be installed with `pip install -r` directly.
 | `reward_functions.py` | Standalone reward CLI and batch_reward_fn for offline evaluation |
 | `train_qwen3_grpo.sh` | Full pipeline: dataset → parquet → dry-run or real vERL training |
 | `write_training_summary.py` | Post-run summary generator (artifacts, hardware, honest claims) |
+| `find_lora_adapter_artifacts.py` | Scan a run directory for adapter files; suggests INFRAGRAPH_LORA_ADAPTER_PATH |
+| `export_lora_adapter.py` | Convert vERL actor checkpoint to PEFT format; fails gracefully if format unsupported |
 | `sample_config.yaml` | vERL config reference (informational; shell script passes flags directly) |
 | `data/` | Generated JSONL and parquet files (not committed) |
 | `runs/` | Training output and adapter checkpoints (not committed) |
@@ -158,7 +160,11 @@ python training/verl_grpo/reward_functions.py \
 bash training/verl_grpo/train_qwen3_grpo.sh
 ```
 
-### 5. Real training run (requires vERL + AMD/CUDA GPU)
+### 5. Real training run with checkpoint persistence (requires vERL + AMD/CUDA GPU)
+
+`SAVE_FREQ` (default 8) controls how often vERL writes actor checkpoints.
+`TEST_FREQ` (default 8) controls validation frequency.
+`RUN_DIR` overrides the output directory.
 
 ```bash
 # Install prerequisites
@@ -167,10 +173,42 @@ pip install torch --index-url https://download.pytorch.org/whl/rocm6.0  # AMD
 # or for NVIDIA:
 pip install torch --index-url https://download.pytorch.org/whl/cu121
 
-INFRAGRAPH_RUN_REAL_VERL=1 bash training/verl_grpo/train_qwen3_grpo.sh
+SAVE_FREQ=8 TEST_FREQ=8 \
+RUN_DIR=training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved \
+INFRAGRAPH_RUN_REAL_VERL=1 \
+bash training/verl_grpo/train_qwen3_grpo.sh
 ```
 
-### 6. Write training summary (after a run)
+### 6. Scan for adapter artifacts (after a run)
+
+```bash
+python training/verl_grpo/find_lora_adapter_artifacts.py \
+  --run-dir training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved
+```
+
+Prints a file table and suggests `INFRAGRAPH_LORA_ADAPTER_PATH` if a
+PEFT-compatible directory is found.
+
+### 7. Export vERL checkpoint to PEFT format
+
+If the run directory contains FSDP-sharded actor weights rather than a
+standard PEFT adapter:
+
+```bash
+python training/verl_grpo/export_lora_adapter.py \
+  --run-dir  training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved \
+  --base-model Qwen/Qwen3-4B \
+  --output-dir training/verl_grpo/exported_adapter
+```
+
+The script tries two strategies in order:
+1. Direct `PeftModel.from_pretrained` if `adapter_config.json` is present.
+2. Heuristic FSDP shard merge, extracting `lora_A`/`lora_B` tensors.
+
+It fails with a clear message if neither strategy recognises the format —
+it never fabricates adapter files.
+
+### 8. Write training summary (after a run)
 
 ```bash
 python training/verl_grpo/write_training_summary.py --run-dir training/verl_grpo/runs/qwen3_4b_grpo_lora_amd
@@ -193,12 +231,31 @@ python training/verl_grpo/write_training_summary.py --run-dir training/verl_grpo
 
 ## After Training
 
-Point the app at the adapter:
+### Verify checkpoint files exist
 
 ```bash
-export INFRAGRAPH_LORA_ADAPTER_PATH=training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/latest
+python training/verl_grpo/find_lora_adapter_artifacts.py \
+  --run-dir training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved
+```
+
+### Convert to PEFT format if needed
+
+```bash
+python training/verl_grpo/export_lora_adapter.py \
+  --run-dir  training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved \
+  --base-model Qwen/Qwen3-4B \
+  --output-dir training/verl_grpo/exported_adapter
+```
+
+### Point the app at the adapter
+
+```bash
+export INFRAGRAPH_LORA_ADAPTER_PATH=training/verl_grpo/exported_adapter
 streamlit run app/streamlit_app.py
 ```
 
 The AI Resolution Agent in Tab 2 (Topology RCA) and Tab 4 (GNN RCA) will show
 "Fine-tuned Adapter: Loaded" and use the aligned model for inference.
+
+Do not set `INFRAGRAPH_LORA_ADAPTER_PATH` unless `adapter_model.safetensors`
+and `adapter_config.json` are present in the target directory.
