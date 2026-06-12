@@ -5,7 +5,11 @@ Entry point called by vERL during rollout scoring:
 
     compute_score(data_source, solution_str, ground_truth, extra_info=None) -> float
 
-ground_truth is a JSON string built by prepare_verl_dataset.py:
+ground_truth is the reference record from prepare_verl_dataset.py.
+It may arrive as a dict (parquet struct column) or as a JSON string
+(legacy / fallback path).  _parse_json() handles both transparently.
+
+Expected fields:
 {
     "root_cause":        str,
     "impacted_nodes":    [str, ...],

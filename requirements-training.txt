@@ -1,33 +1,44 @@
 # ============================================================
-# InfraGraph AI — training data prep dependencies
+# InfraGraph AI — dataset / reward / training-prep dependencies
 # ============================================================
-# Use this layer for:
+# Use for:
 #   - JSONL → parquet conversion  (prepare_verl_dataset.py)
 #   - Reward function evaluation  (reward_functions.py)
 #   - LoRA adapter loading in the Streamlit app
 #   - Enterprise GNN training     (train_enterprise_gnn_rca.py)
 #
-# Install order:
+# Install:
 #   pip install -r requirements.txt
 #   pip install -r requirements-training.txt
 #
 # This file does NOT include vERL, vLLM, Ray, or ROCm torch.
-# For the AMD GRPO training stack:
+# For the full AMD GRPO training stack:
 #   bash scripts/amd_rocm/bootstrap_grpo_env.sh
 # ============================================================
 
-# --- Parquet serialisation (used by prepare_verl_dataset.py) -
+# --- Parquet / dataset serialisation -------------------------
 datasets>=2.18.0
+pyarrow>=14.0.0
 
-# --- Transformer model utilities -----------------------------
-transformers>=4.40.0
-peft>=0.10.0
-accelerate>=0.29.0
+# --- Data utilities ------------------------------------------
+pandas>=2.0.0
+numpy<2.3
+scikit-learn>=1.2.0
+networkx>=3.0
+tqdm>=4.65.0
+pyyaml>=6.0
 
-# --- GNN training (torch-geometric) -------------------------
-# torch-geometric has special install requirements; install
-# separately after torch is present:
-#   pip install torch-geometric
-# Uncomment the line below only if torch-geometric is already
-# installed in your environment:
-# torch-geometric>=2.5.0
+# --- vERL training runtime deps (non-GPU) --------------------
+ray
+torchdata
+tensordict
+codetiming
+hydra-core
+omegaconf
+
+# --- Transformer / LoRA utilities ----------------------------
+# Pinned to the range that was verified on the AMD training run.
+# (pip freeze from successful run: transformers==4.57.0, peft==0.17.1, accelerate==1.10.1)
+transformers>=4.46.0,<4.58.0
+peft>=0.14.0
+accelerate>=1.0.0

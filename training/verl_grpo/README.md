@@ -1,22 +1,24 @@
 # InfraGraph AI — Qwen3-4B LoRA + GRPO/vERL Alignment (AMD ROCm)
 
 This directory implements the RL alignment pipeline for a graph-grounded
-remediation agent based on Qwen3-4B-Instruct, LoRA adapters, and GRPO via vERL.
+remediation agent based on Qwen3-4B, LoRA adapters, and GRPO via vERL.
 
 ---
 
 ## Honest Status Levels
 
-The project distinguishes three states.  Read this before making any claims.
+The project distinguishes four states.  Read this before making any claims.
 
 | State | What exists | Honest label |
 |-------|-------------|--------------|
 | **Scaffold / dry-run** | Dataset + reward functions + training script; no real run | "LoRA + GRPO alignment scaffold implemented" |
 | **Reward-evaluated dataset** | `verl_train.parquet` + `verl_eval.parquet` produced; reward scores computed | "Reward-evaluated alignment dataset built" |
-| **Completed fine-tune** | Adapter checkpoint files written by a real vERL run | "LoRA fine-tuned Qwen3-4B with GRPO using vERL on AMD GPUs" |
+| **Real training pass completed** | 32/32 steps ran on AMD ROCm GPU; no persisted adapter detected in committed evidence | "Real Qwen/Qwen3-4B GRPO training pass completed on AMD ROCm (adapter checkpoint not committed)" |
+| **Persisted adapter available** | `adapter_model.safetensors` / `adapter_config.json` in `runs/` or documented external path | "LoRA fine-tuned Qwen3-4B with GRPO using vERL on AMD GPU — adapter available" |
 
-**Only claim a completed fine-tune after a real training run produces adapter files
-in `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/`.**
+**Current status: Real training pass completed (32/32 steps, AMD ROCm, HIP 7.0).**
+No adapter checkpoint files were detected in the committed run evidence.
+Do not claim a reusable fine-tuned adapter is available unless checkpoint files exist.
 
 ---
 

@@ -81,11 +81,22 @@ echo
 "$PYTHON" - <<'PY'
 from pathlib import Path
 
+# ── Locate vERL package dynamically (works with any Python version / install path)
+try:
+    import verl as _verl
+    VERL_ROOT = Path(_verl.__file__).resolve().parent
+except ImportError:
+    print("  [SKIP] vERL not importable — source patches skipped.")
+    print("         Run bootstrap_grpo_env.sh first, then re-run this script.")
+    raise SystemExit(0)
+
+print(f"  vERL package root: {VERL_ROOT}")
+
 # ── Patch 1: disable sleep mode in vLLM async server ─────────────────────────
-SERVER = Path("/usr/local/lib/python3.12/dist-packages/verl/workers/rollout/vllm_rollout/vllm_async_server.py")
+SERVER = VERL_ROOT / "workers" / "rollout" / "vllm_rollout" / "vllm_async_server.py"
 
 if not SERVER.exists():
-    print(f"  [SKIP] vllm_async_server.py not found at expected path — skipping sleep-mode patch")
+    print(f"  [SKIP] vllm_async_server.py not found at {SERVER}")
     print(f"         (config override free_cache_engine=False is still active)")
 else:
     text = SERVER.read_text()
@@ -103,13 +114,13 @@ else:
             '"enable_sleep_mode": False,  # InfraGraph ROCm patch: unsupported on current platform',
         )
         SERVER.write_text(text)
-        print(f"  [OK]   Patched vllm_async_server.py  (backup: {bak.name})")
+        print(f"  [OK]   Patched {SERVER.name}  (backup: {bak.name})")
 
 # ── Patch 2: tolerate string extra_info/reward_model in rl_dataset.py ─────────
-DATASET = Path("/usr/local/lib/python3.12/dist-packages/verl/utils/dataset/rl_dataset.py")
+DATASET = VERL_ROOT / "utils" / "dataset" / "rl_dataset.py"
 
 if not DATASET.exists():
-    print(f"  [SKIP] rl_dataset.py not found at expected path — skipping extra_info patch")
+    print(f"  [SKIP] rl_dataset.py not found at {DATASET}")
     print(f"         (prepare_verl_dataset.py already writes dicts via datasets.Dataset)")
 else:
     text = DATASET.read_text()
@@ -144,7 +155,7 @@ else:
             bak = DATASET.with_suffix(".py.bak_infragraph_extra_info")
             bak.write_text(text)
             DATASET.write_text(text.replace(OLD, NEW, 1))
-            print(f"  [OK]   Patched rl_dataset.py  (backup: {bak.name})")
+            print(f"  [OK]   Patched {DATASET.name}  (backup: {bak.name})")
         else:
             print(f"  [WARN] rl_dataset.py — anchor line not found; patch skipped.")
             print(f"         Anchor:  {OLD.strip()!r}")

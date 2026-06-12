@@ -1,0 +1,13 @@
+# ============================================================
+# InfraGraph AI — vector memory / RAG dependencies
+# ============================================================
+# Use for: Graph Copilot vector memory, ChromaDB indexing,
+#          semantic retrieval over graph evidence.
+#
+# Install:
+#   pip install -r requirements.txt
+#   pip install -r requirements-rag.txt
+# ============================================================
+
+chromadb
+sentence-transformers

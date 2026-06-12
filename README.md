@@ -6,16 +6,18 @@ Synthetic network-diagram dataset generator and AI pipeline for **automated topo
 
 ## Installation
 
-Three dependency tiers — install only what you need.
+Install only what you need.
 
 | Tier | Command | Use case |
 |------|---------|----------|
-| **App / demo** | `pip install -r requirements.txt` | Streamlit cockpit, graph RCA, topology, non-GPU |
-| **Training prep** | + `pip install -r requirements-training.txt` | Dataset conversion, reward evaluation, parquet |
-| **AMD GRPO training** | `bash scripts/amd_rocm/bootstrap_grpo_env.sh` | ROCm torch + vLLM + vERL |
+| **App / demo** | `pip install -r requirements.txt` | Streamlit cockpit, graph RCA, topology — no GPU required |
+| **Vision / detector** | + `pip install -r requirements-vision.txt` | YOLO / RF-DETR diagram detector, OCR |
+| **Vector memory** | + `pip install -r requirements-rag.txt` | ChromaDB + sentence-transformers for Graph Copilot |
+| **Dataset / reward prep** | + `pip install -r requirements-training.txt` | JSONL→parquet, reward evaluation, LoRA utilities |
+| **AMD GRPO training** | `bash scripts/amd_rocm/bootstrap_grpo_env.sh` | ROCm torch + vLLM + vERL (AMD GPU only) |
 
 > `pip install -r requirements.txt` alone **cannot** reproduce the AMD ROCm GRPO
-> training run and does not install vERL, vLLM, or ROCm torch.
+> training run. It does not install vERL, vLLM, ROCm torch, or the training stack.
 
 ### AMD ROCm GRPO training setup
 
@@ -55,7 +57,7 @@ The GRPO reward functions align Qwen3 outputs to be:
 
 ```bash
 python -m vllm.entrypoints.openai.api_server \
-    --model Qwen/Qwen3-4B-Instruct \
+    --model Qwen/Qwen3-4B \
     --host 0.0.0.0 \
     --port 8000
 ```
@@ -80,7 +82,7 @@ bash training/verl_grpo/train_qwen3_grpo.sh
 ```bash
 export INFRAGRAPH_LORA_ADAPTER_PATH=./outputs/verl_grpo_checkpoints/qwen3_grpo_rca_remediation/latest
 export INFRAGRAPH_QWEN_BASE_URL=http://localhost:8000/v1
-export INFRAGRAPH_QWEN_MODEL=Qwen/Qwen3-4B-Instruct
+export INFRAGRAPH_QWEN_MODEL=Qwen/Qwen3-4B
 streamlit run app/streamlit_app.py
 ```
 

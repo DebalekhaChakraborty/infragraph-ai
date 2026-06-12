@@ -1,44 +1,51 @@
 # ============================================================
-# InfraGraph AI — AMD ROCm / vERL GRPO training dependencies
+# InfraGraph AI — AMD ROCm / vERL GRPO training stack
 # ============================================================
 #
-# WARNING: Do NOT pip install this file directly.
+# WARNING: Do NOT run `pip install -r requirements-amd-rocm.txt` directly.
 #
-# This file documents the AMD GPU training stack for reference.
-# The correct install path is:
+# Blindly pip-installing this file on an existing ROCm environment
+# will likely break the ROCm torch build or vLLM wheel.
+# Use the bootstrap script instead — it checks what is already
+# present before touching anything:
 #
 #   bash scripts/amd_rocm/bootstrap_grpo_env.sh
-#
-# That script checks what is already installed before touching
-# torch, vLLM, or vERL, and installs only what is missing.
-# Blindly running pip install -r requirements-amd-rocm.txt
-# on an existing ROCm environment will likely break torch.
-#
-# After install, apply runtime patches:
 #   bash scripts/amd_rocm/patch_verl_runtime_for_rocm.sh
+#
+# This file is a reference document only.
+# Versions below are from the pip freeze of the successful training run.
 # ============================================================
 
-# --- PyTorch ROCm --------------------------------------------
-# Must be installed via the ROCm wheel index, NOT from PyPI:
+# --- PyTorch ROCm (DO NOT install from PyPI) -----------------
+# Installed via local wheel on the hackathon platform:
+#   torch @ file:///install/torch-2.8.0+gitb2fb688-cp312-...whl
+# For general ROCm installs:
 #   pip install torch --index-url https://download.pytorch.org/whl/rocm6.0
-# torch>=2.2.0
+# torch==2.8.0   # (ROCm build)
 
-# --- vLLM ----------------------------------------------------
-# Install after ROCm torch is present:
-#   pip install vllm
-# vllm>=0.4.0
+# --- vLLM (ROCm build, DO NOT install generic vLLM) ----------
+# Installed via local ROCm wheel:
+#   vllm @ file:///install/vllm-0.11.0rc2.dev424+g045b396d0.rocm700-cp312-...whl
+# vllm==0.11.0rc2  # (ROCm build)
 
-# --- vERL ----------------------------------------------------
-# Install from source — the PyPI release may not include
-# verl.trainer.main_ppo used for GRPO:
-#   pip install git+https://github.com/volcengine/verl.git
-# verl
+# --- vERL (install from source, not PyPI) --------------------
+# The PyPI release may not include verl.trainer.main_ppo.
+# Verified commit: volcengine/verl@41a52449db58996731f54b79d20b939f5297fc4d
+#   pip install --no-cache-dir --no-deps git+https://github.com/volcengine/verl.git
+# verl @ git+https://github.com/volcengine/verl.git@41a52449
 
-# --- Ray (vERL dependency) -----------------------------------
-# ray[default]>=2.10.0
-
-# --- Training utilities (same as requirements-training.txt) --
-datasets>=2.18.0
-transformers>=4.40.0
-peft>=0.10.0
-accelerate>=0.29.0
+# --- Verified versions from successful run -------------------
+# (pip freeze excerpt — AMD hackathon platform, Python 3.12)
+accelerate==1.10.1
+codetiming==1.4.0
+datasets==4.2.0
+hydra-core==1.3.3
+omegaconf==2.3.1
+peft==0.17.1
+ray==2.50.0
+tensordict==0.13.0
+torchdata==0.11.0
+transformers==4.57.0
+pyarrow==24.0.0
+pandas==3.0.3
+numpy==2.2.6

@@ -156,7 +156,7 @@ def _resolve_qwen_runtime_config() -> dict:
         "model": (
             _os.environ.get("INFRAGRAPH_QWEN_MODEL")
             or _os.environ.get("QWEN_MODEL")
-            or "Qwen/Qwen3-4B-Instruct"
+            or "Qwen/Qwen3-4B"
         ),
         "timeout": timeout,
     }
@@ -3973,7 +3973,7 @@ def _tab_local_rca() -> None:
             )
         if not _loc_lora_exists:
             st.caption(
-                "No LoRA adapter loaded — using base Qwen3-4B-Instruct (or template mode). "
+                "No LoRA adapter loaded — using base Qwen3-4B (or template mode). "
                 "Set `INFRAGRAPH_LORA_ADAPTER_PATH` after running GRPO fine-tuning."
             )
 
