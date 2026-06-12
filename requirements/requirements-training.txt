@@ -22,7 +22,7 @@ pyarrow>=14.0.0
 
 # --- Data utilities ------------------------------------------
 pandas>=2.0.0
-numpy<2.3
+numpy==2.2.6
 scikit-learn>=1.2.0
 networkx>=3.0
 tqdm>=4.65.0
