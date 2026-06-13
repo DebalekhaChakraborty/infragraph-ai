@@ -153,22 +153,76 @@ def retrieve_kb_evidence(
             "metadata":    deserialized_meta,
         })
 
-    # Optional reranking: boost items whose applies_to_diagrams / applies_to_alert_types
-    # overlap with the context
+    # Rerank with domain-aware strong boosts before returning top_k
     evidence = _rerank_by_overlap(evidence, context)
 
     return evidence[:top_k]
 
 
+# ── Domain inference ──────────────────────────────────────────────────────────
+
+_DOMAIN_KEYWORDS: dict[str, list[str]] = {
+    "firewall": [
+        "dc-fw", "fw-", "-fw", "firewall", "packet_drop", "packet drop", "acl",
+    ],
+    "load_balancer": [
+        "app-lb", "-lb-", "-lb", "lb-", "load_balancer", "load balancer",
+        "backend_pool", "backend pool", "unhealthy", "health_probe", "health probe",
+    ],
+    "database": [
+        "db-master", "db_master", "db-", "-db", "database", "connection_pool",
+        "connection pool", "replica", "replication",
+    ],
+    "wan": [
+        "wan-pe", "wan_pe", "pe-0", "pe-1", "pe-", "-pe", "wan",
+        "bgp", "ospf", "mpls", "circuit", "link_down", "link down", "sfp", "carrier",
+    ],
+}
+
+_DOMAIN_KB_PREFIXES: dict[str, list[str]] = {
+    "firewall":      ["SOP-DC-FW", "DC-FW", "KR-DC-FW"],
+    "load_balancer": ["SOP-APP-LB", "KR-APP-LB", "APP-LB"],
+    "database":      ["SOP-DB", "KR-DB"],
+    "wan":           ["SOP-WAN", "KR-WAN"],
+}
+
+
+def _infer_domain(root_cause: str) -> str:
+    """Infer infrastructure domain from a root-cause node ID or description."""
+    rc = root_cause.lower()
+    for domain, keywords in _DOMAIN_KEYWORDS.items():
+        for kw in keywords:
+            if kw in rc:
+                return domain
+    return ""
+
+
 def _rerank_by_overlap(evidence: list[dict], context: dict) -> list[dict]:
     """
-    Boost evidence items whose KB metadata overlaps with context fields.
+    Boost evidence using domain inference and multi-signal overlap.
 
-    Overlap boost is additive, applied on top of the embedding score,
-    then the list is re-sorted descending.
+    Boost weights (additive on top of embedding score):
+      root_cause text in chunk body   +0.30
+      root_cause in kb_id / title     +0.25
+      domain prefix match             +0.20
+      root_cause in evidence_tags     +0.15
+      node_type overlap (per match)   +0.10
+      diagram overlap (per match)     +0.08
+      alert type overlap (per match)  +0.06
+      doc_type sop                    +0.05
+      doc_type known_resolution       +0.02
+      cross-diagram runbook (>=3 diag) -0.10
     """
-    context_diagrams = set(str(d).lower() for d in (context.get("impacted_diagrams", []) or []))
-    context_diagrams.add(str(context.get("root_cause_diagram", "")).lower())
+    root_cause = str(context.get("root_cause", "")).strip().lower()
+    domain = _infer_domain(root_cause)
+    domain_prefixes = _DOMAIN_KB_PREFIXES.get(domain, [])
+
+    context_diagrams: set[str] = set(
+        str(d).lower() for d in (context.get("impacted_diagrams", []) or [])
+    )
+    rc_diagram = str(context.get("root_cause_diagram", "")).lower()
+    if rc_diagram:
+        context_diagrams.add(rc_diagram)
 
     alert_types_raw: list[str] = []
     for ev in (context.get("alert_timeline", []) or []):
@@ -178,18 +232,62 @@ def _rerank_by_overlap(evidence: list[dict], context: dict) -> list[dict]:
                 alert_types_raw.append(a)
     context_alert_types = set(alert_types_raw)
 
+    context_node_types: set[str] = set()
+    for c in (context.get("candidate_ranking", []) or []):
+        if isinstance(c, dict):
+            nt = str(c.get("node_type", "")).strip().lower()
+            if nt:
+                context_node_types.add(nt)
+
     for item in evidence:
-        meta    = item.get("metadata", {})
-        boost   = 0.0
+        meta        = item.get("metadata", {})
+        text        = item.get("text", "").lower()
+        boost       = 0.0
 
-        kb_diagrams    = set(str(d).lower() for d in _ensure_list(meta.get("applies_to_diagrams")))
-        kb_alert_types = set(str(a).lower() for a in _ensure_list(meta.get("applies_to_alert_types")))
+        kb_id_orig  = str(meta.get("kb_id", ""))
+        kb_id       = kb_id_orig.lower()
+        title       = str(meta.get("title", "")).lower()
+        doc_type    = str(meta.get("doc_type", "")).lower()
+        ev_tags     = [str(t).lower() for t in _ensure_list(meta.get("evidence_tags"))]
+        kb_diagrams = set(str(d).lower() for d in _ensure_list(meta.get("applies_to_diagrams")))
+        kb_alerts   = set(str(a).lower() for a in _ensure_list(meta.get("applies_to_alert_types")))
+        kb_ntypes   = set(str(n).lower() for n in _ensure_list(meta.get("applies_to_node_types")))
 
-        diag_overlap  = len(context_diagrams  & kb_diagrams)
-        alert_overlap = len(context_alert_types & kb_alert_types)
+        # Strong signal: root_cause text appears in chunk body
+        if root_cause and root_cause in text:
+            boost += 0.30
 
-        boost += diag_overlap  * 0.05
-        boost += alert_overlap * 0.05
+        # Strong signal: root_cause appears in kb_id or title
+        if root_cause and (root_cause in kb_id or root_cause in title):
+            boost += 0.25
+
+        # Domain prefix: kb_id starts with one of the inferred domain prefixes
+        if domain_prefixes and any(
+            kb_id_orig.upper().startswith(p.upper()) for p in domain_prefixes
+        ):
+            boost += 0.20
+
+        # Root_cause appears in evidence_tags
+        if root_cause and any(root_cause in tag or tag in root_cause for tag in ev_tags):
+            boost += 0.15
+
+        # Per-match structural overlaps
+        for nt in context_node_types:
+            if nt in kb_ntypes:
+                boost += 0.10
+
+        boost += len(context_diagrams & kb_diagrams) * 0.08
+        boost += len(context_alert_types & kb_alerts) * 0.06
+
+        # Doc-type minor bonuses
+        if doc_type == "sop":
+            boost += 0.05
+        elif doc_type == "known_resolution":
+            boost += 0.02
+
+        # Cross-diagram runbook penalty: general runbooks should not outrank domain SOPs
+        if doc_type == "runbook" and len(kb_diagrams) >= 3:
+            boost -= 0.10
 
         item["score"] = round(min(1.0, item["score"] + boost), 4)
 

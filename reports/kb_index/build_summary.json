@@ -1,9 +1,0 @@
-{
-  "documents_loaded": 8,
-  "chunks_indexed": 73,
-  "collection_name": "infragraph_sop_kb",
-  "index_dir": "/workspace/shared/infragraph-ai/runtime_state/kb_index",
-  "embed_model": "sentence-transformers/all-MiniLM-L6-v2",
-  "elapsed_seconds": 136.62,
-  "kb_root": "assets/kb"
-}
