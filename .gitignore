@@ -44,11 +44,11 @@ runtime_state/vector_memory/
 reports/hydra_runs/
 
 # Model checkpoint binaries (new canonical locations)
-model_artifacts/**/*.pth
-model_artifacts/**/*.pt
-model_artifacts/**/*.ckpt
-model_artifacts/**/*.safetensors
-model_artifacts/**/*.bin
+# model_artifacts/**/*.pth
+# model_artifacts/**/*.pt
+# model_artifacts/**/*.ckpt
+# model_artifacts/**/*.safetensors
+# model_artifacts/**/*.bin
 
 # Keep datasets in git for submission
 # datasets/ is intentionally NOT ignored
