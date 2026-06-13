@@ -63,7 +63,6 @@
     "shared_services_topology"
   ],
   "alert_count": 7,
-  "remediation": null,
   "cluster_id": "CLU-ent_enterprise_v3_0000-001",
   "cluster_score": 0.8273,
   "correlation_reasons": [

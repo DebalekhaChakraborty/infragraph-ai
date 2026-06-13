@@ -1,0 +1,127 @@
+{
+  "case_id": "ent_enterprise_v3_0074",
+  "scenario_id": "enterprise_v3_0074",
+  "mode": "enterprise_gnn_rca",
+  "cluster_count": 1,
+  "clusters": [
+    {
+      "cluster_id": "CLU-ent_enterprise_v3_0074-001",
+      "case_id": "ent_enterprise_v3_0074",
+      "scenario_id": "enterprise_v3_0074",
+      "mode": "enterprise_gnn_rca",
+      "diagram_scope": [
+        "app_db_topology",
+        "wan_topology"
+      ],
+      "event_count": 3,
+      "time_window": {
+        "start_offset_min": 0,
+        "end_offset_min": 5
+      },
+      "cluster_score": 0.5533,
+      "correlation_dimensions": {
+        "temporal": 1.0,
+        "topology": 0.4333,
+        "alert_type_seq": 0.2,
+        "source_peer": 0.4333,
+        "cross_diagram": 0.6
+      },
+      "correlation_reasons": [
+        "3 event(s) span 5 min (t=0..5)",
+        "Events span 2 diagrams: app_db_topology, wan_topology"
+      ],
+      "events": [
+        {
+          "event_id": "EVT-0001",
+          "node": "WAN-PE-01",
+          "alert_type": "link_down",
+          "severity": "critical",
+          "time_offset_min": 0,
+          "diagram_id": "wan_topology",
+          "correlation_role": "cluster_seed"
+        },
+        {
+          "event_id": "EVT-0002",
+          "node": "WAN-PE-02",
+          "alert_type": "error_rate",
+          "severity": "high",
+          "time_offset_min": 1,
+          "diagram_id": "wan_topology",
+          "correlation_role": "peer_signal"
+        },
+        {
+          "event_id": "EVT-0003",
+          "node": "APP-LB-01",
+          "alert_type": "connection_timeout",
+          "severity": "warning",
+          "time_offset_min": 5,
+          "diagram_id": "app_db_topology",
+          "correlation_role": "noise_candidate"
+        }
+      ],
+      "cluster_fingerprint": "e24e31bfd6a9",
+      "causal_evidence": [
+        {
+          "evidence_id": "CE-001",
+          "stage": "temporal_correlation",
+          "summary": "3 alert(s) within a 5-minute window (t=0..5 min), consistent with a propagating fault.",
+          "supporting_events": [
+            "EVT-0001",
+            "EVT-0002",
+            "EVT-0003"
+          ],
+          "supporting_nodes": [
+            "WAN-PE-01",
+            "WAN-PE-02",
+            "APP-LB-01"
+          ],
+          "confidence": 1.0
+        },
+        {
+          "evidence_id": "CE-002",
+          "stage": "topology_proximity",
+          "summary": "Alerted nodes (WAN-PE-01, WAN-PE-02, APP-LB-01) are topologically proximate (topology score 0.43), suggesting fault propagation through connected infrastructure.",
+          "supporting_events": [
+            "EVT-0001",
+            "EVT-0002",
+            "EVT-0003"
+          ],
+          "supporting_nodes": [
+            "WAN-PE-01",
+            "WAN-PE-02",
+            "APP-LB-01"
+          ],
+          "confidence": 0.4333
+        },
+        {
+          "evidence_id": "CE-003",
+          "stage": "cross_diagram_correlation",
+          "summary": "Events span 2 diagrams (app_db_topology, wan_topology). Cross-diagram correlation score 0.60 indicates the fault may have propagated across topology boundaries.",
+          "supporting_events": [
+            "EVT-0001",
+            "EVT-0002",
+            "EVT-0003"
+          ],
+          "supporting_nodes": [
+            "WAN-PE-01",
+            "WAN-PE-02",
+            "APP-LB-01"
+          ],
+          "confidence": 0.6
+        },
+        {
+          "evidence_id": "CE-004",
+          "stage": "propagation_hypothesis",
+          "summary": "Hypothesis: fault originated at the cluster seed node and may have propagated downstream through connected infrastructure.",
+          "supporting_events": [
+            "EVT-0001"
+          ],
+          "supporting_nodes": [
+            "WAN-PE-01"
+          ],
+          "confidence": 0.7167
+        }
+      ]
+    }
+  ]
+}

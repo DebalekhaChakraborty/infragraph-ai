@@ -22,7 +22,7 @@ _FI_SHARED        = FEATURE_NAMES.index("is_shared_entity")
 _FI_PAGERANK      = FEATURE_NAMES.index("pagerank")
 
 _FORBIDDEN_KEYS = frozenset({
-    "recommended_actions", "remediation_steps", "resolution_steps",
+    "remediation", "recommended_actions", "remediation_steps", "resolution_steps",
     "rollback_steps", "validation_steps", "servicenow_incident_summary",
     "resolution", "rollback",
     # evaluation leakage at top level (must be nested under "evaluation" key only)
@@ -159,7 +159,6 @@ def predict_one(
         "top_candidates":       top_candidates,
         "impacted_diagrams":    impacted_diags,
         "alert_count":          graph_dict.get("event_count", int(x[:, _FI_IS_ALERTED].sum())),
-        "remediation":          None,
     }
 
     if labels_dict:
