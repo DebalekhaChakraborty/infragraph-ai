@@ -44,6 +44,11 @@
       "Incident spans diagrams: branch_topology, datacenter_topology, app_db_topology, shared_services_topology",
       "Alert events observed: 7",
       "Impacted nodes: DC-FW-01, DC-CORE-SW-01, APP-LB-01, APP-01, DB-MASTER",
+      "Retrieved SOP evidence: KB-SOP-DC-FW-001-001 — Datacenter Firewall Packet Drop and Link Error Response (Trigger Symptoms)",
+      "Retrieved SOP evidence: KB-SOP-DC-FW-001-006 — Datacenter Firewall Packet Drop and Link Error Response (Validation Steps)",
+      "Retrieved SOP evidence: KB-RUNBOOK-ENT-XDIAG-001-006 — Enterprise Cross-Diagram Incident Validation Runbook (Validation Steps)",
+      "Retrieved SOP evidence: KB-RUNBOOK-ENT-XDIAG-001-002 — Enterprise Cross-Diagram Incident Validation Runbook (Applicable RCA Patterns)",
+      "Retrieved SOP evidence: KB-RUNBOOK-ENT-XDIAG-001-004 — Enterprise Cross-Diagram Incident Validation Runbook (Triage Steps)",
       "CE-001 (temporal_correlation, confidence=0.85): 7 alert(s) within a 18-minute window (t=0..18 min), consistent with a propagating fault.",
       "CE-002 (alert_sequence, confidence=1.0): Alert type sequence matches propagation chain: link_errors -> latency. This ordering is consistent with fault propagation from the initiating node.",
       "CE-003 (topology_proximity, confidence=0.7571): Alerted nodes (DC-FW-01, DC-CORE-SW-01, APP-LB-01, APP-01...) are topologically proximate (topology score 0.76), suggesting fault propagation through connected infrastructure.",
@@ -52,12 +57,7 @@
       "Correlation reason: 7 event(s) span 18 min (t=0..18)",
       "Correlation reason: Propagation pattern detected: link_errors -> latency",
       "Correlation reason: Events span 4 diagrams: app_db_topology, branch_topology, datacenter_topology, shared_services_topology",
-      "Correlation reason: Alerted nodes are topologically proximate (2-3 hops)",
-      "KB-SOP-DC-FW-001-001: Datacenter Firewall Packet Drop and Link Error Response § Trigger Symptoms",
-      "KB-SOP-DC-FW-001-006: Datacenter Firewall Packet Drop and Link Error Response § Validation Steps",
-      "KB-RUNBOOK-ENT-XDIAG-001-006: Enterprise Cross-Diagram Incident Validation Runbook § Validation Steps",
-      "KB-RUNBOOK-ENT-XDIAG-001-002: Enterprise Cross-Diagram Incident Validation Runbook § Applicable RCA Patterns",
-      "KB-RUNBOOK-ENT-XDIAG-001-004: Enterprise Cross-Diagram Incident Validation Runbook § Triage Steps"
+      "Correlation reason: Alerted nodes are topologically proximate (2-3 hops)"
     ],
     "pre_checks": [
       "Confirm root-cause candidate DC-FW-01 is present in enterprise graph memory.",
@@ -73,27 +73,29 @@
       "Confirm power and cooling alarms are not contributing to device instability."
     ],
     "validation_steps": [
-      "Confirm alert frequency has decreased after initial triage actions.",
-      "Verify that impact-path nodes are returning to healthy state across all diagrams.",
-      "Run connectivity tests across affected diagram boundaries.",
-      "Confirm monitoring system shows green health on root-cause node.",
+      "Confirm packet-drop counters on the affected firewall interface have stopped incrementing.",
+      "Verify traffic flows that were blocked are now passing the firewall policy.",
+      "Check the firewall deny log to confirm no residual ACL hits on legitimate traffic.",
+      "Confirm the security team has reviewed and approved the policy change before closure.",
       "Confirm health of all impacted nodes: DC-FW-01, DC-CORE-SW-01, APP-LB-01, APP-01, DB-MASTER, IAM-01….",
       "Validate according to SOP-DC-FW-001 (Datacenter Firewall Packet Drop and Link Error Response) validation section [KB-SOP-DC-FW-001-006].",
       "Validate according to RUNBOOK-ENT-XDIAG-001 (Enterprise Cross-Diagram Incident Validation Runbook) validation section [KB-RUNBOOK-ENT-XDIAG-001-006]."
     ],
     "remediation_steps": [
-      "Restore 'DC-FW-01' (datacenter_topology) by restarting the affected service or applying corrective configuration.",
-      "Re-advertise affected routes or re-establish BGP/OSPF sessions if routing is impacted.",
-      "Verify that downstream nodes in the impact path have recovered.",
-      "Clear alert conditions on monitoring platform and confirm no secondary triggers.",
-      "Document the change applied and update the CMDB record for the affected device.",
+      "Restore 'DC-FW-01' (datacenter_topology) following domain-specific steps below.",
+      "Review the firewall policy change log for any recently added or modified deny rules.",
+      "Identify affected traffic flows from packet-drop counters on the suspect interface.",
+      "Confirm the ACL or policy rule causing drops — do not remove rules without change approval.",
+      "Apply firewall policy correction only within an approved maintenance window.",
+      "After policy update, confirm packet-drop counters stop incrementing and traffic restores.",
+      "Document the change and update the CMDB record for the affected firewall.",
       "Coordinate recovery across all affected diagrams in order: branch_topology → datacenter_topology → app_db_topology → shared_services_topology."
     ],
     "post_checks": [
-      "Confirm alert frequency has decreased after initial triage actions.",
-      "Verify that impact-path nodes are returning to healthy state across all diagrams.",
-      "Run connectivity tests across affected diagram boundaries.",
-      "Confirm monitoring system shows green health on root-cause node.",
+      "Confirm packet-drop counters on the affected firewall interface have stopped incrementing.",
+      "Verify traffic flows that were blocked are now passing the firewall policy.",
+      "Check the firewall deny log to confirm no residual ACL hits on legitimate traffic.",
+      "Confirm the security team has reviewed and approved the policy change before closure.",
       "Confirm health of all impacted nodes: DC-FW-01, DC-CORE-SW-01, APP-LB-01, APP-01, DB-MASTER, IAM-01….",
       "Validate according to SOP-DC-FW-001 (Datacenter Firewall Packet Drop and Link Error Response) validation section [KB-SOP-DC-FW-001-006].",
       "Validate according to RUNBOOK-ENT-XDIAG-001 (Enterprise Cross-Diagram Incident Validation Runbook) validation section [KB-RUNBOOK-ENT-XDIAG-001-006]."

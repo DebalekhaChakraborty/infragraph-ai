@@ -43,18 +43,18 @@
       "Incident spans diagrams: app_db_topology",
       "Alert events observed: 4",
       "Impacted nodes: APP-LB-01, APP-01, APP-02, DB-MASTER",
+      "Retrieved SOP evidence: KB-SOP-DB-001-001 — Database Master Node Latency and Connection Timeout Response (Trigger Symptoms)",
+      "Retrieved known resolution: KB-KR-APP-LB-001-002 — Known Resolution: Application Load Balancer Backend Health Degradation (Root Cause Confirmed)",
+      "Retrieved known resolution: KB-KR-APP-LB-001-001 — Known Resolution: Application Load Balancer Backend Health Degradation (Incident Summary)",
+      "Retrieved SOP evidence: KB-SOP-APP-LB-001-001 — Application Load Balancer Backend Pool Unhealthy Response (Trigger Symptoms)",
+      "Retrieved SOP evidence: KB-RUNBOOK-ENT-XDIAG-001-006 — Enterprise Cross-Diagram Incident Validation Runbook (Validation Steps)",
       "CE-001 (temporal_correlation, confidence=1.0): 4 alert(s) within a 11-minute window (t=0..11 min), consistent with a propagating fault.",
       "CE-002 (alert_sequence, confidence=0.85): Alert type sequence matches propagation chain: cpu -> latency. This ordering is consistent with fault propagation from the initiating node.",
       "CE-003 (topology_proximity, confidence=0.95): Alerted nodes (APP-LB-01, APP-01, APP-02, DB-MASTER) are topologically proximate (topology score 0.95), suggesting fault propagation through connected infrastructure.",
       "CE-004 (propagation_hypothesis, confidence=0.975): Hypothesis: fault initiated at APP-LB-01 (alert: cpu_spike) and propagated to 1 downstream node(s) matching known propagation patterns.",
       "Correlation reason: 4 event(s) span 11 min (t=0..11)",
       "Correlation reason: Propagation pattern detected: cpu -> latency",
-      "Correlation reason: Alerted nodes are directly adjacent (1-2 hops)",
-      "KB-SOP-DB-001-001: Database Master Node Latency and Connection Timeout Response § Trigger Symptoms",
-      "KB-KR-APP-LB-001-002: Known Resolution: Application Load Balancer Backend Health Degradation § Root Cause Confirmed",
-      "KB-KR-APP-LB-001-001: Known Resolution: Application Load Balancer Backend Health Degradation § Incident Summary",
-      "KB-SOP-APP-LB-001-001: Application Load Balancer Backend Pool Unhealthy Response § Trigger Symptoms",
-      "KB-RUNBOOK-ENT-XDIAG-001-006: Enterprise Cross-Diagram Incident Validation Runbook § Validation Steps"
+      "Correlation reason: Alerted nodes are directly adjacent (1-2 hops)"
     ],
     "pre_checks": [
       "Confirm root-cause candidate APP-LB-01 is present in enterprise graph memory.",
@@ -70,25 +70,27 @@
       "Review recent application deployments or configuration changes."
     ],
     "validation_steps": [
-      "Confirm alert frequency has decreased after initial triage actions.",
-      "Verify that impact-path nodes are returning to healthy state across all diagrams.",
-      "Run connectivity tests across affected diagram boundaries.",
-      "Confirm monitoring system shows green health on root-cause node.",
+      "Confirm load balancer backend pool shows all members as healthy after remediation.",
+      "Send a synthetic health-probe request and verify application response is within threshold.",
+      "Verify application error rates in APM/logging have returned to baseline.",
+      "Confirm connection-timeout alerts have cleared on the monitoring platform.",
       "Confirm health of all impacted nodes: APP-LB-01, APP-01, APP-02, DB-MASTER.",
       "Validate according to RUNBOOK-ENT-XDIAG-001 (Enterprise Cross-Diagram Incident Validation Runbook) validation section [KB-RUNBOOK-ENT-XDIAG-001-006]."
     ],
     "remediation_steps": [
-      "Restore 'APP-LB-01' (app_db_topology) by restarting the affected service or applying corrective configuration.",
-      "Re-advertise affected routes or re-establish BGP/OSPF sessions if routing is impacted.",
-      "Verify that downstream nodes in the impact path have recovered.",
-      "Clear alert conditions on monitoring platform and confirm no secondary triggers.",
-      "Document the change applied and update the CMDB record for the affected device."
+      "Restore 'APP-LB-01' (app_db_topology) following domain-specific steps below.",
+      "Drain the affected backend pool members gracefully before making any configuration change.",
+      "Investigate backend health probe failures — check application health endpoint response codes.",
+      "Verify backend server CPU, memory, and thread-pool saturation before re-adding to pool.",
+      "After configuration change, confirm backend pool health-check status returns healthy.",
+      "Verify no recent application deployment introduced a health-endpoint regression.",
+      "Document the change and update the CMDB record for the affected load balancer."
     ],
     "post_checks": [
-      "Confirm alert frequency has decreased after initial triage actions.",
-      "Verify that impact-path nodes are returning to healthy state across all diagrams.",
-      "Run connectivity tests across affected diagram boundaries.",
-      "Confirm monitoring system shows green health on root-cause node.",
+      "Confirm load balancer backend pool shows all members as healthy after remediation.",
+      "Send a synthetic health-probe request and verify application response is within threshold.",
+      "Verify application error rates in APM/logging have returned to baseline.",
+      "Confirm connection-timeout alerts have cleared on the monitoring platform.",
       "Confirm health of all impacted nodes: APP-LB-01, APP-01, APP-02, DB-MASTER.",
       "Validate according to RUNBOOK-ENT-XDIAG-001 (Enterprise Cross-Diagram Incident Validation Runbook) validation section [KB-RUNBOOK-ENT-XDIAG-001-006]."
     ],
