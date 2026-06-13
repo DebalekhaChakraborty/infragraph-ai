@@ -92,6 +92,29 @@ Preprocessing: `OneHotEncoder` on categoricals (`node_type`, `zone`, `diagram_id
 
 ---
 
+## CPU setup (local or notebook)
+
+Install the base requirements including `joblib` (used for model serialisation):
+
+```bash
+python -m pip install -r requirements/requirements.txt
+```
+
+`joblib` is listed explicitly in `requirements/requirements.txt`. If you need
+to install it in isolation:
+
+```bash
+python -m pip install joblib
+```
+
+For a repeatable one-command setup that also covers training utilities:
+
+```bash
+bash scripts/setup_rca_cpu_env.sh
+```
+
+---
+
 ## Step-by-step usage
 
 ### 1. Build the feature dataset

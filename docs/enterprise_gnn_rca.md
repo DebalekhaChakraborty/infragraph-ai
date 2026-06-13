@@ -160,6 +160,33 @@ If `torch_geometric` is not installed, all scripts exit with:
 
 ---
 
+## Ephemeral AMD GPU setup
+
+When the Jupyter environment resets (pip installs lost), run these two scripts
+in order to restore the full RCA + GNN stack:
+
+```bash
+# Step 1 — restore ROCm torch + vERL/GRPO stack (skips if already present)
+bash scripts/amd_rocm/bootstrap_grpo_env.sh
+
+# Step 2 — restore RCA / GNN dependencies
+bash scripts/amd_rocm/bootstrap_rca_gnn_env.sh
+```
+
+Verify the result:
+
+```bash
+python -c "
+import torch, torch_geometric
+print(torch.__version__, torch.cuda.is_available(), torch_geometric.__version__)
+"
+```
+
+`bootstrap_rca_gnn_env.sh` is safe to re-run and will exit early with a clear
+message if torch is missing rather than silently installing a mismatched wheel.
+
+---
+
 ## Step-by-step usage
 
 ### 1. Build the graph dataset
