@@ -41,7 +41,9 @@ runtime_state/live_ingestion/
 runtime_state/live_absorption/
 runtime_state/incident_runs/
 runtime_state/vector_memory/
+runtime_state/kb_index/
 reports/hydra_runs/
+reports/kb_index/
 
 # Model checkpoint binaries (new canonical locations)
 # model_artifacts/**/*.pth
