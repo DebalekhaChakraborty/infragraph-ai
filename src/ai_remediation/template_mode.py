@@ -33,7 +33,22 @@ def _evidence_ids(context: dict) -> list[str]:
         eid = meta.get("evidence_id")
         if eid:
             ids.append(str(eid))
+    for item in context.get("causal_evidence", []) or []:
+        eid = item.get("evidence_id")
+        if eid:
+            ids.append(str(eid))
     return _unique_strings(ids)
+
+
+def _causal_evidence_summaries(context: dict, max_items: int = 5) -> list[str]:
+    out: list[str] = []
+    for item in (context.get("causal_evidence", []) or [])[:max_items]:
+        eid     = item.get("evidence_id", "CE")
+        stage   = item.get("stage", "unknown")
+        summary = item.get("summary", "")
+        conf    = item.get("confidence", "")
+        out.append(f"{eid} ({stage}, confidence={conf}): {summary}")
+    return out
 
 
 def _blast_radius(scope: str, impacted_diagrams: list[str], impacted_nodes: list[str]) -> str:
@@ -195,6 +210,9 @@ def _generate_local_template(context: dict) -> dict:
     ]
     if imp_nodes:
         evidence.append(f"Impacted nodes on this diagram: {', '.join(imp_nodes[:5])}")
+    evidence.extend(_causal_evidence_summaries(context))
+    for reason in (context.get("correlation_reasons", []) or [])[:5]:
+        evidence.append(f"Correlation reason: {reason}")
 
     triage = _TRIAGE_BY_DIAGRAM.get(diagram_id, _DEFAULT_TRIAGE)[:]
     if root_cause:
@@ -237,9 +255,13 @@ def _generate_local_template(context: dict) -> dict:
         "assignment_group": "Network Operations — Topology Diagram",
     }
 
+    cluster_id    = context.get("cluster_id", "")
+    cluster_score = context.get("cluster_score")
+    cluster_str   = f"{cluster_id} (score={cluster_score:.4f})" if cluster_id and cluster_score is not None else cluster_id or "—"
     confidence = (
         f"RCA source: {rca_source}. "
         "Topology BFS traversal used — candidate ranking reflects single-diagram graph topology. "
+        f"Event correlation cluster: {cluster_str}. "
         "Template mode: output is deterministic and not model-generated."
     )
     pre_checks = [
@@ -248,9 +270,10 @@ def _generate_local_template(context: dict) -> dict:
         "Run read-only reachability and health checks before applying any change.",
     ]
     audit = (
-        f"Template fallback generated a Topology RCA remediation plan for {diagram_id}; "
+        f"Template remediation plan for {diagram_id}; "
         f"risk={risk}, blast_radius={blast}, automation={automation}. "
-        f"Evidence IDs used: {', '.join(evidence_ids) if evidence_ids else 'none'}."
+        f"Evidence IDs used: {', '.join(evidence_ids) if evidence_ids else 'none'}. "
+        f"Event correlation cluster: {cluster_str}."
     )
 
     output = make_remediation_output(
@@ -325,6 +348,9 @@ def _generate_enterprise_template(context: dict) -> dict:
     ]
     if imp_nodes:
         evidence.append(f"Impacted nodes: {', '.join(imp_nodes[:5])}")
+    evidence.extend(_causal_evidence_summaries(context))
+    for reason in (context.get("correlation_reasons", []) or [])[:5]:
+        evidence.append(f"Correlation reason: {reason}")
 
     triage = _TRIAGE_BY_DIAGRAM.get(rc_diagram or diagram_id, _DEFAULT_TRIAGE)[:]
     if root_cause:
@@ -381,23 +407,28 @@ def _generate_enterprise_template(context: dict) -> dict:
         "assignment_group": "Network Engineering — Enterprise Operations",
     }
 
+    cluster_id    = context.get("cluster_id", "")
+    cluster_score = context.get("cluster_score")
+    cluster_str   = f"{cluster_id} (score={cluster_score:.4f})" if cluster_id and cluster_score is not None else cluster_id or "—"
     confidence = (
         f"RCA source: {rca_source}. "
         + ("GNN inference result was used — candidate ranking is model-derived. "
            if context.get("gnn_result_available") else
-           "No trained GNN result available — ranking derived from scenario ground truth. ")
+           "GNN inference result not available — candidate ranking derived from alert timeline heuristics. ")
+        + f"Event correlation cluster: {cluster_str}. "
         + "Template mode: output is deterministic and not model-generated."
     )
     pre_checks = [
         f"Confirm root-cause candidate {root_cause or 'unknown'} is present in enterprise graph memory.",
         f"Validate impacted diagrams before any change: {diag_list}.",
-        "Confirm GNN ranking source and alert timeline freshness before remediation.",
+        "Confirm RCA source and alert timeline freshness before remediation.",
         "Run read-only reachability checks across diagram boundaries first.",
     ]
     audit = (
-        f"Template fallback generated an Enterprise remediation plan for scenario {scenario_id}; "
+        f"Template remediation plan for scenario {scenario_id}; "
         f"risk={risk}, blast_radius={blast}, automation={automation}, rca_source={rca_source}. "
-        f"Evidence IDs used: {', '.join(evidence_ids) if evidence_ids else 'none'}."
+        f"Evidence IDs used: {', '.join(evidence_ids) if evidence_ids else 'none'}. "
+        f"Event correlation cluster: {cluster_str}."
     )
 
     output = make_remediation_output(
