@@ -1,0 +1,23 @@
+{
+  "total_graphs": 80,
+  "feature_dim": 54,
+  "split_distribution": {
+    "train": 64,
+    "val": 8,
+    "test": 8
+  },
+  "pattern_distribution": {
+    "hero_dc_fw_to_app_db_identity": 1,
+    "branch_rtr_failure": 13,
+    "wan_failure": 19,
+    "dc_fw_failure": 16,
+    "lb_failure": 15,
+    "db_failure": 10,
+    "shared_id_failure": 6
+  },
+  "node_count_avg": 30.6,
+  "node_count_min": 21,
+  "node_count_max": 39,
+  "edge_count_avg": 76.1,
+  "event_count_avg": 4.4
+}

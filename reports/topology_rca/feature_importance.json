@@ -1,122 +1,122 @@
 [
   {
     "feature": "min_time_rank",
-    "importance": 0.13217
+    "importance": 0.143908
   },
   {
     "feature": "is_first_alerted_node",
-    "importance": 0.111143
+    "importance": 0.111111
   },
   {
     "feature": "severity_weighted_alert_score",
-    "importance": 0.108696
-  },
-  {
-    "feature": "alert_sequence_position_norm",
-    "importance": 0.092347
-  },
-  {
-    "feature": "max_severity_score",
-    "importance": 0.089489
-  },
-  {
-    "feature": "mean_alert_time",
-    "importance": 0.088068
+    "importance": 0.104187
   },
   {
     "feature": "first_alert_time",
-    "importance": 0.086719
+    "importance": 0.09373
+  },
+  {
+    "feature": "max_severity_score",
+    "importance": 0.084819
+  },
+  {
+    "feature": "alert_sequence_position_norm",
+    "importance": 0.08424
+  },
+  {
+    "feature": "mean_alert_time",
+    "importance": 0.082754
   },
   {
     "feature": "propagation_consistency_score",
-    "importance": 0.037518
+    "importance": 0.037603
   },
   {
     "feature": "alert_burst_score",
-    "importance": 0.034556
+    "importance": 0.036038
   },
   {
     "feature": "min_undirected_distance_to_alert",
-    "importance": 0.030417
-  },
-  {
-    "feature": "alert_count",
-    "importance": 0.029172
+    "importance": 0.03165
   },
   {
     "feature": "is_alerted",
-    "importance": 0.02309
+    "importance": 0.027643
+  },
+  {
+    "feature": "alert_count",
+    "importance": 0.027242
   },
   {
     "feature": "upstream_critical_alert_count",
-    "importance": 0.02256
+    "importance": 0.025991
   },
   {
     "feature": "mean_undirected_distance_to_alert",
-    "importance": 0.016889
-  },
-  {
-    "feature": "upstream_alert_count",
-    "importance": 0.015325
+    "importance": 0.021493
   },
   {
     "feature": "betweenness_centrality",
-    "importance": 0.013547
+    "importance": 0.014054
   },
   {
     "feature": "reverse_reachability_from_alert_count",
-    "importance": 0.012126
+    "importance": 0.013377
   },
   {
-    "feature": "alerts_reachable_upstream_before_candidate",
-    "importance": 0.006389
-  },
-  {
-    "feature": "node_type_priority_score",
-    "importance": 0.006188
-  },
-  {
-    "feature": "downstream_after_candidate_count",
-    "importance": 0.006128
+    "feature": "upstream_alert_count",
+    "importance": 0.011134
   },
   {
     "feature": "total_degree",
-    "importance": 0.004815
+    "importance": 0.00656
   },
   {
-    "feature": "alerts_reachable_downstream_after_candidate",
-    "importance": 0.004346
+    "feature": "node_type_priority_score",
+    "importance": 0.006526
+  },
+  {
+    "feature": "alerts_reachable_upstream_before_candidate",
+    "importance": 0.006307
   },
   {
     "feature": "is_sink_node",
-    "importance": 0.003699
-  },
-  {
-    "feature": "alert_type_count_link_errors",
-    "importance": 0.003181
-  },
-  {
-    "feature": "out_degree",
-    "importance": 0.003087
-  },
-  {
-    "feature": "downstream_alert_count",
-    "importance": 0.002367
-  },
-  {
-    "feature": "in_degree",
-    "importance": 0.002285
-  },
-  {
-    "feature": "is_last_alerted_node",
-    "importance": 0.00196
+    "importance": 0.004166
   },
   {
     "feature": "directed_reachability_to_alert_count",
-    "importance": 0.001766
+    "importance": 0.003302
+  },
+  {
+    "feature": "out_degree",
+    "importance": 0.003273
+  },
+  {
+    "feature": "downstream_after_candidate_count",
+    "importance": 0.002181
+  },
+  {
+    "feature": "in_degree",
+    "importance": 0.002012
+  },
+  {
+    "feature": "is_last_alerted_node",
+    "importance": 0.001784
+  },
+  {
+    "feature": "downstream_alert_count",
+    "importance": 0.001668
+  },
+  {
+    "feature": "alert_type_count_link_errors",
+    "importance": 0.001404
   },
   {
     "feature": "closeness_centrality",
-    "importance": 0.001569
+    "importance": 0.001296
+  },
+  {
+    "feature": "is_source_node",
+    "importance": 0.000979
   }
 ]
