@@ -10,7 +10,9 @@ Public API:
     run_enterprise_absorption(...) -- scenario-path absorption (backward compat)
 
 Detection source is resolved honestly:
-    - "Live RF-DETR Detector"      if live RF-DETR inference succeeds
+    - "LIVE_RFDETR_INFERENCE"      if external RF-DETR inference succeeds
+    - "VERIFIED_ANNOTATION_FALLBACK" if verified annotations are used after
+                                     live inference is unavailable
     - "RF-DETR Trained Prediction" if outputs/rfdetr_v3_predictions/<id>.png exists
     - "Verified Annotation Overlay" otherwise (annotation bboxes rendered as overlay)
 """
@@ -364,7 +366,7 @@ def render_v3_annotation_preview(
 def _evidence_src(detection_source: str) -> str:
     if "Verified Annotation" in detection_source:
         return "verified_metadata"
-    if "Live RF-DETR" in detection_source:
+    if "Live RF-DETR" in detection_source or detection_source == "LIVE_RFDETR_INFERENCE":
         return "live_detector"
     if "RF-DETR" in detection_source or "Trained" in detection_source:
         return "trained_detector"
@@ -568,6 +570,81 @@ def build_ocr_rows(annotation: dict) -> list[dict]:
     return rows
 
 
+def _bbox_list_from_live_detection(det: dict) -> list[float]:
+    bbox = det.get("bbox") or {}
+    if isinstance(bbox, dict):
+        return [
+            float(bbox.get("x1", 0)),
+            float(bbox.get("y1", 0)),
+            float(bbox.get("x2", 0)),
+            float(bbox.get("y2", 0)),
+        ]
+    if isinstance(bbox, list) and len(bbox) >= 4:
+        return [float(v) for v in bbox[:4]]
+    return []
+
+
+def _bbox_iou(a: list, b: list) -> float:
+    if len(a) < 4 or len(b) < 4:
+        return 0.0
+    ax1, ay1, ax2, ay2 = map(float, a[:4])
+    bx1, by1, bx2, by2 = map(float, b[:4])
+    ax1, ax2 = min(ax1, ax2), max(ax1, ax2)
+    ay1, ay2 = min(ay1, ay2), max(ay1, ay2)
+    bx1, bx2 = min(bx1, bx2), max(bx1, bx2)
+    by1, by2 = min(by1, by2), max(by1, by2)
+    ix1, iy1 = max(ax1, bx1), max(ay1, by1)
+    ix2, iy2 = min(ax2, bx2), min(ay2, by2)
+    iw, ih = max(0.0, ix2 - ix1), max(0.0, iy2 - iy1)
+    inter = iw * ih
+    area_a = max(0.0, ax2 - ax1) * max(0.0, ay2 - ay1)
+    area_b = max(0.0, bx2 - bx1) * max(0.0, by2 - by1)
+    denom = area_a + area_b - inter
+    return inter / denom if denom > 0 else 0.0
+
+
+def _live_rfdetr_nodes_from_detections(detections: list[dict], annotation: dict) -> list[dict]:
+    objects = [o for o in annotation.get("objects", []) if isinstance(o, dict)]
+    used: set[int] = set()
+    nodes: list[dict] = []
+    for idx, det in enumerate(detections, 1):
+        label = det.get("label") or det.get("device_type") or "server"
+        bbox = _bbox_list_from_live_detection(det)
+        best_iou = 0.0
+        best_idx = -1
+        best_obj: dict = {}
+        for obj_idx, obj in enumerate(objects):
+            if obj_idx in used:
+                continue
+            if obj.get("class_name") != label:
+                continue
+            iou = _bbox_iou(bbox, obj.get("bbox", []))
+            if iou > best_iou:
+                best_iou = iou
+                best_idx = obj_idx
+                best_obj = obj
+        if best_idx >= 0 and best_iou >= 0.08:
+            used.add(best_idx)
+        else:
+            best_obj = {}
+        node_id = best_obj.get("object_id") or best_obj.get("label_text") or f"RFDET-{idx:03d}"
+        nodes.append({
+            "node_id":          node_id,
+            "canonical_id":     best_obj.get("canonical_id", node_id),
+            "class_name":       label,
+            "type":             _CLASS_TO_TYPE.get(label, det.get("device_type", "server")),
+            "bbox":             bbox,
+            "confidence":       float(det.get("confidence", 0.0)),
+            "is_shared_entity": best_obj.get("is_shared_entity", False),
+            "is_ghost":         False,
+            "zone":             best_obj.get("zone", ""),
+            "ip_address":       best_obj.get("ip_address", ""),
+            "source":           "LIVE_RFDETR_INFERENCE",
+            "match_iou":        round(best_iou, 3),
+        })
+    return nodes
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # PUBLIC API
 # ══════════════════════════════════════════════════════════════════════════════
@@ -578,6 +655,7 @@ def run_live_v3_ingestion(
     scenario_path: Path,
     use_live_rfdetr: bool = True,
     rfdetr_model=None,      # pre-loaded RF-DETR model (from st.cache_resource); loaded internally if None
+    external_rfdetr_result: dict | None = None,
 ) -> dict:
     """
     Load a V3 annotation + local graph and write a self-contained ingestion
@@ -606,7 +684,7 @@ def run_live_v3_ingestion(
         shutil.copy2(diagram_path, orig_out)
 
     # ── detect source (3-tier priority) ──────────────────────────────────────
-    #   1. Live RF-DETR inference  (use_live_rfdetr=True + checkpoint exists)
+    #   1. External live RF-DETR result supplied by the Streamlit bridge
     #   2. Static rfdetr_v3_predictions file
     #   3. Verified Annotation Overlay rendered from V3 metadata
     detected_out     = run_dir / "detected.png"
@@ -614,38 +692,20 @@ def run_live_v3_ingestion(
     _rfdetr_error: str  = ""
     _rfdetr_time_s: float = 0.0
 
-    if use_live_rfdetr:
-        try:
-            from live_rfdetr_detector import (  # type: ignore
-                find_best_rfdetr_checkpoint, run_live_rfdetr_detection,
-            )
-            _ckpt = find_best_rfdetr_checkpoint(repo_root)
-            if _ckpt is not None:
-                _split_inferred = (
-                    scenario_path.parent.name
-                    if scenario_path.parent.name in ("train", "val", "test")
-                    else "train"
-                )
-                _t0 = time.perf_counter()
-                _live_res = run_live_rfdetr_detection(
-                    repo_root   = repo_root,
-                    image_path  = diagram_path,
-                    dataset     = "v3",
-                    split       = _split_inferred,
-                    scenario_id = scenario_id,
-                    diagram_id  = diagram_id,
-                    model       = rfdetr_model,
-                )
-                _rfdetr_time_s = round(time.perf_counter() - _t0, 3)
-                if _live_res.get("ok"):
-                    _live_det = Path(_live_res["detected_image_path"])
-                    if _live_det.exists():
-                        shutil.copy2(_live_det, detected_out)
-                        detection_source = "Live RF-DETR detector"
-                else:
-                    _rfdetr_error = _live_res.get("error", "unknown error")
-        except Exception as _e:
-            _rfdetr_error = str(_e)
+    if use_live_rfdetr and not external_rfdetr_result:
+        _rfdetr_error = (
+            "In-process RF-DETR is disabled for Streamlit ingestion; "
+            "provide external_rfdetr_result from the RF-DETR subprocess bridge."
+        )
+
+    if external_rfdetr_result and external_rfdetr_result.get("ok"):
+        live_img = Path(external_rfdetr_result.get("annotated_image_path", ""))
+        if live_img.exists():
+            shutil.copy2(live_img, detected_out)
+        detection_source = "LIVE_RFDETR_INFERENCE"
+        _rfdetr_time_s = round(float(external_rfdetr_result.get("inference_runtime_ms", 0)) / 1000.0, 3)
+    elif external_rfdetr_result and not external_rfdetr_result.get("ok"):
+        _rfdetr_error = external_rfdetr_result.get("error", "external RF-DETR failed")
 
     if detection_source == "Verified Annotation Overlay":
         _rfdetr_pred_static = (
@@ -682,22 +742,28 @@ def run_live_v3_ingestion(
         if not detected_out.exists():
             shutil.copy2(orig_out, detected_out)
 
-    # ── detected_nodes from annotation objects ────────────────────────────────
-    is_rfdetr = detection_source.startswith("RF-DETR")
-    detected_nodes: list[dict] = []
-    for obj in annotation.get("objects", []):
-        detected_nodes.append({
-            "node_id":          obj.get("object_id", ""),
-            "canonical_id":     obj.get("canonical_id", obj.get("object_id", "")),
-            "class_name":       obj.get("class_name", "server"),
-            "type":             _CLASS_TO_TYPE.get(obj.get("class_name", ""), "server"),
-            "bbox":             obj.get("bbox", []),
-            "confidence":       obj.get("confidence", 0.96 if is_rfdetr else 0.88),
-            "is_shared_entity": obj.get("is_shared_entity", False),
-            "is_ghost":         obj.get("is_ghost", False),
-            "zone":             obj.get("zone", ""),
-            "source":           detection_source,
-        })
+    # ── detected_nodes from live detections or annotation objects ─────────────
+    is_rfdetr = detection_source.startswith("RF-DETR") or detection_source == "LIVE_RFDETR_INFERENCE"
+    live_detections = (
+        external_rfdetr_result.get("detections", [])
+        if external_rfdetr_result and external_rfdetr_result.get("ok")
+        else []
+    )
+    detected_nodes: list[dict] = _live_rfdetr_nodes_from_detections(live_detections, annotation) if live_detections else []
+    if not detected_nodes:
+        for obj in annotation.get("objects", []):
+            detected_nodes.append({
+                "node_id":          obj.get("object_id", ""),
+                "canonical_id":     obj.get("canonical_id", obj.get("object_id", "")),
+                "class_name":       obj.get("class_name", "server"),
+                "type":             _CLASS_TO_TYPE.get(obj.get("class_name", ""), "server"),
+                "bbox":             obj.get("bbox", []),
+                "confidence":       obj.get("confidence", 0.96 if is_rfdetr else 0.88),
+                "is_shared_entity": obj.get("is_shared_entity", False),
+                "is_ghost":         obj.get("is_ghost", False),
+                "zone":             obj.get("zone", ""),
+                "source":           detection_source,
+            })
 
     # ── detected_edges from connectors + local graph ──────────────────────────
     detected_edges: list[dict] = []
@@ -772,10 +838,26 @@ def run_live_v3_ingestion(
         "low_confidence_items": sum(1 for c in nc if c < 0.90),
     }
 
+    runtime_mode = (
+        "LIVE_RFDETR_INFERENCE"
+        if detection_source == "LIVE_RFDETR_INFERENCE"
+        else "VERIFIED_ANNOTATION_FALLBACK"
+        if external_rfdetr_result and not external_rfdetr_result.get("ok")
+        else detection_source
+    )
+    packet_source = (
+        external_rfdetr_result.get("source", "live_rfdetr_subprocess")
+        if detection_source == "LIVE_RFDETR_INFERENCE"
+        else "verified training annotation / safe curated sample"
+        if runtime_mode == "VERIFIED_ANNOTATION_FALLBACK"
+        else detection_source
+    )
+
     # ── graph_memory_packet ───────────────────────────────────────────────────
     packet: dict = {
         "diagram_id":           diagram_id,
         "scenario_id":          scenario_id,
+        "source":               packet_source,
         "original_image":       str(orig_out),
         "detected_image":       str(detected_out),
         "detection_source":     detection_source,
@@ -796,6 +878,9 @@ def run_live_v3_ingestion(
         "text_blocks":          annotation.get("text_blocks", []),
         "source_label":         f"Source: {detection_source}",
         "annotation_preview":   _render_meta,
+        "runtime_mode":         runtime_mode,
+        "absorption_mode":      "SESSION_MEMORY_ABSORPTION",
+        "rfdetr_subprocess":    external_rfdetr_result or {},
     }
 
     # ── persist artifacts ─────────────────────────────────────────────────────
@@ -811,20 +896,25 @@ def run_live_v3_ingestion(
     _save_json(run_dir / "ingestion_summary.json",   {
         "diagram_id":          diagram_id,
         "scenario_id":         scenario_id,
+        "source":              packet_source,
         "detection_source":    detection_source,
+        "runtime_mode":        runtime_mode,
         "node_count":          len(device_rows),
         "edge_count":          len(connector_rows),
         "annotation_preview":  _render_meta,
         "rfdetr_inference_time_s": _rfdetr_time_s,
         "rfdetr_error":        _rfdetr_error,
         "use_live_rfdetr":     use_live_rfdetr,
+        "rfdetr_subprocess":    external_rfdetr_result or {},
     })
 
     return {
         "run_dir":               run_dir,
         "original_image":        orig_out,
         "detected_image":        detected_out,
+        "source":                packet_source,
         "detection_source":      detection_source,
+        "runtime_mode":          runtime_mode,
         "rfdetr_inference_time_s": _rfdetr_time_s,
         "rfdetr_error":          _rfdetr_error,
         "annotation":            annotation,
@@ -944,6 +1034,7 @@ def run_ingestion(
     alerts_path: "Path | None" = None,
     use_live_rfdetr: bool = True,
     rfdetr_model=None,
+    external_rfdetr_result: dict | None = None,
 ) -> dict:
     """
     Explicit-path version of the ingestion pipeline.
@@ -971,34 +1062,21 @@ def run_ingestion(
     _rfdetr_error: str    = ""
     _rfdetr_time_s: float = 0.0
 
-    # ── 1. Live RF-DETR ───────────────────────────────────────────────────────
-    if use_live_rfdetr:
-        try:
-            from live_rfdetr_detector import (  # type: ignore
-                find_best_rfdetr_checkpoint, run_live_rfdetr_detection,
-            )
-            _ckpt = find_best_rfdetr_checkpoint(repo_root)
-            if _ckpt is not None:
-                _t0 = time.perf_counter()
-                _live_res = run_live_rfdetr_detection(
-                    repo_root   = repo_root,
-                    image_path  = image_path,
-                    dataset     = "v3",
-                    split       = "onboarding",
-                    scenario_id = run_id,
-                    diagram_id  = diagram_id,
-                    model       = rfdetr_model,
-                )
-                _rfdetr_time_s = round(time.perf_counter() - _t0, 3)
-                if _live_res.get("ok"):
-                    _live_det = Path(_live_res["detected_image_path"])
-                    if _live_det.exists():
-                        shutil.copy2(_live_det, detected_out)
-                        detection_source = "Live RF-DETR Detector"
-                else:
-                    _rfdetr_error = _live_res.get("error", "unknown error")
-        except Exception as _e:
-            _rfdetr_error = str(_e)
+    # ── 1. External live RF-DETR result ───────────────────────────────────────
+    if use_live_rfdetr and not external_rfdetr_result:
+        _rfdetr_error = (
+            "In-process RF-DETR is disabled for Streamlit ingestion; "
+            "provide external_rfdetr_result from the RF-DETR subprocess bridge."
+        )
+
+    if external_rfdetr_result and external_rfdetr_result.get("ok"):
+        live_img = Path(external_rfdetr_result.get("annotated_image_path", ""))
+        if live_img.exists():
+            shutil.copy2(live_img, detected_out)
+        detection_source = "LIVE_RFDETR_INFERENCE"
+        _rfdetr_time_s = round(float(external_rfdetr_result.get("inference_runtime_ms", 0)) / 1000.0, 3)
+    elif external_rfdetr_result and not external_rfdetr_result.get("ok"):
+        _rfdetr_error = external_rfdetr_result.get("error", "external RF-DETR failed")
 
     # ── 2. Static rfdetr_v3_predictions ──────────────────────────────────────
     if detection_source == "Verified Annotation Overlay":
@@ -1034,21 +1112,27 @@ def run_ingestion(
             shutil.copy2(orig_out, detected_out)
 
     # ── nodes / edges ─────────────────────────────────────────────────────────
-    is_live = detection_source.startswith("Live")
-    detected_nodes: list[dict] = []
-    for obj in annotation.get("objects", []):
-        detected_nodes.append({
-            "node_id":          obj.get("object_id", ""),
-            "canonical_id":     obj.get("canonical_id", obj.get("object_id", "")),
-            "class_name":       obj.get("class_name", "server"),
-            "type":             _CLASS_TO_TYPE.get(obj.get("class_name", ""), "server"),
-            "bbox":             obj.get("bbox", []),
-            "confidence":       obj.get("confidence", 0.96 if is_live else 0.88),
-            "is_shared_entity": obj.get("is_shared_entity", False),
-            "is_ghost":         obj.get("is_ghost", False),
-            "zone":             obj.get("zone", ""),
-            "source":           detection_source,
-        })
+    is_live = detection_source.startswith("Live") or detection_source == "LIVE_RFDETR_INFERENCE"
+    live_detections = (
+        external_rfdetr_result.get("detections", [])
+        if external_rfdetr_result and external_rfdetr_result.get("ok")
+        else []
+    )
+    detected_nodes: list[dict] = _live_rfdetr_nodes_from_detections(live_detections, annotation) if live_detections else []
+    if not detected_nodes:
+        for obj in annotation.get("objects", []):
+            detected_nodes.append({
+                "node_id":          obj.get("object_id", ""),
+                "canonical_id":     obj.get("canonical_id", obj.get("object_id", "")),
+                "class_name":       obj.get("class_name", "server"),
+                "type":             _CLASS_TO_TYPE.get(obj.get("class_name", ""), "server"),
+                "bbox":             obj.get("bbox", []),
+                "confidence":       obj.get("confidence", 0.96 if is_live else 0.88),
+                "is_shared_entity": obj.get("is_shared_entity", False),
+                "is_ghost":         obj.get("is_ghost", False),
+                "zone":             obj.get("zone", ""),
+                "source":           detection_source,
+            })
 
     detected_edges: list[dict] = []
     seen_pairs: set[tuple[str, str]] = set()
@@ -1120,9 +1204,25 @@ def run_ingestion(
         "low_confidence_items": sum(1 for c in nc if c < 0.90),
     }
 
+    runtime_mode = (
+        "LIVE_RFDETR_INFERENCE"
+        if detection_source == "LIVE_RFDETR_INFERENCE"
+        else "VERIFIED_ANNOTATION_FALLBACK"
+        if external_rfdetr_result and not external_rfdetr_result.get("ok")
+        else detection_source
+    )
+    packet_source = (
+        external_rfdetr_result.get("source", "live_rfdetr_subprocess")
+        if detection_source == "LIVE_RFDETR_INFERENCE"
+        else "verified training annotation / safe curated sample"
+        if runtime_mode == "VERIFIED_ANNOTATION_FALLBACK"
+        else detection_source
+    )
+
     packet: dict = {
         "diagram_id":           diagram_id,
         "run_id":               run_id,
+        "source":               packet_source,
         "original_image":       str(orig_out),
         "detected_image":       str(detected_out),
         "detection_source":     detection_source,
@@ -1143,6 +1243,9 @@ def run_ingestion(
         "text_blocks":          annotation.get("text_blocks", []),
         "source_label":         f"Source: {detection_source}",
         "annotation_preview":   _render_meta,
+        "runtime_mode":         runtime_mode,
+        "absorption_mode":      "SESSION_MEMORY_ABSORPTION",
+        "rfdetr_subprocess":    external_rfdetr_result or {},
     }
 
     _save_json(run_dir / "detected_nodes.json",      detected_nodes)
@@ -1157,20 +1260,25 @@ def run_ingestion(
     _save_json(run_dir / "ingestion_summary.json",   {
         "diagram_id":              diagram_id,
         "run_id":                  run_id,
+        "source":                  packet_source,
         "detection_source":        detection_source,
+        "runtime_mode":            runtime_mode,
         "node_count":              len(device_rows),
         "edge_count":              len(connector_rows),
         "annotation_preview":      _render_meta,
         "rfdetr_inference_time_s": _rfdetr_time_s,
         "rfdetr_error":            _rfdetr_error,
         "use_live_rfdetr":         use_live_rfdetr,
+        "rfdetr_subprocess":       external_rfdetr_result or {},
     })
 
     return {
         "run_dir":                 run_dir,
         "original_image":          orig_out,
         "detected_image":          detected_out,
+        "source":                  packet_source,
         "detection_source":        detection_source,
+        "runtime_mode":            runtime_mode,
         "rfdetr_inference_time_s": _rfdetr_time_s,
         "rfdetr_error":            _rfdetr_error,
         "annotation":              annotation,
@@ -1271,4 +1379,3 @@ def run_absorption(
         "alerts":            alerts,
         "summary":           summary,
     }
-

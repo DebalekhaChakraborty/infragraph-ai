@@ -1,0 +1,8 @@
+# InfraGraph AI — RF-DETR detector runtime
+# Install in the detector/base environment, not necessarily the Streamlit venv.
+
+rfdetr
+pillow>=10.0.0
+opencv-python-headless>=4.8.0
+numpy>=1.24.0
+matplotlib>=3.7.0
