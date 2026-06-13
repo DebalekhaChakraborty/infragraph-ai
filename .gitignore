@@ -30,5 +30,5 @@ reports/kb_index/
 # yolov8*.pt
 
 # Generated training data (rebuilt from scripts)
-# data/qwen_sop_grounded/
-# data/remediation_training/
+data/qwen_sop_grounded/
+data/remediation_training/
