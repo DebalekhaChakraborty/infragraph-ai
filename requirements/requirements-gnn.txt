@@ -1,0 +1,25 @@
+# ============================================================
+# InfraGraph AI — Enterprise GNN RCA dependencies
+# ============================================================
+# Install AFTER base requirements AND after a working torch is
+# present (platform-provided or via bootstrap_grpo_env.sh).
+#
+# torch is NOT listed here — ROCm torch must come from the
+# correct AMD wheel or the preinstalled Jupyter image.
+# Installing it via pip here would overwrite a working ROCm build.
+#
+# Usage (AMD ROCm Jupyter after restart):
+#   bash scripts/amd_rocm/bootstrap_rca_gnn_env.sh
+#
+# Usage (CPU / generic):
+#   pip install -r requirements/requirements.txt
+#   pip install -r requirements/requirements-gnn.txt
+# ============================================================
+
+torch_geometric>=2.5.0
+joblib>=1.3.0
+networkx>=3.0
+numpy>=1.24.0
+pandas>=2.0.0
+scikit-learn>=1.2.0
+tqdm>=4.65.0
