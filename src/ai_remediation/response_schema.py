@@ -32,7 +32,22 @@ Output schema
       "assignment_group":  str
   },
   "audit_summary": str,
-  "confidence_notes": str
+  "confidence_notes": str,
+  "runbook_chain": [
+      {
+        "runbook_id":   str,
+        "title":        str,
+        "domain":       str,
+        "evidence_ids": [str, ...]
+      }
+  ],
+  "automation_plan": {
+      "can_execute":        bool,
+      "requires_approval":  bool,
+      "connector":          str,
+      "dry_run_supported":  bool,
+      "execution_note":     str
+  }
 }
 """
 from __future__ import annotations
@@ -124,6 +139,14 @@ def empty_remediation_output(scope: str = "enterprise") -> dict:
         },
         "audit_summary":               "",
         "confidence_notes":            "",
+        "runbook_chain":               [],
+        "automation_plan":             {
+            "can_execute":       False,
+            "requires_approval": True,
+            "connector":         "",
+            "dry_run_supported": False,
+            "execution_note":    "",
+        },
     }
 
 
@@ -148,6 +171,8 @@ def make_remediation_output(
     servicenow_incident_summary: "dict | None" = None,
     audit_summary: str = "",
     confidence_notes: str = "",
+    runbook_chain: "list[dict] | None" = None,
+    automation_plan: "dict | None" = None,
 ) -> dict:
     """Return a normalised remediation output dict."""
     return {
@@ -176,6 +201,14 @@ def make_remediation_output(
         },
         "audit_summary":               audit_summary,
         "confidence_notes":            confidence_notes,
+        "runbook_chain":               runbook_chain or [],
+        "automation_plan":             automation_plan or {
+            "can_execute":       False,
+            "requires_approval": True,
+            "connector":         "",
+            "dry_run_supported": False,
+            "execution_note":    "",
+        },
     }
 
 
@@ -187,12 +220,12 @@ OUTPUT_SCHEMA_TEMPLATE: dict = {
     "risk_level":               "<low | medium | high | critical>",
     "automation_eligibility":   "<safe_to_automate | human_approval_required | manual_only>",
     "blast_radius":             "<single_node | single_diagram | cross_diagram | enterprise_wide>",
-    "evidence_ids_used":        ["<E1>", "<E2>"],
+    "evidence_ids_used":        ["<E1>", "<E2>", "<RB-RUNBOOK_ID-000>", "<KB-SOP-ID-000>"],
     "evidence_from_graph":      ["<evidence item 1>", "<evidence item 2>"],
     "pre_checks":               ["<read-only check 1>", "<read-only check 2>"],
     "triage_steps":             ["<step 1>", "<step 2>"],
     "validation_steps":         ["<step 1>", "<step 2>"],
-    "remediation_steps":        ["<step 1>", "<step 2>"],
+    "remediation_steps":        ["<step 1 citing RB-* runbook_id and KB-* SOP>", "<step 2>"],
     "post_checks":              ["<post-change validation 1>", "<post-change validation 2>"],
     "do_not_execute_if":        ["<condition that blocks execution>"],
     "rollback_or_safety_notes": ["<safety note 1>", "<safety note 2>"],
@@ -204,6 +237,21 @@ OUTPUT_SCHEMA_TEMPLATE: dict = {
         "priority":          "<1-Critical / 2-High / 3-Medium>",
         "assignment_group":  "<team responsible for resolution>",
     },
-    "audit_summary": "<operator-ready audit note with evidence IDs and approvals>",
+    "audit_summary": "<operator-ready audit note with evidence IDs (CE-*, RB-*, KB-*) and approvals>",
     "confidence_notes": "<strength of evidence and known uncertainties>",
+    "runbook_chain": [
+        {
+            "runbook_id":   "<e.g. APP-LB-001>",
+            "title":        "<runbook title>",
+            "domain":       "<load_balancer | database | firewall | wan | enterprise>",
+            "evidence_ids": ["<RB-APP-LB-001-000>", "<RB-APP-LB-001-001>"],
+        }
+    ],
+    "automation_plan": {
+        "can_execute":       "<true | false>",
+        "requires_approval": "<true | false>",
+        "connector":         "<connector name or empty>",
+        "dry_run_supported": "<true | false>",
+        "execution_note":    "<brief note on automation readiness>",
+    },
 }

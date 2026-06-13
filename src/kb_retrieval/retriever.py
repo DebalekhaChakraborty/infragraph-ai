@@ -180,10 +180,18 @@ _DOMAIN_KEYWORDS: dict[str, list[str]] = {
 }
 
 _DOMAIN_KB_PREFIXES: dict[str, list[str]] = {
-    "firewall":      ["SOP-DC-FW", "DC-FW", "KR-DC-FW"],
-    "load_balancer": ["SOP-APP-LB", "KR-APP-LB", "APP-LB"],
-    "database":      ["SOP-DB", "KR-DB"],
-    "wan":           ["SOP-WAN", "KR-WAN"],
+    "firewall":      ["SOP-DC-FW", "DC-FW", "KR-DC-FW", "RB-DC-FW"],
+    "load_balancer": ["SOP-APP-LB", "KR-APP-LB", "APP-LB", "RB-APP-LB"],
+    "database":      ["SOP-DB", "KR-DB", "RB-DB"],
+    "wan":           ["SOP-WAN", "KR-WAN", "RB-WAN"],
+}
+
+# Runbook domain → runbook_id prefix for guaranteed inclusion
+_DOMAIN_RUNBOOK_IDS: dict[str, str] = {
+    "firewall":      "DC-FW",
+    "load_balancer": "APP-LB",
+    "database":      "DB",
+    "wan":           "WAN",
 }
 
 
@@ -285,13 +293,100 @@ def _rerank_by_overlap(evidence: list[dict], context: dict) -> list[dict]:
         elif doc_type == "known_resolution":
             boost += 0.02
 
-        # Cross-diagram runbook penalty: general runbooks should not outrank domain SOPs
-        if doc_type == "runbook" and len(kb_diagrams) >= 3:
-            boost -= 0.10
+        # Domain runbook: strong boost when runbook domain matches inferred domain
+        if doc_type == "runbook":
+            rb_domain = str(meta.get("domain", "")).lower()
+            if rb_domain and domain and rb_domain == domain:
+                boost += 0.35
+            elif doc_type == "runbook" and len(kb_diagrams) >= 3:
+                # Cross-diagram runbook without domain match: mild penalty vs. domain SOPs
+                boost -= 0.10
 
         item["score"] = round(min(1.0, item["score"] + boost), 4)
 
     return sorted(evidence, key=lambda x: x["score"], reverse=True)
+
+
+def build_runbook_chain(evidence: list[dict], context: dict) -> list[dict]:
+    """
+    Extract runbook-type evidence chunks into a structured runbook_chain list.
+
+    Always includes the cross-diagram validation runbook (ENT-XDIAG-001) when
+    the context has multiple impacted diagrams, in addition to the domain runbook.
+
+    Each chain item:
+      runbook_id        : str
+      title             : str
+      domain            : str
+      source            : str
+      approval_required : bool
+      automation_eligible: bool
+      execution_mode    : str
+      tool_name         : str
+      connector         : str
+      dry_run_supported : bool
+      evidence_ids      : list[str]  (RB-* chunk IDs from this runbook)
+      sections_retrieved: list[str]  (section headings found in evidence)
+    """
+    impacted_diagrams = context.get("impacted_diagrams") or []
+    is_cross_diagram  = len(impacted_diagrams) >= 2
+
+    # Group runbook chunks by runbook_id
+    rb_groups: dict[str, list[dict]] = {}
+    for item in evidence:
+        meta     = item.get("metadata", {}) if isinstance(item, dict) else {}
+        doc_type = str(meta.get("doc_type", "")).lower()
+        if doc_type != "runbook":
+            continue
+        rb_id = str(meta.get("runbook_id", "")).strip()
+        if not rb_id:
+            continue
+        rb_groups.setdefault(rb_id, []).append(item)
+
+    chain: list[dict] = []
+    seen_rb_ids: set[str] = set()
+
+    def _add_rb(rb_id: str, chunks: list[dict]) -> None:
+        if rb_id in seen_rb_ids or not chunks:
+            return
+        seen_rb_ids.add(rb_id)
+        first_meta = chunks[0].get("metadata", {})
+        chain.append({
+            "runbook_id":          rb_id,
+            "title":               str(first_meta.get("title", "")),
+            "domain":              str(first_meta.get("domain", "")),
+            "source":              str(first_meta.get("source", "approved_kb_repo")),
+            "approval_required":   bool(first_meta.get("approval_required", True)),
+            "automation_eligible": bool(first_meta.get("automation_eligible", False)),
+            "execution_mode":      str(first_meta.get("execution_mode", "manual")),
+            "tool_name":           str(first_meta.get("tool_name", "")),
+            "connector":           str(first_meta.get("connector", "")),
+            "dry_run_supported":   bool(first_meta.get("dry_run_supported", False)),
+            "evidence_ids":        [c.get("evidence_id", "") for c in chunks if c.get("evidence_id")],
+            "sections_retrieved":  [
+                str(c.get("metadata", {}).get("section", ""))
+                for c in chunks if c.get("metadata", {}).get("section")
+            ],
+        })
+
+    # Add domain-specific runbook first (highest priority)
+    root_cause = str(context.get("root_cause", "")).strip()
+    domain     = _infer_domain(root_cause)
+    domain_rb_prefix = _DOMAIN_RUNBOOK_IDS.get(domain, "")
+    for rb_id, chunks in rb_groups.items():
+        if domain_rb_prefix and rb_id.startswith(domain_rb_prefix):
+            _add_rb(rb_id, chunks)
+
+    # Add remaining retrieved runbooks (excluding cross-diagram, handled separately)
+    for rb_id, chunks in rb_groups.items():
+        if rb_id != "ENT-XDIAG-001":
+            _add_rb(rb_id, chunks)
+
+    # Always append cross-diagram runbook when incident spans >= 2 diagrams
+    if is_cross_diagram and "ENT-XDIAG-001" in rb_groups:
+        _add_rb("ENT-XDIAG-001", rb_groups["ENT-XDIAG-001"])
+
+    return chain
 
 
 def _ensure_list(value) -> list:

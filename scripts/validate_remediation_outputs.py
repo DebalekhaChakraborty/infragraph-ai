@@ -148,25 +148,28 @@ def _check_file(path: Path) -> list[str]:
     if not isinstance(efg, list) or len(efg) == 0:
         violations.append("remediation.evidence_from_graph must be a non-empty list")
 
-    # KB evidence check: if kb_evidence_count > 0, at least one KB-* ID must appear somewhere
+    # KB evidence check: if kb_evidence_count > 0, at least one KB-* or RB-* ID must appear somewhere
     input_summary = data.get("input_context_summary", {})
     kb_count = input_summary.get("kb_evidence_count", data.get("kb_evidence_count", 0))
     if isinstance(kb_count, int) and kb_count > 0:
         kb_id_found = _has_kb_evidence_id(rem)
         if not kb_id_found:
             violations.append(
-                f"kb_evidence_count={kb_count} but no KB-* evidence ID found in "
+                f"kb_evidence_count={kb_count} but no KB-*/RB-* evidence ID found in "
                 "evidence_ids_used, evidence_from_graph, audit_summary, or confidence_notes"
             )
+
+    # Runbook chain validation (soft check — only when KB evidence was retrieved)
+    violations.extend(_check_runbook_chain(rem, input_summary))
 
     return violations
 
 
 def _has_kb_evidence_id(rem: dict) -> bool:
-    """Return True if any KB-* evidence ID appears in key remediation fields."""
+    """Return True if any KB-* or RB-* evidence ID appears in key remediation fields."""
     def _contains_kb(value) -> bool:
         if isinstance(value, str):
-            return "KB-" in value
+            return "KB-" in value or "RB-" in value
         if isinstance(value, list):
             return any(_contains_kb(v) for v in value)
         return False
@@ -175,6 +178,38 @@ def _has_kb_evidence_id(rem: dict) -> bool:
         if _contains_kb(rem.get(field)):
             return True
     return False
+
+
+def _check_runbook_chain(rem: dict, input_summary: dict) -> list[str]:
+    """Validate runbook_chain when KB evidence was retrieved."""
+    violations: list[str] = []
+    kb_count = input_summary.get("kb_evidence_count", 0)
+    if not isinstance(kb_count, int) or kb_count == 0:
+        return violations  # no KB retrieved, runbook_chain may be empty
+
+    chain = rem.get("runbook_chain")
+    if chain is None:
+        return violations  # older outputs without runbook_chain are not penalised
+    if not isinstance(chain, list):
+        violations.append("remediation.runbook_chain must be a list")
+        return violations
+
+    for i, rb in enumerate(chain):
+        if not isinstance(rb, dict):
+            violations.append(f"runbook_chain[{i}] must be a dict")
+            continue
+        for field in ("runbook_id", "title", "domain", "evidence_ids"):
+            if not rb.get(field):
+                violations.append(f"runbook_chain[{i}] missing required field: {field!r}")
+        ev_ids = rb.get("evidence_ids", [])
+        if isinstance(ev_ids, list):
+            for eid in ev_ids:
+                if isinstance(eid, str) and eid and not (eid.startswith("RB-") or eid.startswith("KB-")):
+                    violations.append(
+                        f"runbook_chain[{i}].evidence_ids contains non-RB-*/KB-* ID: {eid!r}"
+                    )
+
+    return violations
 
 
 def _rel(path: Path) -> str:

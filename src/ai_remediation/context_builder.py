@@ -175,13 +175,34 @@ def build_enterprise_remediation_context(
         causal_evidence=causal_evidence,
     )
 
-    # Inject KB evidence into both tracking fields
+    # Inject KB evidence and build runbook chain
     if kb_evidence:
         existing = list(context.get("retrieved_graph_memory_evidence", []) or [])
         context["retrieved_graph_memory_evidence"] = existing + kb_evidence
         context["retrieved_kb_evidence"] = kb_evidence
 
+        # Separate runbook vs. non-runbook KB evidence
+        runbook_evidence = [
+            e for e in kb_evidence
+            if (e.get("metadata") or {}).get("doc_type") == "runbook"
+        ]
+        if runbook_evidence:
+            context["retrieved_runbook_evidence"] = runbook_evidence
+            context["runbook_chain"] = _build_runbook_chain_safe(
+                evidence=kb_evidence,
+                context=context,
+            )
+
     return context
+
+
+def _build_runbook_chain_safe(*, evidence: list[dict], context: dict) -> list[dict]:
+    """Attempt to build runbook chain; return [] on any error."""
+    try:
+        from kb_retrieval.retriever import build_runbook_chain
+        return build_runbook_chain(evidence, context)
+    except Exception:
+        return []
 
 
 def _retrieve_kb_evidence_safe(

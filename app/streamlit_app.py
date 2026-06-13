@@ -2097,8 +2097,75 @@ def _render_remediation_plan(plan: dict) -> None:
             unsafe_allow_html=True,
         )
 
+    def _runbook_chain_section() -> None:
+        _chain = resp.get("runbook_chain", []) or []
+        if not _chain:
+            return
+        with st.expander(
+            f"Retrieved Approved Runbooks ({len(_chain)})",
+            expanded=True,
+        ):
+            for _rb in _chain:
+                _rb_id    = _rb.get("runbook_id", "?")
+                _rb_title = _rb.get("title", "—")
+                _rb_dom   = _rb.get("domain", "")
+                _rb_mode  = _rb.get("execution_mode", "manual")
+                _rb_approv = _rb.get("approval_required", True)
+                _rb_auto  = _rb.get("automation_eligible", False)
+                _rb_dry   = _rb.get("dry_run_supported", False)
+                _rb_tool  = _rb.get("tool_name", "") or _rb.get("connector", "")
+                _rb_eids  = ", ".join((_rb.get("evidence_ids") or [])[:6])
+                _rb_secs  = ", ".join((_rb.get("sections_retrieved") or [])[:4])
+                _approv_color = "#ef4444" if _rb_approv else "#10b981"
+                _auto_color   = "#10b981" if _rb_auto else "#94a3b8"
+                _dry_color    = "#38bdf8" if _rb_dry else "#94a3b8"
+                st.markdown(
+                    f'<div style="background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.25);'
+                    f'border-left:3px solid #a78bfa;border-radius:8px;padding:10px 14px;margin:6px 0">'
+                    f'<div style="font-size:0.8rem;color:#a78bfa;font-weight:800;margin-bottom:4px">'
+                    f'[{_esc(_rb_id)}] {_esc(_rb_title)}</div>'
+                    f'<div style="font-size:0.7rem;color:#94a3b8;display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px">'
+                    f'<span>domain: <b style="color:#e2e8f0">{_esc(_rb_dom)}</b></span>'
+                    f'<span>mode: <b style="color:#e2e8f0">{_esc(_rb_mode)}</b></span>'
+                    f'<span style="color:{_approv_color}">{"approval_required" if _rb_approv else "no_approval_required"}</span>'
+                    f'<span style="color:{_auto_color}">{"automation_eligible" if _rb_auto else "manual_only"}</span>'
+                    f'<span style="color:{_dry_color}">{"dry_run_ok" if _rb_dry else "no_dry_run"}</span>'
+                    + (f'<span>tool: <b style="color:#e2e8f0">{_esc(_rb_tool)}</b></span>' if _rb_tool else "")
+                    + f'</div>'
+                    f'<div style="font-size:0.68rem;color:#64748b">'
+                    f'evidence_ids: <span style="color:#c4b5fd">{_esc(_rb_eids) or "—"}</span>'
+                    + (f' &nbsp;|&nbsp; sections: {_esc(_rb_secs)}' if _rb_secs else "")
+                    + f'</div></div>',
+                    unsafe_allow_html=True,
+                )
+
+        # Automation Plan
+        _aplan = resp.get("automation_plan") or {}
+        if _aplan:
+            _ap_can     = _aplan.get("can_execute", False)
+            _ap_approv  = _aplan.get("requires_approval", True)
+            _ap_conn    = _aplan.get("connector", "")
+            _ap_dry     = _aplan.get("dry_run_supported", False)
+            _ap_note    = _aplan.get("execution_note", "")
+            _ap_color   = "#10b981" if _ap_can else "#f59e0b"
+            _ap_label   = "Automation Ready" if _ap_can else "Manual Execution Required"
+            with st.expander("Automation Plan", expanded=False):
+                st.markdown(
+                    f'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">'
+                    f'<span style="display:inline-block;padding:3px 10px;border-radius:999px;'
+                    f'border:1px solid {_ap_color};color:{_ap_color};font-size:0.72rem;font-weight:800">'
+                    f'{_esc(_ap_label)}</span>'
+                    + (f'<span style="font-size:0.72rem;color:#ef4444">approval_required</span>' if _ap_approv else "")
+                    + (f'<span style="font-size:0.72rem;color:#38bdf8">dry_run_supported</span>' if _ap_dry else "")
+                    + (f'<span style="font-size:0.72rem;color:#94a3b8">connector: {_esc(_ap_conn)}</span>' if _ap_conn else "")
+                    + f'</div>'
+                    + (f'<div style="font-size:0.78rem;color:#cbd5e1">{_esc(_ap_note)}</div>' if _ap_note else ""),
+                    unsafe_allow_html=True,
+                )
+
     _source_badge(plan)
     _metric_cards()
+    _runbook_chain_section()
 
     exec_sum = resp.get("executive_summary", "")
     if exec_sum:

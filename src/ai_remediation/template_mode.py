@@ -37,7 +37,40 @@ def _evidence_ids(context: dict) -> list[str]:
         eid = item.get("evidence_id")
         if eid:
             ids.append(str(eid))
+    # Include RB-* evidence IDs from runbook chain
+    for rb in context.get("runbook_chain", []) or []:
+        for eid in rb.get("evidence_ids", []):
+            if eid:
+                ids.append(str(eid))
     return _unique_strings(ids)
+
+
+def _build_automation_plan(context: dict) -> dict:
+    """Build automation_plan from the first automation-eligible runbook in the chain."""
+    runbook_chain = context.get("runbook_chain", []) or []
+    # Find the first automation-eligible runbook
+    for rb in runbook_chain:
+        if rb.get("automation_eligible"):
+            return {
+                "can_execute":       True,
+                "requires_approval": bool(rb.get("approval_required", False)),
+                "connector":         str(rb.get("connector", "") or rb.get("tool_name", "")),
+                "dry_run_supported": bool(rb.get("dry_run_supported", False)),
+                "execution_note":    (
+                    f"Runbook {rb.get('runbook_id', '')} is automation-eligible "
+                    f"(execution_mode={rb.get('execution_mode', 'semi_automated')}). "
+                    + ("Dry-run available." if rb.get("dry_run_supported") else "No dry-run.")
+                ),
+            }
+    # Default: manual only
+    approval_needed = any(rb.get("approval_required", True) for rb in runbook_chain)
+    return {
+        "can_execute":       False,
+        "requires_approval": approval_needed or True,
+        "connector":         "",
+        "dry_run_supported": False,
+        "execution_note":    "No automation-eligible runbook available — manual execution required.",
+    }
 
 
 def _kb_evidence_refs(context: dict, max_items: int = 5) -> list[str]:
@@ -454,6 +487,9 @@ def _generate_local_template(context: dict) -> dict:
     rollback = list(_ROLLBACK_LOCAL)
     rollback.extend(_kb_section_steps(context, "Rollback / Safety Notes"))
 
+    runbook_chain   = context.get("runbook_chain") or []
+    automation_plan = _build_automation_plan(context)
+
     output = make_remediation_output(
         executive_summary=exec_sum,
         probable_root_cause=probable,
@@ -474,6 +510,8 @@ def _generate_local_template(context: dict) -> dict:
         servicenow_incident_summary=snow,
         audit_summary=audit,
         confidence_notes=confidence,
+        runbook_chain=runbook_chain,
+        automation_plan=automation_plan,
     )
     output["source"] = _SOURCE_LABEL
     return output
@@ -631,6 +669,9 @@ def _generate_enterprise_template(context: dict) -> dict:
     rollback = list(_ROLLBACK_ENTERPRISE)
     rollback.extend(_kb_section_steps(context, "Rollback / Safety Notes"))
 
+    runbook_chain   = context.get("runbook_chain") or []
+    automation_plan = _build_automation_plan(context)
+
     output = make_remediation_output(
         executive_summary=exec_sum,
         probable_root_cause=probable,
@@ -651,6 +692,8 @@ def _generate_enterprise_template(context: dict) -> dict:
         servicenow_incident_summary=snow,
         audit_summary=audit,
         confidence_notes=confidence,
+        runbook_chain=runbook_chain,
+        automation_plan=automation_plan,
     )
     output["source"] = _SOURCE_LABEL
     return output

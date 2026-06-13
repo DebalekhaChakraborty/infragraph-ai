@@ -1,9 +1,15 @@
 ---
 kb_id: RUNBOOK-ENT-XDIAG-001
+runbook_id: ENT-XDIAG-001
 title: "Enterprise Cross-Diagram Incident Validation Runbook"
 doc_type: runbook
 version: "1.0"
+source: approved_kb_repo
+domain: enterprise
 owner_group: "Network Engineering — Enterprise Operations"
+approval_required: true
+automation_eligible: false
+execution_mode: manual
 applies_to_node_types:
   - any
 applies_to_diagrams:

@@ -53,34 +53,56 @@ def chunk_document(
             for sub in _sliding_split(full_section, max_chars, overlap):
                 raw_chunks.append((heading, sub))
 
+    doc_type   = doc.get("doc_type", "")
+    runbook_id = doc.get("runbook_id", "").strip()
+    is_runbook = (doc_type == "runbook") and bool(runbook_id)
+
     result: list[dict] = []
     for i, (section, text) in enumerate(raw_chunks):
-        chunk_id   = f"{kb_id}::chunk-{i:03d}"
-        evidence_id = f"KB-{kb_id}-{i:03d}"
+        chunk_id = f"{kb_id}::chunk-{i:03d}"
+        if is_runbook:
+            evidence_id = f"RB-{runbook_id}-{i:03d}"
+        else:
+            evidence_id = f"KB-{kb_id}-{i:03d}"
+
+        meta: dict = {
+            "chunk_id":               chunk_id,
+            "evidence_id":            evidence_id,
+            "kb_id":                  kb_id,
+            "title":                  title,
+            "doc_type":               doc_type,
+            "section":                section,
+            "owner_group":            doc.get("owner_group", ""),
+            "applies_to_node_types":  doc.get("applies_to_node_types", []),
+            "applies_to_diagrams":    doc.get("applies_to_diagrams", []),
+            "applies_to_alert_types": doc.get("applies_to_alert_types", []),
+            "rca_patterns":           doc.get("rca_patterns", []),
+            "evidence_tags":          doc.get("evidence_tags", []),
+            "source_type":            "sop_kb",
+            "chunk_index":            i,
+        }
+        # Preserve runbook-specific fields in metadata for retriever / UI
+        if is_runbook:
+            meta["runbook_id"]          = runbook_id
+            meta["source"]              = doc.get("source", "")
+            meta["domain"]              = doc.get("domain", "")
+            meta["approval_required"]   = doc.get("approval_required", False)
+            meta["automation_eligible"] = doc.get("automation_eligible", False)
+            meta["execution_mode"]      = doc.get("execution_mode", "")
+            meta["tool_name"]           = doc.get("tool_name", "")
+            meta["connector"]           = doc.get("connector", "")
+            meta["action"]              = doc.get("action", "")
+            meta["dry_run_supported"]   = doc.get("dry_run_supported", False)
+
         result.append({
             "chunk_id":    chunk_id,
             "evidence_id": evidence_id,
             "kb_id":       kb_id,
             "title":       title,
-            "doc_type":    doc.get("doc_type", ""),
+            "doc_type":    doc_type,
             "section":     section,
             "text":        text,
-            "metadata": {
-                "chunk_id":               chunk_id,
-                "evidence_id":            evidence_id,
-                "kb_id":                  kb_id,
-                "title":                  title,
-                "doc_type":               doc.get("doc_type", ""),
-                "section":                section,
-                "owner_group":            doc.get("owner_group", ""),
-                "applies_to_node_types":  doc.get("applies_to_node_types", []),
-                "applies_to_diagrams":    doc.get("applies_to_diagrams", []),
-                "applies_to_alert_types": doc.get("applies_to_alert_types", []),
-                "rca_patterns":           doc.get("rca_patterns", []),
-                "evidence_tags":          doc.get("evidence_tags", []),
-                "source_type":            "sop_kb",
-                "chunk_index":            i,
-            },
+            "metadata":    meta,
         })
 
     return result

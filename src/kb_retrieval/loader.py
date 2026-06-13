@@ -110,10 +110,12 @@ def load_kb_documents(kb_root: Path) -> list[dict]:
         # Derive kb_id from filename if not in frontmatter
         kb_id = str(meta.get("kb_id", "")).strip() or md_file.stem
 
+        doc_type_str = str(meta.get("doc_type", inferred_doc_type)).strip()
+
         documents.append({
             "kb_id":        kb_id,
             "title":        str(meta.get("title", md_file.stem)).strip(),
-            "doc_type":     str(meta.get("doc_type", inferred_doc_type)).strip(),
+            "doc_type":     doc_type_str,
             "version":      str(meta.get("version", "unknown")).strip(),
             "owner_group":  str(meta.get("owner_group", "")).strip(),
             "applies_to_node_types":  _as_list(meta.get("applies_to_node_types")),
@@ -121,6 +123,17 @@ def load_kb_documents(kb_root: Path) -> list[dict]:
             "applies_to_alert_types": _as_list(meta.get("applies_to_alert_types")),
             "rca_patterns":           _as_list(meta.get("rca_patterns")),
             "evidence_tags":          _as_list(meta.get("evidence_tags")),
+            # Runbook-specific fields (empty string / False when not a runbook)
+            "runbook_id":          str(meta.get("runbook_id", "")).strip(),
+            "source":              str(meta.get("source", "")).strip(),
+            "domain":              str(meta.get("domain", "")).strip(),
+            "approval_required":   _as_bool(meta.get("approval_required")),
+            "automation_eligible": _as_bool(meta.get("automation_eligible")),
+            "execution_mode":      str(meta.get("execution_mode", "")).strip(),
+            "tool_name":           str(meta.get("tool_name", "")).strip(),
+            "connector":           str(meta.get("connector", "")).strip(),
+            "action":              str(meta.get("action", "")).strip(),
+            "dry_run_supported":   _as_bool(meta.get("dry_run_supported")),
             "file_path":    str(md_file),
             "body":         body,
             "raw":          raw,
@@ -135,3 +148,11 @@ def _as_list(value) -> list[str]:
     if isinstance(value, list):
         return [str(v) for v in value]
     return [str(value)]
+
+
+def _as_bool(value) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.lower() in ("true", "yes", "1")
+    return bool(value)

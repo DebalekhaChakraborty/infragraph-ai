@@ -169,6 +169,9 @@ def _fmt_retrieved_evidence(evidence: list) -> str:
     lines = []
     for i, item in enumerate(evidence[:8], 1):
         meta = item.get("metadata", {}) if isinstance(item, dict) else {}
+        doc_type = str(meta.get("doc_type", "")).lower()
+        if doc_type == "runbook":
+            continue  # runbooks are shown separately in _fmt_runbook_chain
         evidence_id = meta.get("evidence_id") or f"E{i}"
         source_type = meta.get("source_type", "unknown")
         scenario_id = meta.get("scenario_id", "")
@@ -179,6 +182,32 @@ def _fmt_retrieved_evidence(evidence: list) -> str:
             f"  - {evidence_id} | {source_type} | scenario={scenario_id} | "
             f"diagram={diagram_id} | node={node_id}: {text}"
         )
+    return "\n".join(lines) if lines else "  (none)"
+
+
+def _fmt_runbook_chain(runbook_chain: list) -> str:
+    """Format the approved runbook chain for prompt injection."""
+    if not runbook_chain:
+        return "  (no approved runbooks retrieved)"
+    lines = []
+    for rb in runbook_chain:
+        rb_id    = rb.get("runbook_id", "?")
+        title    = rb.get("title", "")
+        domain   = rb.get("domain", "")
+        mode     = rb.get("execution_mode", "manual")
+        approval = "approval_required" if rb.get("approval_required") else "no_approval_required"
+        auto_ok  = "automation_eligible" if rb.get("automation_eligible") else "manual_only"
+        dry_run  = "dry_run_supported" if rb.get("dry_run_supported") else "no_dry_run"
+        tool     = rb.get("tool_name", "") or rb.get("connector", "")
+        ev_ids   = ", ".join(rb.get("evidence_ids", [])[:4])
+        sections = ", ".join(rb.get("sections_retrieved", [])[:4])
+        lines.append(f"  [{rb_id}] {title}")
+        lines.append(f"    domain={domain} | mode={mode} | {approval} | {auto_ok} | {dry_run}")
+        if tool:
+            lines.append(f"    tool={tool}")
+        lines.append(f"    evidence_ids={ev_ids}")
+        if sections:
+            lines.append(f"    sections={sections}")
     return "\n".join(lines)
 
 
@@ -222,6 +251,8 @@ def _build_local_user_message(ctx: dict) -> str:
         "RCA result, candidate ranking, alert timeline, and causal evidence together. "
         "If causal evidence conflicts with the RCA result, say human validation is required "
         "before remediation. Do not invent devices, teams, commands, IPs, or services.\n\n"
+        "--- Approved Runbook Chain ---\n"
+        f"{_fmt_runbook_chain(ctx.get('runbook_chain', []))}\n\n"
         "--- Retrieved SOP / KB / Graph Memory Evidence ---\n"
         f"{_fmt_retrieved_evidence(ctx.get('retrieved_graph_memory_evidence', []))}\n\n"
         "--- Graph Summary ---\n"
@@ -232,10 +263,14 @@ def _build_local_user_message(ctx: dict) -> str:
         "- Validation must come before remediation.\n"
         "- Rollback/safety notes are mandatory.\n"
         "- If evidence is insufficient, say what is missing instead of inventing.\n"
-        "- Include evidence IDs such as E1, E2, CE-001, KB-* whenever retrieved or causal evidence supports a step.\n"
-        "- SOP/KB evidence (KB-* IDs) takes priority as the primary remediation source; use it to structure steps.\n"
-        "- Label any action not supported by SOP/KB or causal evidence as a 'validation recommendation'.\n"
-        "- Do not invent SOP names, runbook numbers, team names, or commands not found in the retrieved evidence.\n\n"
+        "- Include evidence IDs such as CE-001, KB-*, RB-* whenever retrieved or causal evidence supports a step.\n"
+        "- Approved Runbook Chain takes HIGHEST priority — structure remediation_steps by following the runbook chain in order.\n"
+        "- In every remediation step that follows a runbook, cite the runbook_id (e.g. APP-LB-001) and its RB-* evidence IDs.\n"
+        "- SOP/KB evidence (KB-* IDs) is the secondary source; use it to fill gaps not covered by the runbook chain.\n"
+        "- Label any action not supported by an approved runbook, SOP/KB, or causal evidence as 'validation recommendation'.\n"
+        "- Do not invent SOP names, runbook numbers, team names, or commands not found in the retrieved evidence.\n"
+        "- Populate runbook_chain in the output JSON using the approved runbooks provided above.\n"
+        "- Populate automation_plan based on the automation_eligible and approval_required fields of the runbooks used.\n\n"
         "--- Output Schema (return ONLY this JSON shape) ---\n"
         f"{schema_json}\n\n"
         'Generate the remediation plan. Set "scope" to "local" in your response.'
@@ -290,6 +325,8 @@ def _build_enterprise_user_message(ctx: dict) -> str:
         "RCA result, candidate ranking, alert timeline, and causal evidence together. "
         "If causal evidence conflicts with the RCA result, say human validation is required "
         "before remediation. Do not invent devices, teams, commands, IPs, or services.\n\n"
+        "--- Approved Runbook Chain ---\n"
+        f"{_fmt_runbook_chain(ctx.get('runbook_chain', []))}\n\n"
         "--- Retrieved SOP / KB / Graph Memory Evidence ---\n"
         f"{_fmt_retrieved_evidence(ctx.get('retrieved_graph_memory_evidence', []))}\n\n"
         "--- Graph Memory Summary ---\n"
@@ -302,10 +339,14 @@ def _build_enterprise_user_message(ctx: dict) -> str:
         "- If evidence is insufficient, say what is missing instead of inventing.\n"
         "- Explain cross-diagram escalation and blast radius when more than one diagram is impacted.\n"
         "- Explain the GNN ranking when GNN is available; otherwise name the RCA source used.\n"
-        "- Include evidence IDs such as E1, E2, CE-001, KB-* whenever retrieved or causal evidence supports a step.\n"
-        "- SOP/KB evidence (KB-* IDs) takes priority as the primary remediation source; use it to structure steps.\n"
-        "- Label any action not supported by SOP/KB or causal evidence as a 'validation recommendation'.\n"
-        "- Do not invent SOP names, runbook numbers, team names, or commands not found in the retrieved evidence.\n\n"
+        "- Include evidence IDs such as CE-001, KB-*, RB-* whenever retrieved or causal evidence supports a step.\n"
+        "- Approved Runbook Chain takes HIGHEST priority — structure remediation_steps by following the runbook chain in order.\n"
+        "- In every remediation step that follows a runbook, cite the runbook_id (e.g. ENT-XDIAG-001) and its RB-* evidence IDs.\n"
+        "- SOP/KB evidence (KB-* IDs) is the secondary source; use it to fill gaps not covered by the runbook chain.\n"
+        "- Label any action not supported by an approved runbook, SOP/KB, or causal evidence as 'validation recommendation'.\n"
+        "- Do not invent SOP names, runbook numbers, team names, or commands not found in the retrieved evidence.\n"
+        "- Populate runbook_chain in the output JSON using the approved runbooks provided above.\n"
+        "- Populate automation_plan based on the automation_eligible and approval_required fields of the runbooks used.\n\n"
         "--- Output Schema (return ONLY this JSON shape) ---\n"
         f"{schema_json}\n\n"
         'Generate the enterprise remediation plan. Set "scope" to "enterprise" in your response.'

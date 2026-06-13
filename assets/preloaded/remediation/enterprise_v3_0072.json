@@ -105,6 +105,14 @@
     },
     "audit_summary": "Template remediation plan for scenario enterprise_v3_0072; risk=critical, blast_radius=single_diagram, automation=manual_only, rca_source=Enterprise GNN RCA. Evidence IDs used: CE-001, CE-002, CE-003, CE-004. Event correlation cluster: CLU-ent_enterprise_v3_0072-001 (score=0.7750). ",
     "confidence_notes": "RCA source: Enterprise GNN RCA. GNN inference result was used — candidate ranking is model-derived. Event correlation cluster: CLU-ent_enterprise_v3_0072-001 (score=0.7750). Template mode: output is deterministic and not model-generated.",
+    "runbook_chain": [],
+    "automation_plan": {
+      "can_execute": false,
+      "requires_approval": true,
+      "connector": "",
+      "dry_run_supported": false,
+      "execution_note": "No automation-eligible runbook available — manual execution required."
+    },
     "source": "template"
   }
 }
