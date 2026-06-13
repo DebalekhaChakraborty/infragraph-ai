@@ -1,5 +1,13 @@
 # Run Qwen with vLLM on AMD Jupyter
 
+> **Note — older setup reference.** This document covers the initial AMD GPU
+> verification flow using `Qwen/Qwen2-7B-Instruct` and old env var names
+> (`QWEN_BASE_URL`, `QWEN_MODEL`). It is preserved as a troubleshooting
+> reference and is NOT the current reset procedure.
+>
+> For the current SOP-grounded LoRA adapter reset workflow, see instead:
+> `docs/amd_rocm_qwen_sop_lora_reset.md`
+
 ## 1. Start the vLLM server on port 8000
 
 ```bash

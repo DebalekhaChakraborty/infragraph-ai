@@ -2,6 +2,17 @@
 # patch_verl_runtime_for_rocm.sh — Apply and verify ROCm-specific runtime fixes
 # for InfraGraph AI vERL GRPO training.
 #
+# PURPOSE: vERL runtime patching for the old GRPO/vERL training path only.
+# This script patches the installed vERL package sources and verifies the
+# training configuration for AMD ROCm compatibility.
+#
+# This script does NOT start vLLM, does NOT publish adapters, and is NOT
+# required for serving the SOP-grounded SFT LoRA adapter.
+#
+# For the current SOP-grounded LoRA serving and reset flow, see instead:
+#   bash scripts/amd_rocm/start_qwen_sop_lora_vllm.sh
+#   docs/amd_rocm_qwen_sop_lora_reset.md
+#
 # Two modes of protection:
 #   1. Config-level overrides (in train_qwen3_grpo.sh) — verified here.
 #   2. Source-level patches to the installed vERL package — applied here.
@@ -10,7 +21,7 @@
 # Usage:
 #   bash scripts/amd_rocm/patch_verl_runtime_for_rocm.sh
 #
-# Run this after bootstrap_grpo_env.sh and before training.
+# Run this after bootstrap_grpo_env.sh and before GRPO training.
 set -euo pipefail
 
 PYTHON="${PYTHON:-python}"

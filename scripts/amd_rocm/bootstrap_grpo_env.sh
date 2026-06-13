@@ -1,6 +1,18 @@
 #!/usr/bin/env bash
 # bootstrap_grpo_env.sh — Install the AMD ROCm vERL/GRPO training stack.
 #
+# PURPOSE: Environment setup for the old GRPO/vERL reinforcement learning
+# training path only. This installs torch (ROCm), vERL, vLLM, and related
+# training utilities.
+#
+# This script does NOT start vLLM, does NOT run remediation generation, and
+# is NOT required for serving the SOP-grounded SFT LoRA adapter.
+#
+# For the current SOP-grounded LoRA serving and reset flow, see instead:
+#   bash scripts/amd_rocm/start_qwen_sop_lora_vllm.sh       (Terminal 1)
+#   bash scripts/amd_rocm/generate_qwen_sop_remediation_after_reset.sh  (Terminal 2)
+#   docs/amd_rocm_qwen_sop_lora_reset.md
+#
 # Checks what is already present before touching anything.
 # Safe to re-run on an existing environment — will skip already-installed
 # components rather than clobbering a working ROCm torch installation.
@@ -163,7 +175,11 @@ EOF
 echo
 echo "Bootstrap complete."
 echo
-echo "Next step — apply runtime patches:"
+echo "NOTE: This environment is for GRPO/vERL training only."
+echo "      For SOP-grounded LoRA serving (normal reset flow), see:"
+echo "        docs/amd_rocm_qwen_sop_lora_reset.md"
+echo
+echo "Next step — apply runtime patches (GRPO/vERL only):"
 echo "  bash scripts/amd_rocm/patch_verl_runtime_for_rocm.sh"
 echo
 echo "Then run GRPO training (dry-run by default):"

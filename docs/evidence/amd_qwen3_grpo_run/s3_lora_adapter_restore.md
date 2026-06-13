@@ -1,5 +1,15 @@
 # InfraGraph GRPO LoRA Adapter — S3 Location and Restore Instructions
 
+> **Note — GRPO adapter only.** These instructions are for the old GRPO/vERL
+> reinforcement learning adapter (`/tmp/infragraph_qwen3_grpo_lora_adapter`).
+> This is NOT the current SOP-grounded SFT LoRA adapter. The GRPO adapter
+> settings below (`--max-model-len 2048`, `INFRAGRAPH_QWEN_MAX_TOKENS=900`)
+> are specific to the GRPO adapter and must NOT be used with the SOP-grounded
+> adapter.
+>
+> For the current SOP-grounded adapter and reset workflow, see:
+> `docs/amd_rocm_qwen_sop_lora_reset.md`
+
 The exported PEFT LoRA adapter is stored in S3, not in Git.
 Git stores code, evidence documents, and these restore instructions.
 
@@ -32,7 +42,11 @@ After a new training run completes:
 scripts/amd_rocm/publish_lora_adapter_to_s3.sh
 ```
 
-## Serve with vLLM (AMD ROCm)
+## Serve with vLLM (AMD ROCm) — GRPO adapter only
+
+> These settings are for the GRPO adapter. The SOP-grounded SFT adapter
+> requires `--max-model-len 8192` and `INFRAGRAPH_QWEN_MAX_TOKENS=1400`.
+> See `docs/amd_rocm_qwen_sop_lora_reset.md` for the current adapter.
 
 ```bash
 VLLM_USE_TRITON_FLASH_ATTN=0 \
@@ -46,7 +60,10 @@ vllm serve Qwen/Qwen3-4B \
   --max-model-len 2048
 ```
 
-## Streamlit env vars (set after vLLM is serving)
+## Streamlit env vars (GRPO adapter — set after vLLM is serving)
+
+> GRPO adapter settings. For SOP-grounded adapter use
+> `INFRAGRAPH_QWEN_MAX_TOKENS=1400` and `INFRAGRAPH_QWEN_TIMEOUT=240`.
 
 ```bash
 export INFRAGRAPH_QWEN_BASE_URL="http://127.0.0.1:8000/v1"
