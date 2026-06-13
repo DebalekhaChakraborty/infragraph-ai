@@ -21,12 +21,14 @@ runtime_state/**/*.sqlite3
 runtime_state/**/*.sqlite3-shm
 runtime_state/**/*.sqlite3-wal
 runtime_state/**/.chroma/
-
-# KB index build reports (generated)
 reports/kb_index/
 
-# Large generated outputs / model checkpoints
-outputs/
-model_artifacts/
-data/rca/enterprise_gnn/*.pt
-yolov8*.pt
+## Large generated outputs / model checkpoints
+# outputs/
+# model_artifacts/
+# data/rca/enterprise_gnn/*.pt
+# yolov8*.pt
+
+# Generated training data (rebuilt from scripts)
+data/qwen_sop_grounded/
+data/remediation_training/
