@@ -17,18 +17,24 @@ RCA JSON                      Event Correlation Clusters
    <scenario_id>.json)          <scenario_id>.json)
          │                             │
          └──────────────┬──────────────┘
+                        │
+               SOP/KB Vector Index
+               (runtime_state/kb_index/)   ◀── assets/kb/ docs
+                        │
                         ▼
           src/ai_remediation/context_builder.py
           build_enterprise_remediation_context()
+          + KB retrieval via src/kb_retrieval/
                         │
-                        ▼  remediation input dict
+                        ▼  remediation input dict (with KB-* evidence)
           ┌─────────────┴──────────────┐
           │                            │
           ▼                            ▼
  Qwen/vLLM (preferred)       Template mode (deterministic)
  src/ai_remediation/         src/ai_remediation/
    qwen_client.py              template_mode.py
-          │                            │
+   (KB-* IDs in grounding)     (KB-* IDs in evidence_from_graph,
+          │                     remediation_steps, rollback notes)
           └─────────────┬──────────────┘
                         ▼
           assets/preloaded/remediation/<scenario_id>.json
@@ -47,16 +53,36 @@ RCA JSON                      Event Correlation Clusters
 5. Derives impact path from the first causal evidence item's supporting_nodes.
 6. Passes cluster fields (`cluster_id`, `cluster_score`, `correlation_reasons`,
    `causal_evidence`) directly into the remediation context.
+7. **Retrieves SOP/KB evidence** from the ChromaDB vector index (if built) and injects
+   it into `context["retrieved_graph_memory_evidence"]` and `context["retrieved_kb_evidence"]`.
+   KB evidence uses IDs of the form `KB-<kb_id>-<chunk_index>`.
+
+KB retrieval is opt-out (`retrieve_kb=True` by default). If the index does not exist,
+retrieval silently returns empty — no error unless `strict_kb=True`.
 
 ---
 
 ## Commands
 
+### Build the SOP/KB index
+
+```bash
+# First-time build (requires chromadb + sentence-transformers)
+python scripts/build_kb_index.py
+
+# Force rebuild
+python scripts/build_kb_index.py --reset
+```
+
 ### Generate remediation outputs
 
 ```bash
 # Template mode (deterministic; no vLLM required)
+# KB retrieval is enabled by default if the index exists
 python scripts/generate_remediation_demo_assets.py --template-only
+
+# Build KB index first, then generate
+python scripts/generate_remediation_demo_assets.py --build-kb-index --template-only
 
 # Prefer Qwen/vLLM (falls back to template if vLLM unavailable)
 python scripts/generate_remediation_demo_assets.py --prefer-qwen
@@ -73,6 +99,11 @@ python scripts/generate_remediation_demo_assets.py --strict-qwen
 | `--strict-qwen` | Require vLLM; exit 1 if unavailable |
 | `--out-dir <dir>` | Override output directory (default: `assets/preloaded/remediation`) |
 | `--include-raw` | Include `raw_model_output` field in envelope |
+| `--build-kb-index` | Build KB index before generation |
+| `--kb-index-dir <dir>` | Override KB index directory |
+| `--kb-top-k <n>` | Number of KB chunks to retrieve per scenario (default: 5) |
+| `--strict-kb` | Fail if no KB evidence retrieved |
+| `--no-kb` | Disable KB retrieval |
 
 ### Validate remediation outputs
 
@@ -187,25 +218,55 @@ and must not be presented as model-generated or AI output.
 **Forbidden anywhere**: `expected_root_cause`, `ground_truth_node`, `correct_top1`,
 `correct_top_k`, `reciprocal_rank`, `evaluation`.
 
+**Non-empty**: `evidence_from_graph`.
+
+**KB evidence**: If `input_context_summary.kb_evidence_count > 0`, at least one `KB-*`
+evidence ID must appear in `evidence_ids_used`, `evidence_from_graph`, `audit_summary`,
+or `confidence_notes`.
+
 ---
 
 ## Directory layout
 
 ```
 src/ai_remediation/
-  context_builder.py     build remediation input from RCA JSON + events
+  context_builder.py     build remediation input from RCA JSON + events + KB retrieval
   prompt_builder.py      Qwen3 prompt construction (local + enterprise)
-  template_mode.py       deterministic fallback plan generator
+  template_mode.py       deterministic plan generator (uses KB evidence)
   qwen_client.py         vLLM/OpenAI-compatible HTTP client
   response_schema.py     input/output schema definitions
 
-scripts/
-  generate_remediation_demo_assets.py   generate per-scenario remediation JSONs
-  validate_remediation_outputs.py       validate remediation output files
-  run_final_demo_pipeline.sh            full RCA → validate → remediation → validate
+src/kb_retrieval/
+  __init__.py            public API
+  schema.py              constants (DEFAULT_KB_ROOT, DEFAULT_INDEX_DIR, ...)
+  loader.py              parse_frontmatter, load_kb_documents
+  chunker.py             chunk_document (section-level + sliding window)
+  indexer.py             build_kb_index (ChromaDB + sentence-transformers)
+  retriever.py           retrieve_kb_evidence (with overlap reranking)
 
-assets/preloaded/
-  enterprise_gnn_rca/    RCA outputs only (no remediation fields)
-  event_correlation/     cluster outputs (causal evidence)
-  remediation/           remediation outputs (separate from RCA)
+scripts/
+  build_kb_index.py                             build/rebuild KB vector index
+  generate_remediation_demo_assets.py           generate per-scenario remediation JSONs
+  validate_remediation_outputs.py               validate remediation output files
+  build_sop_grounded_remediation_training_data.py  generate SFT training data
+  run_final_demo_pipeline.sh                    full RCA → validate → remediation → validate
+
+assets/
+  kb/
+    sops/                Standard Operating Procedures (SOP-*.md)
+    runbooks/            Operational runbooks (RUNBOOK-*.md)
+    known_resolutions/   Confirmed resolution patterns (KR-*.md)
+  preloaded/
+    enterprise_gnn_rca/  RCA outputs only (no remediation fields)
+    event_correlation/   cluster outputs (causal evidence)
+    remediation/         remediation outputs (separate from RCA)
+
+runtime_state/
+  kb_index/              ChromaDB persistent vector store
+
+data/
+  remediation_training/  SFT training data (JSONL)
+
+reports/
+  kb_index/              build_summary.json
 ```

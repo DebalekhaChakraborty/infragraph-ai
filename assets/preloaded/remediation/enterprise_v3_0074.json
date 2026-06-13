@@ -15,8 +15,10 @@
     "root_cause_diagram": "wan_topology",
     "candidate_count": 3,
     "causal_evidence_count": 4,
-    "correlation_reason_count": 2
+    "correlation_reason_count": 2,
+    "kb_evidence_count": 0
   },
+  "kb_evidence_count": 0,
   "remediation": {
     "executive_summary": "Cross-diagram incident affecting 2 topology domain(s) (app_db_topology, wan_topology). 3 alert event(s) detected. Primary suspected root cause: WAN-PE-01 in wan_topology. Immediate triage recommended to validate and restore service.",
     "probable_root_cause": "WAN-PE-01 (in wan_topology)",
@@ -98,7 +100,7 @@
       "priority": "2-High",
       "assignment_group": "Network Engineering — Enterprise Operations"
     },
-    "audit_summary": "Template remediation plan for scenario enterprise_v3_0074; risk=critical, blast_radius=cross_diagram, automation=manual_only, rca_source=Scenario-grounded RCA simulation. Evidence IDs used: CE-001, CE-002, CE-003, CE-004. Event correlation cluster: CLU-ent_enterprise_v3_0074-001 (score=0.5533).",
+    "audit_summary": "Template remediation plan for scenario enterprise_v3_0074; risk=critical, blast_radius=cross_diagram, automation=manual_only, rca_source=Scenario-grounded RCA simulation. Evidence IDs used: CE-001, CE-002, CE-003, CE-004. Event correlation cluster: CLU-ent_enterprise_v3_0074-001 (score=0.5533). ",
     "confidence_notes": "RCA source: Scenario-grounded RCA simulation. GNN inference result not available — candidate ranking derived from alert timeline heuristics. Event correlation cluster: CLU-ent_enterprise_v3_0074-001 (score=0.5533). Template mode: output is deterministic and not model-generated.",
     "source": "template"
   }

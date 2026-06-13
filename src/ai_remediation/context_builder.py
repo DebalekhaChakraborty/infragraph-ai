@@ -5,6 +5,8 @@ Reads:
   assets/preloaded/enterprise_gnn_rca/<scenario_id>.json  (RCA result)
   scenario_library/enterprise_gnn_rca/<case_id>/events.json (observable events)
 
+Optionally retrieves SOP/KB evidence from the ChromaDB vector index.
+
 Never reads labels.json.
 Never adds ground_truth or evaluation fields to the returned context.
 
@@ -32,6 +34,11 @@ def build_enterprise_remediation_context(
     scenario_id: str,
     rca_path: Path | None = None,
     scenario_library_root: Path | None = None,
+    # KB retrieval options
+    kb_index_dir: Path | None = None,
+    retrieve_kb: bool = True,
+    kb_top_k: int = 5,
+    strict_kb: bool = False,
 ) -> dict:
     """
     Build a remediation input context dict from a clean Enterprise GNN RCA output.
@@ -44,6 +51,11 @@ def build_enterprise_remediation_context(
                              (default: assets/preloaded/enterprise_gnn_rca/<scenario_id>.json)
     scenario_library_root  : override path to scenario_library root
                              (default: repo_root/scenario_library)
+    kb_index_dir           : override path to ChromaDB KB index
+                             (default: repo_root/runtime_state/kb_index)
+    retrieve_kb            : if True, query the KB index and inject evidence
+    kb_top_k               : max KB evidence chunks to retrieve
+    strict_kb              : if True and no KB evidence found, raise RuntimeError
 
     Returns
     -------
@@ -105,18 +117,42 @@ def build_enterprise_remediation_context(
     # First observed node from alert timeline
     first_observed_node = alert_timeline[0].get("node", "") if alert_timeline else ""
 
-    # Compact graph memory summary (no labels content)
+    # ── KB / SOP retrieval ────────────────────────────────────────────────────
+    kb_evidence: list[dict] = []
+    if retrieve_kb:
+        _idx_dir = kb_index_dir or (repo_root / "runtime_state" / "kb_index")
+        kb_evidence = _retrieve_kb_evidence_safe(
+            context_preview={
+                "root_cause":          root_cause,
+                "root_cause_diagram":  root_cause_diagram,
+                "impacted_diagrams":   impacted_diagrams,
+                "alert_timeline":      alert_timeline,
+                "candidate_ranking":   candidate_ranking,
+                "correlation_reasons": correlation_reasons,
+                "causal_evidence":     causal_evidence,
+            },
+            index_dir=_idx_dir,
+            top_k=kb_top_k,
+        )
+        if strict_kb and not kb_evidence:
+            raise RuntimeError(
+                f"strict_kb=True but no KB evidence retrieved for scenario {scenario_id}. "
+                "Run: python scripts/build_kb_index.py --reset"
+            )
+
+    # Build graph memory summary (includes KB chunk count if retrieved)
     cluster_score_str = f"{cluster_score:.4f}" if cluster_score is not None else "—"
+    kb_note = f"; kb_chunks_retrieved={len(kb_evidence)}" if kb_evidence else ""
     graph_memory_summary = (
         f"Enterprise RCA scenario {scenario_id}; "
         f"root={root_cause}; "
         f"diagram={root_cause_diagram}; "
         f"cluster={cluster_id}; "
         f"cluster_score={cluster_score_str}; "
-        f"impacted_diagrams={impacted_diagrams}."
+        f"impacted_diagrams={impacted_diagrams}{kb_note}."
     )
 
-    return make_remediation_input(
+    context = make_remediation_input(
         incident_id=f"INC-{scenario_id}",
         scope="enterprise",
         selected_diagram_id=root_cause_diagram,
@@ -138,3 +174,31 @@ def build_enterprise_remediation_context(
         correlation_reasons=correlation_reasons,
         causal_evidence=causal_evidence,
     )
+
+    # Inject KB evidence into both tracking fields
+    if kb_evidence:
+        existing = list(context.get("retrieved_graph_memory_evidence", []) or [])
+        context["retrieved_graph_memory_evidence"] = existing + kb_evidence
+        context["retrieved_kb_evidence"] = kb_evidence
+
+    return context
+
+
+def _retrieve_kb_evidence_safe(
+    *,
+    context_preview: dict,
+    index_dir: Path,
+    top_k: int,
+) -> list[dict]:
+    """Attempt KB retrieval; return [] on any import or retrieval error."""
+    try:
+        from kb_retrieval.retriever import retrieve_kb_evidence
+        from kb_retrieval.schema import DEFAULT_COLLECTION
+        return retrieve_kb_evidence(
+            context=context_preview,
+            index_dir=index_dir,
+            collection_name=DEFAULT_COLLECTION,
+            top_k=top_k,
+        )
+    except Exception:
+        return []

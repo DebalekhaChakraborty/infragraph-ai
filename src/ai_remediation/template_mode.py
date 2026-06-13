@@ -40,6 +40,57 @@ def _evidence_ids(context: dict) -> list[str]:
     return _unique_strings(ids)
 
 
+def _kb_evidence_refs(context: dict, max_items: int = 5) -> list[str]:
+    """Return short reference strings for retrieved KB evidence chunks."""
+    out: list[str] = []
+    for item in (context.get("retrieved_kb_evidence", []) or [])[:max_items]:
+        if not isinstance(item, dict):
+            continue
+        eid   = item.get("evidence_id", "KB-unknown")
+        meta  = item.get("metadata") or {}
+        title = meta.get("title", "")
+        section = meta.get("section", "")
+        sec_suffix = f" § {section}" if section else ""
+        out.append(f"{eid}: {title}{sec_suffix}")
+    return out
+
+
+def _kb_section_steps(context: dict, section_keyword: str, max_items: int = 3) -> list[str]:
+    """
+    Return SOP-grounded action strings for chunks whose text contains a known section.
+
+    Looks at retrieved_kb_evidence chunks. Matches are phrased as references,
+    not invented commands.
+    """
+    out: list[str] = []
+    seen: set[str] = set()
+    for item in (context.get("retrieved_kb_evidence", []) or []):
+        if not isinstance(item, dict):
+            continue
+        text = item.get("text", "")
+        if section_keyword.lower() not in text.lower():
+            continue
+        meta  = item.get("metadata") or {}
+        kb_id = meta.get("kb_id", "")
+        title = meta.get("title", "")
+        eid   = item.get("evidence_id", "KB-unknown")
+        key   = kb_id or eid
+        if key in seen:
+            continue
+        seen.add(key)
+        if "remediation" in section_keyword.lower():
+            out.append(f"Follow {kb_id or 'SOP'} ({title}) remediation section [{eid}].")
+        elif "validation" in section_keyword.lower():
+            out.append(f"Validate according to {kb_id or 'SOP'} ({title}) validation section [{eid}].")
+        elif "rollback" in section_keyword.lower() or "safety" in section_keyword.lower():
+            out.append(f"Apply rollback/safety controls from {kb_id or 'SOP'} ({title}) [{eid}].")
+        else:
+            out.append(f"Refer to {kb_id or 'SOP'} ({title}) for {section_keyword} guidance [{eid}].")
+        if len(out) >= max_items:
+            break
+    return out
+
+
 def _causal_evidence_summaries(context: dict, max_items: int = 5) -> list[str]:
     out: list[str] = []
     for item in (context.get("causal_evidence", []) or [])[:max_items]:
@@ -213,6 +264,7 @@ def _generate_local_template(context: dict) -> dict:
     evidence.extend(_causal_evidence_summaries(context))
     for reason in (context.get("correlation_reasons", []) or [])[:5]:
         evidence.append(f"Correlation reason: {reason}")
+    evidence.extend(_kb_evidence_refs(context))
 
     triage = _TRIAGE_BY_DIAGRAM.get(diagram_id, _DEFAULT_TRIAGE)[:]
     if root_cause:
@@ -226,6 +278,7 @@ def _generate_local_template(context: dict) -> dict:
         f"Confirm downstream nodes in the impact path have recovered: {path_str}.",
         "Document the applied change and update the CMDB record.",
     ]
+    remediation.extend(_kb_section_steps(context, "Remediation Steps"))
 
     validation = _VALIDATION_STEPS_LOCAL[:]
     if imp_nodes:
@@ -234,6 +287,7 @@ def _generate_local_template(context: dict) -> dict:
             + ", ".join(imp_nodes[:5])
             + ("…" if len(imp_nodes) > 5 else "") + "."
         )
+    validation.extend(_kb_section_steps(context, "Validation Steps"))
 
     escalation = (
         f"Escalate to network engineering if '{root_cause}' cannot be restored within 30 minutes, "
@@ -258,10 +312,13 @@ def _generate_local_template(context: dict) -> dict:
     cluster_id    = context.get("cluster_id", "")
     cluster_score = context.get("cluster_score")
     cluster_str   = f"{cluster_id} (score={cluster_score:.4f})" if cluster_id and cluster_score is not None else cluster_id or "—"
+    n_kb = len(context.get("retrieved_kb_evidence", []) or [])
+    kb_note = f"SOP/KB evidence retrieved: {n_kb} chunk(s). " if n_kb else ""
     confidence = (
         f"RCA source: {rca_source}. "
         "Topology BFS traversal used — candidate ranking reflects single-diagram graph topology. "
         f"Event correlation cluster: {cluster_str}. "
+        f"{kb_note}"
         "Template mode: output is deterministic and not model-generated."
     )
     pre_checks = [
@@ -273,8 +330,12 @@ def _generate_local_template(context: dict) -> dict:
         f"Template remediation plan for {diagram_id}; "
         f"risk={risk}, blast_radius={blast}, automation={automation}. "
         f"Evidence IDs used: {', '.join(evidence_ids) if evidence_ids else 'none'}. "
-        f"Event correlation cluster: {cluster_str}."
+        f"Event correlation cluster: {cluster_str}. "
+        + (f"KB chunks retrieved: {n_kb}." if n_kb else "")
     )
+
+    rollback = list(_ROLLBACK_LOCAL)
+    rollback.extend(_kb_section_steps(context, "Rollback / Safety Notes"))
 
     output = make_remediation_output(
         executive_summary=exec_sum,
@@ -291,7 +352,7 @@ def _generate_local_template(context: dict) -> dict:
         remediation_steps=remediation,
         post_checks=validation,
         do_not_execute_if=_do_not_execute("local", root_cause),
-        rollback_or_safety_notes=_ROLLBACK_LOCAL,
+        rollback_or_safety_notes=rollback,
         escalation_recommendation=escalation,
         servicenow_incident_summary=snow,
         audit_summary=audit,
@@ -351,6 +412,7 @@ def _generate_enterprise_template(context: dict) -> dict:
     evidence.extend(_causal_evidence_summaries(context))
     for reason in (context.get("correlation_reasons", []) or [])[:5]:
         evidence.append(f"Correlation reason: {reason}")
+    evidence.extend(_kb_evidence_refs(context))
 
     triage = _TRIAGE_BY_DIAGRAM.get(rc_diagram or diagram_id, _DEFAULT_TRIAGE)[:]
     if root_cause:
@@ -369,6 +431,7 @@ def _generate_enterprise_template(context: dict) -> dict:
             "Coordinate recovery across all affected diagrams in order: "
             + " → ".join(imp_diagrams[:n_diags]) + "."
         )
+    remediation.extend(_kb_section_steps(context, "Remediation Steps"))
 
     validation = _VALIDATION_STEPS_ENT[:]
     if imp_nodes:
@@ -377,6 +440,7 @@ def _generate_enterprise_template(context: dict) -> dict:
             + ", ".join(imp_nodes[:6])
             + ("…" if len(imp_nodes) > 6 else "") + "."
         )
+    validation.extend(_kb_section_steps(context, "Validation Steps"))
 
     escalation = (
         "Escalate to network engineering team if root-cause node cannot be restored within "
@@ -410,12 +474,15 @@ def _generate_enterprise_template(context: dict) -> dict:
     cluster_id    = context.get("cluster_id", "")
     cluster_score = context.get("cluster_score")
     cluster_str   = f"{cluster_id} (score={cluster_score:.4f})" if cluster_id and cluster_score is not None else cluster_id or "—"
+    n_kb = len(context.get("retrieved_kb_evidence", []) or [])
+    kb_note = f"SOP/KB evidence retrieved: {n_kb} chunk(s). " if n_kb else ""
     confidence = (
         f"RCA source: {rca_source}. "
         + ("GNN inference result was used — candidate ranking is model-derived. "
            if context.get("gnn_result_available") else
            "GNN inference result not available — candidate ranking derived from alert timeline heuristics. ")
         + f"Event correlation cluster: {cluster_str}. "
+        + f"{kb_note}"
         + "Template mode: output is deterministic and not model-generated."
     )
     pre_checks = [
@@ -428,8 +495,12 @@ def _generate_enterprise_template(context: dict) -> dict:
         f"Template remediation plan for scenario {scenario_id}; "
         f"risk={risk}, blast_radius={blast}, automation={automation}, rca_source={rca_source}. "
         f"Evidence IDs used: {', '.join(evidence_ids) if evidence_ids else 'none'}. "
-        f"Event correlation cluster: {cluster_str}."
+        f"Event correlation cluster: {cluster_str}. "
+        + (f"KB chunks retrieved: {n_kb}." if n_kb else "")
     )
+
+    rollback = list(_ROLLBACK_ENTERPRISE)
+    rollback.extend(_kb_section_steps(context, "Rollback / Safety Notes"))
 
     output = make_remediation_output(
         executive_summary=exec_sum,
@@ -446,7 +517,7 @@ def _generate_enterprise_template(context: dict) -> dict:
         remediation_steps=remediation,
         post_checks=validation,
         do_not_execute_if=_do_not_execute("enterprise", root_cause),
-        rollback_or_safety_notes=_ROLLBACK_ENTERPRISE,
+        rollback_or_safety_notes=rollback,
         escalation_recommendation=escalation,
         servicenow_incident_summary=snow,
         audit_summary=audit,

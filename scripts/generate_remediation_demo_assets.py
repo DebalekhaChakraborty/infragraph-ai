@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -72,7 +73,9 @@ def _build_envelope(
             "candidate_count":         len(context.get("candidate_ranking", [])),
             "causal_evidence_count":   len(context.get("causal_evidence", [])),
             "correlation_reason_count": len(context.get("correlation_reasons", [])),
+            "kb_evidence_count":       len(context.get("retrieved_kb_evidence", []) or []),
         },
+        "kb_evidence_count": len(context.get("retrieved_kb_evidence", []) or []),
         "remediation": plan_result.get("response", {}),
     }
     # Preserve Qwen error if template fallback was used
@@ -112,17 +115,57 @@ def main() -> None:
         "--include-raw", action="store_true",
         help="Include raw_model_output field in the envelope.",
     )
+    # KB retrieval options
+    parser.add_argument(
+        "--build-kb-index", action="store_true",
+        help="Build (or rebuild) the KB vector index before generating remediation outputs.",
+    )
+    parser.add_argument(
+        "--kb-index-dir", default=None, metavar="DIR",
+        help="Override the KB vector index directory (default: runtime_state/kb_index).",
+    )
+    parser.add_argument(
+        "--kb-top-k", type=int, default=5, metavar="N",
+        help="Number of KB evidence chunks to retrieve per scenario (default: 5).",
+    )
+    parser.add_argument(
+        "--strict-kb", action="store_true",
+        help="Fail if no KB evidence is retrieved for a scenario.",
+    )
+    parser.add_argument(
+        "--no-kb", action="store_true",
+        help="Disable KB retrieval entirely.",
+    )
     args = parser.parse_args()
 
     if args.strict_qwen and args.template_only:
         parser.error("--strict-qwen and --template-only are mutually exclusive.")
 
     prefer_qwen = args.prefer_qwen or (not args.template_only)
+    retrieve_kb = not args.no_kb
+    kb_index_dir = (REPO_ROOT / args.kb_index_dir).resolve() if args.kb_index_dir else None
 
     out_dir = (REPO_ROOT / args.out_dir).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
 
     qwen_config = get_qwen_runtime_config()
+
+    # Optionally rebuild the KB index first
+    if args.build_kb_index:
+        print("----------------------------------------------------")
+        print("[KB] Building KB vector index...")
+        print("----------------------------------------------------")
+        cmd = [sys.executable, str(REPO_ROOT / "scripts" / "build_kb_index.py")]
+        if args.kb_index_dir:
+            cmd += ["--index-dir", args.kb_index_dir]
+        if args.strict_kb:
+            cmd += ["--reset"]
+        sys.stdout.flush()
+        result = subprocess.run(cmd, check=False, cwd=str(REPO_ROOT))
+        if result.returncode != 0:
+            print("[ERROR] KB index build failed.")
+            sys.exit(1)
+        print()
 
     print("====================================================")
     print(" InfraGraph AI — Generate Remediation Demo Assets")
@@ -130,6 +173,7 @@ def main() -> None:
     print(f"Scenarios    : {', '.join(args.scenarios)}")
     print(f"Mode         : {'template-only' if args.template_only else ('strict-qwen' if args.strict_qwen else 'prefer-qwen (fallback=template)')}")
     print(f"Output dir   : {out_dir.relative_to(REPO_ROOT)}")
+    print(f"KB retrieval : {'disabled' if args.no_kb else f'enabled (top-k={args.kb_top_k})'}")
     print()
 
     failures: list[str] = []
@@ -148,7 +192,16 @@ def main() -> None:
                 repo_root=REPO_ROOT,
                 scenario_id=scenario_id,
                 rca_path=rca_path,
+                kb_index_dir=kb_index_dir,
+                retrieve_kb=retrieve_kb,
+                kb_top_k=args.kb_top_k,
+                strict_kb=args.strict_kb,
             )
+        except RuntimeError as exc:
+            # strict_kb failure surfaces here
+            print(f"  [ERROR] {exc}")
+            failures.append(scenario_id)
+            continue
         except Exception as exc:
             print(f"  [ERROR] Failed to build remediation context: {exc}")
             failures.append(scenario_id)
@@ -161,6 +214,7 @@ def main() -> None:
               f"(score={context.get('cluster_score')})")
         print(f"  Alert events    : {len(context.get('alert_timeline', []))}")
         print(f"  Causal evidence : {len(context.get('causal_evidence', []))} item(s)")
+        print(f"  KB evidence     : {len(context.get('retrieved_kb_evidence', []) or [])} chunk(s)")
 
         try:
             if args.template_only:
