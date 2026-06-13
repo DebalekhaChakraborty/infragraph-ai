@@ -1,92 +1,92 @@
-# Python/cache
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.ipynb_checkpoints/
+# # Python/cache
+# __pycache__/
+# *.pyc
+# *.pyo
+# *.pyd
+# .ipynb_checkpoints/
 
-# Virtual environments
-.venv/
-.venv-rfdetr/
-.venv-ui/
-venv/
-env/
+# # Virtual environments
+# .venv/
+# .venv-rfdetr/
+# .venv-ui/
+# venv/
+# env/
 
-# Logs/temp
-*.log
-*.tmp
-.DS_Store
+# # Logs/temp
+# *.log
+# *.tmp
+# .DS_Store
 
-# Archives
-*.tar.gz
-*.zip
+# # Archives
+# *.tar.gz
+# *.zip
 
-# Heavy training/model artifacts
-outputs/rfdetr_v3/
-outputs/rfdetr_v3_smoke/
-outputs/vector_memory/
-outputs/**/model/
-model_artifacts/
-.chroma/
-data/vector_memory/
-runs/
-training_runs/
-*.ckpt
-*.pth
-*.pt
-*.onnx
+# # Heavy training/model artifacts
+# outputs/rfdetr_v3/
+# outputs/rfdetr_v3_smoke/
+# outputs/vector_memory/
+# outputs/**/model/
+# model_artifacts/
+# .chroma/
+# data/vector_memory/
+# runs/
+# training_runs/
+# *.ckpt
+# *.pth
+# *.pt
+# *.onnx
 
-# New canonical runtime directories (generated, not committed)
-runtime_state/live_ingestion/
-runtime_state/live_absorption/
-runtime_state/incident_runs/
-runtime_state/vector_memory/
-runtime_state/kb_index/
-reports/hydra_runs/
-reports/kb_index/
+# # New canonical runtime directories (generated, not committed)
+# runtime_state/live_ingestion/
+# runtime_state/live_absorption/
+# runtime_state/incident_runs/
+# runtime_state/vector_memory/
+# runtime_state/kb_index/
+# reports/hydra_runs/
+# reports/kb_index/
 
-# Model checkpoint binaries (new canonical locations)
-# model_artifacts/**/*.pth
-# model_artifacts/**/*.pt
-# model_artifacts/**/*.ckpt
-# model_artifacts/**/*.safetensors
-# model_artifacts/**/*.bin
+# # Model checkpoint binaries (new canonical locations)
+# # model_artifacts/**/*.pth
+# # model_artifacts/**/*.pt
+# # model_artifacts/**/*.ckpt
+# # model_artifacts/**/*.safetensors
+# # model_artifacts/**/*.bin
 
-# Keep datasets in git for submission
-# datasets/ is intentionally NOT ignored
+# # Keep datasets in git for submission
+# # datasets/ is intentionally NOT ignored
 
-# Python/Jupyter generated files
-__pycache__/
-*.py[cod]
-.ipynb_checkpoints/
+# # Python/Jupyter generated files
+# __pycache__/
+# *.py[cod]
+# .ipynb_checkpoints/
 
-# Python/Jupyter generated files
-__pycache__/
-*.py[cod]
-.ipynb_checkpoints/
+# # Python/Jupyter generated files
+# __pycache__/
+# *.py[cod]
+# .ipynb_checkpoints/
 
-# Generated training/checkpoint artifacts
-training/verl_grpo/runs/
-training_runs/
-node_modules/
+# # Generated training/checkpoint artifacts
+# training/verl_grpo/runs/
+# training_runs/
+# node_modules/
 
-# Legacy/offloaded outputs
-outputs/v1/
-outputs/v2/
-outputs/*v1*/
-outputs/*v2*/
+# # Legacy/offloaded outputs
+# outputs/v1/
+# outputs/v2/
+# outputs/*v1*/
+# outputs/*v2*/
 
-# Model/checkpoint binaries
-*.safetensors
-*.pt
-*.pth
-*.bin
-*.ckpt
+# # Model/checkpoint binaries
+# *.safetensors
+# *.pt
+# *.pth
+# *.bin
+# *.ckpt
 
-# Legacy outputs/ — kept for backward compatibility; new writes go to canonical dirs
-# outputs/ itself is NOT ignored so committed demo assets remain accessible.
-# Specific legacy paths that were always generated (not curated):
-outputs/live_ingestion/
-outputs/live_absorption/
-outputs/incident_runs/
-outputs/vector_memory/
+# # Legacy outputs/ — kept for backward compatibility; new writes go to canonical dirs
+# # outputs/ itself is NOT ignored so committed demo assets remain accessible.
+# # Specific legacy paths that were always generated (not curated):
+# outputs/live_ingestion/
+# outputs/live_absorption/
+# outputs/incident_runs/
+# outputs/vector_memory/
