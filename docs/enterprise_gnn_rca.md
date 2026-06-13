@@ -204,6 +204,7 @@ python scripts/predict_enterprise_gnn_rca.py --case-id ent_enterprise_v3_0000
 | `--top-k` | 3 | Number of ranked candidates |
 | `--with-eval` | off | Include ground-truth comparison (reads labels.json) |
 | `--out` | _(auto)_ | Override output directory |
+| `--cluster-file` | (none) | Path to event correlation cluster file — enriches output with `cluster_id`, `cluster_score`, `correlation_reasons`, `causal_evidence` |
 
 **Output routing:**
 

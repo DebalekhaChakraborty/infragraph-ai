@@ -2,11 +2,16 @@
 """
 validate_rca_outputs.py — Verify RCA preloaded output files are demo-safe.
 
-By default, scans only the two RCA output directories:
+By default, scans only the three RCA output directories:
   assets/preloaded/topology_rca_results/
   assets/preloaded/enterprise_gnn_rca/
+  assets/preloaded/event_correlation/
 
 Reports under reports/ are NOT scanned — evaluation fields are allowed there.
+Event correlation cluster files are checked for the same forbidden keys
+(remediation and evaluation leakage); cluster-specific fields such as
+cluster_id, cluster_score, correlation_reasons, and causal_evidence are
+explicitly allowed.
 
 Exits 0 if all checks pass.  Exits 1 and prints a failure report if any
 file contains forbidden remediation or evaluation-leakage keys.
@@ -16,7 +21,8 @@ Usage:
   python scripts/validate_rca_outputs.py --verbose
   python scripts/validate_rca_outputs.py \\
       --scan-dir assets/preloaded/topology_rca_results \\
-      --scan-dir assets/preloaded/enterprise_gnn_rca
+      --scan-dir assets/preloaded/enterprise_gnn_rca \\
+      --scan-dir assets/preloaded/event_correlation
 """
 from __future__ import annotations
 
@@ -30,6 +36,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 _DEFAULT_SCAN_DIRS: list[str] = [
     "assets/preloaded/topology_rca_results",
     "assets/preloaded/enterprise_gnn_rca",
+    "assets/preloaded/event_correlation",
 ]
 
 # Keys that must NEVER appear anywhere in a preloaded RCA output file

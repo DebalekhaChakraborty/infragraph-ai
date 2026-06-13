@@ -52,6 +52,35 @@ _FORBIDDEN_KEYS = frozenset({
 })
 
 
+def _enrich_with_cluster(result: dict, cluster_file: str, case_id: str, scenario_id: str, repo_root: Path) -> None:
+    """Load cluster file and merge primary cluster fields into result."""
+    cf_path = Path(cluster_file) if Path(cluster_file).is_absolute() else (repo_root / cluster_file).resolve()
+    if not cf_path.exists():
+        print(f"[WARN] Cluster file not found: {cf_path}")
+        return
+    try:
+        cluster_data = json.loads(cf_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        print(f"[WARN] Could not load cluster file: {exc}")
+        return
+
+    if cluster_data.get("case_id") != case_id and cluster_data.get("scenario_id") != scenario_id:
+        print(f"[WARN] Cluster file case_id/scenario_id does not match {case_id!r}")
+        return
+
+    clusters = cluster_data.get("clusters", [])
+    if not clusters:
+        print("[WARN] Cluster file contains no clusters.")
+        return
+
+    primary = clusters[0]
+    result["cluster_id"]           = primary.get("cluster_id", "")
+    result["cluster_score"]        = primary.get("cluster_score", 0.0)
+    result["correlation_reasons"]  = primary.get("correlation_reasons", [])
+    result["causal_evidence"]      = primary.get("causal_evidence", [])
+    print(f"Cluster enriched : {result['cluster_id']} (score={result['cluster_score']:.4f})")
+
+
 def _assert_clean(obj: dict) -> None:
     for key in _FORBIDDEN_KEYS:
         if key in obj:
@@ -92,6 +121,12 @@ def main() -> None:
     parser.add_argument("--hybrid-score", action="store_true",
                         help="Combine model probability with alert-context score "
                              "(0.75 x model + 0.25 x context)")
+    parser.add_argument(
+        "--cluster-file", default=None,
+        help="Path to event correlation cluster file for this case.  "
+             "Enriches RCA output with cluster_id, cluster_score, "
+             "correlation_reasons, and causal_evidence.",
+    )
     args = parser.parse_args()
 
     repo_root = REPO_ROOT
@@ -226,6 +261,10 @@ def main() -> None:
             "reciprocal_rank":   round(1.0 / rank, 4),
             "rank":              rank,
         }
+
+    # Enrich with event correlation cluster data when --cluster-file is provided
+    if args.cluster_file:
+        _enrich_with_cluster(result, args.cluster_file, args.case_id, "", repo_root)
 
     # Guard: clean outputs going to preloaded must have no eval keys
     if not args.with_eval:

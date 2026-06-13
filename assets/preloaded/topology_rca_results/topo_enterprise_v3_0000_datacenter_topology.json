@@ -31,5 +31,53 @@
   ],
   "total_nodes": 9,
   "alert_count": 2,
-  "scoring_mode": "ml_only"
+  "scoring_mode": "ml_only",
+  "cluster_id": "CLU-topo_enterprise_v3_0000_datacenter_topology-001",
+  "cluster_score": 0.795,
+  "correlation_reasons": [
+    "2 event(s) span 3 min (t=0..3)",
+    "Alerted nodes are directly adjacent (1-2 hops)"
+  ],
+  "causal_evidence": [
+    {
+      "evidence_id": "CE-001",
+      "stage": "temporal_correlation",
+      "summary": "2 alert(s) within a 3-minute window (t=0..3 min), consistent with a propagating fault.",
+      "supporting_events": [
+        "EVT-0001",
+        "EVT-0002"
+      ],
+      "supporting_nodes": [
+        "DC-FW-01",
+        "DC-CORE-SW-01"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "evidence_id": "CE-002",
+      "stage": "topology_proximity",
+      "summary": "Alerted nodes (DC-FW-01, DC-CORE-SW-01) are topologically proximate (topology score 1.00), suggesting fault propagation through connected infrastructure.",
+      "supporting_events": [
+        "EVT-0001",
+        "EVT-0002"
+      ],
+      "supporting_nodes": [
+        "DC-FW-01",
+        "DC-CORE-SW-01"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "evidence_id": "CE-003",
+      "stage": "propagation_hypothesis",
+      "summary": "Hypothesis: fault originated at the cluster seed node and may have propagated downstream through connected infrastructure.",
+      "supporting_events": [
+        "EVT-0001"
+      ],
+      "supporting_nodes": [
+        "DC-FW-01"
+      ],
+      "confidence": 1.0
+    }
+  ]
 }
