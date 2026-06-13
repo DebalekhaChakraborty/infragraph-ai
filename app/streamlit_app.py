@@ -1900,6 +1900,27 @@ def _build_remediation_context(
     incident_id  = ent_incident.get("incident_id", "")
     scenario_id  = ent_incident.get("scenario_id", alerts_data.get("scenario_id", ""))
 
+    # Load causal_evidence from the main enterprise GNN RCA JSON (plain {scenario_id}.json),
+    # which contains CE-* evidence IDs, correlation_reasons, and cluster metadata.
+    # The *_enterprise_gnn_rca_result.json loaded by _load_gnn_rca_result() has raw scores
+    # but not causal_evidence — so we read the main JSON separately.
+    _main_rca_json: dict = {}
+    if scenario_id:
+        _main_rca_p = _demo_asset_path("enterprise_gnn_rca") / f"{scenario_id}.json"
+        if _main_rca_p.exists():
+            try:
+                _main_rca_json = json.loads(_main_rca_p.read_text(encoding="utf-8"))
+            except Exception:
+                pass
+    causal_evidence     = (_main_rca_json.get("causal_evidence", [])
+                           or (gnn_result or {}).get("causal_evidence", []))
+    correlation_reasons = (_main_rca_json.get("correlation_reasons", [])
+                           or (gnn_result or {}).get("correlation_reasons", []))
+    cluster_id          = (_main_rca_json.get("cluster_id", "")
+                           or (gnn_result or {}).get("cluster_id", ""))
+    cluster_score       = (_main_rca_json.get("cluster_score")
+                           or (gnn_result or {}).get("cluster_score"))
+
     return _make_remediation_input(
         incident_id=incident_id,
         scope="enterprise",
@@ -1917,6 +1938,10 @@ def _build_remediation_context(
         rca_source=rca_source,
         device_context=device_ctx,
         connector_context=connector_ctx,
+        cluster_id=cluster_id,
+        cluster_score=cluster_score,
+        correlation_reasons=correlation_reasons,
+        causal_evidence=causal_evidence,
     )
 
 
@@ -2126,6 +2151,14 @@ def _render_ai_pipeline_trace(
     _sop_adapter_env  = _os.environ.get("INFRAGRAPH_LORA_ADAPTER_PATH") or ""
     _sop_adapter_path = _sop_adapter_env or str(REPO_ROOT / "model_artifacts" / "qwen_lora" / "infragraph_sop_grounded")
     _sop_adapter_ok   = Path(_sop_adapter_path).exists()
+    _gnn_model_path   = str(_demo_asset_path("enterprise_gnn_rca") / "enterprise_gnn_model.pt")
+    _gnn_metrics_path = str(_demo_asset_path("enterprise_gnn_rca") / "enterprise_gnn_metrics.json")
+    _qwen_alias       = (_os.environ.get("INFRAGRAPH_QWEN_MODEL")
+                         or _os.environ.get("QWEN_MODEL")
+                         or _QWEN_MODEL)
+    _qwen_base_url_v  = (_os.environ.get("INFRAGRAPH_QWEN_BASE_URL")
+                         or _os.environ.get("QWEN_BASE_URL")
+                         or _QWEN_BASE_URL)
     rows = {
         "Selected diagram": selected_diagram or "—",
         "Selected scenario": selected_scenario or "—",
@@ -2135,6 +2168,11 @@ def _render_ai_pipeline_trace(
         "Root cause": root_cause or "—",
         "Impacted diagram count": str(len(set(str(d) for d in impacted_diagrams if d))),
         "Vector evidence retrieved": str(vector_evidence_count),
+        "GNN model path": _gnn_model_path,
+        "GNN metrics path": _gnn_metrics_path,
+        "GNN model available": "yes" if Path(_gnn_model_path).exists() else "no",
+        "Qwen model alias": _qwen_alias,
+        "Qwen base URL": _qwen_base_url_v,
         "Qwen configured": "yes" if _qwen_configured() else "no",
         "Response source": response_source or "—",
         "SOP-grounded adapter path": _sop_adapter_path,
@@ -2207,6 +2245,132 @@ def _render_qwen_runtime_proof(plan_result: dict) -> None:
                 st.code(raw_output[:300], language="json")
         else:
             st.caption("No raw model output — template mode or plan not yet generated.")
+
+
+def _render_gnn_rca_model_evidence(gnn_result: dict, metrics: dict) -> None:
+    """Expandable Trained RCA Model Evidence panel for Enterprise GNN RCA."""
+    if not gnn_result and not metrics:
+        return
+
+    inference_source = gnn_result.get("inference_source", "")
+    inference_mode   = (
+        "precomputed_gnn_inference_artifact"
+        if inference_source in ("trained_enterprise_gnn", "precomputed")
+        or gnn_result.get("rca_source") == "Enterprise GNN RCA"
+        else "live_gnn_inference"
+    )
+    backend      = metrics.get("backend") or gnn_result.get("backend") or "torch"
+    model_type   = metrics.get("model_type") or gnn_result.get("model_type") or "Enterprise GCN RCA"
+    architecture = metrics.get("architecture", "—")
+    epochs       = metrics.get("epochs_trained", "—")
+    best_epoch   = metrics.get("best_val_epoch", "—")
+    feature_dim  = metrics.get("feature_dim", "—")
+    device       = metrics.get("device_name") or metrics.get("selected_device") or "—"
+    train_m      = metrics.get("train_metrics", {})
+    val_m        = metrics.get("val_metrics", {})
+    test_m       = metrics.get("test_metrics", {})
+
+    _gnn_model_p   = str(_demo_asset_path("enterprise_gnn_rca") / "enterprise_gnn_model.pt")
+    _gnn_metrics_p = str(_demo_asset_path("enterprise_gnn_rca") / "enterprise_gnn_metrics.json")
+
+    with st.expander("Trained RCA Model Evidence", expanded=False):
+        # Inference mode provenance header
+        _inf_color = "#38bdf8" if inference_mode == "precomputed_gnn_inference_artifact" else "#10b981"
+        st.markdown(
+            f'<div style="background:rgba(15,23,42,0.6);border:1px solid rgba(56,189,248,0.25);'
+            f'border-left:3px solid {_inf_color};border-radius:8px;padding:10px 14px;margin-bottom:12px">'
+            f'<div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.08em;'
+            f'color:#64748b;margin-bottom:3px">Inference Mode</div>'
+            f'<div style="font-family:monospace;font-size:0.82rem;font-weight:700;color:{_inf_color}">'
+            f'{html.escape(inference_mode)}</div>'
+            f'<div style="font-size:0.72rem;color:#94a3b8;margin-top:4px">'
+            f'Generated by trained GNN RCA pipeline ({html.escape(model_type)}); '
+            f'preloaded for stability.</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+        # Model metadata grid
+        _meta_items = [
+            ("Backend",      str(backend)),
+            ("Architecture", str(architecture)),
+            ("Epochs",       str(epochs)),
+            ("Best Val Ep.", str(best_epoch)),
+            ("Feature Dim",  str(feature_dim)),
+            ("Device",       str(device)),
+        ]
+        st.markdown(
+            '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">'
+            + "".join(
+                f'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);'
+                f'border-radius:8px;padding:8px 10px">'
+                f'<div style="font-size:0.58rem;color:#64748b;text-transform:uppercase;margin-bottom:3px">'
+                f'{html.escape(lbl)}</div>'
+                f'<div style="font-size:0.78rem;font-weight:700;color:#f1f5f9;font-family:monospace">'
+                f'{html.escape(val)}</div>'
+                f'</div>'
+                for lbl, val in _meta_items
+            )
+            + '</div>',
+            unsafe_allow_html=True,
+        )
+
+        # Metrics table (no ground-truth fields)
+        if train_m or val_m or test_m:
+            st.markdown(
+                '<div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;'
+                'color:#94a3b8;margin-bottom:6px">Model Metrics</div>',
+                unsafe_allow_html=True,
+            )
+            metric_rows = []
+            for split, m in [("train", train_m), ("val", val_m), ("test", test_m)]:
+                if m:
+                    metric_rows.append({
+                        "Split":     split,
+                        "Top-1":     f"{m.get('top1', 0):.1%}",
+                        "Top-3":     f"{m.get('top3', 0):.1%}",
+                        "MRR":       f"{m.get('mrr', 0):.4f}",
+                        "Scenarios": m.get("scenario_count", "—"),
+                    })
+            if metric_rows:
+                st.dataframe(pd.DataFrame(metric_rows), use_container_width=True, hide_index=True)
+
+        # Top candidates (filter ground-truth fields)
+        candidates = gnn_result.get("top_candidates", [])
+        if candidates:
+            st.markdown(
+                '<div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;'
+                'color:#94a3b8;margin:10px 0 6px">GNN Top Candidates (Softmax-Normalised Scores)</div>',
+                unsafe_allow_html=True,
+            )
+            _cand_rows = []
+            for c in candidates:
+                _cand_rows.append({
+                    "Rank":    c.get("rank", "—"),
+                    "Node":    c.get("node_id") or c.get("node", "—"),
+                    "Diagram": c.get("diagram_id") or c.get("diagram_type", "—"),
+                    "Type":    c.get("node_type") or c.get("type", "—"),
+                    "Score":   f"{float(c.get('score', 0)):.4f}",
+                })
+            st.dataframe(pd.DataFrame(_cand_rows), use_container_width=True, hide_index=True)
+
+        # Artifact paths
+        _model_exists   = Path(_gnn_model_p).exists()
+        _metrics_exists = Path(_gnn_metrics_p).exists()
+        _model_suffix   = "" if _model_exists   else " <em style=\"color:#ef4444\">(not found)</em>"
+        _metrics_suffix = "" if _metrics_exists else " <em style=\"color:#ef4444\">(not found)</em>"
+        st.markdown(
+            f'<div style="font-size:0.68rem;color:#475569;margin-top:10px;'
+            f'border-top:1px solid rgba(255,255,255,0.06);padding-top:8px">'
+            f'<strong style="color:#64748b">Model:</strong> '
+            f'<code style="font-size:0.65rem">{html.escape(_gnn_model_p)}</code>'
+            f'{_model_suffix}<br>'
+            f'<strong style="color:#64748b">Metrics:</strong> '
+            f'<code style="font-size:0.65rem">{html.escape(_gnn_metrics_p)}</code>'
+            f'{_metrics_suffix}'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -3994,6 +4158,90 @@ def _tab_local_rca() -> None:
         if result.get("path_note"):
             st.caption(f"Path note: {result['path_note']}")
 
+    # ── AI Enterprise Expansion ────────────────────────────────────────────────
+    if st.session_state.get("enterprise_absorbed"):
+        st.markdown('<hr class="ws-rule" style="margin:12px 0">', unsafe_allow_html=True)
+        _ent_inc_exp  = st.session_state.get("enterprise_incident") or {}
+        _ent_rca_exp  = st.session_state.get("enterprise_rca_result") or {}
+        _ent_summ_exp = st.session_state.get("enterprise_ingestion_summary") or {}
+        _ent_scen_exp = (
+            _ent_inc_exp.get("scenario_id")
+            or _ent_rca_exp.get("scenario_id")
+            or _ent_summ_exp.get("scenario_id")
+            or ""
+        )
+        _gnn_exp = _load_gnn_rca_result(_ent_scen_exp) if _ent_scen_exp else None
+        _ent_rc_gnn    = (_ent_rca_exp.get("root_cause")
+                          or (_gnn_exp or {}).get("predicted_root_cause", ""))
+        _ent_rc_diag   = (_ent_rca_exp.get("root_cause_diagram")
+                          or (_gnn_exp or {}).get("root_cause_diagram", ""))
+        _ent_imp_diags = (_ent_rca_exp.get("impacted_diagrams")
+                          or (_gnn_exp or {}).get("impacted_diagrams", []))
+        _local_rc_exp  = result.get("root_cause", "")
+        _outside       = bool(
+            _ent_rc_gnn
+            and _ent_rc_gnn != _local_rc_exp
+            and _ent_rc_diag
+            and _ent_rc_diag != diagram_id
+        )
+        _ent_exp_hdr = (
+            "AI-expanded Enterprise RCA — Root cause outside this diagram"
+            if _outside
+            else "AI Enterprise Expansion"
+        )
+        st.markdown(
+            f'<div class="section-label" style="margin-bottom:8px">{_ent_exp_hdr}</div>',
+            unsafe_allow_html=True,
+        )
+        col_ex1, col_ex2 = st.columns(2)
+        with col_ex1:
+            st.markdown(
+                f'<div style="background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.15);'
+                f'border-left:3px solid #22c55e;border-radius:8px;padding:10px 14px">'
+                f'<div style="font-size:0.6rem;text-transform:uppercase;color:#64748b;margin-bottom:3px">'
+                f'Topology root cause</div>'
+                f'<div style="font-family:monospace;font-size:0.9rem;font-weight:700;color:#22c55e">'
+                f'{html.escape(_local_rc_exp or "—")}</div>'
+                f'<div style="font-size:0.7rem;color:#475569;margin-top:2px">Diagram: {html.escape(str(diagram_id))}</div>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+        with col_ex2:
+            _ent_rc_color = "#f59e0b" if _outside else "#10b981"
+            st.markdown(
+                f'<div style="background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.15);'
+                f'border-left:3px solid {_ent_rc_color};border-radius:8px;padding:10px 14px">'
+                f'<div style="font-size:0.6rem;text-transform:uppercase;color:#64748b;margin-bottom:3px">'
+                f'Enterprise root cause</div>'
+                f'<div style="font-family:monospace;font-size:0.9rem;font-weight:700;color:{_ent_rc_color}">'
+                f'{html.escape(_ent_rc_gnn or "—")}</div>'
+                f'<div style="font-size:0.7rem;color:#475569;margin-top:2px">'
+                f'Diagram: {html.escape(_ent_rc_diag or "—")}</div>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+        if _outside:
+            st.warning(
+                f"Root cause outside starting diagram: Enterprise GNN RCA identified "
+                f"**{_ent_rc_gnn}** (in **{_ent_rc_diag}**) as the cross-diagram root cause. "
+                f"Proceed to **Enterprise GNN RCA** tab for full cross-diagram investigation.",
+            )
+        if _ent_imp_diags:
+            _diag_chips = " ".join(
+                f'<span class="diag-label">{html.escape(str(d))}</span>'
+                for d in _ent_imp_diags[:6]
+            )
+            st.markdown(
+                f'<div style="font-size:0.75rem;color:#94a3b8;margin-top:8px">'
+                f'<span style="color:#64748b">Impacted diagrams (enterprise):</span> {_diag_chips}</div>',
+                unsafe_allow_html=True,
+            )
+        elif not _ent_rc_gnn:
+            st.caption(
+                "Enterprise graph absorbed. Run Enterprise GNN RCA in the Enterprise GNN RCA tab "
+                "to see the cross-diagram root cause analysis."
+            )
+
     # ── AI Resolution Agent (Local) ────────────────────────────────────────────
     st.markdown('<hr class="ws-rule" style="margin:22px 0 14px 0">', unsafe_allow_html=True)
     st.markdown(
@@ -5296,11 +5544,16 @@ def _tab_gnn_rca() -> None:
             unsafe_allow_html=True,
         )
         if rca_mode == "Enterprise GNN RCA":
+            _inf_mode_lbl = "precomputed_gnn_inference_artifact"
             src_file = rca.get("gnn_source_file", "")
+            _caption_parts = [
+                f"Generated by trained GNN RCA pipeline; inference_mode={_inf_mode_lbl}"
+            ]
             if src_file:
-                st.caption(f"GNN result loaded from: {Path(src_file).name}")
+                _caption_parts.append(f"loaded from: {Path(src_file).name}")
+            st.caption(" · ".join(_caption_parts))
         else:
-            st.caption("Source: scenario alerts.json ground truth — no trained GNN result for this scenario")
+            st.caption("Source: scenario-grounded evidence — no trained GNN result for this scenario")
 
         # Reasoning steps (from enterprise incident if available)
         _ent_steps = (ent_incident or {}).get("reasoning_steps", [])
@@ -5339,6 +5592,12 @@ def _tab_gnn_rca() -> None:
                 unsafe_allow_html=True,
             )
             st.dataframe(pd.DataFrame(ranking), use_container_width=True, hide_index=True)
+
+        # Trained RCA Model Evidence — provenance expander for GNN model + metrics
+        _gnn_metrics_data = _safe_read_json(
+            REPO_ROOT / "assets" / "preloaded" / "enterprise_gnn_rca" / "enterprise_gnn_metrics.json"
+        )
+        _render_gnn_rca_model_evidence(_gnn_result_pre or {}, _gnn_metrics_data)
 
         # Do not render RCA recommended_actions here.
         # Remediation must come from the AI Resolution Agent to avoid hardcoded-looking output.
