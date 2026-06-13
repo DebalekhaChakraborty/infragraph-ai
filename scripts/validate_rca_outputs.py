@@ -41,6 +41,7 @@ _DEFAULT_SCAN_DIRS: list[str] = [
 
 # Keys that must NEVER appear anywhere in a preloaded RCA output file
 _FORBIDDEN_REMEDIATION: frozenset[str] = frozenset({
+    "remediation",
     "recommended_actions",
     "remediation_steps",
     "resolution_steps",
