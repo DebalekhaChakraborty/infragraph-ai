@@ -15,8 +15,10 @@
     "root_cause_diagram": "datacenter_topology",
     "candidate_count": 3,
     "causal_evidence_count": 5,
-    "correlation_reason_count": 4
+    "correlation_reason_count": 4,
+    "kb_evidence_count": 0
   },
+  "kb_evidence_count": 0,
   "remediation": {
     "executive_summary": "Cross-diagram incident affecting 4 topology domain(s) (branch_topology, datacenter_topology, app_db_topology, shared_services_topology). 7 alert event(s) detected. Primary suspected root cause: DC-FW-01 in datacenter_topology. Immediate triage recommended to validate and restore service.",
     "probable_root_cause": "DC-FW-01 (in datacenter_topology)",
@@ -103,7 +105,7 @@
       "priority": "1-Critical",
       "assignment_group": "Network Engineering — Enterprise Operations"
     },
-    "audit_summary": "Template remediation plan for scenario enterprise_v3_0000; risk=critical, blast_radius=enterprise_wide, automation=manual_only, rca_source=Enterprise GNN RCA. Evidence IDs used: CE-001, CE-002, CE-003, CE-004, CE-005. Event correlation cluster: CLU-ent_enterprise_v3_0000-001 (score=0.8273).",
+    "audit_summary": "Template remediation plan for scenario enterprise_v3_0000; risk=critical, blast_radius=enterprise_wide, automation=manual_only, rca_source=Enterprise GNN RCA. Evidence IDs used: CE-001, CE-002, CE-003, CE-004, CE-005. Event correlation cluster: CLU-ent_enterprise_v3_0000-001 (score=0.8273). ",
     "confidence_notes": "RCA source: Enterprise GNN RCA. GNN inference result was used — candidate ranking is model-derived. Event correlation cluster: CLU-ent_enterprise_v3_0000-001 (score=0.8273). Template mode: output is deterministic and not model-generated.",
     "source": "template"
   }

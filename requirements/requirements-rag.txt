@@ -2,12 +2,20 @@
 # InfraGraph AI — vector memory / RAG dependencies
 # ============================================================
 # Use for: Graph Copilot vector memory, ChromaDB indexing,
-#          semantic retrieval over graph evidence.
+#          semantic retrieval over graph evidence, and
+#          SOP/KB-grounded remediation RAG.
 #
 # Install:
 #   pip install -r requirements.txt
-#   pip install -r requirements-rag.txt
+#   pip install -r requirements/requirements-rag.txt
+#
+# Note: sentence-transformers brings its own torch dependency.
+# Do NOT pin torch here — the host environment may require a specific
+# torch build (e.g., AMD ROCm, CUDA). Install torch separately first
+# if needed, then install this file.
 # ============================================================
 
-chromadb
-sentence-transformers
+chromadb>=0.5.0
+sentence-transformers>=3.0.0
+numpy>=1.24.0
+scikit-learn>=1.2.0

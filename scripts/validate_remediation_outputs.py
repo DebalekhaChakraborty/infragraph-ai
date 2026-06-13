@@ -143,7 +143,38 @@ def _check_file(path: Path) -> list[str]:
             "remediation.servicenow_incident_summary.short_description must be non-empty"
         )
 
+    # evidence_from_graph must be non-empty
+    efg = rem.get("evidence_from_graph", [])
+    if not isinstance(efg, list) or len(efg) == 0:
+        violations.append("remediation.evidence_from_graph must be a non-empty list")
+
+    # KB evidence check: if kb_evidence_count > 0, at least one KB-* ID must appear somewhere
+    input_summary = data.get("input_context_summary", {})
+    kb_count = input_summary.get("kb_evidence_count", data.get("kb_evidence_count", 0))
+    if isinstance(kb_count, int) and kb_count > 0:
+        kb_id_found = _has_kb_evidence_id(rem)
+        if not kb_id_found:
+            violations.append(
+                f"kb_evidence_count={kb_count} but no KB-* evidence ID found in "
+                "evidence_ids_used, evidence_from_graph, audit_summary, or confidence_notes"
+            )
+
     return violations
+
+
+def _has_kb_evidence_id(rem: dict) -> bool:
+    """Return True if any KB-* evidence ID appears in key remediation fields."""
+    def _contains_kb(value) -> bool:
+        if isinstance(value, str):
+            return "KB-" in value
+        if isinstance(value, list):
+            return any(_contains_kb(v) for v in value)
+        return False
+
+    for field in ("evidence_ids_used", "evidence_from_graph", "audit_summary", "confidence_notes"):
+        if _contains_kb(rem.get(field)):
+            return True
+    return False
 
 
 def _rel(path: Path) -> str:
