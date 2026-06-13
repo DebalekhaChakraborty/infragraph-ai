@@ -8,12 +8,13 @@ Reads:
   model_artifacts/enterprise_gnn_rca/enterprise_gnn_rca.pt
   model_artifacts/enterprise_gnn_rca/enterprise_gnn_config.json
 
-Writes:
-  assets/preloaded/enterprise_gnn_rca/<scenario_id>.json
+Default writes to:
+  assets/preloaded/enterprise_gnn_rca/<scenario_id>.json  (demo-safe, no eval fields)
 
-Default output contains predicted root-cause ranking only — no evaluation fields
-and no remediation content.  Pass --with-eval to include ground-truth comparison
-(reads labels.json from the scenario library).
+With --with-eval (unless --out is overridden) writes to:
+  reports/enterprise_gnn_rca/manual_eval/<scenario_id>.json
+
+No remediation content is produced here.
 
 Usage:
   python scripts/predict_enterprise_gnn_rca.py --scenario-id enterprise_v3_0000
@@ -60,18 +61,21 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Run Enterprise GNN RCA prediction for one scenario."
     )
-    parser.add_argument("--scenario-id",     default=None,
+    parser.add_argument("--scenario-id",      default=None,
                         help="scenario_id from manifest (e.g. enterprise_v3_0000)")
-    parser.add_argument("--case-id",         default=None,
+    parser.add_argument("--case-id",          default=None,
                         help="case_id from manifest (e.g. ent_enterprise_v3_0000)")
-    parser.add_argument("--manifest",        default="scenario_library/manifest.json")
+    parser.add_argument("--manifest",         default="scenario_library/manifest.json")
     parser.add_argument("--scenario-library", default="scenario_library")
-    parser.add_argument("--model",           default="model_artifacts/enterprise_gnn_rca/enterprise_gnn_rca.pt")
-    parser.add_argument("--config",          default="model_artifacts/enterprise_gnn_rca/enterprise_gnn_config.json")
-    parser.add_argument("--out",             default="assets/preloaded/enterprise_gnn_rca")
+    parser.add_argument("--model",            default="model_artifacts/enterprise_gnn_rca/enterprise_gnn_rca.pt")
+    parser.add_argument("--config",           default="model_artifacts/enterprise_gnn_rca/enterprise_gnn_config.json")
+    parser.add_argument("--out",              default=None,
+                        help="Output directory override.  Default: assets/preloaded/enterprise_gnn_rca "
+                             "(or reports/enterprise_gnn_rca/manual_eval when --with-eval is set).")
     parser.add_argument("--top-k",  type=int, default=3)
     parser.add_argument("--with-eval", action="store_true",
-                        help="Include ground-truth comparison (reads labels.json)")
+                        help="Include ground-truth comparison (reads labels.json).  "
+                             "Output is written to reports/enterprise_gnn_rca/manual_eval by default.")
     args = parser.parse_args()
 
     if not args.scenario_id and not args.case_id:
@@ -82,12 +86,44 @@ def main() -> None:
     repo_root   = REPO_ROOT
     lib_root    = (repo_root / args.scenario_library).resolve()
     model_path  = (repo_root / args.model).resolve()
-    config_path = Path(args.config) if Path(args.config).is_absolute() else (repo_root / args.config).resolve()
-    out_dir     = (repo_root / args.out).resolve()
+    config_path = (
+        Path(args.config) if Path(args.config).is_absolute()
+        else (repo_root / args.config).resolve()
+    )
+
+    # Resolve output directory (Part B)
+    if args.out:
+        out_dir = (repo_root / args.out).resolve()
+    elif args.with_eval:
+        out_dir = repo_root / "reports" / "enterprise_gnn_rca" / "manual_eval"
+        print("[INFO] --with-eval enabled; writing evaluation output under "
+              "reports/enterprise_gnn_rca/manual_eval, not assets/preloaded/.")
+    else:
+        out_dir = repo_root / "assets" / "preloaded" / "enterprise_gnn_rca"
 
     if not model_path.exists():
         print(f"[ERROR] Model not found: {model_path}")
         print("        Run scripts/train_enterprise_gnn_rca.py first.")
+        sys.exit(1)
+
+    if not config_path.exists():
+        print(f"[ERROR] Config not found: {config_path}")
+        print("        Run scripts/train_enterprise_gnn_rca.py first.")
+        sys.exit(1)
+
+    # Feature dimension check BEFORE loading weights (Part C)
+    config_raw = json.loads(config_path.read_text(encoding="utf-8"))
+    model_in_channels = config_raw.get("in_channels", IN_DIM)
+    if model_in_channels != IN_DIM:
+        print(
+            f"[ERROR] Feature dimension mismatch: model expects {model_in_channels} features, "
+            f"but dataset produces {IN_DIM} features."
+        )
+        print(
+            "        Rebuild the dataset and retrain the Enterprise GNN RCA model:\n"
+            "          python scripts/build_enterprise_gnn_dataset.py\n"
+            "          python scripts/train_enterprise_gnn_rca.py"
+        )
         sys.exit(1)
 
     manifest_path = (repo_root / args.manifest).resolve()
@@ -131,21 +167,8 @@ def main() -> None:
         print(f"[ERROR] Failed to build graph for case {case_id}. Check enterprise_graph.json.")
         sys.exit(1)
 
-    # Load model and check feature dimension
-    model, config = load_gnn(model_path, config_path)
-
-    model_in_channels = config.get("in_channels", IN_DIM)
-    if model_in_channels != IN_DIM:
-        print(
-            f"[ERROR] Feature dimension mismatch: model expects {model_in_channels} features, "
-            f"but dataset produces {IN_DIM} features."
-        )
-        print(
-            "        Rebuild the dataset and retrain the Enterprise GNN RCA model:\n"
-            "          python scripts/build_enterprise_gnn_dataset.py\n"
-            "          python scripts/train_enterprise_gnn_rca.py"
-        )
-        sys.exit(1)
+    # Dimension check passed — load model weights
+    model, _ = load_gnn(model_path, config_path)
 
     # Predict — pass labels only when --with-eval is explicitly requested
     labels_for_eval = labels if args.with_eval else None

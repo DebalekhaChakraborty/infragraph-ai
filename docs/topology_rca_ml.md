@@ -141,6 +141,12 @@ Options:
 | `--with-eval` | off | Include ground-truth comparison (reads labels.json) |
 | `--hybrid-score` | off | Combine model probability with alert-context score |
 
+**Output routing:**
+
+- Default (no `--with-eval`): writes demo-safe output to `assets/preloaded/topology_rca_results/`.
+- With `--with-eval` (and no `--out-dir`): writes to `reports/topology_rca/manual_eval/`.
+- Do not use `--with-eval` when generating preloaded demo assets.
+
 **Hybrid scoring** (`--hybrid-score`):
 
 ```

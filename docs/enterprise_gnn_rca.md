@@ -65,7 +65,13 @@ assets/preloaded/enterprise_gnn_rca/
 | `labels.json` | Ground truth: `root_cause_node`, `root_cause_diagram`, `impacted_diagrams` — private |
 | `graph_ref.json` | Paths to `enterprise_graph.json` and `stitch_map.json` |
 | `enterprise_graph.json` | Nodes + edges + cross_diagram_edges for the full enterprise graph |
-| `stitch_map.json` | Shared entity canonicalisation across diagrams |
+| `stitch_map.json` | Shared entity canonicalisation across diagrams (provenance only — see note below) |
+
+> **stitch_map.json provenance note**: `stitch_map.json` is currently retained as
+> provenance for how scenario diagrams were stitched into the enterprise graph.
+> The Enterprise GNN consumes `enterprise_graph.json`, which is already pre-stitched
+> and contains local plus cross-diagram edges.  Future versions may use
+> `stitch_map.json` directly to reconstruct `enterprise_graph.json` at inference time.
 
 ### Public vs private
 
@@ -197,6 +203,13 @@ python scripts/predict_enterprise_gnn_rca.py --case-id ent_enterprise_v3_0000
 | `--case-id` | — | case_id from manifest |
 | `--top-k` | 3 | Number of ranked candidates |
 | `--with-eval` | off | Include ground-truth comparison (reads labels.json) |
+| `--out` | _(auto)_ | Override output directory |
+
+**Output routing:**
+
+- Default (no `--with-eval`): writes demo-safe output to `assets/preloaded/enterprise_gnn_rca/`.
+- With `--with-eval` (and no `--out`): writes to `reports/enterprise_gnn_rca/manual_eval/`.
+- Do not use `--with-eval` when generating preloaded demo assets.
 
 ---
 
