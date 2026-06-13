@@ -16,9 +16,9 @@
     "candidate_count": 3,
     "causal_evidence_count": 5,
     "correlation_reason_count": 4,
-    "kb_evidence_count": 0
+    "kb_evidence_count": 5
   },
-  "kb_evidence_count": 0,
+  "kb_evidence_count": 5,
   "remediation": {
     "executive_summary": "Cross-diagram incident affecting 4 topology domain(s) (branch_topology, datacenter_topology, app_db_topology, shared_services_topology). 7 alert event(s) detected. Primary suspected root cause: DC-FW-01 in datacenter_topology. Immediate triage recommended to validate and restore service.",
     "probable_root_cause": "DC-FW-01 (in datacenter_topology)",
@@ -27,6 +27,11 @@
     "automation_eligibility": "manual_only",
     "blast_radius": "enterprise_wide",
     "evidence_ids_used": [
+      "KB-SOP-DC-FW-001-001",
+      "KB-SOP-DC-FW-001-006",
+      "KB-RUNBOOK-ENT-XDIAG-001-006",
+      "KB-RUNBOOK-ENT-XDIAG-001-002",
+      "KB-RUNBOOK-ENT-XDIAG-001-004",
       "CE-001",
       "CE-002",
       "CE-003",
@@ -47,7 +52,12 @@
       "Correlation reason: 7 event(s) span 18 min (t=0..18)",
       "Correlation reason: Propagation pattern detected: link_errors -> latency",
       "Correlation reason: Events span 4 diagrams: app_db_topology, branch_topology, datacenter_topology, shared_services_topology",
-      "Correlation reason: Alerted nodes are topologically proximate (2-3 hops)"
+      "Correlation reason: Alerted nodes are topologically proximate (2-3 hops)",
+      "KB-SOP-DC-FW-001-001: Datacenter Firewall Packet Drop and Link Error Response § Trigger Symptoms",
+      "KB-SOP-DC-FW-001-006: Datacenter Firewall Packet Drop and Link Error Response § Validation Steps",
+      "KB-RUNBOOK-ENT-XDIAG-001-006: Enterprise Cross-Diagram Incident Validation Runbook § Validation Steps",
+      "KB-RUNBOOK-ENT-XDIAG-001-002: Enterprise Cross-Diagram Incident Validation Runbook § Applicable RCA Patterns",
+      "KB-RUNBOOK-ENT-XDIAG-001-004: Enterprise Cross-Diagram Incident Validation Runbook § Triage Steps"
     ],
     "pre_checks": [
       "Confirm root-cause candidate DC-FW-01 is present in enterprise graph memory.",
@@ -67,7 +77,9 @@
       "Verify that impact-path nodes are returning to healthy state across all diagrams.",
       "Run connectivity tests across affected diagram boundaries.",
       "Confirm monitoring system shows green health on root-cause node.",
-      "Confirm health of all impacted nodes: DC-FW-01, DC-CORE-SW-01, APP-LB-01, APP-01, DB-MASTER, IAM-01…."
+      "Confirm health of all impacted nodes: DC-FW-01, DC-CORE-SW-01, APP-LB-01, APP-01, DB-MASTER, IAM-01….",
+      "Validate according to SOP-DC-FW-001 (Datacenter Firewall Packet Drop and Link Error Response) validation section [KB-SOP-DC-FW-001-006].",
+      "Validate according to RUNBOOK-ENT-XDIAG-001 (Enterprise Cross-Diagram Incident Validation Runbook) validation section [KB-RUNBOOK-ENT-XDIAG-001-006]."
     ],
     "remediation_steps": [
       "Restore 'DC-FW-01' (datacenter_topology) by restarting the affected service or applying corrective configuration.",
@@ -82,7 +94,9 @@
       "Verify that impact-path nodes are returning to healthy state across all diagrams.",
       "Run connectivity tests across affected diagram boundaries.",
       "Confirm monitoring system shows green health on root-cause node.",
-      "Confirm health of all impacted nodes: DC-FW-01, DC-CORE-SW-01, APP-LB-01, APP-01, DB-MASTER, IAM-01…."
+      "Confirm health of all impacted nodes: DC-FW-01, DC-CORE-SW-01, APP-LB-01, APP-01, DB-MASTER, IAM-01….",
+      "Validate according to SOP-DC-FW-001 (Datacenter Firewall Packet Drop and Link Error Response) validation section [KB-SOP-DC-FW-001-006].",
+      "Validate according to RUNBOOK-ENT-XDIAG-001 (Enterprise Cross-Diagram Incident Validation Runbook) validation section [KB-RUNBOOK-ENT-XDIAG-001-006]."
     ],
     "do_not_execute_if": [
       "Do not execute changes if root cause DC-FW-01 is not confirmed by graph evidence.",
@@ -105,8 +119,8 @@
       "priority": "1-Critical",
       "assignment_group": "Network Engineering — Enterprise Operations"
     },
-    "audit_summary": "Template remediation plan for scenario enterprise_v3_0000; risk=critical, blast_radius=enterprise_wide, automation=manual_only, rca_source=Enterprise GNN RCA. Evidence IDs used: CE-001, CE-002, CE-003, CE-004, CE-005. Event correlation cluster: CLU-ent_enterprise_v3_0000-001 (score=0.8273). ",
-    "confidence_notes": "RCA source: Enterprise GNN RCA. GNN inference result was used — candidate ranking is model-derived. Event correlation cluster: CLU-ent_enterprise_v3_0000-001 (score=0.8273). Template mode: output is deterministic and not model-generated.",
+    "audit_summary": "Template remediation plan for scenario enterprise_v3_0000; risk=critical, blast_radius=enterprise_wide, automation=manual_only, rca_source=Enterprise GNN RCA. Evidence IDs used: KB-SOP-DC-FW-001-001, KB-SOP-DC-FW-001-006, KB-RUNBOOK-ENT-XDIAG-001-006, KB-RUNBOOK-ENT-XDIAG-001-002, KB-RUNBOOK-ENT-XDIAG-001-004, CE-001, CE-002, CE-003, CE-004, CE-005. Event correlation cluster: CLU-ent_enterprise_v3_0000-001 (score=0.8273). KB chunks retrieved: 5.",
+    "confidence_notes": "RCA source: Enterprise GNN RCA. GNN inference result was used — candidate ranking is model-derived. Event correlation cluster: CLU-ent_enterprise_v3_0000-001 (score=0.8273). SOP/KB evidence retrieved: 5 chunk(s). Template mode: output is deterministic and not model-generated.",
     "source": "template"
   }
 }

@@ -5,7 +5,7 @@
   "rca_source": "Enterprise GNN RCA",
   "predicted_root_cause": "APP-LB-01",
   "root_cause_diagram": "app_db_topology",
-  "confidence": 0.9459,
+  "confidence": 1.0,
   "top_candidates": [
     {
       "rank": 1,
@@ -15,41 +15,41 @@
         "app_db_topology"
       ],
       "node_type": "load_balancer",
-      "score": 0.9459,
+      "score": 1.0,
       "evidence": [
-        "alert_count=1",
-        "cross_diagram_degree=0.0",
+        "alert_count=1.0",
+        "cross_diagram_degree=0.071",
         "distance_to_alert=0.0",
         "shared_entity=False"
       ]
     },
     {
       "rank": 2,
-      "node_id": "DC-CORE-SW-01",
-      "diagram_id": "datacenter_topology",
-      "node_observed_in_diagrams": [
-        "datacenter_topology"
-      ],
-      "node_type": "switch",
-      "score": 0.8889,
-      "evidence": [
-        "alert_count=0",
-        "cross_diagram_degree=0.0",
-        "distance_to_alert=0.0",
-        "shared_entity=True"
-      ]
-    },
-    {
-      "rank": 3,
-      "node_id": "SERVICE-API-01",
+      "node_id": "APP-01",
       "diagram_id": "app_db_topology",
       "node_observed_in_diagrams": [
         "app_db_topology"
       ],
-      "node_type": "service",
-      "score": 0.8776,
+      "node_type": "server",
+      "score": 0.0,
       "evidence": [
-        "alert_count=0",
+        "alert_count=1.0",
+        "cross_diagram_degree=0.0",
+        "distance_to_alert=0.0",
+        "shared_entity=False"
+      ]
+    },
+    {
+      "rank": 3,
+      "node_id": "APP-02",
+      "diagram_id": "app_db_topology",
+      "node_observed_in_diagrams": [
+        "app_db_topology"
+      ],
+      "node_type": "server",
+      "score": 0.0,
+      "evidence": [
+        "alert_count=1.0",
         "cross_diagram_degree=0.0",
         "distance_to_alert=0.0",
         "shared_entity=False"
