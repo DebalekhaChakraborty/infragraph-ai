@@ -2006,8 +2006,8 @@ def _render_remediation_plan(plan: dict) -> None:
         ok = bool(result.get("ok", False))
         if src == "qwen_vllm" and ok:
             text, color = "Live Qwen/vLLM", "#10b981"
-        elif src == "template":
-            text, color = "Template fallback — deterministic, not model-generated", "#f59e0b"
+        elif src in ("template", "template_fallback"):
+            text, color = "Template/fallback response — deterministic, not model-generated", "#f59e0b"
         elif not ok:
             text, color = "Strict mode blocked", "#ef4444"
         else:
@@ -2123,8 +2123,9 @@ def _render_ai_pipeline_trace(
     response_source: str = "",
 ) -> None:
     impacted_diagrams = impacted_diagrams or []
-    training_path = REPO_ROOT / "training" / "verl_grpo" / "data" / "rca_remediation_rl_train.jsonl"
-    alignment_assets = (REPO_ROOT / "training" / "verl_grpo").exists()
+    _sop_adapter_env  = _os.environ.get("INFRAGRAPH_LORA_ADAPTER_PATH") or ""
+    _sop_adapter_path = _sop_adapter_env or str(REPO_ROOT / "model_artifacts" / "qwen_lora" / "infragraph_sop_grounded")
+    _sop_adapter_ok   = Path(_sop_adapter_path).exists()
     rows = {
         "Selected diagram": selected_diagram or "—",
         "Selected scenario": selected_scenario or "—",
@@ -2136,11 +2137,76 @@ def _render_ai_pipeline_trace(
         "Vector evidence retrieved": str(vector_evidence_count),
         "Qwen configured": "yes" if _qwen_configured() else "no",
         "Response source": response_source or "—",
-        "Alignment assets available": "yes" if alignment_assets else "no",
-        "Training dataset path": str(training_path) if training_path.exists() else "not generated",
+        "SOP-grounded adapter path": _sop_adapter_path,
+        "Adapter available": "yes" if _sop_adapter_ok else "no — run scripts/train_qwen_sop_lora.py",
     }
     with st.expander("AI Pipeline Trace", expanded=False):
         st.table(pd.DataFrame([{"Signal": k, "Value": v} for k, v in rows.items()]))
+
+
+def _render_qwen_runtime_proof(plan_result: dict) -> None:
+    """Expandable Qwen Runtime Proof panel with source badge."""
+    import datetime as _dt
+
+    src = plan_result.get("source", "")
+    ok  = bool(plan_result.get("ok", False))
+
+    # ── Source badge (always visible, outside expander) ───────────────────────
+    if src == "qwen_vllm" and ok:
+        badge_text  = "Live Qwen/vLLM response"
+        badge_color = "#10b981"
+    else:
+        badge_text  = "Template/fallback response"
+        badge_color = "#f59e0b"
+
+    st.markdown(
+        f'<span style="display:inline-block;margin:8px 0 4px 0;padding:4px 12px;'
+        f'border-radius:999px;border:1px solid {badge_color};color:{badge_color};'
+        f'background:rgba(15,23,42,0.5);font-size:0.72rem;font-weight:800">'
+        f'{html.escape(badge_text)}</span>',
+        unsafe_allow_html=True,
+    )
+
+    # ── Expandable proof panel ────────────────────────────────────────────────
+    with st.expander("Qwen Runtime Proof", expanded=False):
+        base_url    = (_os.environ.get("INFRAGRAPH_QWEN_BASE_URL")
+                       or _os.environ.get("QWEN_BASE_URL")
+                       or _QWEN_BASE_URL)
+        model_id    = (_os.environ.get("INFRAGRAPH_QWEN_MODEL")
+                       or _os.environ.get("QWEN_MODEL")
+                       or _QWEN_MODEL)
+        timeout_s   = _os.environ.get("INFRAGRAPH_QWEN_TIMEOUT") or str(_QWEN_TIMEOUT)
+        max_tokens  = _os.environ.get("INFRAGRAPH_QWEN_MAX_TOKENS") or "—"
+        adapter_env = _os.environ.get("INFRAGRAPH_LORA_ADAPTER_PATH") or ""
+        adapter_eff = adapter_env or "model_artifacts/qwen_lora/infragraph_sop_grounded"
+        vllm_up     = _check_vllm_available()
+        raw_output  = str(plan_result.get("raw") or "")
+        raw_len     = len(raw_output)
+        gen_ts      = plan_result.get("_generated_at") or "—"
+        qwen_err    = plan_result.get("qwen_error") or ""
+
+        rows: dict[str, str] = {
+            "INFRAGRAPH_QWEN_BASE_URL":     base_url,
+            "INFRAGRAPH_QWEN_MODEL":        model_id,
+            "INFRAGRAPH_QWEN_TIMEOUT":      f"{timeout_s}s",
+            "INFRAGRAPH_QWEN_MAX_TOKENS":   max_tokens,
+            "INFRAGRAPH_LORA_ADAPTER_PATH": adapter_eff,
+            "vLLM /models check":           "PASS" if vllm_up else "FAIL",
+            "Response source":              src or "—",
+            "Response ok":                  str(ok),
+            "Raw output length (chars)":    str(raw_len),
+            "Generated at":                 gen_ts,
+        }
+        if qwen_err:
+            rows["Qwen error (caused fallback)"] = qwen_err[:300]
+
+        st.table(pd.DataFrame([{"Field": k, "Value": v} for k, v in rows.items()]))
+
+        if raw_len > 0:
+            with st.expander("Raw model output (first 300 chars)", expanded=False):
+                st.code(raw_output[:300], language="json")
+        else:
+            st.caption("No raw model output — template mode or plan not yet generated.")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -3983,8 +4049,8 @@ def _tab_local_rca() -> None:
             )
         if not _loc_lora_exists:
             st.caption(
-                "InfraGraph LoRA adapter not available — using base/model fallback or template mode. "
-                "Set `INFRAGRAPH_LORA_ADAPTER_PATH` after running GRPO fine-tuning."
+                "SOP-grounded LoRA adapter not detected. "
+                "Train with `scripts/train_qwen_sop_lora.py` or set `INFRAGRAPH_LORA_ADAPTER_PATH`."
             )
 
         # Action buttons
@@ -3996,7 +4062,7 @@ def _tab_local_rca() -> None:
                 else "Generate Topology Template Resolution Plan"
             )
             if st.button(_loc_btn_lbl, key="local_ai_plan_btn", type="primary"):
-                with st.spinner("Building local resolution plan…"):
+                with st.spinner("Building resolution plan…"):
                     _loc_ctx = _build_local_remediation_context(result, incident, local_graph, diagram_id)
                     if _loc_ctx and _generate_resolution_plan is not None:
                         _root = (result or {}).get("root_cause", "")
@@ -4014,6 +4080,8 @@ def _tab_local_rca() -> None:
                             model=_QWEN_MODEL,
                             timeout=_QWEN_TIMEOUT,
                         )
+                        import datetime as _dt
+                        _loc_plan_result["_generated_at"] = _dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         st.session_state.local_ai_resolution_plan = _loc_plan_result
                     else:
                         st.error("Could not build remediation context — RCA result may be incomplete.")
@@ -4036,21 +4104,28 @@ def _tab_local_rca() -> None:
                 elif _loc_snow:
                     st.code(str(_loc_snow), language="text")
 
-        # Honesty banner for template source
+        # Honesty banner + provenance proof
         if _loc_plan:
             _loc_src = _loc_plan.get("source", "")
-            if _loc_src == "template":
+            if _loc_src in ("template", "template_fallback"):
+                _fb_detail = (
+                    " Qwen returned an error — see Qwen Runtime Proof for details."
+                    if _loc_src == "template_fallback"
+                    else " Connect a vLLM server to enable Qwen3 AI inference."
+                )
                 st.markdown(
                     '<div style="background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.3);'
                     'border-radius:8px;padding:10px 14px;margin:10px 0;font-size:0.8rem;color:#fbbf24">'
-                    'Template fallback — deterministic output, not model-generated. '
-                    'Connect a vLLM server to enable Qwen3 AI inference.'
+                    f'Template output — deterministic, not AI-generated.{html.escape(_fb_detail)}'
                     '</div>',
                     unsafe_allow_html=True,
                 )
-            if _loc_plan.get("error"):
+            if _loc_plan.get("qwen_error"):
+                st.warning(f"Qwen error (caused fallback): {_loc_plan['qwen_error']}")
+            elif _loc_plan.get("error"):
                 st.warning(f"Inference error: {_loc_plan['error']}")
             _render_remediation_plan(_loc_plan)
+            _render_qwen_runtime_proof(_loc_plan)
             _render_ai_pipeline_trace(
                 selected_diagram=str(diagram_id),
                 selected_scenario=str((incident or {}).get("scenario_id", "")),
@@ -5330,9 +5405,8 @@ def _tab_gnn_rca() -> None:
         )
     if not _lora_exists:
         st.caption(
-            "Base Qwen model detected. Fine-tuned adapter not loaded. "
-            "Run `bash training/verl_grpo/train_qwen3_grpo.sh` to prepare and set "
-            "`INFRAGRAPH_LORA_ADAPTER_PATH`."
+            "SOP-grounded LoRA adapter not detected. "
+            "Train with `scripts/train_qwen_sop_lora.py` or set `INFRAGRAPH_LORA_ADAPTER_PATH`."
         )
 
     # Only show generation buttons when we have something to remediate
@@ -5374,6 +5448,9 @@ def _tab_gnn_rca() -> None:
                         )
                     else:
                         _plan = {}
+                    if _plan:
+                        import datetime as _dt
+                        _plan["_generated_at"] = _dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     st.session_state.enterprise_ai_resolution_plan = _plan
                 st.rerun()
 
@@ -5405,25 +5482,27 @@ def _tab_gnn_rca() -> None:
         _plan_src = _rem_plan.get("source", "")
         _plan_ok  = _rem_plan.get("ok", False)
 
-        if _plan_src == "template":
+        if _plan_src in ("template", "template_fallback"):
+            _fb_detail = (
+                " Qwen returned an error — see Qwen Runtime Proof for details."
+                if _plan_src == "template_fallback"
+                else " Connect a vLLM server to enable Qwen3 AI inference."
+            )
             st.markdown(
                 '<div style="background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.3);'
                 'border-radius:8px;padding:10px 14px;margin:10px 0;font-size:0.8rem;color:#fbbf24">'
-                'Template fallback — deterministic output, not model-generated.</div>',
+                f'Template output — deterministic, not AI-generated.{html.escape(_fb_detail)}'
+                '</div>',
                 unsafe_allow_html=True,
             )
-        elif _plan_src == "qwen_vllm" and _plan_ok:
-            _used_model = _rem_plan.get("model", _QWEN_MODEL)
-            st.markdown(
-                f'<div style="font-size:0.7rem;color:#10b981;margin-bottom:6px">'
-                f'Generated by {_used_model} via vLLM.</div>',
-                unsafe_allow_html=True,
-            )
-
-        if not _plan_ok and _rem_plan.get("error"):
+        if _rem_plan.get("qwen_error"):
+            st.warning(f"Qwen error (caused fallback): {_rem_plan['qwen_error']}")
+        elif not _plan_ok and _rem_plan.get("error"):
             st.error(f"Resolution plan error: {_rem_plan['error']}")
-        else:
+
+        if _plan_ok or _plan_src in ("template", "template_fallback"):
             _render_remediation_plan(_rem_plan)
+            _render_qwen_runtime_proof(_rem_plan)
             _render_ai_pipeline_trace(
                 selected_diagram=str(diagram_id),
                 selected_scenario=str((ent_incident or {}).get("scenario_id") or (rca or {}).get("scenario_id") or ""),
