@@ -29,6 +29,9 @@ reports/kb_index/
 # data/rca/enterprise_gnn/*.pt
 # yolov8*.pt
 
+# Qwen LoRA adapter binaries (rebuilt via train_qwen_sop_lora.py)
+model_artifacts/qwen_lora/
+
 # Generated training data (rebuilt from scripts)
 data/qwen_sop_grounded/
 data/qwen_sop_grounded_expanded/
