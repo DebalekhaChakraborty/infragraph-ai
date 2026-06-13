@@ -1,0 +1,24 @@
+{
+  "total_records": 4,
+  "train_records": 3,
+  "val_records": 1,
+  "scenarios": [
+    "enterprise_v3_0000",
+    "enterprise_v3_0072",
+    "enterprise_v3_0073",
+    "enterprise_v3_0074"
+  ],
+  "train_scenarios": [
+    "enterprise_v3_0000",
+    "enterprise_v3_0072",
+    "enterprise_v3_0073"
+  ],
+  "val_scenarios": [
+    "enterprise_v3_0074"
+  ],
+  "skipped": [],
+  "kb_top_k": 5,
+  "strict_kb": false,
+  "target_source": "template_sop_grounded",
+  "output_dir": "data\\qwen_sop_grounded"
+}
