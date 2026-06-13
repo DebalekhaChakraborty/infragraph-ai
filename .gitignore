@@ -10,6 +10,14 @@ __pycache__/
 venv/
 env/
 
+# ChromaDB / local vector index runtime files
+runtime_state/kb_index/
+runtime_state/chroma/
+runtime_state/**/*.sqlite3
+runtime_state/**/*.sqlite3-shm
+runtime_state/**/*.sqlite3-wal
+runtime_state/**/.chroma/
+
 # # Logs/temp
 # *.log
 # *.tmp
