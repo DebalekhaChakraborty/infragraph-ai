@@ -1,0 +1,29 @@
+# ============================================================
+# InfraGraph AI — Qwen LoRA SFT requirements
+# ============================================================
+# Supervised fine-tuning with LoRA for SOP-grounded Qwen alignment.
+#
+# No bitsandbytes — AMD ROCm environments may not support 4-bit
+# quantization. All training uses standard float32/bfloat16/float16.
+#
+# Install:
+#   pip install -r requirements/requirements-qwen-lora.txt
+#
+# If torch is not installed yet (CUDA):
+#   pip install torch>=2.0.0
+# For AMD ROCm, install the ROCm torch wheel first:
+#   pip install torch --index-url https://download.pytorch.org/whl/rocm6.0
+# ============================================================
+
+# --- Hugging Face core -------------------------------------------
+# Pinned to same range as requirements-training.txt
+transformers>=4.46.0,<4.58.0
+peft>=0.14.0
+accelerate>=1.0.0
+
+# --- Serialisation -----------------------------------------------
+safetensors>=0.4.0
+
+# --- Utilities ---------------------------------------------------
+# torch is listed as a comment only — install separately for your hardware
+# torch>=2.0.0
