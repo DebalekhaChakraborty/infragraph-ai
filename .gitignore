@@ -1,16 +1,14 @@
 # # Python/cache
-# __pycache__/
-# *.pyc
-# *.pyo
-# *.pyd
-# .ipynb_checkpoints/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/
 
 # # Virtual environments
-# .venv/
-# .venv-rfdetr/
-# .venv-ui/
-# venv/
-# env/
+.venv/
+venv/
+env/
 
 # # Logs/temp
 # *.log
@@ -55,26 +53,12 @@
 # # Keep datasets in git for submission
 # # datasets/ is intentionally NOT ignored
 
-# # Python/Jupyter generated files
-# __pycache__/
-# *.py[cod]
-# .ipynb_checkpoints/
-
-# # Python/Jupyter generated files
-# __pycache__/
-# *.py[cod]
-# .ipynb_checkpoints/
 
 # # Generated training/checkpoint artifacts
 # training/verl_grpo/runs/
 # training_runs/
 # node_modules/
 
-# # Legacy/offloaded outputs
-# outputs/v1/
-# outputs/v2/
-# outputs/*v1*/
-# outputs/*v2*/
 
 # # Model/checkpoint binaries
 # *.safetensors
