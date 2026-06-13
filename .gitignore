@@ -31,4 +31,5 @@ reports/kb_index/
 
 # Generated training data (rebuilt from scripts)
 data/qwen_sop_grounded/
+data/qwen_sop_grounded_expanded/
 data/remediation_training/
