@@ -61,6 +61,10 @@ def make_remediation_input(
     device_context: list[dict] | None = None,
     connector_context: list[dict] | None = None,
     interface_context: list[dict] | None = None,
+    cluster_id: str = "",
+    cluster_score: float | None = None,
+    correlation_reasons: list[str] | None = None,
+    causal_evidence: list[dict] | None = None,
 ) -> dict:
     """Return a normalised remediation input dict for either scope."""
     return {
@@ -83,6 +87,10 @@ def make_remediation_input(
         "device_context":        device_context or [],
         "connector_context":     connector_context or [],
         "interface_context":     interface_context or [],
+        "cluster_id":            cluster_id,
+        "cluster_score":         cluster_score,
+        "correlation_reasons":   correlation_reasons or [],
+        "causal_evidence":       causal_evidence or [],
     }
 
 

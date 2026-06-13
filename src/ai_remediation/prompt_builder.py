@@ -135,48 +135,32 @@ def _fmt_connectors(connectors: list) -> str:
     return "\n".join(lines)
 
 
-def _fmt_causal_evidence(cluster_data: dict) -> str:
-    """Format event correlation cluster summary for prompt injection."""
-    clusters = cluster_data.get("clusters", [])
-    if not clusters:
-        return "  (no cluster data)"
-    primary = clusters[0]
+def _fmt_causal_evidence(items: list, max_items: int = 8) -> str:
+    """Format a list of causal evidence items for prompt injection."""
+    if not items:
+        return "  (none)"
     lines: list[str] = []
-
-    cid   = primary.get("cluster_id", "—")
-    score = primary.get("cluster_score", 0.0)
-    dims  = primary.get("correlation_dimensions", {})
-    tw    = primary.get("time_window", {})
-    diags = primary.get("diagram_scope", [])
-
-    lines.append(f"  Cluster        : {cid}  (score={score:.4f})")
-    lines.append(
-        f"  Dimensions     : temporal={dims.get('temporal', 0):.2f}  "
-        f"topology={dims.get('topology', 0):.2f}  "
-        f"seq={dims.get('alert_type_seq', 0):.2f}  "
-        f"peer={dims.get('source_peer', 0):.2f}  "
-        f"cross={dims.get('cross_diagram', 0):.2f}"
-    )
-    lines.append(
-        f"  Time window    : t={tw.get('start_offset_min', 0)}..{tw.get('end_offset_min', 0)} min"
-    )
-    if diags:
-        lines.append(f"  Diagrams       : {', '.join(diags)}")
-
-    for reason in primary.get("correlation_reasons", []):
-        lines.append(f"  Reason         : {reason}")
-
-    ce_items = primary.get("causal_evidence", [])
-    if ce_items:
-        lines.append("  Causal evidence:")
-        for ce in ce_items:
-            eid   = ce.get("evidence_id", "?")
-            stage = ce.get("stage", "?")
-            conf  = ce.get("confidence", 0.0)
-            summ  = ce.get("summary", "")
-            lines.append(f"    [{eid}] {stage} (conf={conf:.2f}): {summ}")
-
+    for item in items[:max_items]:
+        eid   = item.get("evidence_id", "CE")
+        stage = item.get("stage", "unknown")
+        conf  = item.get("confidence", "")
+        summary = item.get("summary", "")
+        supporting_events = item.get("supporting_events", [])
+        supporting_nodes  = item.get("supporting_nodes", [])
+        lines.append(
+            f"  - {eid} | {stage} | confidence={conf}: {summary} "
+            f"| events={supporting_events[:5]} | nodes={supporting_nodes[:5]}"
+        )
+    if len(items) > max_items:
+        lines.append(f"  … ({len(items) - max_items} more)")
     return "\n".join(lines)
+
+
+def _fmt_correlation_reasons(reasons: list, max_items: int = 8) -> str:
+    """Format a list of correlation reason strings for prompt injection."""
+    if not reasons:
+        return "  (none)"
+    return "\n".join(f"  - {r}" for r in reasons[:max_items])
 
 
 def _fmt_retrieved_evidence(evidence: list) -> str:
@@ -202,6 +186,9 @@ def _fmt_retrieved_evidence(evidence: list) -> str:
 
 def _build_local_user_message(ctx: dict) -> str:
     schema_json = json.dumps(OUTPUT_SCHEMA_TEMPLATE, indent=2)
+    cluster_id    = ctx.get("cluster_id") or "—"
+    cluster_score = ctx.get("cluster_score")
+    cluster_score_str = f"{cluster_score:.4f}" if cluster_score is not None else "—"
     return (
         "== TOPOLOGY RCA REMEDIATION REQUEST ==\n\n"
         f"Diagram        : {ctx.get('selected_diagram_id', '—')}\n"
@@ -223,14 +210,21 @@ def _build_local_user_message(ctx: dict) -> str:
         f"{_fmt_device_context(ctx.get('device_context', []))}\n\n"
         "--- Connector Context ---\n"
         f"{_fmt_connectors(ctx.get('connector_context', []))}\n\n"
+        "--- Event Correlation & Causal Evidence ---\n"
+        f"Cluster ID    : {cluster_id}\n"
+        f"Cluster score : {cluster_score_str}\n\n"
+        "Correlation reasons:\n"
+        f"{_fmt_correlation_reasons(ctx.get('correlation_reasons', []))}\n\n"
+        "Causal evidence:\n"
+        f"{_fmt_causal_evidence(ctx.get('causal_evidence', []))}\n\n"
+        "Grounding rule (causal evidence): Treat event correlation and causal evidence as "
+        "supporting evidence, not absolute proof. Final remediation must be grounded in the "
+        "RCA result, candidate ranking, alert timeline, and causal evidence together. "
+        "If causal evidence conflicts with the RCA result, say human validation is required "
+        "before remediation. Do not invent devices, teams, commands, IPs, or services.\n\n"
         "--- Retrieved Graph Memory Evidence ---\n"
         f"{_fmt_retrieved_evidence(ctx.get('retrieved_graph_memory_evidence', []))}\n\n"
-        + (
-            "--- Event Correlation & Causal Evidence ---\n"
-            f"{_fmt_causal_evidence(ctx['cluster_data'])}\n\n"
-            if ctx.get("cluster_data") else ""
-        )
-        + "--- Graph Summary ---\n"
+        "--- Graph Summary ---\n"
         f"{ctx.get('graph_memory_summary', '—')}\n\n"
         "Grounding rules:\n"
         "- Use only listed node IDs, diagram IDs, alerts, RCA results, and retrieved evidence IDs.\n"
@@ -238,7 +232,7 @@ def _build_local_user_message(ctx: dict) -> str:
         "- Validation must come before remediation.\n"
         "- Rollback/safety notes are mandatory.\n"
         "- If evidence is insufficient, say what is missing instead of inventing.\n"
-        "- Include evidence IDs such as E1 or E2 whenever retrieved evidence supports a step.\n\n"
+        "- Include evidence IDs such as E1, E2, CE-001 whenever retrieved or causal evidence supports a step.\n\n"
         "--- Output Schema (return ONLY this JSON shape) ---\n"
         f"{schema_json}\n\n"
         'Generate the remediation plan. Set "scope" to "local" in your response.'
@@ -252,8 +246,11 @@ def _build_enterprise_user_message(ctx: dict) -> str:
     gnn_note = (
         "GNN correlation result is available — use node rankings from it."
         if ctx.get("gnn_result_available")
-        else "GNN result not available — use alert-timeline and BFS rankings only."
+        else "GNN result not available — use alert-timeline and candidate rankings only."
     )
+    cluster_id    = ctx.get("cluster_id") or "—"
+    cluster_score = ctx.get("cluster_score")
+    cluster_score_str = f"{cluster_score:.4f}" if cluster_score is not None else "—"
     return (
         "== ENTERPRISE RCA REMEDIATION REQUEST ==\n\n"
         f"Incident ID       : {ctx.get('incident_id', '—')}\n"
@@ -278,14 +275,21 @@ def _build_enterprise_user_message(ctx: dict) -> str:
         f"{_fmt_device_context(ctx.get('device_context', []))}\n\n"
         "--- Connector Context ---\n"
         f"{_fmt_connectors(ctx.get('connector_context', []))}\n\n"
+        "--- Event Correlation & Causal Evidence ---\n"
+        f"Cluster ID    : {cluster_id}\n"
+        f"Cluster score : {cluster_score_str}\n\n"
+        "Correlation reasons:\n"
+        f"{_fmt_correlation_reasons(ctx.get('correlation_reasons', []))}\n\n"
+        "Causal evidence:\n"
+        f"{_fmt_causal_evidence(ctx.get('causal_evidence', []))}\n\n"
+        "Grounding rule (causal evidence): Treat event correlation and causal evidence as "
+        "supporting evidence, not absolute proof. Final remediation must be grounded in the "
+        "RCA result, candidate ranking, alert timeline, and causal evidence together. "
+        "If causal evidence conflicts with the RCA result, say human validation is required "
+        "before remediation. Do not invent devices, teams, commands, IPs, or services.\n\n"
         "--- Retrieved Graph Memory Evidence ---\n"
         f"{_fmt_retrieved_evidence(ctx.get('retrieved_graph_memory_evidence', []))}\n\n"
-        + (
-            "--- Event Correlation & Causal Evidence ---\n"
-            f"{_fmt_causal_evidence(ctx['cluster_data'])}\n\n"
-            if ctx.get("cluster_data") else ""
-        )
-        + "--- Graph Memory Summary ---\n"
+        "--- Graph Memory Summary ---\n"
         f"{ctx.get('graph_memory_summary', '—')}\n\n"
         "Enterprise grounding rules:\n"
         "- Use only listed node IDs, diagram IDs, alerts, RCA results, GNN ranking, and retrieved evidence IDs.\n"
@@ -294,8 +298,8 @@ def _build_enterprise_user_message(ctx: dict) -> str:
         "- Rollback/safety notes are mandatory.\n"
         "- If evidence is insufficient, say what is missing instead of inventing.\n"
         "- Explain cross-diagram escalation and blast radius when more than one diagram is impacted.\n"
-        "- Explain the GNN ranking when GNN is available; otherwise name the scenario-grounded RCA source.\n"
-        "- Include evidence IDs such as E1 or E2 whenever retrieved evidence supports a step.\n\n"
+        "- Explain the GNN ranking when GNN is available; otherwise name the RCA source used.\n"
+        "- Include evidence IDs such as E1, E2, CE-001 whenever retrieved or causal evidence supports a step.\n\n"
         "--- Output Schema (return ONLY this JSON shape) ---\n"
         f"{schema_json}\n\n"
         'Generate the enterprise remediation plan. Set "scope" to "enterprise" in your response.'

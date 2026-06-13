@@ -318,26 +318,37 @@ production and Streamlit use.  Use `scripts/validate_rca_outputs.py` to verify.
 
 ## Generating clean RCA assets
 
-To regenerate all four primary scenario outputs (event correlation clusters +
-Enterprise GNN RCA results), run:
+All four demo scenarios must produce real Enterprise GNN outputs
+(`rca_source = "Enterprise GNN RCA"`).  Scenario-grounded simulation is not the
+default and must not be used for the final demo unless explicitly labelled.
+
+Requirements before running:
+- `model_artifacts/enterprise_gnn_rca/enterprise_gnn_rca.pt`
+- `model_artifacts/enterprise_gnn_rca/enterprise_gnn_config.json`
+
+If these are missing the script exits with a clear error and train command.
 
 ```bash
 python scripts/generate_enterprise_rca_demo_assets.py
+python scripts/validate_rca_outputs.py --verbose
 ```
 
-This script:
-1. Builds event correlation clusters for each scenario (`build_event_correlation_clusters`
-   logic, writing to `assets/preloaded/event_correlation/`).
-2. Produces a clean RCA result for each scenario:
-   - `enterprise_v3_0000`: patches the existing GNN output (removes any forbidden keys).
-   - `enterprise_v3_0072`: reformats the stored GNN result into the clean schema
-     (`rca_source = "Enterprise GNN RCA"`).
-   - `enterprise_v3_0073`, `enterprise_v3_0074`: produces heuristic outputs
-     (`rca_source = "Scenario-grounded RCA simulation"`) — used when torch/GNN is
-     unavailable on the current machine.
-3. Enriches all RCA outputs with cluster evidence (`cluster_id`, `cluster_score`,
-   `correlation_reasons`, `causal_evidence`).
-4. Runs `validate_rca_outputs.py --verbose` and exits non-zero if any file fails.
+For each scenario the script runs in order:
+
+```bash
+python scripts/build_event_correlation_clusters.py --case-id ent_<scenario_id>
+python scripts/predict_enterprise_gnn_rca.py \
+    --scenario-id <scenario_id> \
+    --cluster-file assets/preloaded/event_correlation/<scenario_id>.json
+```
+
+Additional flags:
+
+| Flag | Description |
+|------|-------------|
+| `--scenarios <id> ...` | Process specific scenario IDs only |
+| `--dry-run` | Print commands without executing |
+| `--allow-simulation-fallback` | Allow simulation if GNN fails (clearly labelled, not default) |
 
 ```
 outputs written:
@@ -345,7 +356,8 @@ outputs written:
   assets/preloaded/enterprise_gnn_rca/enterprise_v3_000{0,2,3,4}.json
 ```
 
-Add `--dry-run` to print what would be written without touching the filesystem.
+All four RCA files must contain `"rca_source": "Enterprise GNN RCA"`.
+Run `validate_rca_outputs.py --verbose` to confirm.
 
 ---
 
