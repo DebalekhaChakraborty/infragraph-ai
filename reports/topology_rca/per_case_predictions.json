@@ -51,7 +51,7 @@
       },
       {
         "rank": 3,
-        "node_id": "APP-01",
+        "node_id": "APP-02",
         "score": 0.0,
         "node_type": "server"
       }
@@ -127,13 +127,13 @@
       {
         "rank": 1,
         "node_id": "WAN-PE-01",
-        "score": 0.935,
+        "score": 0.945,
         "node_type": "router"
       },
       {
         "rank": 2,
         "node_id": "WAN-PE-02",
-        "score": 0.005,
+        "score": 0.015,
         "node_type": "router"
       },
       {
@@ -156,13 +156,13 @@
       {
         "rank": 1,
         "node_id": "DB-MASTER",
-        "score": 0.995,
+        "score": 1.0,
         "node_type": "database"
       },
       {
         "rank": 2,
         "node_id": "APP-01",
-        "score": 0.01,
+        "score": 0.0,
         "node_type": "server"
       },
       {
@@ -190,9 +190,9 @@
       },
       {
         "rank": 2,
-        "node_id": "WAN-ISP-01",
-        "score": 0.0,
-        "node_type": "cloud_or_wan"
+        "node_id": "WAN-PE-02",
+        "score": 0.01,
+        "node_type": "router"
       },
       {
         "rank": 3,
@@ -272,20 +272,20 @@
       {
         "rank": 1,
         "node_id": "DB-MASTER",
-        "score": 0.995,
+        "score": 1.0,
         "node_type": "database"
       },
       {
         "rank": 2,
-        "node_id": "APP-01",
-        "score": 0.005,
-        "node_type": "server"
-      },
-      {
-        "rank": 3,
         "node_id": "APP-LB-01",
         "score": 0.0,
         "node_type": "load_balancer"
+      },
+      {
+        "rank": 3,
+        "node_id": "APP-02",
+        "score": 0.0,
+        "node_type": "server"
       }
     ]
   },
@@ -301,13 +301,13 @@
       {
         "rank": 1,
         "node_id": "WAN-PE-01",
-        "score": 0.935,
+        "score": 0.945,
         "node_type": "router"
       },
       {
         "rank": 2,
         "node_id": "WAN-PE-02",
-        "score": 0.005,
+        "score": 0.015,
         "node_type": "router"
       },
       {
@@ -335,9 +335,9 @@
       },
       {
         "rank": 2,
-        "node_id": "WAN-ISP-01",
-        "score": 0.0,
-        "node_type": "cloud_or_wan"
+        "node_id": "WAN-PE-02",
+        "score": 0.01,
+        "node_type": "router"
       },
       {
         "rank": 3,
@@ -388,13 +388,13 @@
       {
         "rank": 1,
         "node_id": "WAN-PE-01",
-        "score": 0.935,
+        "score": 0.945,
         "node_type": "router"
       },
       {
         "rank": 2,
         "node_id": "WAN-PE-02",
-        "score": 0.005,
+        "score": 0.015,
         "node_type": "router"
       },
       {

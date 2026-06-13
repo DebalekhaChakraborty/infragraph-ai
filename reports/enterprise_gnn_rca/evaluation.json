@@ -1,0 +1,58 @@
+{
+  "train": {
+    "case_count": 64,
+    "top1_accuracy": 1.0,
+    "top3_accuracy": 1.0,
+    "mrr": 1.0,
+    "baseline_topology_score": {
+      "top1_accuracy": 1.0,
+      "description": "Heuristic baseline: alert severity + node type priority + cross-diagram connectivity"
+    },
+    "per_split_metrics": {
+      "train": {
+        "case_count": 64,
+        "top1_accuracy": 1.0,
+        "top3_accuracy": 1.0,
+        "mrr": 1.0
+      }
+    }
+  },
+  "val": {
+    "case_count": 8,
+    "top1_accuracy": 1.0,
+    "top3_accuracy": 1.0,
+    "mrr": 1.0,
+    "baseline_topology_score": {
+      "top1_accuracy": 1.0,
+      "description": "Heuristic baseline: alert severity + node type priority + cross-diagram connectivity"
+    },
+    "per_split_metrics": {
+      "val": {
+        "case_count": 8,
+        "top1_accuracy": 1.0,
+        "top3_accuracy": 1.0,
+        "mrr": 1.0
+      }
+    }
+  },
+  "test": {
+    "case_count": 8,
+    "top1_accuracy": 1.0,
+    "top3_accuracy": 1.0,
+    "mrr": 1.0,
+    "baseline_topology_score": {
+      "top1_accuracy": 1.0,
+      "description": "Heuristic baseline: alert severity + node type priority + cross-diagram connectivity"
+    },
+    "per_split_metrics": {
+      "test": {
+        "case_count": 8,
+        "top1_accuracy": 1.0,
+        "top3_accuracy": 1.0,
+        "mrr": 1.0
+      }
+    }
+  },
+  "best_epoch": 10,
+  "best_val_mrr": 1.0
+}

@@ -15,23 +15,23 @@
     {
       "rank": 2,
       "node_id": "DC-CORE-SW-01",
-      "score": 0.015,
+      "score": 0.0989,
       "node_type": "switch",
       "zone": "DC Core",
       "is_alerted": true
     },
     {
       "rank": 3,
-      "node_id": "DC-FW-02",
-      "score": 0.0,
-      "node_type": "firewall",
+      "node_id": "DC-RTR-01",
+      "score": 0.0868,
+      "node_type": "router",
       "zone": "DC Edge",
       "is_alerted": false
     }
   ],
   "total_nodes": 9,
   "alert_count": 2,
-  "scoring_mode": "ml_only",
+  "scoring_mode": "hybrid_alert_context",
   "cluster_id": "CLU-topo_enterprise_v3_0000_datacenter_topology-001",
   "cluster_score": 0.795,
   "correlation_reasons": [
