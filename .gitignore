@@ -1,11 +1,14 @@
-# # Python/cache
+# Python / cache
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 .ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
-# # Virtual environments
+# Virtual environments
 .venv/
 venv/
 env/
@@ -13,72 +16,17 @@ env/
 # ChromaDB / local vector index runtime files
 runtime_state/kb_index/
 runtime_state/chroma/
+runtime_state/incident_runs/
 runtime_state/**/*.sqlite3
 runtime_state/**/*.sqlite3-shm
 runtime_state/**/*.sqlite3-wal
 runtime_state/**/.chroma/
 
-# # Logs/temp
-# *.log
-# *.tmp
-# .DS_Store
+# KB index build reports (generated)
+reports/kb_index/
 
-# # Archives
-# *.tar.gz
-# *.zip
-
-# # Heavy training/model artifacts
-# outputs/rfdetr_v3/
-# outputs/rfdetr_v3_smoke/
-# outputs/vector_memory/
-# outputs/**/model/
-# model_artifacts/
-# .chroma/
-# data/vector_memory/
-# runs/
-# training_runs/
-# *.ckpt
-# *.pth
-# *.pt
-# *.onnx
-
-# # New canonical runtime directories (generated, not committed)
-# runtime_state/live_ingestion/
-# runtime_state/live_absorption/
-# runtime_state/incident_runs/
-# runtime_state/vector_memory/
-# runtime_state/kb_index/
-# reports/hydra_runs/
-# reports/kb_index/
-
-# # Model checkpoint binaries (new canonical locations)
-# # model_artifacts/**/*.pth
-# # model_artifacts/**/*.pt
-# # model_artifacts/**/*.ckpt
-# # model_artifacts/**/*.safetensors
-# # model_artifacts/**/*.bin
-
-# # Keep datasets in git for submission
-# # datasets/ is intentionally NOT ignored
-
-
-# # Generated training/checkpoint artifacts
-# training/verl_grpo/runs/
-# training_runs/
-# node_modules/
-
-
-# # Model/checkpoint binaries
-# *.safetensors
-# *.pt
-# *.pth
-# *.bin
-# *.ckpt
-
-# # Legacy outputs/ — kept for backward compatibility; new writes go to canonical dirs
-# # outputs/ itself is NOT ignored so committed demo assets remain accessible.
-# # Specific legacy paths that were always generated (not curated):
-# outputs/live_ingestion/
-# outputs/live_absorption/
-# outputs/incident_runs/
-# outputs/vector_memory/
+# Large generated outputs / model checkpoints
+outputs/
+model_artifacts/
+data/rca/enterprise_gnn/*.pt
+yolov8*.pt

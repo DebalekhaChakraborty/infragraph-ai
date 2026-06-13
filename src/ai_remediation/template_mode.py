@@ -41,17 +41,25 @@ def _evidence_ids(context: dict) -> list[str]:
 
 
 def _kb_evidence_refs(context: dict, max_items: int = 5) -> list[str]:
-    """Return short reference strings for retrieved KB evidence chunks."""
+    """Return formatted reference strings for retrieved KB evidence chunks.
+
+    SOPs and runbooks are labelled "Retrieved SOP evidence: ...";
+    known resolutions are labelled "Retrieved known resolution: ...".
+    """
     out: list[str] = []
     for item in (context.get("retrieved_kb_evidence", []) or [])[:max_items]:
         if not isinstance(item, dict):
             continue
-        eid   = item.get("evidence_id", "KB-unknown")
-        meta  = item.get("metadata") or {}
-        title = meta.get("title", "")
-        section = meta.get("section", "")
-        sec_suffix = f" § {section}" if section else ""
-        out.append(f"{eid}: {title}{sec_suffix}")
+        eid      = item.get("evidence_id", "KB-unknown")
+        meta     = item.get("metadata") or {}
+        title    = meta.get("title", "")
+        section  = meta.get("section", "")
+        doc_type = meta.get("doc_type", "")
+        sec_suffix = f" ({section})" if section else ""
+        if doc_type == "known_resolution":
+            out.append(f"Retrieved known resolution: {eid} — {title}{sec_suffix}")
+        else:
+            out.append(f"Retrieved SOP evidence: {eid} — {title}{sec_suffix}")
     return out
 
 
@@ -145,6 +153,104 @@ def _do_not_execute(scope: str, root_cause: str) -> list[str]:
     if scope == "enterprise":
         base.append("Do not execute cross-domain changes without NOC and owning team approval.")
     return base
+
+
+# ── Domain inference (mirrors kb_retrieval.retriever._infer_domain) ──────────
+
+_TEMPLATE_DOMAIN_KEYWORDS: dict[str, list[str]] = {
+    "firewall": [
+        "dc-fw", "fw-", "-fw", "firewall", "packet_drop", "packet drop", "acl",
+    ],
+    "load_balancer": [
+        "app-lb", "-lb-", "-lb", "lb-", "load_balancer", "load balancer",
+        "backend_pool", "backend pool", "unhealthy", "health_probe", "health probe",
+    ],
+    "database": [
+        "db-master", "db_master", "db-", "-db", "database", "connection_pool",
+        "connection pool", "replica", "replication",
+    ],
+    "wan": [
+        "wan-pe", "wan_pe", "pe-0", "pe-1", "pe-", "-pe", "wan",
+        "bgp", "ospf", "mpls", "circuit", "link_down", "link down", "sfp", "carrier",
+    ],
+}
+
+
+def _infer_domain(root_cause: str) -> str:
+    """Infer infra domain from root_cause node ID for domain-specific step selection."""
+    rc = root_cause.lower()
+    for domain, keywords in _TEMPLATE_DOMAIN_KEYWORDS.items():
+        for kw in keywords:
+            if kw in rc:
+                return domain
+    return ""
+
+
+# ── Domain-specific remediation steps ────────────────────────────────────────
+
+_REMEDIATION_BY_DOMAIN: dict[str, list[str]] = {
+    "load_balancer": [
+        "Drain the affected backend pool members gracefully before making any configuration change.",
+        "Investigate backend health probe failures — check application health endpoint response codes.",
+        "Verify backend server CPU, memory, and thread-pool saturation before re-adding to pool.",
+        "After configuration change, confirm backend pool health-check status returns healthy.",
+        "Verify no recent application deployment introduced a health-endpoint regression.",
+        "Document the change and update the CMDB record for the affected load balancer.",
+    ],
+    "database": [
+        "Check active connection count and connection-pool exhaustion on the database master node.",
+        "Review the slow query log for queries holding locks or consuming excessive resources.",
+        "Verify replication lag between master and replica — do not failover without DBA approval.",
+        "Coordinate with the DBA team before applying schema changes or restarting the database.",
+        "After restoration, confirm connection-pool recovery metrics return to baseline.",
+        "Document the change and update the CMDB record for the affected database node.",
+    ],
+    "wan": [
+        "Verify WAN circuit status with the carrier via the NOC portal or vendor dashboard.",
+        "Inspect physical layer: check SFP module status and optic power levels if accessible.",
+        "Confirm BGP session state on WAN edge nodes — look for session reset timestamps.",
+        "If BGP is down, verify route advertisements are propagating after re-establishment.",
+        "Confirm the backup WAN path is active and carrying traffic during the outage.",
+        "Document the change and update the CMDB record for the affected WAN edge node.",
+    ],
+    "firewall": [
+        "Review the firewall policy change log for any recently added or modified deny rules.",
+        "Identify affected traffic flows from packet-drop counters on the suspect interface.",
+        "Confirm the ACL or policy rule causing drops — do not remove rules without change approval.",
+        "Apply firewall policy correction only within an approved maintenance window.",
+        "After policy update, confirm packet-drop counters stop incrementing and traffic restores.",
+        "Document the change and update the CMDB record for the affected firewall.",
+    ],
+}
+
+# ── Domain-specific validation steps ─────────────────────────────────────────
+
+_VALIDATION_BY_DOMAIN: dict[str, list[str]] = {
+    "load_balancer": [
+        "Confirm load balancer backend pool shows all members as healthy after remediation.",
+        "Send a synthetic health-probe request and verify application response is within threshold.",
+        "Verify application error rates in APM/logging have returned to baseline.",
+        "Confirm connection-timeout alerts have cleared on the monitoring platform.",
+    ],
+    "database": [
+        "Confirm active connection count is below the configured connection-pool limit.",
+        "Verify no new slow-query alerts are firing after remediation.",
+        "Confirm replication lag has returned to near-zero on all replica nodes.",
+        "Check database latency metrics in the monitoring platform show return to baseline.",
+    ],
+    "wan": [
+        "Confirm BGP session state shows Established on all WAN edge nodes.",
+        "Verify end-to-end reachability across the WAN link from multiple test points.",
+        "Confirm packet loss and error rate on the WAN interface have dropped to zero.",
+        "Verify carrier circuit status shows up in the NOC portal.",
+    ],
+    "firewall": [
+        "Confirm packet-drop counters on the affected firewall interface have stopped incrementing.",
+        "Verify traffic flows that were blocked are now passing the firewall policy.",
+        "Check the firewall deny log to confirm no residual ACL hits on legitimate traffic.",
+        "Confirm the security team has reviewed and approved the policy change before closure.",
+    ],
+}
 
 
 # ── Domain-specific triage templates ─────────────────────────────────────────
@@ -261,26 +367,37 @@ def _generate_local_template(context: dict) -> dict:
     ]
     if imp_nodes:
         evidence.append(f"Impacted nodes on this diagram: {', '.join(imp_nodes[:5])}")
+    # KB evidence near top — before CE-* causal evidence
+    evidence.extend(_kb_evidence_refs(context))
     evidence.extend(_causal_evidence_summaries(context))
     for reason in (context.get("correlation_reasons", []) or [])[:5]:
         evidence.append(f"Correlation reason: {reason}")
-    evidence.extend(_kb_evidence_refs(context))
 
     triage = _TRIAGE_BY_DIAGRAM.get(diagram_id, _DEFAULT_TRIAGE)[:]
     if root_cause:
         triage.insert(0, f"Focus initial investigation on node '{root_cause}' in {diagram_id}.")
 
-    remediation = [
-        f"Restore '{root_cause}' in {diagram_id} by restarting the affected service "
-        "or applying corrective configuration.",
-        "Verify interface up/down state and error counters on the root-cause node.",
-        "Clear alert conditions on the monitoring platform for this diagram.",
-        f"Confirm downstream nodes in the impact path have recovered: {path_str}.",
-        "Document the applied change and update the CMDB record.",
-    ]
+    domain = _infer_domain(root_cause)
+    _dom_rem = _REMEDIATION_BY_DOMAIN.get(domain)
+    _dom_val = _VALIDATION_BY_DOMAIN.get(domain)
+
+    if _dom_rem:
+        remediation = list(_dom_rem)
+        remediation.insert(
+            0, f"Restore '{root_cause}' in {diagram_id} following domain-specific steps below."
+        )
+    else:
+        remediation = [
+            f"Restore '{root_cause}' in {diagram_id} by restarting the affected service "
+            "or applying corrective configuration.",
+            "Verify interface up/down state and error counters on the root-cause node.",
+            "Clear alert conditions on the monitoring platform for this diagram.",
+            f"Confirm downstream nodes in the impact path have recovered: {path_str}.",
+            "Document the applied change and update the CMDB record.",
+        ]
     remediation.extend(_kb_section_steps(context, "Remediation Steps"))
 
-    validation = _VALIDATION_STEPS_LOCAL[:]
+    validation = list(_dom_val) if _dom_val else list(_VALIDATION_STEPS_LOCAL)
     if imp_nodes:
         validation.append(
             "Confirm health of impacted nodes: "
@@ -409,23 +526,35 @@ def _generate_enterprise_template(context: dict) -> dict:
     ]
     if imp_nodes:
         evidence.append(f"Impacted nodes: {', '.join(imp_nodes[:5])}")
+    # KB evidence near top — before CE-* causal evidence
+    evidence.extend(_kb_evidence_refs(context))
     evidence.extend(_causal_evidence_summaries(context))
     for reason in (context.get("correlation_reasons", []) or [])[:5]:
         evidence.append(f"Correlation reason: {reason}")
-    evidence.extend(_kb_evidence_refs(context))
 
     triage = _TRIAGE_BY_DIAGRAM.get(rc_diagram or diagram_id, _DEFAULT_TRIAGE)[:]
     if root_cause:
         triage.insert(0, f"Focus initial investigation on node '{root_cause}' in {rc_diagram or 'the root-cause diagram'}.")
 
-    remediation = [
-        f"Restore '{root_cause}' ({rc_diagram or 'root-cause diagram'}) "
-        "by restarting the affected service or applying corrective configuration.",
-        "Re-advertise affected routes or re-establish BGP/OSPF sessions if routing is impacted.",
-        "Verify that downstream nodes in the impact path have recovered.",
-        "Clear alert conditions on monitoring platform and confirm no secondary triggers.",
-        "Document the change applied and update the CMDB record for the affected device.",
-    ]
+    domain = _infer_domain(root_cause)
+    _dom_rem = _REMEDIATION_BY_DOMAIN.get(domain)
+    _dom_val = _VALIDATION_BY_DOMAIN.get(domain)
+
+    if _dom_rem:
+        remediation = list(_dom_rem)
+        remediation.insert(
+            0,
+            f"Restore '{root_cause}' ({rc_diagram or 'root-cause diagram'}) "
+            "following domain-specific steps below.",
+        )
+    else:
+        remediation = [
+            f"Restore '{root_cause}' ({rc_diagram or 'root-cause diagram'}) "
+            "by restarting the affected service or applying corrective configuration.",
+            "Verify device state and error counters on the root-cause node.",
+            "Clear alert conditions on the monitoring platform and confirm no secondary triggers.",
+            "Document the change applied and update the CMDB record for the affected device.",
+        ]
     if n_diags >= 3:
         remediation.append(
             "Coordinate recovery across all affected diagrams in order: "
@@ -433,7 +562,7 @@ def _generate_enterprise_template(context: dict) -> dict:
         )
     remediation.extend(_kb_section_steps(context, "Remediation Steps"))
 
-    validation = _VALIDATION_STEPS_ENT[:]
+    validation = list(_dom_val) if _dom_val else list(_VALIDATION_STEPS_ENT)
     if imp_nodes:
         validation.append(
             "Confirm health of all impacted nodes: "
