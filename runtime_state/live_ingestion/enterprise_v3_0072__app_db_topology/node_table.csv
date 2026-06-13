@@ -1,0 +1,10 @@
+node_id,type,ip_address,zone,shared,confidence,source
+APP-LB-01,load_balancer,10.16.1.2,App Ingress,False,0.88,Prepared V3 annotation fallback
+APP-01,server,10.16.1.3,App Tier,False,0.88,Prepared V3 annotation fallback
+APP-02,server,10.16.1.4,App Tier,False,0.88,Prepared V3 annotation fallback
+SERVICE-API-01,service,10.16.1.5,App Tier,False,0.88,Prepared V3 annotation fallback
+DB-MASTER,database,10.16.1.6,DB Tier,False,0.88,Prepared V3 annotation fallback
+DB-CACHE-01,server,10.16.1.7,DB Tier,False,0.88,Prepared V3 annotation fallback
+DB-REPLICA-01,database,10.16.1.8,DB Tier,False,0.88,Prepared V3 annotation fallback
+DC-CORE-SW-01,switch,,Network,True,0.88,Prepared V3 annotation fallback
+DC-AGG-SW-01,switch,,Network,True,0.88,Prepared V3 annotation fallback

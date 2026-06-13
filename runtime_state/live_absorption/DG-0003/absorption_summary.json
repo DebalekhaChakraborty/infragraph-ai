@@ -1,0 +1,56 @@
+{
+  "absorbed_diagram_id": "datacenter_topology",
+  "run_id": "DG-0003",
+  "nodes_absorbed": 9,
+  "edges_absorbed": 9,
+  "shared_entities_matched": 9,
+  "cross_diagram_links_created": 4,
+  "matched_entities": [
+    "DC-AGG-SW-01",
+    "DC-CORE-SW-01",
+    "DC-CORE-SW-02",
+    "DC-FW-01",
+    "DC-FW-02",
+    "DC-RTR-01",
+    "DC-SRV-01",
+    "DC-SRV-02",
+    "DC-SRV-03"
+  ],
+  "cross_diagram_links": [
+    {
+      "source": "WAN-PE-02",
+      "source_diagram": "wan_topology",
+      "target": "DC-RTR-01",
+      "target_diagram": "datacenter_topology",
+      "relationship": "connected_to",
+      "label": "MPLS-L3VPN"
+    },
+    {
+      "source": "DC-CORE-SW-01",
+      "source_diagram": "datacenter_topology",
+      "target": "DC-CORE-SW-01",
+      "target_diagram": "app_db_topology",
+      "relationship": "shared_entity",
+      "label": "same-node"
+    },
+    {
+      "source": "DC-CORE-SW-01",
+      "source_diagram": "datacenter_topology",
+      "target": "APP-LB-01",
+      "target_diagram": "app_db_topology",
+      "relationship": "routes_to",
+      "label": "HTTPS"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "source_diagram": "datacenter_topology",
+      "target": "APP-LB-01",
+      "target_diagram": "app_db_topology",
+      "relationship": "routes_to",
+      "label": "10G"
+    }
+  ],
+  "before_node_count": 19,
+  "after_node_count": 28,
+  "status": "absorbed_into_enterprise_graph"
+}

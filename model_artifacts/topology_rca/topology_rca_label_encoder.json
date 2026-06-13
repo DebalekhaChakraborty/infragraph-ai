@@ -1,0 +1,8 @@
+{
+  "classes": [
+    0,
+    1
+  ],
+  "label": "is_root_node",
+  "note": "binary classification — 1 means this node is the root cause"
+}
