@@ -135,6 +135,50 @@ def _fmt_connectors(connectors: list) -> str:
     return "\n".join(lines)
 
 
+def _fmt_causal_evidence(cluster_data: dict) -> str:
+    """Format event correlation cluster summary for prompt injection."""
+    clusters = cluster_data.get("clusters", [])
+    if not clusters:
+        return "  (no cluster data)"
+    primary = clusters[0]
+    lines: list[str] = []
+
+    cid   = primary.get("cluster_id", "—")
+    score = primary.get("cluster_score", 0.0)
+    dims  = primary.get("correlation_dimensions", {})
+    tw    = primary.get("time_window", {})
+    diags = primary.get("diagram_scope", [])
+
+    lines.append(f"  Cluster        : {cid}  (score={score:.4f})")
+    lines.append(
+        f"  Dimensions     : temporal={dims.get('temporal', 0):.2f}  "
+        f"topology={dims.get('topology', 0):.2f}  "
+        f"seq={dims.get('alert_type_seq', 0):.2f}  "
+        f"peer={dims.get('source_peer', 0):.2f}  "
+        f"cross={dims.get('cross_diagram', 0):.2f}"
+    )
+    lines.append(
+        f"  Time window    : t={tw.get('start_offset_min', 0)}..{tw.get('end_offset_min', 0)} min"
+    )
+    if diags:
+        lines.append(f"  Diagrams       : {', '.join(diags)}")
+
+    for reason in primary.get("correlation_reasons", []):
+        lines.append(f"  Reason         : {reason}")
+
+    ce_items = primary.get("causal_evidence", [])
+    if ce_items:
+        lines.append("  Causal evidence:")
+        for ce in ce_items:
+            eid   = ce.get("evidence_id", "?")
+            stage = ce.get("stage", "?")
+            conf  = ce.get("confidence", 0.0)
+            summ  = ce.get("summary", "")
+            lines.append(f"    [{eid}] {stage} (conf={conf:.2f}): {summ}")
+
+    return "\n".join(lines)
+
+
 def _fmt_retrieved_evidence(evidence: list) -> str:
     if not evidence:
         return "  (none)"
@@ -181,7 +225,12 @@ def _build_local_user_message(ctx: dict) -> str:
         f"{_fmt_connectors(ctx.get('connector_context', []))}\n\n"
         "--- Retrieved Graph Memory Evidence ---\n"
         f"{_fmt_retrieved_evidence(ctx.get('retrieved_graph_memory_evidence', []))}\n\n"
-        "--- Graph Summary ---\n"
+        + (
+            "--- Event Correlation & Causal Evidence ---\n"
+            f"{_fmt_causal_evidence(ctx['cluster_data'])}\n\n"
+            if ctx.get("cluster_data") else ""
+        )
+        + "--- Graph Summary ---\n"
         f"{ctx.get('graph_memory_summary', '—')}\n\n"
         "Grounding rules:\n"
         "- Use only listed node IDs, diagram IDs, alerts, RCA results, and retrieved evidence IDs.\n"
@@ -231,7 +280,12 @@ def _build_enterprise_user_message(ctx: dict) -> str:
         f"{_fmt_connectors(ctx.get('connector_context', []))}\n\n"
         "--- Retrieved Graph Memory Evidence ---\n"
         f"{_fmt_retrieved_evidence(ctx.get('retrieved_graph_memory_evidence', []))}\n\n"
-        "--- Graph Memory Summary ---\n"
+        + (
+            "--- Event Correlation & Causal Evidence ---\n"
+            f"{_fmt_causal_evidence(ctx['cluster_data'])}\n\n"
+            if ctx.get("cluster_data") else ""
+        )
+        + "--- Graph Memory Summary ---\n"
         f"{ctx.get('graph_memory_summary', '—')}\n\n"
         "Enterprise grounding rules:\n"
         "- Use only listed node IDs, diagram IDs, alerts, RCA results, GNN ranking, and retrieved evidence IDs.\n"

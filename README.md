@@ -42,11 +42,12 @@ GRPO pipeline, reward functions, and honest status levels.
 
 ## AI Remediation Agent: Qwen3 + vLLM + vERL/GRPO
 
-InfraGraph AI uses a three-stage intelligence pipeline:
+InfraGraph AI uses a four-stage intelligence pipeline:
 
 1. **Diagram Intelligence** — RF-DETR extracts topology graph memory from network diagrams.
-2. **Topology RCA + Enterprise GNN RCA** — single-diagram graph reasoning first, then cross-diagram GNN ranking across scenario graphs.
-3. **Qwen3 Remediation Agent** — served via vLLM and designed for LoRA/GRPO fine-tuning with vERL, generates grounded resolution plans from graph memory, alert timeline, RCA path, and GNN ranking.
+2. **Event Correlation** — pre-RCA layer that groups observable alert events into temporal clusters with causal evidence trails (deterministic, no root-cause labels).
+3. **Topology RCA + Enterprise GNN RCA** — single-diagram graph reasoning first, then cross-diagram GNN ranking across scenario graphs.  RCA output can be enriched with event correlation cluster context.
+4. **Qwen3 Remediation Agent** — served via vLLM and designed for LoRA/GRPO fine-tuning with vERL, generates grounded resolution plans from graph memory, alert timeline, event correlation evidence, RCA path, and GNN ranking.
 
 The GRPO reward functions align Qwen3 outputs to be:
 - **Graph-grounded** — only referencing nodes and IPs present in the enterprise graph.
@@ -107,9 +108,10 @@ streamlit run app/streamlit_app.py
 
 InfraGraph AI now presents a full training + inference story:
 
+- **Event Correlation** groups observable alert events into temporal clusters with deterministic causal evidence trails.  See [docs/event_correlation_and_causal_evidence.md](docs/event_correlation_and_causal_evidence.md).
 - **Topology RCA** handles single-diagram dependency reasoning and local remediation.
 - **Enterprise GNN RCA** handles cross-diagram graph reasoning and root-cause ranking when a matching GNN result exists.
-- **Qwen3/vLLM remediation** generates graph-grounded resolution plans from RCA context, alert timelines, GNN ranking, and retrieved vector evidence.
+- **Qwen3/vLLM remediation** generates graph-grounded resolution plans from RCA context, alert timelines, event correlation evidence, GNN ranking, and retrieved vector evidence.
 - **Vector memory** uses ChromaDB to retrieve evidence IDs for Graph Copilot and remediation prompts.
 - **LoRA + GRPO/vERL scaffold** under `training/verl_grpo/` turns RCA/remediation records into sample alignment data with deterministic reward functions for AMD GPU fine-tuning.
 

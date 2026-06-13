@@ -140,6 +140,7 @@ Options:
 | `--top-k` | `3` | How many ranked candidates to include |
 | `--with-eval` | off | Include ground-truth comparison (reads labels.json) |
 | `--hybrid-score` | off | Combine model probability with alert-context score |
+| `--cluster-file` | (none) | Path to event correlation cluster file — enriches output with `cluster_id`, `cluster_score`, `correlation_reasons`, `causal_evidence` |
 
 **Output routing:**
 
@@ -204,6 +205,17 @@ With `--with-eval`, an `"evaluation"` block is appended:
   }
 ```
 
+With `--cluster-file`, four additional fields are appended:
+
+```json
+  "cluster_id":          "CLU-topo_enterprise_v3_0000_datacenter_topology-001",
+  "cluster_score":       0.7950,
+  "correlation_reasons": ["2 event(s) span 3 min (t=0..3)", "..."],
+  "causal_evidence":     [{"evidence_id": "CE-001", "stage": "temporal_correlation", ...}]
+```
+
+These are allowed in `assets/preloaded/` and pass `validate_rca_outputs.py`.
+
 The output contains **no** `recommended_actions`, `remediation_steps`,
 `resolution_steps`, `rollback_steps`, `validation_steps`, or `servicenow_ticket` fields.
 
@@ -230,14 +242,20 @@ src/rca_ml/
   topology_dataset.py   scenario_library loader + DataFrame builder
   topology_model.py     RandomForest pipeline, evaluation, serialisation
 
+src/event_correlation/
+  __init__.py, schema.py, correlator.py, evidence.py, io.py
+  (pre-RCA event clustering — see docs/event_correlation_and_causal_evidence.md)
+
 scripts/
   build_topology_rca_dataset.py
   train_topology_rca_model.py
   predict_topology_rca.py
+  build_event_correlation_clusters.py
   validate_rca_outputs.py      demo-safety checker for assets/preloaded/
 
 data/rca/topology/          (gitignored — generated)
 model_artifacts/topology_rca/  (gitignored — generated)
 reports/topology_rca/          (gitignored — generated)
 assets/preloaded/topology_rca_results/  (committed for Streamlit demo)
+assets/preloaded/event_correlation/     (committed — cluster files)
 ```

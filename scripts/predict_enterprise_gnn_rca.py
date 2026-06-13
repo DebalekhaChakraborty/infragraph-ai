@@ -76,6 +76,12 @@ def main() -> None:
     parser.add_argument("--with-eval", action="store_true",
                         help="Include ground-truth comparison (reads labels.json).  "
                              "Output is written to reports/enterprise_gnn_rca/manual_eval by default.")
+    parser.add_argument(
+        "--cluster-file", default=None,
+        help="Path to event correlation cluster file for this scenario.  "
+             "Enriches RCA output with cluster_id, cluster_score, "
+             "correlation_reasons, and causal_evidence.",
+    )
     args = parser.parse_args()
 
     if not args.scenario_id and not args.case_id:
@@ -191,6 +197,35 @@ def main() -> None:
         print(f"Correct top-1    : {ev['correct_top1']}")
         print(f"Correct top-{args.top_k}    : {ev['correct_top_k']}")
         print(f"Reciprocal rank  : {ev['reciprocal_rank']}")
+
+    # Enrich with event correlation cluster data when --cluster-file is provided
+    if args.cluster_file:
+        cf_path = (
+            Path(args.cluster_file) if Path(args.cluster_file).is_absolute()
+            else (repo_root / args.cluster_file).resolve()
+        )
+        if not cf_path.exists():
+            print(f"[WARN] Cluster file not found: {cf_path}")
+        else:
+            try:
+                cluster_data = json.loads(cf_path.read_text(encoding="utf-8"))
+                if (cluster_data.get("case_id") == case_id
+                        or cluster_data.get("scenario_id") == scenario_id):
+                    clusters = cluster_data.get("clusters", [])
+                    if clusters:
+                        primary = clusters[0]
+                        result["cluster_id"]          = primary.get("cluster_id", "")
+                        result["cluster_score"]       = primary.get("cluster_score", 0.0)
+                        result["correlation_reasons"] = primary.get("correlation_reasons", [])
+                        result["causal_evidence"]     = primary.get("causal_evidence", [])
+                        print(f"Cluster enriched : {result['cluster_id']} "
+                              f"(score={result['cluster_score']:.4f})")
+                    else:
+                        print("[WARN] Cluster file contains no clusters.")
+                else:
+                    print(f"[WARN] Cluster file case_id/scenario_id does not match {case_id!r}")
+            except Exception as exc:
+                print(f"[WARN] Could not load cluster file: {exc}")
 
     # Write output
     out_dir.mkdir(parents=True, exist_ok=True)
