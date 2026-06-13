@@ -16,9 +16,9 @@
     "candidate_count": 3,
     "causal_evidence_count": 4,
     "correlation_reason_count": 2,
-    "kb_evidence_count": 5
+    "kb_evidence_count": 0
   },
-  "kb_evidence_count": 5,
+  "kb_evidence_count": 0,
   "remediation": {
     "executive_summary": "Cross-diagram incident affecting 2 topology domain(s) (wan_topology, app_db_topology). 3 alert event(s) detected. Primary suspected root cause: WAN-PE-01 in wan_topology. Immediate triage recommended to validate and restore service.",
     "probable_root_cause": "WAN-PE-01 (in wan_topology)",
@@ -27,11 +27,6 @@
     "automation_eligibility": "manual_only",
     "blast_radius": "cross_diagram",
     "evidence_ids_used": [
-      "KB-SOP-WAN-001-001",
-      "KB-SOP-WAN-001-000",
-      "KB-SOP-WAN-001-003",
-      "KB-SOP-WAN-001-010",
-      "KB-SOP-WAN-001-002",
       "CE-001",
       "CE-002",
       "CE-003",
@@ -43,11 +38,6 @@
       "Incident spans diagrams: wan_topology, app_db_topology",
       "Alert events observed: 3",
       "Impacted nodes: WAN-PE-01, WAN-PE-02, APP-LB-01",
-      "Retrieved SOP evidence: KB-SOP-WAN-001-001 — WAN Provider Edge Link Down and High Error Rate Response (Trigger Symptoms)",
-      "Retrieved SOP evidence: KB-SOP-WAN-001-000 — WAN Provider Edge Link Down and High Error Rate Response (Purpose)",
-      "Retrieved SOP evidence: KB-SOP-WAN-001-003 — WAN Provider Edge Link Down and High Error Rate Response (Pre-Checks)",
-      "Retrieved SOP evidence: KB-SOP-WAN-001-010 — WAN Provider Edge Link Down and High Error Rate Response (Evidence Tags)",
-      "Retrieved SOP evidence: KB-SOP-WAN-001-002 — WAN Provider Edge Link Down and High Error Rate Response (Applicable RCA Patterns)",
       "CE-001 (temporal_correlation, confidence=1.0): 3 alert(s) within a 5-minute window (t=0..5 min), consistent with a propagating fault.",
       "CE-002 (topology_proximity, confidence=0.4333): Alerted nodes (WAN-PE-01, WAN-PE-02, APP-LB-01) are topologically proximate (topology score 0.43), suggesting fault propagation through connected infrastructure.",
       "CE-003 (cross_diagram_correlation, confidence=0.6): Events span 2 diagrams (app_db_topology, wan_topology). Cross-diagram correlation score 0.60 indicates the fault may have propagated across topology boundaries.",
@@ -82,8 +72,7 @@
       "Confirm BGP session state on WAN edge nodes — look for session reset timestamps.",
       "If BGP is down, verify route advertisements are propagating after re-establishment.",
       "Confirm the backup WAN path is active and carrying traffic during the outage.",
-      "Document the change and update the CMDB record for the affected WAN edge node.",
-      "Follow SOP-WAN-001 (WAN Provider Edge Link Down and High Error Rate Response) remediation section [KB-SOP-WAN-001-000]."
+      "Document the change and update the CMDB record for the affected WAN edge node."
     ],
     "post_checks": [
       "Confirm BGP session state shows Established on all WAN edge nodes.",
@@ -113,8 +102,8 @@
       "priority": "2-High",
       "assignment_group": "Network Engineering — Enterprise Operations"
     },
-    "audit_summary": "Template remediation plan for scenario enterprise_v3_0074; risk=critical, blast_radius=cross_diagram, automation=manual_only, rca_source=Enterprise GNN RCA. Evidence IDs used: KB-SOP-WAN-001-001, KB-SOP-WAN-001-000, KB-SOP-WAN-001-003, KB-SOP-WAN-001-010, KB-SOP-WAN-001-002, CE-001, CE-002, CE-003, CE-004. Event correlation cluster: CLU-ent_enterprise_v3_0074-001 (score=0.5533). KB chunks retrieved: 5.",
-    "confidence_notes": "RCA source: Enterprise GNN RCA. GNN inference result was used — candidate ranking is model-derived. Event correlation cluster: CLU-ent_enterprise_v3_0074-001 (score=0.5533). SOP/KB evidence retrieved: 5 chunk(s). Template mode: output is deterministic and not model-generated.",
+    "audit_summary": "Template remediation plan for scenario enterprise_v3_0074; risk=critical, blast_radius=cross_diagram, automation=manual_only, rca_source=Enterprise GNN RCA. Evidence IDs used: CE-001, CE-002, CE-003, CE-004. Event correlation cluster: CLU-ent_enterprise_v3_0074-001 (score=0.5533). ",
+    "confidence_notes": "RCA source: Enterprise GNN RCA. GNN inference result was used — candidate ranking is model-derived. Event correlation cluster: CLU-ent_enterprise_v3_0074-001 (score=0.5533). Template mode: output is deterministic and not model-generated.",
     "source": "template"
   }
 }
