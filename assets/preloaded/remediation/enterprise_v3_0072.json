@@ -16,9 +16,9 @@
     "candidate_count": 3,
     "causal_evidence_count": 4,
     "correlation_reason_count": 3,
-    "kb_evidence_count": 5
+    "kb_evidence_count": 0
   },
-  "kb_evidence_count": 5,
+  "kb_evidence_count": 0,
   "remediation": {
     "executive_summary": "Cross-diagram incident affecting 1 topology domain(s) (app_db_topology). 4 alert event(s) detected. Primary suspected root cause: APP-LB-01 in app_db_topology. Immediate triage recommended to validate and restore service.",
     "probable_root_cause": "APP-LB-01 (in app_db_topology)",
@@ -27,11 +27,6 @@
     "automation_eligibility": "manual_only",
     "blast_radius": "single_diagram",
     "evidence_ids_used": [
-      "KB-SOP-DB-001-001",
-      "KB-KR-APP-LB-001-002",
-      "KB-KR-APP-LB-001-001",
-      "KB-SOP-APP-LB-001-001",
-      "KB-RUNBOOK-ENT-XDIAG-001-006",
       "CE-001",
       "CE-002",
       "CE-003",
@@ -43,11 +38,6 @@
       "Incident spans diagrams: app_db_topology",
       "Alert events observed: 4",
       "Impacted nodes: APP-LB-01, APP-01, APP-02, DB-MASTER",
-      "Retrieved SOP evidence: KB-SOP-DB-001-001 — Database Master Node Latency and Connection Timeout Response (Trigger Symptoms)",
-      "Retrieved known resolution: KB-KR-APP-LB-001-002 — Known Resolution: Application Load Balancer Backend Health Degradation (Root Cause Confirmed)",
-      "Retrieved known resolution: KB-KR-APP-LB-001-001 — Known Resolution: Application Load Balancer Backend Health Degradation (Incident Summary)",
-      "Retrieved SOP evidence: KB-SOP-APP-LB-001-001 — Application Load Balancer Backend Pool Unhealthy Response (Trigger Symptoms)",
-      "Retrieved SOP evidence: KB-RUNBOOK-ENT-XDIAG-001-006 — Enterprise Cross-Diagram Incident Validation Runbook (Validation Steps)",
       "CE-001 (temporal_correlation, confidence=1.0): 4 alert(s) within a 11-minute window (t=0..11 min), consistent with a propagating fault.",
       "CE-002 (alert_sequence, confidence=0.85): Alert type sequence matches propagation chain: cpu -> latency. This ordering is consistent with fault propagation from the initiating node.",
       "CE-003 (topology_proximity, confidence=0.95): Alerted nodes (APP-LB-01, APP-01, APP-02, DB-MASTER) are topologically proximate (topology score 0.95), suggesting fault propagation through connected infrastructure.",
@@ -74,8 +64,7 @@
       "Send a synthetic health-probe request and verify application response is within threshold.",
       "Verify application error rates in APM/logging have returned to baseline.",
       "Confirm connection-timeout alerts have cleared on the monitoring platform.",
-      "Confirm health of all impacted nodes: APP-LB-01, APP-01, APP-02, DB-MASTER.",
-      "Validate according to RUNBOOK-ENT-XDIAG-001 (Enterprise Cross-Diagram Incident Validation Runbook) validation section [KB-RUNBOOK-ENT-XDIAG-001-006]."
+      "Confirm health of all impacted nodes: APP-LB-01, APP-01, APP-02, DB-MASTER."
     ],
     "remediation_steps": [
       "Restore 'APP-LB-01' (app_db_topology) following domain-specific steps below.",
@@ -91,8 +80,7 @@
       "Send a synthetic health-probe request and verify application response is within threshold.",
       "Verify application error rates in APM/logging have returned to baseline.",
       "Confirm connection-timeout alerts have cleared on the monitoring platform.",
-      "Confirm health of all impacted nodes: APP-LB-01, APP-01, APP-02, DB-MASTER.",
-      "Validate according to RUNBOOK-ENT-XDIAG-001 (Enterprise Cross-Diagram Incident Validation Runbook) validation section [KB-RUNBOOK-ENT-XDIAG-001-006]."
+      "Confirm health of all impacted nodes: APP-LB-01, APP-01, APP-02, DB-MASTER."
     ],
     "do_not_execute_if": [
       "Do not execute changes if root cause APP-LB-01 is not confirmed by graph evidence.",
@@ -115,8 +103,8 @@
       "priority": "2-High",
       "assignment_group": "Network Engineering — Enterprise Operations"
     },
-    "audit_summary": "Template remediation plan for scenario enterprise_v3_0072; risk=critical, blast_radius=single_diagram, automation=manual_only, rca_source=Enterprise GNN RCA. Evidence IDs used: KB-SOP-DB-001-001, KB-KR-APP-LB-001-002, KB-KR-APP-LB-001-001, KB-SOP-APP-LB-001-001, KB-RUNBOOK-ENT-XDIAG-001-006, CE-001, CE-002, CE-003, CE-004. Event correlation cluster: CLU-ent_enterprise_v3_0072-001 (score=0.7750). KB chunks retrieved: 5.",
-    "confidence_notes": "RCA source: Enterprise GNN RCA. GNN inference result was used — candidate ranking is model-derived. Event correlation cluster: CLU-ent_enterprise_v3_0072-001 (score=0.7750). SOP/KB evidence retrieved: 5 chunk(s). Template mode: output is deterministic and not model-generated.",
+    "audit_summary": "Template remediation plan for scenario enterprise_v3_0072; risk=critical, blast_radius=single_diagram, automation=manual_only, rca_source=Enterprise GNN RCA. Evidence IDs used: CE-001, CE-002, CE-003, CE-004. Event correlation cluster: CLU-ent_enterprise_v3_0072-001 (score=0.7750). ",
+    "confidence_notes": "RCA source: Enterprise GNN RCA. GNN inference result was used — candidate ranking is model-derived. Event correlation cluster: CLU-ent_enterprise_v3_0072-001 (score=0.7750). Template mode: output is deterministic and not model-generated.",
     "source": "template"
   }
 }

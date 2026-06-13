@@ -124,6 +124,26 @@ def _repair_common_json_issues(s: str) -> str:
     return s
 
 
+_REQUIRED_RESPONSE_FIELDS: tuple[str, ...] = (
+    "remediation_steps",
+    "validation_steps",
+    "rollback_or_safety_notes",
+    "evidence_from_graph",
+)
+
+
+def _check_required_fields(response: dict) -> str:
+    """Return an error string if required fields are missing or empty, else ''."""
+    for field in _REQUIRED_RESPONSE_FIELDS:
+        val = response.get(field)
+        if not isinstance(val, list) or not val:
+            return f"Missing or empty required field: {field!r}"
+    snow = response.get("servicenow_incident_summary")
+    if not isinstance(snow, dict) or not str(snow.get("short_description", "")).strip():
+        return "Missing or empty: servicenow_incident_summary.short_description"
+    return ""
+
+
 def _extract_json_from_text(text: str) -> dict:
     """Extract JSON object from model output.
 
@@ -233,7 +253,12 @@ def generate_remediation_with_qwen(
         content = data["choices"][0]["message"]["content"]
         result["raw"]      = content
         result["response"] = _extract_json_from_text(content)
-        result["ok"]       = True
+        field_err = _check_required_fields(result["response"])
+        if field_err:
+            result["ok"]    = False
+            result["error"] = f"Qwen response missing required fields: {field_err}"
+        else:
+            result["ok"]    = True
 
     except requests.exceptions.ConnectionError:
         result["error"] = (
@@ -306,7 +331,21 @@ def generate_resolution_plan(
     timeout = config["timeout"]
 
     if prefer_qwen and check_vllm_available(base_url, timeout=min(timeout, 5)):
-        return generate_remediation_with_qwen(ctx, base_url=base_url, model=model, timeout=timeout)
+        qwen_result = generate_remediation_with_qwen(ctx, base_url=base_url, model=model, timeout=timeout)
+        if qwen_result.get("ok"):
+            return qwen_result
+        qwen_err = qwen_result.get("error", "Qwen returned ok=False")
+        print(f"Qwen failed, falling back to template: {qwen_err}")
+        template_result = generate_template_remediation(ctx)
+        return {
+            "source":     "template_fallback",
+            "model":      "—",
+            "ok":         bool(template_result),
+            "response":   template_result,
+            "error":      "",
+            "qwen_error": qwen_err,
+            "raw":        "",
+        }
 
     template_result = generate_template_remediation(ctx)
     return {

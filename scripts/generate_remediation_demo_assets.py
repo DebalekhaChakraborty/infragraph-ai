@@ -78,8 +78,12 @@ def _build_envelope(
         "kb_evidence_count": len(context.get("retrieved_kb_evidence", []) or []),
         "remediation": plan_result.get("response", {}),
     }
-    # Preserve Qwen error if template fallback was used
-    if plan_result.get("source") == "template" and plan_result.get("error"):
+    # Preserve Qwen error when template was used as automatic fallback
+    if plan_result.get("source") == "template_fallback":
+        qwen_err = plan_result.get("qwen_error") or plan_result.get("error", "")
+        if qwen_err:
+            envelope["qwen_error"] = qwen_err
+    elif plan_result.get("source") == "template" and plan_result.get("error"):
         envelope["qwen_error"] = plan_result["error"]
     if include_raw:
         envelope["raw_model_output"] = plan_result.get("raw", "")
