@@ -41,6 +41,11 @@ if str(REPO_ROOT / "src") not in sys.path:
 
 from ai_remediation.context_builder import build_enterprise_remediation_context  # noqa: E402
 from ai_remediation.template_mode import generate_template_remediation            # noqa: E402
+from kb_retrieval.evidence_ordering import (                                      # noqa: E402
+    DOMAIN_EXPECTED_FIRST_KB,
+    apply_domain_first_ordering,
+    infer_domain,
+)
 from kb_retrieval.schema import DEFAULT_INDEX_DIR                                 # noqa: E402
 
 _DEFAULT_SCENARIOS = [
@@ -127,7 +132,7 @@ def _collect_all_keys(obj: object, depth: int = 0) -> set[str]:
     return keys
 
 
-def _validate_record(record: dict, strict_kb: bool) -> list[str]:
+def _validate_record(record: dict, root_cause: str, strict_kb: bool) -> list[str]:
     """Return violation messages (empty list = clean)."""
     violations: list[str] = []
 
@@ -154,14 +159,27 @@ def _validate_record(record: dict, strict_kb: bool) -> list[str]:
     except Exception as exc:
         violations.append(f"assistant content is not valid JSON: {exc}")
 
+    ev_ids = [str(x) for x in (asst_obj.get("evidence_ids_used") or [])]
+
     if "evidence_ids_used" not in asst_obj:
         violations.append("assistant output missing 'evidence_ids_used'")
 
     if strict_kb:
-        ev_ids = asst_obj.get("evidence_ids_used", [])
-        if not any(str(x).startswith("KB-") for x in ev_ids):
+        if not any(x.startswith("KB-") for x in ev_ids):
             violations.append(
                 "strict_kb: no KB-* evidence ID in assistant output's evidence_ids_used"
+            )
+
+    # Domain-first KB ordering check (only when KB evidence is present)
+    kb_ids = [x for x in ev_ids if x.startswith("KB-")]
+    if kb_ids:
+        domain = infer_domain(root_cause)
+        expected = DOMAIN_EXPECTED_FIRST_KB.get(domain, ())
+        if expected and not kb_ids[0].startswith(expected):
+            violations.append(
+                f"domain-first ordering: first KB ID {kb_ids[0]!r} "
+                f"does not match expected domain-primary prefixes {expected} "
+                f"for root_cause {root_cause!r} (domain={domain!r})"
             )
 
     all_keys = _collect_all_keys(record)
@@ -256,8 +274,13 @@ def main() -> None:
             skipped.append(scenario_id)
             continue
 
-        kb_evidence    = context.get("retrieved_kb_evidence", []) or []
+        root_cause      = context.get("root_cause", "")
         causal_evidence = context.get("causal_evidence", []) or []
+
+        # Apply domain-first KB evidence ordering before building content
+        apply_domain_first_ordering(context, root_cause)
+
+        kb_evidence = context.get("retrieved_kb_evidence", []) or []
         print(f"  KB chunks      : {len(kb_evidence)}")
         print(f"  Causal evidence: {len(causal_evidence)}")
 
@@ -299,7 +322,7 @@ def main() -> None:
             },
         }
 
-        violations = _validate_record(record, strict_kb=args.strict_kb)
+        violations = _validate_record(record, root_cause=root_cause, strict_kb=args.strict_kb)
         if violations:
             print(f"  [ERROR] Validation failures for {scenario_id}:")
             for v in violations:

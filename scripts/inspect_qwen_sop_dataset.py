@@ -26,6 +26,14 @@ from collections import Counter
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT / "src"))
+
+try:
+    from kb_retrieval.evidence_ordering import DOMAIN_EXPECTED_FIRST_KB, infer_domain
+    _ORDERING_AVAILABLE = True
+except Exception:
+    _ORDERING_AVAILABLE = False
 
 
 def _load_jsonl(path: Path) -> list[dict]:
@@ -191,6 +199,32 @@ def main() -> None:
         print(f"  [WARN] Records missing CE-* citations ({len(bad_ce)}): {bad_ce[:5]}")
     if not bad_kb and not bad_ce:
         print("  [PASS] All records have both KB-* and CE-* evidence citations.")
+
+    # Domain-first KB ordering check
+    if _ORDERING_AVAILABLE:
+        domain_order_violations: list[str] = []
+        for r in all_records:
+            ev = _evidence_ids(r)
+            kb_ids = [e for e in ev if e.startswith("KB-")]
+            if not kb_ids:
+                continue
+            rc = _root_cause(r)
+            domain = infer_domain(rc)
+            expected = DOMAIN_EXPECTED_FIRST_KB.get(domain, ())
+            if expected and not kb_ids[0].startswith(expected):
+                domain_order_violations.append(
+                    f"{r.get('id')}: first KB={kb_ids[0]!r} (expected {expected})"
+                )
+        if domain_order_violations:
+            print(f"  [WARN] Domain-first KB ordering violations ({len(domain_order_violations)}):")
+            for v in domain_order_violations[:5]:
+                print(f"    {v}")
+        else:
+            records_with_kb_count = sum(1 for r in all_records if any(e.startswith("KB-") for e in _evidence_ids(r)))
+            if records_with_kb_count:
+                print("  [PASS] Domain-first KB ordering satisfied for all records with KB evidence.")
+    else:
+        print("  [SKIP] evidence_ordering module unavailable — domain-first check skipped.")
 
     # Dataset summary JSON if present
     summary_path = data_dir / "dataset_summary.json"

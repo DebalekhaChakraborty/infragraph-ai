@@ -41,6 +41,11 @@ if str(REPO_ROOT / "src") not in sys.path:
 
 from ai_remediation.context_builder import build_enterprise_remediation_context  # noqa: E402
 from ai_remediation.template_mode import generate_template_remediation            # noqa: E402
+from kb_retrieval.evidence_ordering import (                                      # noqa: E402
+    DOMAIN_EXPECTED_FIRST_KB,
+    apply_domain_first_ordering,
+    infer_domain,
+)
 from kb_retrieval.schema import DEFAULT_INDEX_DIR                                 # noqa: E402
 
 # ── Constants ─────────────────────────────────────────────────────────────────
@@ -356,6 +361,17 @@ def _validate_record(
             violations.append("strict_kb: no KB-* ID in evidence_ids_used")
         if not any(x.startswith("CE-") for x in ev_ids):
             violations.append("no CE-* ID in evidence_ids_used")
+        # Domain-first KB ordering check (only when KB evidence is present)
+        kb_ids = [x for x in ev_ids if x.startswith("KB-")]
+        if kb_ids:
+            domain = infer_domain(base_root_cause)
+            expected = DOMAIN_EXPECTED_FIRST_KB.get(domain, ())
+            if expected and not kb_ids[0].startswith(expected):
+                violations.append(
+                    f"domain-first ordering: first KB ID {kb_ids[0]!r} "
+                    f"does not match expected prefixes {expected} "
+                    f"for root_cause {base_root_cause!r} (domain={domain!r})"
+                )
 
     # Non-empty required list fields
     for field in ("remediation_steps", "validation_steps", "rollback_or_safety_notes"):
@@ -503,6 +519,9 @@ def main() -> None:
                 seed=args.seed,
                 kb_top_k=args.kb_top_k,
             )
+
+            # Apply domain-first KB evidence ordering before building content
+            apply_domain_first_ordering(varied_context, base_root_cause)
 
             # Build user message content
             user_obj = _build_user_obj(varied_context, scenario_id, var_tag)
