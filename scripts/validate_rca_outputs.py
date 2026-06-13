@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
 """
-validate_rca_outputs.py — Verify RCA output files are demo-safe.
+validate_rca_outputs.py — Verify RCA preloaded output files are demo-safe.
 
-Scans:
-  assets/preloaded/topology_rca_results/*.json
-  assets/preloaded/enterprise_gnn_rca/*.json
+By default, scans only the two RCA output directories:
+  assets/preloaded/topology_rca_results/
+  assets/preloaded/enterprise_gnn_rca/
+
+Reports under reports/ are NOT scanned — evaluation fields are allowed there.
 
 Exits 0 if all checks pass.  Exits 1 and prints a failure report if any
-output file contains forbidden remediation or evaluation-leakage keys.
-
-Reports in reports/ are NOT scanned here — they are allowed to contain
-evaluation fields.
+file contains forbidden remediation or evaluation-leakage keys.
 
 Usage:
   python scripts/validate_rca_outputs.py
-  python scripts/validate_rca_outputs.py --scan-dir assets/preloaded
+  python scripts/validate_rca_outputs.py --verbose
+  python scripts/validate_rca_outputs.py \\
+      --scan-dir assets/preloaded/topology_rca_results \\
+      --scan-dir assets/preloaded/enterprise_gnn_rca
 """
 from __future__ import annotations
 
@@ -25,7 +27,12 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-# Keys that must NEVER appear anywhere in a preloaded output file (recursive check)
+_DEFAULT_SCAN_DIRS: list[str] = [
+    "assets/preloaded/topology_rca_results",
+    "assets/preloaded/enterprise_gnn_rca",
+]
+
+# Keys that must NEVER appear anywhere in a preloaded RCA output file
 _FORBIDDEN_REMEDIATION: frozenset[str] = frozenset({
     "recommended_actions",
     "remediation_steps",
@@ -37,8 +44,7 @@ _FORBIDDEN_REMEDIATION: frozenset[str] = frozenset({
     "rollback",
 })
 
-# Evaluation leakage keys that must not appear in preloaded files.
-# (They are allowed in reports/ evaluation JSONs.)
+# Evaluation leakage keys that must not appear in preloaded files
 _FORBIDDEN_EVALUATION: frozenset[str] = frozenset({
     "expected_root_cause",
     "ground_truth_node",
@@ -48,10 +54,10 @@ _FORBIDDEN_EVALUATION: frozenset[str] = frozenset({
     "evaluation",   # entire eval block must not appear in preloaded output
 })
 
-# For "correct" specifically, check top-level only (it's too generic a word)
-_FORBIDDEN_TOP_LEVEL: frozenset[str] = frozenset({"correct"})
-
 _ALL_FORBIDDEN: frozenset[str] = _FORBIDDEN_REMEDIATION | _FORBIDDEN_EVALUATION
+
+# "correct" is too generic to check recursively — only block at top level
+_FORBIDDEN_TOP_LEVEL: frozenset[str] = frozenset({"correct"})
 
 
 def _collect_all_keys(obj: object, depth: int = 0) -> set[str]:
@@ -60,7 +66,7 @@ def _collect_all_keys(obj: object, depth: int = 0) -> set[str]:
     if isinstance(obj, dict):
         for k, v in obj.items():
             keys.add(k)
-            if depth < 20:  # guard against pathological nesting
+            if depth < 20:
                 keys.update(_collect_all_keys(v, depth + 1))
     elif isinstance(obj, list):
         for item in obj:
@@ -76,8 +82,8 @@ def _check_file(path: Path) -> list[str]:
     except Exception as exc:
         return [f"Could not parse JSON: {exc}"]
 
-    all_keys    = _collect_all_keys(data)
-    top_keys    = set(data.keys()) if isinstance(data, dict) else set()
+    all_keys = _collect_all_keys(data)
+    top_keys = set(data.keys()) if isinstance(data, dict) else set()
 
     for key in _ALL_FORBIDDEN:
         if key in all_keys:
@@ -90,14 +96,21 @@ def _check_file(path: Path) -> list[str]:
     return violations
 
 
+def _rel(path: Path, base: Path) -> str:
+    try:
+        return str(path.relative_to(REPO_ROOT))
+    except ValueError:
+        try:
+            return str(path.relative_to(base.parent))
+        except ValueError:
+            return str(path)
+
+
 def _scan_directory(scan_dir: Path) -> dict[str, list[str]]:
-    """Scan all *.json files under scan_dir and return {path: [violations]}."""
+    """Scan all *.json files under scan_dir and return {rel_path: [violations]}."""
     results: dict[str, list[str]] = {}
     for json_file in sorted(scan_dir.rglob("*.json")):
-        try:
-            rel = str(json_file.relative_to(REPO_ROOT))
-        except ValueError:
-            rel = str(json_file.relative_to(scan_dir.parent))
+        rel = _rel(json_file, scan_dir)
         viol = _check_file(json_file)
         if viol:
             results[rel] = viol
@@ -106,12 +119,13 @@ def _scan_directory(scan_dir: Path) -> dict[str, list[str]]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Validate RCA output files for demo safety."
+        description="Validate RCA preloaded output files for demo safety."
     )
     parser.add_argument(
-        "--scan-dir",
-        default="assets/preloaded",
-        help="Directory to scan (default: assets/preloaded)",
+        "--scan-dir", dest="scan_dirs", action="append", default=None,
+        metavar="DIR",
+        help="Directory to scan (repeatable).  Default: "
+             + " and ".join(_DEFAULT_SCAN_DIRS),
     )
     parser.add_argument(
         "--verbose", "-v", action="store_true",
@@ -119,33 +133,38 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    scan_dir = (REPO_ROOT / args.scan_dir).resolve()
-    if not scan_dir.exists():
-        print(f"[INFO] Scan directory does not exist: {scan_dir}")
-        print("       Nothing to validate.")
-        sys.exit(0)
+    target_dirs: list[str] = args.scan_dirs if args.scan_dirs else _DEFAULT_SCAN_DIRS
 
-    failures = _scan_directory(scan_dir)
+    all_failures: dict[str, list[str]] = {}
+    total_files = 0
 
-    # Count total files checked
-    total = sum(1 for _ in scan_dir.rglob("*.json"))
+    for dir_str in target_dirs:
+        scan_dir = (REPO_ROOT / dir_str).resolve()
+        if not scan_dir.exists():
+            print(f"[INFO] Directory does not exist, skipping: {dir_str}")
+            continue
 
-    if args.verbose:
-        for json_file in sorted(scan_dir.rglob("*.json")):
-            try:
-                rel = str(json_file.relative_to(REPO_ROOT))
-            except ValueError:
-                rel = str(json_file.relative_to(scan_dir.parent))
-            if rel in failures:
-                print(f"  FAIL  {rel}")
-            else:
-                print(f"  ok    {rel}")
+        dir_files = list(scan_dir.rglob("*.json"))
+        total_files += len(dir_files)
 
-    if failures:
-        print(f"\n[FAIL] {len(failures)} file(s) contain forbidden keys "
-              f"(checked {total} file(s) in {args.scan_dir})")
+        if args.verbose:
+            for json_file in sorted(dir_files):
+                rel = _rel(json_file, scan_dir)
+                viol = _check_file(json_file)
+                if viol:
+                    print(f"  FAIL  {rel}")
+                else:
+                    print(f"  ok    {rel}")
+
+        failures = _scan_directory(scan_dir)
+        all_failures.update(failures)
+
+    if all_failures:
+        scanned_label = ", ".join(f"'{d}'" for d in target_dirs)
+        print(f"\n[FAIL] {len(all_failures)} file(s) contain forbidden keys "
+              f"(checked {total_files} file(s) across {scanned_label})")
         print()
-        for path, viols in sorted(failures.items()):
+        for path, viols in sorted(all_failures.items()):
             print(f"  {path}")
             for v in viols:
                 print(f"    - {v}")
@@ -155,7 +174,8 @@ def main() -> None:
               "assets/preloaded/.")
         sys.exit(1)
     else:
-        print(f"[PASS] All {total} file(s) in {args.scan_dir!r} are demo-safe.")
+        scanned_label = ", ".join(f"'{d}'" for d in target_dirs)
+        print(f"[PASS] All {total_files} file(s) across {scanned_label} are demo-safe.")
         sys.exit(0)
 
 

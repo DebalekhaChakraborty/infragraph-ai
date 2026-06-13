@@ -7,12 +7,13 @@ Reads:
   scenario_library/topology_rca/<case_id>/graph_ref.json
   model_artifacts/topology_rca/topology_rca_model.joblib
 
-Writes:
-  assets/preloaded/topology_rca_results/<case_id>.json
+Default writes to:
+  assets/preloaded/topology_rca_results/<case_id>.json   (demo-safe, no eval fields)
 
-Default output contains only root-cause node ranking — no evaluation fields
-and no remediation content.  Pass --with-eval to include ground-truth
-comparison (reads labels.json from the scenario library).
+With --with-eval (unless --out-dir is overridden) writes to:
+  reports/topology_rca/manual_eval/<case_id>.json
+
+No remediation content is produced here.
 
 Usage:
   python scripts/predict_topology_rca.py --case-id topo_enterprise_v3_0000_datacenter_topology
@@ -80,21 +81,33 @@ def main() -> None:
     )
     parser.add_argument("--case-id", required=True, help="Case ID from manifest")
     parser.add_argument("--scenario-library", default="scenario_library")
-    parser.add_argument("--model-dir",         default="model_artifacts/topology_rca")
-    parser.add_argument("--out-dir",           default="assets/preloaded/topology_rca_results")
-    parser.add_argument("--top-k", type=int,   default=3)
+    parser.add_argument("--model-dir",  default="model_artifacts/topology_rca")
+    parser.add_argument("--out-dir",    default=None,
+                        help="Output directory override.  Default: assets/preloaded/topology_rca_results "
+                             "(or reports/topology_rca/manual_eval when --with-eval is set).")
+    parser.add_argument("--top-k", type=int, default=3)
     parser.add_argument("--with-eval", action="store_true",
-                        help="Include ground-truth comparison (reads labels.json)")
+                        help="Include ground-truth comparison (reads labels.json).  "
+                             "Output is written to reports/topology_rca/manual_eval by default.")
     parser.add_argument("--hybrid-score", action="store_true",
                         help="Combine model probability with alert-context score "
                              "(0.75 x model + 0.25 x context)")
     args = parser.parse_args()
 
-    repo_root   = REPO_ROOT
-    lib_root    = (repo_root / args.scenario_library).resolve()
-    model_dir   = (repo_root / args.model_dir).resolve()
-    out_dir     = (repo_root / args.out_dir).resolve()
-    case_dir    = lib_root / "topology_rca" / args.case_id
+    repo_root = REPO_ROOT
+    lib_root  = (repo_root / args.scenario_library).resolve()
+    model_dir = (repo_root / args.model_dir).resolve()
+    case_dir  = lib_root / "topology_rca" / args.case_id
+
+    # Resolve output directory
+    if args.out_dir:
+        out_dir = (repo_root / args.out_dir).resolve()
+    elif args.with_eval:
+        out_dir = repo_root / "reports" / "topology_rca" / "manual_eval"
+        print("[INFO] --with-eval enabled; writing evaluation output under "
+              "reports/topology_rca/manual_eval, not assets/preloaded/.")
+    else:
+        out_dir = repo_root / "assets" / "preloaded" / "topology_rca_results"
 
     if not case_dir.exists():
         print(f"[ERROR] Case directory not found: {case_dir}")
@@ -107,8 +120,14 @@ def main() -> None:
         print("        Run scripts/train_topology_rca_model.py first.")
         sys.exit(1)
 
-    # Load model
-    pipeline, _ = load_model(model_path, feat_col_path)
+    # Load model and check feature column compatibility (Part A)
+    pipeline, saved_feature_cols = load_model(model_path, feat_col_path)
+    if saved_feature_cols and saved_feature_cols != ALL_FEATURE_COLS:
+        print("[ERROR] Feature column mismatch: topology model was trained with a different feature set.")
+        print("        Rebuild dataset and retrain:")
+        print("          python scripts/build_topology_rca_dataset.py")
+        print("          python scripts/train_topology_rca_model.py")
+        sys.exit(1)
 
     # Load case inputs
     def _r(name: str) -> dict:
@@ -123,12 +142,11 @@ def main() -> None:
 
     # Ground truth — only read when --with-eval is explicitly requested
     ground_truth_node: str | None = None
-    in_scope = False
     if args.with_eval:
         label_path = case_dir / "labels.json"
         if label_path.exists():
-            labels   = json.loads(label_path.read_text(encoding="utf-8"))
-            in_scope = bool(labels.get("root_cause_in_scope", False))
+            labels    = json.loads(label_path.read_text(encoding="utf-8"))
+            in_scope  = bool(labels.get("root_cause_in_scope", False))
             ground_truth_node = labels.get("root_cause_node") if in_scope else None
 
     # Build features
@@ -159,7 +177,7 @@ def main() -> None:
     # Score
     scored = score_dataframe(pipeline, df)
 
-    # Hybrid scoring (Part F)
+    # Hybrid scoring
     if args.hybrid_score:
         ctx_score = _compute_alert_context_score(scored)
         scored = scored.copy()
@@ -209,7 +227,9 @@ def main() -> None:
             "rank":              rank,
         }
 
-    _assert_clean(result)
+    # Guard: clean outputs going to preloaded must have no eval keys
+    if not args.with_eval:
+        _assert_clean(result)
 
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"{args.case_id}.json"
