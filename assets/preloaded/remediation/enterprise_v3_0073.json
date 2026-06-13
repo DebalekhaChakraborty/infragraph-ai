@@ -101,13 +101,8 @@
       "priority": "2-High",
       "assignment_group": "Network Engineering — Enterprise Operations"
     },
-<<<<<<< HEAD
-    "audit_summary": "Template remediation plan for scenario enterprise_v3_0073; risk=critical, blast_radius=single_diagram, automation=manual_only, rca_source=Scenario-grounded RCA simulation. Evidence IDs used: CE-001, CE-002, CE-003, CE-004. Event correlation cluster: CLU-ent_enterprise_v3_0073-001 (score=0.7675). ",
-    "confidence_notes": "RCA source: Scenario-grounded RCA simulation. GNN inference result not available — candidate ranking derived from alert timeline heuristics. Event correlation cluster: CLU-ent_enterprise_v3_0073-001 (score=0.7675). Template mode: output is deterministic and not model-generated.",
-=======
-    "audit_summary": "Template remediation plan for scenario enterprise_v3_0073; risk=critical, blast_radius=single_diagram, automation=manual_only, rca_source=Enterprise GNN RCA. Evidence IDs used: CE-001, CE-002, CE-003, CE-004. Event correlation cluster: CLU-ent_enterprise_v3_0073-001 (score=0.7675).",
+    "audit_summary": "Template remediation plan for scenario enterprise_v3_0073; risk=critical, blast_radius=single_diagram, automation=manual_only, rca_source=Enterprise GNN RCA. Evidence IDs used: CE-001, CE-002, CE-003, CE-004. Event correlation cluster: CLU-ent_enterprise_v3_0073-001 (score=0.7675). ",
     "confidence_notes": "RCA source: Enterprise GNN RCA. GNN inference result was used — candidate ranking is model-derived. Event correlation cluster: CLU-ent_enterprise_v3_0073-001 (score=0.7675). Template mode: output is deterministic and not model-generated.",
->>>>>>> f13c593d369d643590b9d94b5ddd703593c8b66b
     "source": "template"
   }
 }
