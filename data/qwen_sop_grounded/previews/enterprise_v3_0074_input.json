@@ -1,0 +1,161 @@
+{
+  "incident_id": "INC-enterprise_v3_0074",
+  "scenario_id": "enterprise_v3_0074",
+  "scope": "enterprise",
+  "root_cause": "WAN-PE-01",
+  "root_cause_diagram": "wan_topology",
+  "impacted_nodes": [
+    "WAN-PE-01",
+    "WAN-PE-02",
+    "APP-LB-01"
+  ],
+  "impacted_diagrams": [
+    "wan_topology",
+    "app_db_topology"
+  ],
+  "alert_timeline": [
+    {
+      "event_id": "EVT-0001",
+      "time_offset_min": 0,
+      "node": "WAN-PE-01",
+      "diagram_id": "wan_topology",
+      "alert_type": "link_down",
+      "severity": "critical"
+    },
+    {
+      "event_id": "EVT-0002",
+      "time_offset_min": 1,
+      "node": "WAN-PE-02",
+      "diagram_id": "wan_topology",
+      "alert_type": "error_rate",
+      "severity": "high"
+    },
+    {
+      "event_id": "EVT-0003",
+      "time_offset_min": 5,
+      "node": "APP-LB-01",
+      "diagram_id": "app_db_topology",
+      "alert_type": "connection_timeout",
+      "severity": "warning"
+    }
+  ],
+  "candidate_ranking": [
+    {
+      "rank": 1,
+      "node_id": "WAN-PE-01",
+      "diagram_id": "wan_topology",
+      "node_observed_in_diagrams": [
+        "wan_topology"
+      ],
+      "node_type": "router",
+      "score": 0.9998,
+      "evidence": [
+        "alert_count=1.0",
+        "cross_diagram_degree=0.0",
+        "distance_to_alert=0.0",
+        "shared_entity=False"
+      ]
+    },
+    {
+      "rank": 2,
+      "node_id": "WAN-PE-02",
+      "diagram_id": "wan_topology",
+      "node_observed_in_diagrams": [
+        "wan_topology"
+      ],
+      "node_type": "router",
+      "score": 0.0002,
+      "evidence": [
+        "alert_count=1.0",
+        "cross_diagram_degree=0.045",
+        "distance_to_alert=0.0",
+        "shared_entity=False"
+      ]
+    },
+    {
+      "rank": 3,
+      "node_id": "WAN-MPLS-CORE",
+      "diagram_id": "wan_topology",
+      "node_observed_in_diagrams": [
+        "wan_topology"
+      ],
+      "node_type": "cloud_or_wan",
+      "score": 0.0,
+      "evidence": [
+        "alert_count=0.0",
+        "cross_diagram_degree=0.0",
+        "distance_to_alert=0.045",
+        "shared_entity=False"
+      ]
+    }
+  ],
+  "cluster_id": "CLU-ent_enterprise_v3_0074-001",
+  "cluster_score": 0.5533,
+  "correlation_reasons": [
+    "3 event(s) span 5 min (t=0..5)",
+    "Events span 2 diagrams: app_db_topology, wan_topology"
+  ],
+  "causal_evidence": [
+    {
+      "evidence_id": "CE-001",
+      "stage": "temporal_correlation",
+      "summary": "3 alert(s) within a 5-minute window (t=0..5 min), consistent with a propagating fault.",
+      "supporting_events": [
+        "EVT-0001",
+        "EVT-0002",
+        "EVT-0003"
+      ],
+      "supporting_nodes": [
+        "WAN-PE-01",
+        "WAN-PE-02",
+        "APP-LB-01"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "evidence_id": "CE-002",
+      "stage": "topology_proximity",
+      "summary": "Alerted nodes (WAN-PE-01, WAN-PE-02, APP-LB-01) are topologically proximate (topology score 0.43), suggesting fault propagation through connected infrastructure.",
+      "supporting_events": [
+        "EVT-0001",
+        "EVT-0002",
+        "EVT-0003"
+      ],
+      "supporting_nodes": [
+        "WAN-PE-01",
+        "WAN-PE-02",
+        "APP-LB-01"
+      ],
+      "confidence": 0.4333
+    },
+    {
+      "evidence_id": "CE-003",
+      "stage": "cross_diagram_correlation",
+      "summary": "Events span 2 diagrams (app_db_topology, wan_topology). Cross-diagram correlation score 0.60 indicates the fault may have propagated across topology boundaries.",
+      "supporting_events": [
+        "EVT-0001",
+        "EVT-0002",
+        "EVT-0003"
+      ],
+      "supporting_nodes": [
+        "WAN-PE-01",
+        "WAN-PE-02",
+        "APP-LB-01"
+      ],
+      "confidence": 0.6
+    },
+    {
+      "evidence_id": "CE-004",
+      "stage": "propagation_hypothesis",
+      "summary": "Hypothesis: fault originated at the cluster seed node and may have propagated downstream through connected infrastructure.",
+      "supporting_events": [
+        "EVT-0001"
+      ],
+      "supporting_nodes": [
+        "WAN-PE-01"
+      ],
+      "confidence": 0.7167
+    }
+  ],
+  "retrieved_kb_evidence": []
+}

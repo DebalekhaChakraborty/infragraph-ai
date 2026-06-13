@@ -1,0 +1,178 @@
+{
+  "incident_id": "INC-enterprise_v3_0073",
+  "scenario_id": "enterprise_v3_0073",
+  "scope": "enterprise",
+  "root_cause": "DB-MASTER",
+  "root_cause_diagram": "app_db_topology",
+  "impacted_nodes": [
+    "DB-MASTER",
+    "APP-01",
+    "APP-02",
+    "DB-REPLICA-01"
+  ],
+  "impacted_diagrams": [
+    "app_db_topology"
+  ],
+  "alert_timeline": [
+    {
+      "event_id": "EVT-0001",
+      "time_offset_min": 0,
+      "node": "DB-MASTER",
+      "diagram_id": "app_db_topology",
+      "alert_type": "cpu_spike",
+      "severity": "critical"
+    },
+    {
+      "event_id": "EVT-0002",
+      "time_offset_min": 1,
+      "node": "APP-01",
+      "diagram_id": "app_db_topology",
+      "alert_type": "connection_timeout",
+      "severity": "high"
+    },
+    {
+      "event_id": "EVT-0003",
+      "time_offset_min": 9,
+      "node": "APP-02",
+      "diagram_id": "app_db_topology",
+      "alert_type": "latency",
+      "severity": "high"
+    },
+    {
+      "event_id": "EVT-0004",
+      "time_offset_min": 12,
+      "node": "DB-REPLICA-01",
+      "diagram_id": "app_db_topology",
+      "alert_type": "latency",
+      "severity": "warning"
+    }
+  ],
+  "candidate_ranking": [
+    {
+      "rank": 1,
+      "node_id": "DB-MASTER",
+      "diagram_id": "app_db_topology",
+      "node_observed_in_diagrams": [
+        "app_db_topology"
+      ],
+      "node_type": "database",
+      "score": 1.0,
+      "evidence": [
+        "alert_count=1.0",
+        "cross_diagram_degree=0.026",
+        "distance_to_alert=0.0",
+        "shared_entity=False"
+      ]
+    },
+    {
+      "rank": 2,
+      "node_id": "APP-01",
+      "diagram_id": "app_db_topology",
+      "node_observed_in_diagrams": [
+        "app_db_topology"
+      ],
+      "node_type": "server",
+      "score": 0.0,
+      "evidence": [
+        "alert_count=1.0",
+        "cross_diagram_degree=0.053",
+        "distance_to_alert=0.0",
+        "shared_entity=True"
+      ]
+    },
+    {
+      "rank": 3,
+      "node_id": "APP-02",
+      "diagram_id": "app_db_topology",
+      "node_observed_in_diagrams": [
+        "app_db_topology"
+      ],
+      "node_type": "server",
+      "score": 0.0,
+      "evidence": [
+        "alert_count=1.0",
+        "cross_diagram_degree=0.0",
+        "distance_to_alert=0.0",
+        "shared_entity=False"
+      ]
+    }
+  ],
+  "cluster_id": "CLU-ent_enterprise_v3_0073-001",
+  "cluster_score": 0.7675,
+  "correlation_reasons": [
+    "4 event(s) span 12 min (t=0..12)",
+    "Propagation pattern detected: cpu -> latency",
+    "Alerted nodes are directly adjacent (1-2 hops)"
+  ],
+  "causal_evidence": [
+    {
+      "evidence_id": "CE-001",
+      "stage": "temporal_correlation",
+      "summary": "4 alert(s) within a 12-minute window (t=0..12 min), consistent with a propagating fault.",
+      "supporting_events": [
+        "EVT-0001",
+        "EVT-0002",
+        "EVT-0003",
+        "EVT-0004"
+      ],
+      "supporting_nodes": [
+        "DB-MASTER",
+        "APP-01",
+        "APP-02",
+        "DB-REPLICA-01"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "evidence_id": "CE-002",
+      "stage": "alert_sequence",
+      "summary": "Alert type sequence matches propagation chain: cpu -> latency. This ordering is consistent with fault propagation from the initiating node.",
+      "supporting_events": [
+        "EVT-0001",
+        "EVT-0002",
+        "EVT-0003",
+        "EVT-0004"
+      ],
+      "supporting_nodes": [
+        "DB-MASTER",
+        "APP-01",
+        "APP-02",
+        "DB-REPLICA-01"
+      ],
+      "confidence": 0.85
+    },
+    {
+      "evidence_id": "CE-003",
+      "stage": "topology_proximity",
+      "summary": "Alerted nodes (DB-MASTER, APP-01, APP-02, DB-REPLICA-01) are topologically proximate (topology score 0.92), suggesting fault propagation through connected infrastructure.",
+      "supporting_events": [
+        "EVT-0001",
+        "EVT-0002",
+        "EVT-0003",
+        "EVT-0004"
+      ],
+      "supporting_nodes": [
+        "DB-MASTER",
+        "APP-01",
+        "APP-02",
+        "DB-REPLICA-01"
+      ],
+      "confidence": 0.925
+    },
+    {
+      "evidence_id": "CE-004",
+      "stage": "propagation_hypothesis",
+      "summary": "Hypothesis: fault initiated at DB-MASTER (alert: cpu_spike) and propagated to 1 downstream node(s) matching known propagation patterns.",
+      "supporting_events": [
+        "EVT-0001",
+        "EVT-0002"
+      ],
+      "supporting_nodes": [
+        "DB-MASTER",
+        "APP-01"
+      ],
+      "confidence": 0.9625
+    }
+  ],
+  "retrieved_kb_evidence": []
+}
