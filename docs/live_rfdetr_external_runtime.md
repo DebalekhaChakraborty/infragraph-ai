@@ -3,7 +3,7 @@
 InfraGraph AI keeps the UI, vision detector, and language model runtimes separate.
 
 - Streamlit runs the application UI and session state.
-- RF-DETR runs in an external detector Python process.
+- RF-DETR can run as an HTTP detector service, or as an external detector Python subprocess.
 - Qwen/vLLM runs as a separate HTTP inference server.
 
 This mirrors the existing Qwen/vLLM setup: Streamlit does not need the model package installed locally. The UI calls the detector runtime through a subprocess bridge and reads a structured JSON result.
@@ -12,7 +12,14 @@ This mirrors the existing Qwen/vLLM setup: Streamlit does not need the model pac
 
 The previous live ingestion path tried to import RF-DETR inside the Streamlit process. If the Streamlit virtual environment did not include `rfdetr`, onboarding reported `No module named 'rfdetr'` even when a base detector environment had the package installed.
 
-The new path does not import RF-DETR in Streamlit. It runs:
+The preferred path is an RF-DETR HTTP service. Streamlit calls the service URL and does not need to know a detector Python path:
+
+```bash
+python scripts/serve_rfdetr_detector.py --host 0.0.0.0 --port 8010
+export INFRAGRAPH_RFDETR_BASE_URL=http://127.0.0.1:8010
+```
+
+If `INFRAGRAPH_RFDETR_BASE_URL` is not set, Streamlit uses a subprocess detector path. The subprocess path still does not import RF-DETR in Streamlit. It runs:
 
 ```bash
 python scripts/run_rfdetr_inference.py \
@@ -27,12 +34,21 @@ python scripts/run_rfdetr_inference.py \
 
 ```bash
 INFRAGRAPH_RFDETR_PYTHON=/path/to/python
+INFRAGRAPH_RFDETR_USE_PATH_PYTHON=1
+INFRAGRAPH_RFDETR_BASE_URL=http://127.0.0.1:8010
 INFRAGRAPH_RFDETR_CHECKPOINT=/path/to/checkpoint_best_total.pth
 INFRAGRAPH_RFDETR_CONFIDENCE=0.25
 INFRAGRAPH_RFDETR_TIMEOUT=180
 ```
 
-`INFRAGRAPH_RFDETR_PYTHON` defaults to the current Python after checking common detector locations such as `/opt/conda/bin/python`, `/usr/bin/python`, and `/workspace/shared/venvs/rfdetr/bin/python`.
+Python resolution for subprocess mode:
+
+1. If `INFRAGRAPH_RFDETR_PYTHON` is set, InfraGraph uses that interpreter exactly.
+2. Else if `INFRAGRAPH_RFDETR_USE_PATH_PYTHON=1`, InfraGraph uses plain `python` and lets the current PATH resolve it.
+3. Else it tries common detector candidates such as `/opt/conda/bin/python`, `/usr/bin/python`, and `/workspace/shared/venvs/rfdetr/bin/python`.
+4. Else it falls back to the Streamlit process Python.
+
+The UI shows `python_resolution_mode`, requested detector Python, resolved detector Python, import status, and Streamlit Python.
 
 `INFRAGRAPH_RFDETR_CHECKPOINT` can be set explicitly. If it is not set, the bridge searches common repository locations under `model_artifacts/` and `outputs/`.
 
@@ -47,14 +63,19 @@ pip install -r requirements/requirements-rfdetr-runtime.txt
 Check the detector runtime:
 
 ```bash
-python scripts/check_rfdetr_runtime.py --python /opt/conda/bin/python
+python scripts/check_rfdetr_runtime.py
+```
+
+Start Streamlit while capturing the current detector/base shell Python:
+
+```bash
+scripts/amd_rocm/start_streamlit_with_external_rfdetr.sh
 ```
 
 Optionally run an image-level check:
 
 ```bash
 python scripts/check_rfdetr_runtime.py \
-  --python /opt/conda/bin/python \
   --image datasets/infragraph_v3/scenarios/train/enterprise_v3_0000/diagrams/branch_topology.png
 ```
 
@@ -64,7 +85,7 @@ Start Streamlit from the application environment and point it at the detector ru
 
 ```bash
 source /workspace/shared/venvs/infragraph-app/bin/activate
-export INFRAGRAPH_RFDETR_PYTHON=/opt/conda/bin/python
+export INFRAGRAPH_RFDETR_BASE_URL=http://127.0.0.1:8010
 python -m streamlit run app/streamlit_app.py --server.address=0.0.0.0 --server.port=8501
 ```
 
@@ -93,4 +114,3 @@ This change does not alter Qwen/vLLM configuration. Qwen remains an HTTP runtime
 INFRAGRAPH_QWEN_BASE_URL=http://127.0.0.1:8000/v1
 INFRAGRAPH_QWEN_MODEL=infragraph
 ```
-

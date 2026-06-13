@@ -135,8 +135,12 @@ if _app_dir_for_bridge not in _sys.path:
 try:
     from rfdetr_subprocess_bridge import (                                      # type: ignore
         resolve_rfdetr_python as _resolve_rfdetr_python,
+        resolve_rfdetr_python_details as _resolve_rfdetr_python_details,
         find_best_rfdetr_checkpoint as _find_rfdetr_ckpt,
         check_rfdetr_runtime as _check_rfdetr_runtime,
+        check_rfdetr_http_service as _check_rfdetr_http_service,
+        rfdetr_service_base_url as _rfdetr_service_base_url,
+        run_rfdetr_detection as _run_rfdetr_detection,
         run_rfdetr_subprocess as _run_rfdetr_subprocess,
     )
     _RFDETR_BRIDGE_OK = True
@@ -145,8 +149,12 @@ except Exception as _rfb_exc:
     _RFDETR_BRIDGE_OK = False
     _RFDETR_BRIDGE_ERR = str(_rfb_exc)
     _resolve_rfdetr_python = None  # type: ignore
+    _resolve_rfdetr_python_details = None  # type: ignore
     _find_rfdetr_ckpt = None       # type: ignore
     _check_rfdetr_runtime = None   # type: ignore
+    _check_rfdetr_http_service = None  # type: ignore
+    _rfdetr_service_base_url = None    # type: ignore
+    _run_rfdetr_detection = None       # type: ignore
     _run_rfdetr_subprocess = None  # type: ignore
 
 # ── Incident simulation package ───────────────────────────────────────────────
@@ -943,6 +951,30 @@ def _cached_rfdetr_runtime_check(python_executable: str) -> dict:
     return _check_rfdetr_runtime(python_executable)
 
 
+@st.cache_data(ttl=60)
+def _cached_rfdetr_python_resolution() -> dict:
+    if not _RFDETR_BRIDGE_OK or _resolve_rfdetr_python_details is None:
+        return {
+            "requested_detector_python": os.environ.get("INFRAGRAPH_RFDETR_PYTHON", "").strip() or "python",
+            "resolved_detector_python": "",
+            "python_executable": "",
+            "import_ok": False,
+            "runtime": {"ok": False, "error": _RFDETR_BRIDGE_ERR},
+            "fallback_reason": _RFDETR_BRIDGE_ERR,
+        }
+    return _resolve_rfdetr_python_details()
+
+
+@st.cache_data(ttl=30)
+def _cached_rfdetr_http_health() -> dict:
+    if not _RFDETR_BRIDGE_OK or _rfdetr_service_base_url is None or _check_rfdetr_http_service is None:
+        return {"ok": False, "service_url": "", "error": _RFDETR_BRIDGE_ERR}
+    base_url = _rfdetr_service_base_url()
+    if not base_url:
+        return {"ok": False, "service_url": "", "error": "INFRAGRAPH_RFDETR_BASE_URL is not set"}
+    return _check_rfdetr_http_service(base_url)
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # DETECTION PAIR VISUAL
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1512,8 +1544,10 @@ def _readiness_checks() -> list[dict]:
     lg_ok = all(
         (V3_HERO_SCENARIO / "local_graphs" / f"{d}.json").exists() for d in V3_REQUIRED_DIAGRAMS
     )
-    rfdetr_python = _resolve_rfdetr_python() if _RFDETR_BRIDGE_OK and _resolve_rfdetr_python else ""
-    rfdetr_runtime = _cached_rfdetr_runtime_check(rfdetr_python) if rfdetr_python else {"ok": False}
+    rfdetr_resolution = _cached_rfdetr_python_resolution()
+    rfdetr_python = str(rfdetr_resolution.get("python_executable") or rfdetr_resolution.get("resolved_detector_python") or "")
+    rfdetr_runtime = rfdetr_resolution.get("runtime") or {"ok": bool(rfdetr_resolution.get("import_ok"))}
+    rfdetr_http = _cached_rfdetr_http_health()
     rfdetr_ckpt = _find_rfdetr_ckpt(REPO_ROOT) if _RFDETR_BRIDGE_OK and _find_rfdetr_ckpt else None
     return [
         {"label": "V3 hero scenario exists",          "ok": V3_HERO_SCENARIO.exists(),                                       "optional": False},
@@ -1525,7 +1559,9 @@ def _readiness_checks() -> list[dict]:
         {"label": "RF-DETR COCO export",               "ok": (V3_DATASET_ROOT / "rfdetr" / "annotations" / "instances_train.json").exists(), "optional": True},
         {"label": "YOLO export",                       "ok": (V3_DATASET_ROOT / "yolo" / "dataset.yaml").exists(),            "optional": True},
         {"label": "RF-DETR checkpoint found",           "ok": bool(rfdetr_ckpt and Path(rfdetr_ckpt).exists()),                "optional": not _strict_mode()},
-        {"label": f"RF-DETR runtime Python: {rfdetr_python or 'not resolved'}", "ok": bool(rfdetr_python),                    "optional": not _strict_mode()},
+        {"label": f"RF-DETR HTTP service: {rfdetr_http.get('service_url') or 'not configured'}", "ok": bool(rfdetr_http.get("ok")), "optional": True},
+        {"label": f"RF-DETR requested Python: {rfdetr_resolution.get('requested_detector_python') or 'python'}", "ok": True, "optional": not _strict_mode()},
+        {"label": f"RF-DETR resolved Python: {rfdetr_python or 'not resolved'}", "ok": bool(rfdetr_python),                    "optional": not _strict_mode()},
         {"label": "RF-DETR import in external runtime", "ok": bool(rfdetr_runtime.get("ok")),                                "optional": not _strict_mode()},
         {"label": "Live onboarding bridge available",   "ok": _RFDETR_BRIDGE_OK,                                              "optional": not _strict_mode()},
         {"label": "PyVis dependency",                  "ok": _pyvis_available(),                                              "optional": not _strict_mode()},
@@ -3201,8 +3237,10 @@ def _tab_onboard_new_diagram() -> None:
     )
 
     # ── External RF-DETR runtime status ───────────────────────────────────────
-    _rfdetr_python = _resolve_rfdetr_python() if _RFDETR_BRIDGE_OK and _resolve_rfdetr_python else ""
-    _rfdetr_runtime = _cached_rfdetr_runtime_check(_rfdetr_python) if _rfdetr_python else {"ok": False}
+    _rfdetr_resolution = _cached_rfdetr_python_resolution()
+    _rfdetr_python = str(_rfdetr_resolution.get("python_executable") or _rfdetr_resolution.get("resolved_detector_python") or "")
+    _rfdetr_runtime = _rfdetr_resolution.get("runtime") or {"ok": bool(_rfdetr_resolution.get("import_ok"))}
+    _rfdetr_http = _cached_rfdetr_http_health()
     _rfdetr_ckpt = _find_rfdetr_ckpt(REPO_ROOT) if _RFDETR_BRIDGE_OK and _find_rfdetr_ckpt else None
     _rfdetr_ckpt_str = str(_rfdetr_ckpt) if _rfdetr_ckpt else None
     col_l, col_r = st.columns([3, 2])
@@ -3220,13 +3258,24 @@ def _tab_onboard_new_diagram() -> None:
                 'Train first: scripts/train_rfdetr_diagram_detector.py</span>',
                 unsafe_allow_html=True,
             )
-        st.caption(f"RF-DETR runtime Python: `{_rfdetr_python or 'not resolved'}`")
+        st.caption(f"Requested detector python: `{_rfdetr_resolution.get('requested_detector_python') or 'python'}`")
+        st.caption(f"Resolved detector python: `{_rfdetr_python or 'not resolved'}`")
+        st.caption(f"Python resolution mode: `{_rfdetr_resolution.get('python_resolution_mode', 'unknown')}`")
+        if _rfdetr_http.get("service_url"):
+            st.caption(f"RF-DETR service URL: `{_rfdetr_http.get('service_url')}`")
+            if _rfdetr_http.get("ok"):
+                st.markdown('<span class="badge badge-success">RF-DETR HTTP service healthy</span>', unsafe_allow_html=True)
+            else:
+                st.markdown('<span class="badge badge-warn">RF-DETR HTTP service unavailable</span>', unsafe_allow_html=True)
+                st.caption(str(_rfdetr_http.get("error", ""))[:300])
         if _rfdetr_runtime.get("ok"):
             st.markdown('<span class="badge badge-success">external RF-DETR import OK</span>', unsafe_allow_html=True)
         else:
             st.markdown('<span class="badge badge-warn">external RF-DETR import unavailable</span>', unsafe_allow_html=True)
             if _rfdetr_runtime.get("error") or _rfdetr_runtime.get("stderr_preview"):
                 st.caption(str(_rfdetr_runtime.get("error") or _rfdetr_runtime.get("stderr_preview"))[:300])
+        if _rfdetr_resolution.get("fallback_reason"):
+            st.caption(f"Fallback reason: {_rfdetr_resolution.get('fallback_reason')}")
     with col_r:
         use_rfdetr = st.checkbox(
             "Use live RF-DETR detector if available",
@@ -3300,21 +3349,27 @@ def _tab_onboard_new_diagram() -> None:
                 st.error(f"runtime_ingestion failed to load at startup — restart the app to retry.{_err_d}")
             else:
                 _external_rfdetr_result = {}
-                if st.session_state.use_live_rfdetr and _rfdetr_ckpt and _run_rfdetr_subprocess is not None:
+                if st.session_state.use_live_rfdetr and _rfdetr_ckpt and _run_rfdetr_detection is not None:
                     _conf = float(os.environ.get("INFRAGRAPH_RFDETR_CONFIDENCE", "0.25"))
                     _timeout = int(os.environ.get("INFRAGRAPH_RFDETR_TIMEOUT", "180"))
                     with st.spinner("Running external RF-DETR detector runtime…"):
-                        _external_rfdetr_result = _run_rfdetr_subprocess(
+                        _external_rfdetr_result = _run_rfdetr_detection(
                             img_path,
                             Path(_rfdetr_ckpt),
                             confidence=_conf,
                             timeout=_timeout,
                         )
                 elif st.session_state.use_live_rfdetr:
+                    _fallback_err = _RFDETR_BRIDGE_ERR or "RF-DETR bridge unavailable"
+                    if not _rfdetr_ckpt:
+                        _fallback_err = "RF-DETR checkpoint not found"
                     _external_rfdetr_result = {
                         "ok": False,
-                        "source": "live_rfdetr_subprocess",
-                        "error": _RFDETR_BRIDGE_ERR or "RF-DETR subprocess bridge unavailable",
+                        "source": "verified_annotation_fallback",
+                        "detector_runtime_mode": "verified_annotation_fallback",
+                        "error": _fallback_err,
+                        "fallback_reason": _fallback_err,
+                        "checkpoint_path": "",
                     }
 
                 _STEPS = [
@@ -3404,16 +3459,31 @@ def _tab_onboard_new_diagram() -> None:
                     unsafe_allow_html=True,
                 )
                 if _external_rfdetr_result.get("ok"):
+                    _det_runtime_mode = (
+                        _external_rfdetr_result.get("detector_runtime_mode")
+                        or _external_rfdetr_result.get("source")
+                        or "live_rfdetr_subprocess"
+                    )
+                    _runtime_lines = [
+                        '<div class="info-card" style="border-color:rgba(59,130,246,0.45)">',
+                        f'<strong>Detector runtime mode: {_det_runtime_mode}</strong><br>',
+                        'Detector: RF-DETR<br>',
+                    ]
+                    if _det_runtime_mode == "live_rfdetr_http_service":
+                        _runtime_lines.append(f'Service URL: <code>{_external_rfdetr_result.get("service_url","")}</code><br>')
+                    else:
+                        _runtime_lines.append(f'Python executable: <code>{_external_rfdetr_result.get("python_executable","")}</code><br>')
+                    _runtime_lines.extend([
+                        f'Checkpoint path: <code>{_external_rfdetr_result.get("checkpoint_path","")}</code><br>',
+                        f'Inference runtime: {_external_rfdetr_result.get("inference_runtime_ms",0)} ms<br>',
+                        f'Detection count: {len(_external_rfdetr_result.get("detections", []))}<br>',
+                        f'Source: {_external_rfdetr_result.get("source","live_rfdetr_subprocess")}',
+                    ])
+                    if _external_rfdetr_result.get("fallback_reason"):
+                        _runtime_lines.append(f'<br>Fallback reason: {_external_rfdetr_result.get("fallback_reason")}')
+                    _runtime_lines.append('</div>')
                     st.markdown(
-                        '<div class="info-card" style="border-color:rgba(59,130,246,0.45)">'
-                        '<strong>Mode: LIVE_RFDETR_INFERENCE</strong><br>'
-                        f'Detector: RF-DETR<br>'
-                        f'Python executable: <code>{_external_rfdetr_result.get("python_executable","")}</code><br>'
-                        f'Checkpoint path: <code>{_external_rfdetr_result.get("checkpoint_path","")}</code><br>'
-                        f'Inference runtime: {_external_rfdetr_result.get("inference_runtime_ms",0)} ms<br>'
-                        f'Detection count: {len(_external_rfdetr_result.get("detections", []))}<br>'
-                        f'Source: {_external_rfdetr_result.get("source","live_rfdetr_subprocess")}'
-                        '</div>',
+                        "".join(_runtime_lines),
                         unsafe_allow_html=True,
                     )
                     _det_rows = []
@@ -3430,9 +3500,11 @@ def _tab_onboard_new_diagram() -> None:
                 elif _external_rfdetr_result:
                     st.warning("Live RF-DETR unavailable — using verified annotation fallback")
                     st.caption(f"RF-DETR error: {_external_rfdetr_result.get('error', 'unknown error')}")
+                    if _external_rfdetr_result.get("fallback_reason"):
+                        st.caption(f"Fallback reason: {_external_rfdetr_result.get('fallback_reason')}")
                     st.markdown(
                         '<div class="warn-card">'
-                        '<strong>Mode: VERIFIED_ANNOTATION_FALLBACK</strong><br>'
+                        '<strong>Detector runtime mode: verified_annotation_fallback</strong><br>'
                         'Source: verified training annotation / safe curated sample'
                         '</div>',
                         unsafe_allow_html=True,
