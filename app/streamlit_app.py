@@ -4101,56 +4101,9 @@ def _tab_onboard_new_diagram() -> None:
         unsafe_allow_html=True,
     )
 
-    # ── External RF-DETR runtime status ───────────────────────────────────────
-    _rfdetr_resolution = _cached_rfdetr_python_resolution()
-    _rfdetr_python = str(_rfdetr_resolution.get("python_executable") or _rfdetr_resolution.get("resolved_detector_python") or "")
-    _rfdetr_runtime = _rfdetr_resolution.get("runtime") or {"ok": bool(_rfdetr_resolution.get("import_ok"))}
-    _rfdetr_http = _cached_rfdetr_http_health()
+    # Resolve RF-DETR availability (no UI shown here)
     _rfdetr_ckpt = _find_rfdetr_ckpt(REPO_ROOT) if _RFDETR_BRIDGE_OK and _find_rfdetr_ckpt else None
-    _rfdetr_ckpt_str = str(_rfdetr_ckpt) if _rfdetr_ckpt else None
-    col_l, col_r = st.columns([3, 2])
-    with col_l:
-        if _rfdetr_ckpt:
-            st.markdown(
-                f'<span class="badge badge-success">RF-DETR checkpoint found</span> '
-                f'<span style="font-size:0.72rem;color:#64748b">{_rfdetr_ckpt.name}</span>',
-                unsafe_allow_html=True,
-            )
-        else:
-            st.markdown(
-                '<span class="badge badge-warn">RF-DETR checkpoint not found</span> '
-                '<span style="font-size:0.72rem;color:#64748b">'
-                'Train first: scripts/train_rfdetr_diagram_detector.py</span>',
-                unsafe_allow_html=True,
-            )
-        st.caption(f"Requested detector python: `{_rfdetr_resolution.get('requested_detector_python') or 'python'}`")
-        st.caption(f"Resolved detector python: `{_rfdetr_python or 'not resolved'}`")
-        st.caption(f"Python resolution mode: `{_rfdetr_resolution.get('python_resolution_mode', 'unknown')}`")
-        if _rfdetr_http.get("service_url"):
-            st.caption(f"RF-DETR service URL: `{_rfdetr_http.get('service_url')}`")
-            if _rfdetr_http.get("ok"):
-                st.markdown('<span class="badge badge-success">RF-DETR HTTP service healthy</span>', unsafe_allow_html=True)
-            else:
-                st.markdown('<span class="badge badge-warn">RF-DETR HTTP service unavailable</span>', unsafe_allow_html=True)
-                st.caption(str(_rfdetr_http.get("error", ""))[:300])
-        if _rfdetr_runtime.get("ok"):
-            st.markdown('<span class="badge badge-success">external RF-DETR import OK</span>', unsafe_allow_html=True)
-        else:
-            st.markdown('<span class="badge badge-warn">external RF-DETR import unavailable</span>', unsafe_allow_html=True)
-            if _rfdetr_runtime.get("error") or _rfdetr_runtime.get("stderr_preview"):
-                st.caption(str(_rfdetr_runtime.get("error") or _rfdetr_runtime.get("stderr_preview"))[:300])
-    with col_r:
-        use_rfdetr = st.checkbox(
-            "Use live RF-DETR detector if available",
-            value=st.session_state.get("use_live_rfdetr", True),
-            key="use_live_rfdetr_cb",
-            disabled=not bool(_rfdetr_ckpt),
-        )
-        st.session_state.use_live_rfdetr = use_rfdetr and bool(_rfdetr_ckpt)
-        st.caption("Live RF-DETR runs in the external detector runtime, not the Streamlit venv.")
-
-    st.markdown("<hr style='border:none;border-top:1px solid rgba(255,255,255,0.06);margin:10px 0'>",
-                unsafe_allow_html=True)
+    st.session_state.use_live_rfdetr = bool(_rfdetr_ckpt)
 
     # ── Load onboarding manifest ──────────────────────────────────────────────
     samples = _load_onboarding_manifest(str(REPO_ROOT))
@@ -4163,23 +4116,25 @@ def _tab_onboard_new_diagram() -> None:
 
     left, right = st.columns([1, 1])
     with left:
-        sel_idx = st.selectbox(
-            "Select sample diagram",
-            range(len(samples)),
-            format_func=lambda i: f"{samples[i]['sample_id']} | {samples[i]['display_name']}",
-            index=None,
-            placeholder="Select a diagram from the pool…",
-            key="onboard_sample_select",
-        )
+        _s_col, _b_col = st.columns([3, 2])
+        with _s_col:
+            sel_idx = st.selectbox(
+                "Select sample diagram",
+                range(len(samples)),
+                format_func=lambda i: f"{samples[i]['sample_id']} | {samples[i]['display_name']}",
+                index=None,
+                placeholder="Select a diagram from the pool…",
+                key="onboard_sample_select",
+            )
 
         if sel_idx is None:
             is_this_sample_active = False
+            img_path = Path("")
         else:
             sample   = samples[sel_idx]
             did      = sample.get("source_diagram_id", "")
             img_path = Path(sample.get("image_path", ""))
 
-            # status card
             onboard_status = st.session_state.get("onboard_status", "not_started")
             onboarded_sid  = (
                 _ss_dict("onboard_sample_record").get("sample_id", "")
@@ -4200,10 +4155,12 @@ def _tab_onboard_new_diagram() -> None:
                 unsafe_allow_html=True,
             )
 
-        # ── action button ─────────────────────────────────────────────────────
+        # ── action button (side-by-side with selectbox) ───────────────────────
         _btn_disabled = (sel_idx is None) or (not img_path.exists())
-        if st.button("Run Live Diagram Intelligence", type="primary",
-                     use_container_width=True, disabled=_btn_disabled):
+        with _b_col:
+            _run_clicked = st.button("Run Live Diagram Intelligence", type="primary",
+                                     use_container_width=True, disabled=_btn_disabled)
+        if _run_clicked:
             if not _RUNTIME_INGESTION or _run_ingestion is None:
                 _err_d = f"  \n`{_RUNTIME_INGESTION_ERR}`" if _RUNTIME_INGESTION_ERR else ""
                 st.error(f"runtime_ingestion failed to load at startup — restart the app to retry.{_err_d}")
