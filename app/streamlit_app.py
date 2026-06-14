@@ -4188,22 +4188,33 @@ def _tab_onboard_new_diagram() -> None:
             "Select sample diagram",
             range(len(samples)),
             format_func=lambda i: f"{samples[i]['sample_id']} | {samples[i]['display_name']}",
-            index=0,
+            index=None,
+            placeholder="Select a diagram from the pool…",
             key="onboard_sample_select",
         )
-        sample   = samples[sel_idx]
-        did      = sample.get("source_diagram_id", "")
-        img_path = Path(sample.get("image_path", ""))
 
-        # status card
-        onboard_status = st.session_state.get("onboard_status", "not_started")
-        onboarded_sid  = (
-            _ss_dict("onboard_sample_record").get("sample_id", "")
-            if onboard_status != "not_started" else ""
-        )
-        is_this_sample_active = onboarded_sid == sample.get("sample_id", "")
+        if sel_idx is None:
+            is_this_sample_active = False
+        else:
+            sample   = samples[sel_idx]
+            did      = sample.get("source_diagram_id", "")
+            img_path = Path(sample.get("image_path", ""))
 
-        if not is_this_sample_active:
+            # status card
+            onboard_status = st.session_state.get("onboard_status", "not_started")
+            onboarded_sid  = (
+                _ss_dict("onboard_sample_record").get("sample_id", "")
+                if onboard_status != "not_started" else ""
+            )
+            is_this_sample_active = onboarded_sid == sample.get("sample_id", "")
+
+        if sel_idx is None:
+            st.markdown(
+                '<div class="info-card" style="margin:8px 0;color:#64748b">'
+                'Select a diagram from the pool above to begin.</div>',
+                unsafe_allow_html=True,
+            )
+        elif not is_this_sample_active:
             st.markdown(
                 '<div class="warn-card" style="margin:8px 0">'
                 '<strong>Not yet onboarded.</strong><br>'
@@ -4226,8 +4237,9 @@ def _tab_onboard_new_diagram() -> None:
             )
 
         # ── action button ─────────────────────────────────────────────────────
+        _btn_disabled = (sel_idx is None) or (not img_path.exists())
         if st.button("Run Live Diagram Intelligence", type="primary",
-                     use_container_width=True, disabled=not img_path.exists()):
+                     use_container_width=True, disabled=_btn_disabled):
             if not _RUNTIME_INGESTION or _run_ingestion is None:
                 _err_d = f"  \n`{_RUNTIME_INGESTION_ERR}`" if _RUNTIME_INGESTION_ERR else ""
                 st.error(f"runtime_ingestion failed to load at startup — restart the app to retry.{_err_d}")
@@ -4417,7 +4429,10 @@ def _tab_onboard_new_diagram() -> None:
                 )
 
     with right:
-        if img_path.exists():
+        if sel_idx is None:
+            # Nothing selected — right column stays empty
+            pass
+        elif img_path.exists():
             det_img = st.session_state.get("detected_image_path", "")
             active_sid = _ss_dict("onboard_sample_record").get("sample_id", "")
             if det_img and Path(det_img).exists() and active_sid == sample.get("sample_id", ""):
