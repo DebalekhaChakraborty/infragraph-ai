@@ -692,7 +692,7 @@ Shortest path: FW-01 → SW-CORE → SW-APP → LB-01 → APP-01
 
 ---
 
-## ServiceNow Summary
+## ITSM Ticket
 
 | Field | Value |
 |-------|-------|
@@ -2244,9 +2244,9 @@ def _render_remediation_plan(plan: dict) -> None:
             ]:
                 if snow.get(key):
                     snow_lines.append(f"{label}: {snow[key]}")
-            _section_card("ServiceNow Summary", snow_lines, accent="#64748b")
+            _section_card("ITSM Ticket", snow_lines, accent="#64748b")
         else:
-            _text_card("ServiceNow Summary", snow, accent="#64748b")
+            _text_card("ITSM Ticket", snow, accent="#64748b")
 
     _text_card("Audit Summary", resp.get("audit_summary", ""), accent="#94a3b8")
     _text_card("Confidence Notes", resp.get("confidence_notes", ""), accent="#94a3b8")
@@ -4561,7 +4561,7 @@ def _tab_local_rca() -> None:
 
         with _col_lb:
             if _loc_plan and st.button(
-                "View ServiceNow Summary",
+                "View ITSM Ticket",
                 key="local_snow_btn",
             ):
                 _loc_resp = _loc_plan.get("response", {})
@@ -5939,7 +5939,7 @@ def _tab_gnn_rca() -> None:
 
         with _col_r2:
             if _rem_plan and st.button(
-                "View ServiceNow Summary", key="gen_snow_btn", type="secondary"
+                "View ITSM Ticket", key="gen_snow_btn", type="secondary"
             ):
                 _snow = (_rem_plan.get("response") or {}).get("servicenow_incident_summary")
                 if isinstance(_snow, dict) and _snow.get("short_description"):
@@ -6254,7 +6254,7 @@ def _deterministic_graph_copilot(question: str, context: dict) -> str:
     if "servicenow" in q or "incident" in q or "snow" in q:
         root = ent_rca.get("root_cause", "unknown")
         return (
-            "### ServiceNow Incident Summary\n\n"
+            "### ITSM Ticket\n\n"
             f"| Field | Value |\n|---|---|\n"
             f"| Short description | Enterprise network fault — root `{root}` |\n"
             f"| Affected CI | `{root}` ({ent_rca.get('root_cause_diagram','?')}) |\n"
@@ -6385,7 +6385,7 @@ def _tab_graph_copilot() -> None:
         "What is the root cause?",
         "Which diagrams are impacted?",
         "Show the impact path from root cause.",
-        "Generate a ServiceNow incident summary.",
+        "Generate an ITSM ticket summary.",
         "What should L1 check first?",
     ]
     cols = st.columns(3)
@@ -6535,7 +6535,7 @@ The GNN identified **FW-01** as root cause with score **30.733** (margin +8.12 o
 
     if any(kw in q for kw in ["servicenow", "ticket", "snow", "p1"]):
         return """\
-**ServiceNow Incident:**
+**ITSM Ticket:**
 
 | Field | Value |
 |-------|-------|
