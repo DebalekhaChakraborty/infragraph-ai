@@ -5985,8 +5985,7 @@ def _tab_gnn_rca() -> None:
     _render_mode = st.radio(
         "Graph render mode",
         ["Stable 2D propagation graph (PyVis)",
-         "Experimental 3D FalconVue",
-         "Static RCA overlay"],
+         "Experimental 3D FalconVue"],
         horizontal=True,
         key="gnn_render_mode",
         label_visibility="collapsed",
@@ -6048,18 +6047,6 @@ def _tab_gnn_rca() -> None:
         else:
             st.warning("FalconVue module not loaded in this environment.")
             st.info("Switch to **Stable 2D propagation graph (PyVis)** above.")
-
-    elif "Static" in _render_mode:
-        _pv_scen = _selected_scenario_path()
-        if _pv_scen:
-            _pv_name = "preview_rca_overlay.png" if rca else "preview_enterprise_graph.png"
-            _pv_p    = _pv_scen / _pv_name
-            if _pv_p.exists():
-                _img(_pv_p, "Scenario Enterprise Graph (static preview)")
-            else:
-                st.caption("Static preview not generated for this selected scenario.")
-        else:
-            st.caption("No scenario selected.")
 
     else:  # Stable 2D PyVis — default
         if _pyvis_available():
@@ -6356,21 +6343,6 @@ def _tab_gnn_rca() -> None:
                 response_source=str(_rem_plan.get("source") or "—"),
             )
 
-    # ── Static RCA overlay ────────────────────────────────────────────────────
-    _rca_preview_scen = _selected_scenario_path()
-    with st.expander("Static RCA overlay", expanded=False):
-        if not _rca_preview_scen:
-            st.caption("Static preview not generated for this selected scenario.")
-        else:
-            for _rca_name, _rca_cap in [
-                ("preview_rca_overlay.png",      "Enterprise graph with RCA annotations"),
-                ("preview_enterprise_graph.png", "Enterprise graph clusters"),
-            ]:
-                _rca_p = _rca_preview_scen / _rca_name
-                if _rca_p.exists():
-                    _img(_rca_p, _rca_cap)
-                else:
-                    st.caption(f"Static preview not generated for this selected scenario: {_rca_name}")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
