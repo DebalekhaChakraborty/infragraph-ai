@@ -7503,16 +7503,6 @@ def _sidebar_v3() -> None:
                 unsafe_allow_html=True,
             )
 
-        with st.expander("Developer", expanded=False):
-            st.code(
-                "python -m py_compile app/streamlit_app.py\n"
-                "python -m streamlit run app/streamlit_app.py",
-                language="bash",
-            )
-            st.markdown("Strict mode:")
-            st.code("export INFRAGRAPH_STRICT_MODE=1", language="bash")
-            st.code('$env:INFRAGRAPH_STRICT_MODE="1"', language="powershell")
-
         st.markdown('<div class="sb-label" style="margin-top:22px">Appearance</div>',
                     unsafe_allow_html=True)
         is_light = st.toggle(
