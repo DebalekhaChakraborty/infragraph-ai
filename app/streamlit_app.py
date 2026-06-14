@@ -3274,8 +3274,6 @@ def _tab_onboard_new_diagram() -> None:
             st.markdown('<span class="badge badge-warn">external RF-DETR import unavailable</span>', unsafe_allow_html=True)
             if _rfdetr_runtime.get("error") or _rfdetr_runtime.get("stderr_preview"):
                 st.caption(str(_rfdetr_runtime.get("error") or _rfdetr_runtime.get("stderr_preview"))[:300])
-        if _rfdetr_resolution.get("fallback_reason"):
-            st.caption(f"Fallback reason: {_rfdetr_resolution.get('fallback_reason')}")
     with col_r:
         use_rfdetr = st.checkbox(
             "Use live RF-DETR detector if available",
