@@ -7293,6 +7293,7 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
         ("ops_scenario_colors",      {}),
         ("ops_clusters",             None),
         ("ops_selected_cluster_id",  None),
+        ("ops_selected_alert_id",    None),
         ("ops_cluster_runs",         {}),
         ("ops_graph_show_cluster",   None),
         ("agent_approval_status",    "pending"),
@@ -7338,6 +7339,29 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
             f"padding:14px;margin-bottom:10px;{extra}"
         )
 
+    _NODE_ALERT_MSGS = {
+        "firewall":      "Firewall policy violation — packet drop rate elevated",
+        "router":        "BGP session flap detected — route table unstable",
+        "switch":        "STP topology change — MAC flush triggered",
+        "compute":       "CPU spike — process starvation detected",
+        "load_balancer": "Health check failure — backend pool degraded",
+        "database":      "Replication lag threshold exceeded — failover risk",
+        "server":        "Disk I/O saturation — latency SLA breach",
+        "gateway":       "Gateway unreachable — upstream connectivity loss",
+        "storage":       "NFS mount hung — I/O timeout on share",
+        "wan":           "WAN link degraded — packet loss above threshold",
+    }
+
+    def _load_enterprise_graph_for(sid: str) -> dict:
+        for sp in ("train", "val", "test"):
+            p = V3_DATASET_ROOT / "scenarios" / sp / sid / "enterprise_graph.json"
+            if p.exists():
+                try:
+                    return json.loads(p.read_text(encoding="utf-8"))
+                except Exception:
+                    pass
+        return {}
+
     def _load_alerts_for_scenario(sid: str) -> list[dict]:
         for sp in ("train", "val", "test"):
             p = V3_DATASET_ROOT / "scenarios" / sp / sid / "alerts.json"
@@ -7348,6 +7372,56 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                 except Exception:
                     pass
         return []
+
+    def _enrich_alert(al_raw: dict, sid: str, eg: dict) -> dict:
+        """Augment a raw alert dict with enterprise-graph context fields."""
+        node_id   = str(al_raw.get("node", al_raw.get("node_id",
+                        al_raw.get("source", al_raw.get("id", "unknown")))))
+        node_type = str(al_raw.get("node_type", al_raw.get("type", "node"))).lower()
+        severity  = str(al_raw.get("severity", al_raw.get("level", "high"))).lower()
+        ts_offset = int(al_raw.get("timestamp_offset", al_raw.get("time_offset", 0)))
+        description = al_raw.get("description", al_raw.get("message", ""))
+
+        # Look up node in enterprise graph
+        nodes = eg.get("nodes", [])
+        eg_node = next(
+            (n for n in nodes if str(n.get("id", n.get("node_id", ""))) == node_id),
+            None,
+        )
+        if eg_node:
+            node_type = eg_node.get("type", eg_node.get("node_type", node_type))
+            diagram   = eg_node.get("diagram_id", eg_node.get("diagram", "—"))
+        else:
+            diagram   = al_raw.get("diagram", "—")
+
+        # Build neighbour list from edges
+        edges = eg.get("edges", [])
+        neighbors = [
+            str(e.get("target", e.get("dst", "")))
+            for e in edges
+            if str(e.get("source", e.get("src", ""))) == node_id
+        ] + [
+            str(e.get("source", e.get("src", "")))
+            for e in edges
+            if str(e.get("target", e.get("dst", ""))) == node_id
+        ]
+        neighbors = [n for n in neighbors if n and n != node_id][:5]
+
+        if not description:
+            # derive from node type
+            _nt_key = next((k for k in _NODE_ALERT_MSGS if k in node_type), "")
+            description = _NODE_ALERT_MSGS.get(_nt_key, f"Telemetry anomaly on {node_id}")
+
+        return {
+            "node_id":     node_id,
+            "node_type":   node_type,
+            "severity":    severity,
+            "timestamp_offset": ts_offset,
+            "diagram":     diagram,
+            "neighbors":   neighbors,
+            "description": description,
+            "raw":         al_raw,
+        }
 
     # ── discover scenarios ─────────────────────────────────────────────────────
     _sc_base = V3_DATASET_ROOT / "scenarios"
@@ -7417,6 +7491,7 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
         if st.button("Reset Flow", use_container_width=True, key="ops_reset_btn"):
             for _rk in ("ops_phase", "ops_alert_stream", "ops_scenario_colors",
                         "ops_clusters", "ops_selected_cluster_id",
+                        "ops_selected_alert_id",
                         "ops_cluster_runs", "ops_graph_show_cluster",
                         "agent_approval_status"):
                 if _rk in st.session_state:
@@ -7435,18 +7510,21 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
             _inc  = _incidents[_i]
             _base = _i * 3
             _als  = _load_alerts_for_scenario(_sid)
+            _eg   = _load_enterprise_graph_for(_sid)
             if _als:
                 for _j, _al in enumerate(_als[:8]):
-                    _node = _al.get("node", _al.get("node_id", _al.get("source", f"NODE-{_j+1}")))
-                    _sev  = str(_al.get("severity", _al.get("level", _SEVERITY_CYCLE[_i % 6]))).lower()
+                    _enr = _enrich_alert(_al, _sid, _eg)
                     _raw.append({
                         "alert_id":         f"ALT-{_sid[-4:]}-{_j}",
                         "scenario_id":      _sid,
                         "scenario_idx":     _i,
-                        "node_id":          str(_node),
-                        "node_type":        str(_al.get("node_type", _al.get("type", "node"))),
-                        "severity":         _sev,
-                        "timestamp_offset": int(_al.get("timestamp_offset", _base + _j * 2)),
+                        "node_id":          _enr["node_id"],
+                        "node_type":        _enr["node_type"],
+                        "severity":         _enr["severity"],
+                        "timestamp_offset": _enr["timestamp_offset"] if _enr["timestamp_offset"] else _base + _j * 2,
+                        "diagram":          _enr["diagram"],
+                        "neighbors":        _enr["neighbors"],
+                        "description":      _enr["description"],
                         "service":          _inc["service"],
                         "title":            _inc["title"],
                         "has_gnn":          _inc["has_gnn"],
@@ -7455,17 +7533,28 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                         "cluster_id":       None,
                     })
             else:
-                _ntypes = ["firewall", "router", "switch", "compute"]
-                _nsevs  = ["critical", "high",   "high",   "medium"]
-                for _j in range(4):
+                # Fallback: generate alerts from enterprise graph nodes
+                _eg_nodes = _eg.get("nodes", [])
+                _al_nodes = _eg_nodes[:6] if _eg_nodes else []
+                _fb_sevs  = ["critical", "high", "high", "medium", "medium", "low"]
+                for _j, _n in enumerate(_al_nodes):
+                    _nid  = str(_n.get("id", _n.get("node_id", f"NODE-{_j+1}")))
+                    _ntyp = str(_n.get("type", _n.get("node_type", "node"))).lower()
+                    _sev  = _fb_sevs[_j % len(_fb_sevs)]
+                    _nt_k = next((k for k in _NODE_ALERT_MSGS if k in _ntyp), "")
+                    _desc = _NODE_ALERT_MSGS.get(_nt_k, f"Telemetry anomaly on {_nid}")
+                    _diag = str(_n.get("diagram_id", _n.get("diagram", "—")))
                     _raw.append({
                         "alert_id":         f"ALT-{_sid[-4:]}-{_j}",
                         "scenario_id":      _sid,
                         "scenario_idx":     _i,
-                        "node_id":          f"NODE-{_sid[-2:].upper()}-{_j+1:02d}",
-                        "node_type":        _ntypes[_j],
-                        "severity":         _nsevs[_j],
+                        "node_id":          _nid,
+                        "node_type":        _ntyp,
+                        "severity":         _sev,
                         "timestamp_offset": _base + _j * 2,
+                        "diagram":          _diag,
+                        "neighbors":        [],
+                        "description":      _desc,
                         "service":          _inc["service"],
                         "title":            _inc["title"],
                         "has_gnn":          _inc["has_gnn"],
@@ -7488,127 +7577,53 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
     # ════════════════════════════════════════════════════════════════════════
     # LEFT — Alert Stream / Clusters
     # ════════════════════════════════════════════════════════════════════════
-    with _col_lft:
-        # section header + action button
-        _lh1, _lh2 = st.columns([1.6, 1.4])
-        with _lh1:
-            _sec_labels = {
-                "stream":     "Active Alert Stream",
-                "correlated": "Correlated Alerts",
-                "clustered":  "Alert Clusters",
-            }
-            st.markdown(
-                f'<div style="font-size:0.62rem;font-weight:700;color:#64748b;'
-                f'text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">'
-                f'{_sec_labels.get(_phase, "Alert Stream")}</div>',
-                unsafe_allow_html=True,
-            )
-        with _lh2:
-            if _phase == "stream":
-                if st.button("▶ Run Correlation", use_container_width=True,
-                             key="ops_correlate_btn", type="primary"):
-                    _sidx = 0
-                    _sid_grp: dict = {}
-                    for _al in _alert_stream:
-                        _s = _al["scenario_id"]
-                        if _s not in _sid_grp:
-                            _sid_grp[_s] = {
-                                "group_id": f"GRP-{_s[-4:]}",
-                                "color":    _GROUP_COLORS[_sidx % len(_GROUP_COLORS)],
-                            }
-                            _sidx += 1
-                        _al["correlation_group"] = _sid_grp[_s]["group_id"]
-                        _al["color"]             = _sid_grp[_s]["color"]
-                    st.session_state.ops_alert_stream  = _alert_stream
-                    st.session_state.ops_scenario_colors = {
-                        s: g["color"] for s, g in _sid_grp.items()
-                    }
-                    st.session_state.ops_phase = "correlated"
-                    st.rerun()
+    _sel_alert_id: str | None = st.session_state.get("ops_selected_alert_id")
 
-            elif _phase == "correlated":
-                if st.button("⬡ Combine Alerts", use_container_width=True,
-                             key="ops_cluster_btn", type="primary"):
-                    _cl_map: dict = {}
-                    for _al in _alert_stream:
-                        _gid = _al["correlation_group"]
-                        if _gid not in _cl_map:
-                            _im = next((x for x in _incidents
-                                        if x["scenario_id"] == _al["scenario_id"]), {})
-                            _cl_map[_gid] = {
-                                "cluster_id":  _gid,
-                                "scenario_id": _al["scenario_id"],
-                                "title":       _im.get("title", "Unknown"),
-                                "service":     _im.get("service", "—"),
-                                "severity":    _im.get("severity", "high"),
-                                "has_gnn":     _im.get("has_gnn", False),
-                                "alerts":      [],
-                                "color":       _al["color"],
-                            }
-                        _cl_map[_gid]["alerts"].append(_al["alert_id"])
-                        _al["cluster_id"] = _gid
-                    _new_clusters = list(_cl_map.values())
-                    st.session_state.ops_clusters      = _new_clusters
-                    st.session_state.ops_alert_stream  = _alert_stream
-                    st.session_state.ops_phase         = "clustered"
-                    if _new_clusters:
-                        st.session_state.ops_selected_cluster_id = _new_clusters[0]["cluster_id"]
-                    st.rerun()
+    with _col_lft:
+        _sec_labels = {
+            "stream":     "Active Alert Stream",
+            "correlated": "Correlated Alerts",
+            "clustered":  "Alert Clusters",
+        }
+        st.markdown(
+            f'<div style="font-size:0.62rem;font-weight:700;color:#64748b;'
+            f'text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">'
+            f'{_sec_labels.get(_phase, "Alert Stream")}</div>',
+            unsafe_allow_html=True,
+        )
 
         # ── flat alert list (stream / correlated phases) ───────────────────
         if _phase in ("stream", "correlated"):
             _shown = 0
             for _al in _alert_stream:
-                _sv_c   = _SV_COLOR.get(_al["severity"], "#6b7280")
-                _dot_c  = _al.get("color") or _sv_c
-                _t_str  = f"t+{_al['timestamp_offset']}m"
-                _grp_html = ""
+                _sv_c  = _SV_COLOR.get(_al["severity"], "#6b7280")
+                _dot_c = _al.get("color") or _sv_c
+                _t_str = f"t+{_al['timestamp_offset']}m"
+                _is_sel_al = (_al["alert_id"] == _sel_alert_id)
+                _al_bg = "rgba(99,102,241,0.10)" if _is_sel_al else "rgba(255,255,255,0.02)"
+                _al_bd = f"border-left:3px solid {_dot_c}" if _is_sel_al else "border-left:3px solid transparent"
+                _grp_tag = ""
                 if _phase == "correlated" and _al.get("correlation_group"):
-                    _grp_html = (
-                        f'<span style="color:{_dot_c};font-size:0.58rem;margin-left:6px;'
-                        f'font-weight:700">■ {_al["correlation_group"]}</span>'
+                    _grp_tag = f' ■ {_al["correlation_group"]}'
+
+                # Render as clickable button with minimal label; show hint as help
+                _btn_label = f"⚡ {_al['node_id']}  {_al['severity'].upper()}  {_t_str}{_grp_tag}"
+                if st.button(
+                    _btn_label,
+                    key=f"al_sel_{_al['alert_id']}",
+                    use_container_width=True,
+                    help=f"{_al.get('description', '')} | {_al.get('diagram','—')}",
+                ):
+                    st.session_state.ops_selected_alert_id = (
+                        None if _is_sel_al else _al["alert_id"]
                     )
-                st.markdown(
-                    f'<div style="padding:5px 8px;margin-bottom:3px;border-radius:6px;'
-                    f'border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02)">'
-                    f'<span style="color:{_dot_c}">⚡</span> '
-                    f'<code style="font-size:0.64rem;color:#cbd5e1">{html.escape(str(_al["node_id"]))}</code>'
-                    f'<span style="color:{_sv_c};font-size:0.59rem;margin-left:5px;font-weight:700">'
-                    f'{_al["severity"].upper()}</span>'
-                    f'<span style="color:#475569;font-size:0.59rem;margin-left:5px">{_t_str}</span>'
-                    f'{_grp_html}</div>',
-                    unsafe_allow_html=True,
-                )
+                    st.rerun()
                 _shown += 1
-                if _shown >= 22:
+                if _shown >= 20:
                     _rem = len(_alert_stream) - _shown
                     if _rem > 0:
                         st.caption(f"…+{_rem} more alerts")
                     break
-
-            if _phase == "correlated":
-                # correlation summary
-                _grp_counts: dict = {}
-                for _al in _alert_stream:
-                    _g = _al.get("correlation_group", "")
-                    _grp_counts[_g] = _grp_counts.get(_g, 0) + 1
-                st.markdown(
-                    f'<div style="{_card()}margin-top:10px">'
-                    f'<div style="font-size:0.61rem;font-weight:700;color:#64748b;'
-                    f'text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">'
-                    f'Correlation Summary</div>',
-                    unsafe_allow_html=True,
-                )
-                for _gid, _cnt in list(_grp_counts.items())[:5]:
-                    _gc = next((a["color"] for a in _alert_stream
-                                if a.get("correlation_group") == _gid), "#6b7280")
-                    st.markdown(
-                        f'<div style="font-size:0.68rem;color:#cbd5e1;padding:2px 0">'
-                        f'<span style="color:{_gc};font-weight:700">■</span> '
-                        f'{_gid} — {_cnt} alert{"s" if _cnt != 1 else ""}</div>',
-                        unsafe_allow_html=True,
-                    )
-                st.markdown("</div>", unsafe_allow_html=True)
 
         # ── cluster cards (clustered phase) ────────────────────────────────
         elif _phase == "clustered":
@@ -7616,41 +7631,44 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                 _is_sel  = (_cl["cluster_id"] == _sel_cid)
                 _has_run = _cl["cluster_id"] in _cl_runs
                 _sv_c    = _SV_COLOR.get(_cl["severity"], "#6b7280")
-                _bdr     = (f"border-left:3px solid {_cl['color']};border:1px solid {_cl['color']}40"
-                            if _is_sel else f"border-left:3px solid {_cl['color']};border:1px solid rgba(255,255,255,0.07)")
+                _cl_color = _cl["color"]
+                _bg  = "rgba(99,102,241,0.09)" if _is_sel else "rgba(255,255,255,0.02)"
+                _bdr = (f"border-left:3px solid {_cl_color};border:1px solid {_cl_color}55"
+                        if _is_sel else f"border-left:3px solid {_cl_color};border:1px solid rgba(255,255,255,0.06)")
                 st.markdown(
-                    f'<div style="background:{"rgba(99,102,241,0.09)" if _is_sel else "rgba(255,255,255,0.02)"};'
-                    f'{_bdr};border-radius:8px;padding:10px 12px;margin-bottom:4px">'
-                    f'<div style="font-size:0.74rem;font-weight:700;color:#f1f5f9;line-height:1.3">'
-                    f'<span style="color:{_cl["color"]};margin-right:4px">●</span>{_cl["title"]}</div>'
-                    f'<div style="font-size:0.61rem;color:#64748b;margin-top:2px">'
+                    f'<div style="background:{_bg};{_bdr};border-radius:8px;'
+                    f'padding:10px 12px;margin-bottom:2px">'
+                    f'<div style="font-size:0.74rem;font-weight:700;color:#f1f5f9">'
+                    f'<span style="color:{_cl_color};margin-right:4px">●</span>{_cl["title"]}</div>'
+                    f'<div style="font-size:0.60rem;color:#64748b;margin-top:2px">'
                     f'<span style="color:{_sv_c};font-weight:700">{_cl["severity"].upper()}</span>'
                     f' · {len(_cl["alerts"])} alerts · {_cl["service"]}'
-                    + ('&nbsp;&nbsp;<span style="color:#22c55e;font-size:0.59rem">✓ Analyzed</span>' if _has_run else '')
-                    + ('&nbsp;<span style="color:#8b5cf6;font-size:0.59rem">GNN</span>' if _cl["has_gnn"] else '')
-                    + f'</div></div>',
+                    + ('&nbsp;<span style="color:#22c55e">✓</span>' if _has_run else '')
+                    + ('&nbsp;<span style="color:#8b5cf6">GNN</span>' if _cl["has_gnn"] else '')
+                    + '</div></div>',
                     unsafe_allow_html=True,
                 )
-                _cb1, _cb2 = st.columns(2)
-                with _cb1:
-                    if st.button(
-                        "⚡ AI Findings",
-                        key=f"ops_findings_{_cl['cluster_id']}",
-                        use_container_width=True,
-                        type="primary" if _is_sel else "secondary",
-                    ):
-                        st.session_state.ops_selected_cluster_id = _cl["cluster_id"]
-                        st.session_state.ops_graph_show_cluster  = None
-                        st.rerun()
-                with _cb2:
-                    if st.button(
-                        "📊 See Graph",
-                        key=f"ops_graph_{_cl['cluster_id']}",
-                        use_container_width=True,
-                    ):
-                        st.session_state.ops_selected_cluster_id = _cl["cluster_id"]
-                        st.session_state.ops_graph_show_cluster  = _cl["cluster_id"]
-                        st.rerun()
+                if st.button(
+                    "⚡ AI Findings",
+                    key=f"ops_findings_{_cl['cluster_id']}",
+                    use_container_width=True,
+                    type="primary" if _is_sel else "secondary",
+                ):
+                    st.session_state.ops_selected_cluster_id = _cl["cluster_id"]
+                    st.session_state.ops_graph_show_cluster  = None
+                    st.rerun()
+                if st.button(
+                    "📊 See Graph",
+                    key=f"ops_graph_{_cl['cluster_id']}",
+                    use_container_width=True,
+                ):
+                    st.session_state.ops_selected_cluster_id = _cl["cluster_id"]
+                    st.session_state.ops_graph_show_cluster  = _cl["cluster_id"]
+                    st.rerun()
+                st.markdown(
+                    '<div style="height:4px"></div>',
+                    unsafe_allow_html=True,
+                )
 
     # ════════════════════════════════════════════════════════════════════════
     # MIDDLE — AI Expert Findings
@@ -7663,20 +7681,176 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
         )
 
         if _phase == "stream":
-            st.markdown(
-                '<div style="text-align:center;padding:48px 20px;color:#475569;font-size:0.78rem">'
-                'Click <strong style="color:#0ea5e9">▶ Run Correlation</strong> to analyse alert '
-                'patterns across scenarios.</div>',
-                unsafe_allow_html=True,
+            # Action button lives here
+            if st.button("▶ Run Correlation", use_container_width=True,
+                         key="ops_correlate_btn", type="primary"):
+                _sidx = 0
+                _sid_grp: dict = {}
+                for _al in _alert_stream:
+                    _s = _al["scenario_id"]
+                    if _s not in _sid_grp:
+                        _sid_grp[_s] = {
+                            "group_id": f"GRP-{_s[-4:]}",
+                            "color":    _GROUP_COLORS[_sidx % len(_GROUP_COLORS)],
+                        }
+                        _sidx += 1
+                    _al["correlation_group"] = _sid_grp[_s]["group_id"]
+                    _al["color"]             = _sid_grp[_s]["color"]
+                st.session_state.ops_alert_stream    = _alert_stream
+                st.session_state.ops_scenario_colors = {
+                    s: g["color"] for s, g in _sid_grp.items()
+                }
+                st.session_state.ops_phase = "correlated"
+                st.rerun()
+
+            # Alert detail panel
+            _sel_al_obj = next(
+                (a for a in _alert_stream if a["alert_id"] == _sel_alert_id), None
             )
+            if _sel_al_obj:
+                _sv2 = _SV_COLOR.get(_sel_al_obj["severity"], "#6b7280")
+                st.markdown(
+                    '<div style="' + _card("border-left:4px solid " + _sv2) + '">',
+                    unsafe_allow_html=True,
+                )
+                st.markdown(
+                    '<div style="font-size:0.61rem;font-weight:700;color:#64748b;'
+                    'text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">'
+                    'Alert Detail</div>',
+                    unsafe_allow_html=True,
+                )
+                st.markdown(_badge(_sel_al_obj["severity"].upper(), _sv2)
+                            + _badge(_sel_al_obj.get("node_type", "node"), "#475569"),
+                            unsafe_allow_html=True)
+                st.markdown(
+                    f'**Node:** `{_sel_al_obj["node_id"]}`  \n'
+                    f'**Diagram:** `{_sel_al_obj.get("diagram", "—")}`  \n'
+                    f'**Timestamp:** t+{_sel_al_obj["timestamp_offset"]}m  \n'
+                    f'**Service:** {_sel_al_obj.get("service", "—")}'
+                )
+                if _sel_al_obj.get("description"):
+                    st.markdown(
+                        f'<div style="font-size:0.74rem;color:#94a3b8;margin:6px 0 4px;'
+                        f'font-style:italic">{html.escape(_sel_al_obj["description"])}</div>',
+                        unsafe_allow_html=True,
+                    )
+                if _sel_al_obj.get("neighbors"):
+                    st.markdown("**Connected nodes:**")
+                    st.markdown(
+                        " · ".join(f"`{n}`" for n in _sel_al_obj["neighbors"][:5])
+                    )
+                st.markdown("</div>", unsafe_allow_html=True)
+            else:
+                st.markdown(
+                    '<div style="text-align:center;padding:40px 20px;color:#475569;font-size:0.75rem">'
+                    'Click any alert in the stream to inspect its details, then click '
+                    '<strong style="color:#0ea5e9">▶ Run Correlation</strong> to analyse '
+                    'alert patterns across scenarios.</div>',
+                    unsafe_allow_html=True,
+                )
+
         elif _phase == "correlated":
+            # Action button
+            if st.button("⬡ Combine Alerts", use_container_width=True,
+                         key="ops_cluster_btn", type="primary"):
+                _cl_map: dict = {}
+                for _al in _alert_stream:
+                    _gid = _al["correlation_group"]
+                    if _gid not in _cl_map:
+                        _im = next((x for x in _incidents
+                                    if x["scenario_id"] == _al["scenario_id"]), {})
+                        _cl_map[_gid] = {
+                            "cluster_id":  _gid,
+                            "scenario_id": _al["scenario_id"],
+                            "title":       _im.get("title", "Unknown"),
+                            "service":     _im.get("service", "—"),
+                            "severity":    _im.get("severity", "high"),
+                            "has_gnn":     _im.get("has_gnn", False),
+                            "alerts":      [],
+                            "color":       _al["color"],
+                        }
+                    _cl_map[_gid]["alerts"].append(_al["alert_id"])
+                    _al["cluster_id"] = _gid
+                _new_clusters = list(_cl_map.values())
+                st.session_state.ops_clusters      = _new_clusters
+                st.session_state.ops_alert_stream  = _alert_stream
+                st.session_state.ops_phase         = "clustered"
+                if _new_clusters:
+                    st.session_state.ops_selected_cluster_id = _new_clusters[0]["cluster_id"]
+                st.rerun()
+
+            # Alert detail or correlation summary
+            _sel_al_obj = next(
+                (a for a in _alert_stream if a["alert_id"] == _sel_alert_id), None
+            )
+            if _sel_al_obj:
+                _sv2 = _SV_COLOR.get(_sel_al_obj["severity"], "#6b7280")
+                _grp_color = _sel_al_obj.get("color") or _sv2
+                st.markdown(
+                    '<div style="' + _card("border-left:4px solid " + _grp_color) + '">',
+                    unsafe_allow_html=True,
+                )
+                st.markdown(
+                    '<div style="font-size:0.61rem;font-weight:700;color:#64748b;'
+                    'text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">'
+                    'Alert Detail</div>',
+                    unsafe_allow_html=True,
+                )
+                st.markdown(
+                    _badge(_sel_al_obj["severity"].upper(), _sv2)
+                    + _badge(_sel_al_obj.get("node_type", "node"), "#475569")
+                    + (_badge(_sel_al_obj["correlation_group"], _grp_color)
+                       if _sel_al_obj.get("correlation_group") else ""),
+                    unsafe_allow_html=True,
+                )
+                st.markdown(
+                    f'**Node:** `{_sel_al_obj["node_id"]}`  \n'
+                    f'**Diagram:** `{_sel_al_obj.get("diagram", "—")}`  \n'
+                    f'**Timestamp:** t+{_sel_al_obj["timestamp_offset"]}m  \n'
+                    f'**Correlation group:** {_sel_al_obj.get("correlation_group", "—")}'
+                )
+                if _sel_al_obj.get("description"):
+                    st.markdown(
+                        f'<div style="font-size:0.74rem;color:#94a3b8;margin:6px 0 4px;'
+                        f'font-style:italic">{html.escape(_sel_al_obj["description"])}</div>',
+                        unsafe_allow_html=True,
+                    )
+                if _sel_al_obj.get("neighbors"):
+                    st.markdown("**Connected nodes (potential propagation path):**")
+                    st.markdown(
+                        " · ".join(f"`{n}`" for n in _sel_al_obj["neighbors"][:5])
+                    )
+                st.markdown("</div>", unsafe_allow_html=True)
+
+            # Correlation summary (always shown in correlated phase)
+            _grp_counts: dict = {}
+            for _al in _alert_stream:
+                _g = _al.get("correlation_group", "")
+                _grp_counts[_g] = _grp_counts.get(_g, 0) + 1
             st.markdown(
-                '<div style="text-align:center;padding:48px 20px;color:#475569;font-size:0.78rem">'
-                'Alerts are now colour-coded by correlation group. Click '
-                '<strong style="color:#f59e0b">⬡ Combine Alerts</strong> to form incident '
-                'clusters.</div>',
+                '<div style="' + _card() + '">'
+                '<div style="font-size:0.61rem;font-weight:700;color:#64748b;'
+                'text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">'
+                'Correlation Groups</div>',
                 unsafe_allow_html=True,
             )
+            for _gid, _cnt in list(_grp_counts.items())[:5]:
+                _gc = next((a["color"] for a in _alert_stream
+                            if a.get("correlation_group") == _gid), "#6b7280")
+                _inc_for_grp = next(
+                    (x for x in _incidents
+                     if f"GRP-{x['scenario_id'][-4:]}" == _gid), {}
+                )
+                st.markdown(
+                    f'<div style="padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'
+                    f'<span style="color:{_gc};font-weight:700;font-size:1.1em">■</span> '
+                    f'<span style="font-size:0.70rem;color:#f1f5f9;font-weight:600">{_gid}</span>'
+                    f' <span style="font-size:0.62rem;color:#64748b">· {_cnt} alerts'
+                    + (f' · {_inc_for_grp.get("service", "")}' if _inc_for_grp else '')
+                    + '</span></div>',
+                    unsafe_allow_html=True,
+                )
+            st.markdown("</div>", unsafe_allow_html=True)
         else:
             # clustered phase — show findings for selected cluster
             _sel_cl = next((c for c in _clusters if c["cluster_id"] == _sel_cid), None)
