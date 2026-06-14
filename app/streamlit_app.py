@@ -4120,8 +4120,6 @@ def _tab_onboard_new_diagram() -> None:
         if _rfdetr_http.get("service_url"):
             _svc = "HTTP live" if _http_ok else "HTTP unavailable"
             _parts.append(f"{_svc} · {_rfdetr_http.get('service_url','')}")
-        if _rfdetr_python:
-            _parts.append(_rfdetr_python)
         _summary = " · ".join(_parts) if _parts else "RF-DETR not configured"
         st.markdown(
             f'<div style="font-size:0.74rem;color:#64748b;margin:6px 0 10px">'
