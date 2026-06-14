@@ -4025,7 +4025,11 @@ def _tab_diagram_outputs_section() -> None:
         orig_p       = st.session_state.get("selected_diagram_path", "")
         det_p        = st.session_state.get("detected_image_path", "")
         det_source   = st.session_state.get("detection_source") or "Verified Annotation Overlay"
-        is_rfdetr    = det_source.startswith("RF-DETR")
+        is_rfdetr    = (
+            det_source.startswith("RF-DETR")
+            or det_source == "LIVE_RFDETR_INFERENCE"
+            or "RFDETR" in det_source.upper()
+        )
 
         c1, c2 = st.columns(2)
         with c1:
@@ -4051,9 +4055,7 @@ def _tab_diagram_outputs_section() -> None:
             elif is_rfdetr:
                 st.image(orig_p, use_container_width=True)
             elif orig_p and Path(orig_p).exists():
-                st.warning(
-                    "Annotation overlay could not be rendered; showing source image."
-                )
+                st.caption("Detection overlay image not available for this run — showing source diagram.")
                 st.image(orig_p, use_container_width=True)
             else:
                 st.markdown(
@@ -4425,7 +4427,15 @@ def _tab_onboard_new_diagram() -> None:
                 )
                 st.image(det_img, use_container_width=True)
             else:
-                st.image(str(img_path), caption=sample.get("display_name", ""), use_container_width=True)
+                # No detection run yet for this diagram — show placeholder, not the raw preset
+                st.markdown(
+                    '<div class="info-card" style="text-align:center;padding:40px 20px;margin-top:8px">'
+                    '<div style="font-size:2rem;margin-bottom:12px">🔍</div>'
+                    '<div style="font-size:0.85rem;color:#94a3b8">Run <strong>Live Diagram Intelligence</strong>'
+                    ' to see the detection output here.</div>'
+                    '</div>',
+                    unsafe_allow_html=True,
+                )
         else:
             st.markdown(
                 '<div class="warn-card" style="text-align:center;padding:40px 20px">'
