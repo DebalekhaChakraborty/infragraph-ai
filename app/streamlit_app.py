@@ -5707,18 +5707,7 @@ def _tab_enterprise_graph_brain() -> None:
             '<div class="absorb-card">'
             '<div class="section-label">Absorption Steps</div>'
             + "".join(_steps_html)
-            + f'<div style="margin-top:12px;padding:8px 10px;background:rgba(16,185,129,0.08);'
-            f'border-radius:8px;border:1px solid rgba(16,185,129,0.2)">'
-            f'<div style="font-size:0.72rem;font-weight:700;color:#10b981">Result</div>'
-            f'<div style="font-size:0.78rem;color:#94a3b8;margin-top:4px">'
-            f'Nodes absorbed: <strong style="color:#f1f5f9">{summary.get("nodes_absorbed",0)}</strong><br>'
-            f'Edges absorbed: <strong style="color:#f1f5f9">{summary.get("edges_absorbed",0)}</strong><br>'
-            f'Shared matched: <strong style="color:#38bdf8">{summary.get("shared_entities_matched",0)}</strong><br>'
-            f'Cross-diag links: <strong style="color:#22d3ee">{summary.get("cross_diagram_links_created",0)}</strong><br>'
-            f'Before nodes: <strong style="color:#94a3b8">{summary.get("before_node_count",0)}</strong> '
-            f'→ After: <strong style="color:#10b981">{summary.get("after_node_count",0)}</strong>'
-            f'</div></div>'
-            '</div>',
+            + '</div>',
             unsafe_allow_html=True,
         )
 
