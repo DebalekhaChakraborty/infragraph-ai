@@ -3175,7 +3175,7 @@ def _build_local_incident_story(
     nodes: dict[str, dict] = {n["id"]: n for n in nodes_raw if n.get("id")}
     node_ids = list(nodes.keys())
     if not node_ids:
-        return {"mode": "scenario_guided_graph_rca", "root_cause": "", "impact_path": []}
+        return {"mode": "Graph-grounded RCA", "root_cause": "", "impact_path": []}
 
     adj_out: dict[str, list] = {n: [] for n in node_ids}
     adj_in:  dict[str, list] = {n: [] for n in node_ids}
@@ -6275,8 +6275,8 @@ def _tab_gnn_rca() -> None:
     st.markdown(
         '<div class="ws-title">Enterprise GNN RCA — cross-diagram graph reasoning</div>'
         '<div class="ws-desc">Simulate cross-diagram alert propagation, then run enterprise '
-        'root cause analysis — GNN-powered when a trained result exists, '
-        'scenario-grounded otherwise.</div>',
+        'root cause analysis — GNN-powered when a trained model result exists, '
+        'graph-grounded otherwise.</div>',
         unsafe_allow_html=True,
     )
 
@@ -6367,7 +6367,7 @@ def _tab_gnn_rca() -> None:
         if _env_override:
             _checked_paths.insert(0, _env_override)
         st.warning(
-            "No trained model file found. Current RCA uses scenario-grounded evidence.\n\n"
+            "No trained model file found. Current RCA uses graph-grounded evidence.\n\n"
             "**Paths checked:**\n" + "\n".join(f"- `{p}`" for p in _checked_paths)
         )
         st.code(
@@ -6416,8 +6416,8 @@ def _tab_gnn_rca() -> None:
     gnn_metrics_available = _enterprise_gnn_available()
     if not gnn_metrics_available and not _gnn_model_exists:
         if _strict_mode() and not st.session_state.allow_enterprise_simulation:
-            st.error("Strict mode: approve before using scenario-grounded simulation.")
-            if st.button("Continue with scenario simulation", key="approve_ent_sim"):
+            st.error("Strict mode: approve before using graph-grounded RCA simulation.")
+            if st.button("Continue with graph-grounded simulation", key="approve_ent_sim"):
                 st.session_state.allow_enterprise_simulation = True
                 st.rerun()
             return
@@ -6564,8 +6564,15 @@ def _tab_gnn_rca() -> None:
     )
     absorbed_ids = {n.get("canonical_id", n.get("id")) for n in local_graph.get("nodes", [])}
 
-    # ── Build RCA journey context (normalized node IDs + step roles) ───────────
-    jctx = _build_rca_journey_context(enterprise_graph, ent_incident, rca, _gnn_result_pre)
+    # ── Build RCA journey context ─────────────────────────────────────────────
+    # Pre-RCA: strip root_cause/impact_path so graph doesn't pre-reveal the answer.
+    # Post-RCA: pass full rca + gnn_result so journey/graph show confirmed root cause.
+    if rca:
+        jctx = _build_rca_journey_context(enterprise_graph, ent_incident, rca, _gnn_result_pre)
+    else:
+        _inc_pre_rca = {k: v for k, v in ent_incident.items()
+                        if k not in ("root_cause", "impact_path", "root_cause_diagram")}
+        jctx = _build_rca_journey_context(enterprise_graph, _inc_pre_rca, None, None)
 
     # ── Run Enterprise RCA button (before the journey stepper) ───────────────
     if ent_incident:
@@ -6588,23 +6595,20 @@ def _tab_gnn_rca() -> None:
                 _persist_incident(ent_incident, "enterprise")
             st.rerun()
 
-    # ── RCA Investigation Journey stepper panel ───────────────────────────────
-    _render_rca_journey_stepper(jctx)
-
-    # ── Render mode selector ──────────────────────────────────────────────────
-    _render_mode = st.radio(
-        "Graph render mode",
-        ["Stable 2D RCA Journey Graph",
-         "Experimental 3D FalconVue"],
-        horizontal=True,
-        key="gnn_render_mode",
-        label_visibility="collapsed",
-    )
+    # ── RCA Investigation Journey stepper panel — only after RCA is run ──────
+    if rca:
+        _render_rca_journey_stepper(jctx)
+    elif ent_incident:
+        st.markdown(
+            '<div style="font-size:0.78rem;color:#64748b;text-align:center;padding:12px 0">'
+            'Click <strong style="color:#a5b4fc">Run Enterprise GNN RCA</strong> above to trace '
+            'the root cause investigation journey.</div>',
+            unsafe_allow_html=True,
+        )
 
     # ── Developer details ─────────────────────────────────────────────────────
     with st.expander("Developer details", expanded=False):
-        st.caption(f"Renderer: {_render_mode}")
-        st.caption(f"FalconVue loaded: {'Yes' if _FALCONVUE_OK else 'No'} | PyVis: {'Yes' if _pyvis_available() else 'No'}")
+        st.caption(f"PyVis: {'Yes' if _pyvis_available() else 'No'}")
         st.caption(f"Journey steps: {len(jctx['steps'])}")
         st.caption(f"Current step index: {jctx['current_step_index']}")
         st.caption(f"Current step node (raw): {jctx.get('current_step',{}).get('node_id','—')}")
@@ -6624,36 +6628,15 @@ def _tab_gnn_rca() -> None:
             st.caption(f"  Step {s['step']}: {s['node_id']!r} → {s['normalized_node_id']!r} [{s['role']}]")
 
     # ── Render the graph ──────────────────────────────────────────────────────
-    if "FalconVue" in _render_mode:
-        if _FALCONVUE_OK and _render_falconvue_graph is not None:
-            _cur_step = jctx.get("current_step", {})
-            try:
-                _render_falconvue_graph(
-                    enterprise_graph, absorbed_ids, rca,
-                    incident=ent_incident or {},
-                    height=800,
-                    mode="scenario",
-                    current_step_node=_cur_step.get("normalized_node_id"),
-                    traversal_path=_cur_step.get("path_so_far", []),
-                    alert_timeline=jctx["alert_timeline"],
-                )
-            except Exception as _fv_exc:
-                st.error(f"FalconVue renderer error: {_fv_exc}")
-                st.info("Switch to **Stable 2D RCA Journey Graph** for a reliable view.")
-        else:
-            st.warning("FalconVue module not loaded.")
-            st.info("Switch to **Stable 2D RCA Journey Graph** above.")
-
-    else:  # Stable 2D RCA Journey Graph — default
-        if _pyvis_available():
-            _legend_j = (
-                "⚡ First alert: orange | 🎯 Root cause: red/large | "
-                "⇒ Cross-diagram bridge: cyan | Step labels on nodes · Dim = background topology"
-            )
-            st.caption(f"Drag · zoom · hover for details · {_legend_j}")
-            _render_enterprise_pyvis_rca_journey(enterprise_graph, jctx, absorbed_ids, height=800)
-        else:
-            st.warning("Install `pyvis>=0.3.2` for the RCA journey graph.")
+    if _pyvis_available():
+        _legend_j = (
+            "⚡ First alert: orange | 🎯 Root cause: red/large | "
+            "⇒ Cross-diagram bridge: cyan | Step labels on nodes · Dim = background topology"
+        )
+        st.caption(f"Drag · zoom · hover for details · {_legend_j}")
+        _render_enterprise_pyvis_rca_journey(enterprise_graph, jctx, absorbed_ids, height=800)
+    else:
+        st.warning("Install `pyvis>=0.3.2` for the RCA journey graph.")
 
     # ── RCA Explanation card ──────────────────────────────────────────────────
     if rca:
@@ -6716,7 +6699,7 @@ def _tab_gnn_rca() -> None:
                 _caption_parts.append(f"loaded from: {Path(src_file).name}")
             st.caption(" · ".join(_caption_parts))
         else:
-            st.caption("Source: scenario-grounded evidence — no trained GNN result for this scenario")
+            st.caption("Source: graph-grounded evidence — GNN inference result not available for this scenario")
 
         # Reasoning steps (from enterprise incident if available)
         _ent_steps = (ent_incident or {}).get("reasoning_steps", [])
@@ -7519,7 +7502,7 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
     if _is_fallback:
         st.warning(
             f"**Partial orchestration — GNN RCA not loaded.**  "
-            f"Root cause derived from scenario-grounded graph fallback (confidence fixed at 50%). "
+            f"Root cause derived from graph-grounded RCA fallback (confidence fixed at 50%). "
             f"Run the **Enterprise GNN RCA** tab first to load a real GNN result for this scenario, "
             f"then re-run the orchestrator.",
             icon="⚠️",
@@ -7747,7 +7730,7 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
 
     # ── Executive Summary ─────────────────────────────────────────────────────
     st.markdown("---")
-    _src_label = "Enterprise GNN RCA" if _is_gnn else "scenario-grounded graph fallback (GNN not loaded)"
+    _src_label = "Enterprise GNN RCA" if _is_gnn else "graph-grounded RCA fallback"
     st.markdown(
         f"> **Executive Summary:** {_run.get('final_summary', '')}  \n"
         f"> *RCA method: {_src_label}*"
