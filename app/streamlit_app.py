@@ -2002,7 +2002,7 @@ def _build_remediation_context(
     imp_diagrams = rca.get("impacted_diagrams", [])      if rca else ent_incident.get("impacted_diagrams", [])
     impact_path  = rca.get("impact_path", [])            if rca else ent_incident.get("impact_path", [])
     ranking      = rca.get("ranking", [])                if rca else ent_incident.get("candidate_ranking", [])
-    rca_source   = rca.get("mode", "Scenario-grounded RCA simulation") if rca else ""
+    rca_source   = rca.get("mode", "Graph-grounded RCA") if rca else ""
     incident_id  = ent_incident.get("incident_id", "")
     scenario_id  = ent_incident.get("scenario_id", alerts_data.get("scenario_id", ""))
 
@@ -3103,7 +3103,7 @@ def _incident_to_local_rca(incident: dict) -> dict:
     steps       = incident.get("reasoning_steps", [])
     why_root    = steps[2] if len(steps) > 2 else " ".join(steps)
     return {
-        "mode":               "scenario_guided_graph_rca",
+        "mode":               "Graph-grounded RCA",
         "root_cause":         incident.get("root_cause", ""),
         "first_observed":     first_obs,
         "first_observed_node": first_obs,
@@ -3120,13 +3120,13 @@ def _incident_to_local_rca(incident: dict) -> dict:
         "reasoning_steps":    steps,
         "recommended_actions": incident.get("recommended_actions", []),
         "path_note":          "",
-        "rca_source":         incident.get("rca_source", "Scenario-guided graph RCA"),
+        "rca_source":         incident.get("rca_source", "Graph-grounded RCA"),
     }
 
 
 def _incident_to_enterprise_rca(incident: dict) -> dict:
     """Convert an enterprise IncidentScenario dict to the enterprise_rca_result format."""
-    mode = incident.get("rca_source", "Scenario-grounded RCA simulation")
+    mode = incident.get("rca_source", "Graph-grounded RCA")
     gnn_src = ""
     if mode == "Enterprise GNN RCA":
         scen = incident.get("scenario_id", "")
@@ -3256,7 +3256,7 @@ def _build_local_incident_story(
     impacted_preview = ", ".join(impacted[:3]) + ("…" if len(impacted) > 3 else "")
 
     return {
-        "mode":               "scenario_guided_graph_rca",
+        "mode":               "Graph-grounded RCA",
         "root_cause":         root,
         "first_observed":     first_obs,
         "alert_nodes":        [first_obs] if first_obs else [],
@@ -3399,7 +3399,7 @@ def _simulate_enterprise_rca(alerts: dict, enterprise_graph: dict) -> dict:
             ranking.append({"node": n, "score": round(0.74 - len(ranking) * 0.05, 3),
                              "reason": "alert propagation evidence"})
     return {
-        "mode":               "Scenario-grounded RCA simulation",
+        "mode":               "Graph-grounded RCA fallback",
         "root_cause":         root,
         "root_cause_diagram": alerts.get("root_cause_diagram", ""),
         "impacted_diagrams":  alerts.get("impacted_diagrams", []),
@@ -5078,7 +5078,7 @@ def _tab_local_rca() -> None:
         local_model = _local_rca_model_available()
         _rca_method = (
             "Trained local GNN model" if local_model
-            else "Graph propagation traversal · scenario annotation (ground truth)"
+            else "Graph-grounded RCA"
         )
         st.markdown(
             f'<div style="font-size:0.74rem;color:#64748b;margin:6px 0 2px">'
@@ -5086,8 +5086,8 @@ def _tab_local_rca() -> None:
             unsafe_allow_html=True,
         )
         if not local_model and _strict_mode() and not st.session_state.allow_local_simulation:
-            st.error("Strict mode: explicitly approve before using scenario-guided RCA.")
-            if st.button("Approve scenario-guided RCA", key="approve_local_sim"):
+            st.error("Strict mode: explicitly approve before using graph-grounded RCA.")
+            if st.button("Approve graph-grounded RCA", key="approve_local_sim"):
                 st.session_state.allow_local_simulation = True
                 st.rerun()
             return
@@ -5194,7 +5194,7 @@ def _tab_local_rca() -> None:
         f'<div class="rca-winner">'
         f'<div class="rca-winner-title">Root Cause Identified</div>'
         f'<div class="rca-winner-sub">'
-        f'RCA source: {result.get("rca_source","Scenario-guided graph RCA")}</div>'
+        f'RCA source: {result.get("rca_source","Graph-grounded RCA")}</div>'
         f'<div class="rca-winner-node">{root}</div>'
         f'<div class="rca-winner-meta">'
         f'Severity: {severity} &nbsp;·&nbsp; '
@@ -6323,7 +6323,7 @@ def _tab_gnn_rca() -> None:
     _gnn_model_src_str   = _enterprise_gnn_model_source(_resolved_gnn_model)
     _gnn_avail_str       = "Yes" if _gnn_result_pre else "No"
     _model_avail_str     = "Yes" if _gnn_model_exists else "No"
-    _rca_src_str         = "Enterprise GNN RCA" if _gnn_result_pre else "Scenario-grounded RCA simulation"
+    _rca_src_str         = "Enterprise GNN RCA" if _gnn_result_pre else "Graph-grounded RCA"
     _n_nodes_pre      = len(enterprise_graph.get("nodes", []))
     _n_edges_pre      = len(enterprise_graph.get("edges", []))
     st.markdown(
@@ -6344,8 +6344,10 @@ def _tab_gnn_rca() -> None:
         f'<div style="font-size:0.78rem;font-weight:600;color:{"#38bdf8" if _gnn_model_exists else "#64748b"}">{_gnn_model_src_str}</div></div>'
         f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">GNN result for scenario</div>'
         f'<div style="font-size:0.82rem;font-weight:700;color:{"#10b981" if _gnn_result_pre else "#f59e0b"}">{_gnn_avail_str}</div></div>'
-        f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">RCA source</div>'
+        f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">RCA engine</div>'
         f'<div style="font-size:0.82rem;font-weight:700;color:{"#10b981" if _gnn_result_pre else "#f59e0b"}">{_rca_src_str}</div></div>'
+        f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Alert source</div>'
+        f'<div style="font-size:0.78rem;font-weight:600;color:#60a5fa">Synthetic cross-diagram alert stream</div></div>'
         '</div>'
         '<div style="font-size:0.72rem;color:#475569;border-top:1px solid rgba(51,65,85,0.4);padding-top:8px">'
         'Enterprise GNN is trained across many scenario graphs. Inference is displayed on the selected '

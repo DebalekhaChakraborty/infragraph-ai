@@ -15,6 +15,6 @@
   "root_cause_diagram": "datacenter_topology",
   "gnn_result_available": false,
   "gnn_result_path": "",
-  "rca_label": "Scenario-grounded cross-diagram RCA simulation",
+  "rca_label": "Graph-grounded RCA",
   "score": 174
 }
