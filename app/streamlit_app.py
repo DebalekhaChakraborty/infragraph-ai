@@ -7426,11 +7426,6 @@ def _sidebar_v3() -> None:
             unsafe_allow_html=True,
         )
 
-        if _strict_mode():
-            st.error("Strict Mode: ON")
-        else:
-            st.info("Standard Mode: ON — annotation overlay enabled when detector unavailable")
-
         st.markdown('<div class="sb-label">Navigate</div>', unsafe_allow_html=True)
         st.radio(
             "Navigate",
