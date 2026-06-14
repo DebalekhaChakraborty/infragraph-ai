@@ -16,7 +16,8 @@ if str(APP_DIR) not in sys.path:
 from rfdetr_subprocess_bridge import (  # noqa: E402
     check_rfdetr_http_service,
     check_rfdetr_runtime,
-    find_best_rfdetr_checkpoint,
+    find_rfdetr_checkpoint_with_reason,
+    is_valid_rfdetr_checkpoint_path,
     rfdetr_service_base_url,
     resolve_rfdetr_python,
     resolve_rfdetr_python_details,
@@ -48,7 +49,32 @@ def main() -> int:
     else:
         resolution = resolve_rfdetr_python_details()
         selected_python = str(resolution.get("python_executable") or resolve_rfdetr_python())
-    checkpoint = Path(args.checkpoint) if args.checkpoint else find_best_rfdetr_checkpoint(REPO_ROOT)
+    # ── Checkpoint resolution ─────────────────────────────────────────────────
+    rejection_reason: str = ""
+    checkpoint_status: str = ""
+    if args.checkpoint:
+        checkpoint = Path(args.checkpoint)
+        if not checkpoint.is_absolute():
+            checkpoint = REPO_ROOT / checkpoint
+        if not checkpoint.exists():
+            checkpoint_status = "NOT FOUND"
+            rejection_reason = f"Path does not exist: {checkpoint}"
+            checkpoint = None
+        elif not is_valid_rfdetr_checkpoint_path(checkpoint):
+            checkpoint_status = "REJECTED (not a valid RF-DETR checkpoint)"
+            rejection_reason = (
+                f"Path {checkpoint} does not meet RF-DETR checkpoint requirements. "
+                "Allowed names: checkpoint_best_total.pth, checkpoint_best_regular.pth, "
+                "checkpoint_best_ema.pth, last.ckpt. "
+                "Path must contain 'rfdetr' and must not contain qwen/rng_state/optimizer/scheduler."
+            )
+            checkpoint = None
+        else:
+            checkpoint_status = "VALID RF-DETR"
+    else:
+        checkpoint, rejection_reason = find_rfdetr_checkpoint_with_reason(REPO_ROOT)
+        checkpoint_status = "VALID RF-DETR" if checkpoint else "NONE"
+
     runtime = check_rfdetr_runtime(selected_python)
 
     print(f"Current Python executable: {sys.executable}")
@@ -67,6 +93,15 @@ def main() -> int:
     if runtime.get("stderr_preview"):
         print(f"Runtime stderr: {runtime.get('stderr_preview')}")
     print(f"Checkpoint discovered: {checkpoint if checkpoint else 'NONE'}")
+    print(f"Checkpoint valid RF-DETR: {checkpoint_status}")
+    if rejection_reason:
+        print(f"Checkpoint rejection reason: {rejection_reason}")
+    if not checkpoint:
+        print(
+            "FAIL: No valid RF-DETR checkpoint found. "
+            "Set INFRAGRAPH_RFDETR_CHECKPOINT to checkpoint_best_total.pth "
+            "under model_artifacts/rfdetr_v3/model or outputs/rfdetr_v3/model."
+        )
 
     service_url = rfdetr_service_base_url()
     if service_url:

@@ -77,22 +77,43 @@ _DEFAULT_COLOR: tuple[int, int, int] = (168, 168, 168)
 _MODEL_CACHE: dict[str, Any] = {}
 
 
+# Allowed checkpoint filenames — anything else (optimizer, rng_state, qwen) is rejected
+_RFDETR_ALLOWED_NAMES: frozenset[str] = frozenset({
+    "checkpoint_best_total.pth",
+    "checkpoint_best_regular.pth",
+    "checkpoint_best_ema.pth",
+    "last.ckpt",
+})
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # CHECKPOINT DISCOVERY
 # ══════════════════════════════════════════════════════════════════════════════
 def find_best_rfdetr_checkpoint(repo_root: Path) -> "Path | None":
-    """Return the first existing RF-DETR checkpoint from the priority list."""
+    """Return the first existing valid RF-DETR checkpoint from the priority list.
+
+    Never returns Qwen LoRA files, optimizer states, RNG states, or any file
+    whose name is not on the RF-DETR checkpoint allowlist.
+    """
     for rel in _CHECKPOINT_PRIORITY:
         p = repo_root / rel
-        if p.exists():
+        if p.exists() and p.name.lower() in _RFDETR_ALLOWED_NAMES:
             return p
-    # alternate: any .pth under new canonical or legacy model dir
+
+    # Restricted fallback: only inside known rfdetr-specific directories,
+    # only for allowed checkpoint names — never a generic *.pth glob.
     for search_dir in [
         repo_root / "model_artifacts" / "rfdetr_v3" / "model",
         repo_root / "outputs" / "rfdetr_v3" / "model",  # legacy
     ]:
-        for p in sorted(search_dir.glob("*.pth")):
-            return p
+        if not search_dir.exists():
+            continue
+        for allowed_name in ("checkpoint_best_total.pth", "checkpoint_best_ema.pth",
+                             "checkpoint_best_regular.pth", "last.ckpt"):
+            p = search_dir / allowed_name
+            if p.exists():
+                return p
+
     return None
 
 

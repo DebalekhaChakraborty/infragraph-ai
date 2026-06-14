@@ -28,6 +28,44 @@ CHECKPOINT_CANDIDATES = [
     "outputs/rfdetr_v3/model/checkpoint_best_ema.pth",
 ]
 
+# Allowed checkpoint filenames — anything else is not an RF-DETR detector checkpoint
+_RFDETR_ALLOWED_NAMES: frozenset[str] = frozenset({
+    "checkpoint_best_total.pth",
+    "checkpoint_best_regular.pth",
+    "checkpoint_best_ema.pth",
+    "last.ckpt",
+})
+
+# Substrings that mark a path as definitively NOT an RF-DETR checkpoint
+_RFDETR_FORBIDDEN_PATH_SUBSTRINGS: tuple[str, ...] = (
+    "qwen",
+    "qwen_lora",
+    "checkpoint-",
+    "rng_state",
+    "optimizer",
+    "scheduler",
+    "trainer_state",
+    "adapter_model",
+)
+
+
+def is_valid_rfdetr_checkpoint_path(path: Path) -> bool:
+    """Return True only if path looks like an RF-DETR detector checkpoint.
+
+    Rejects Qwen LoRA artifacts, optimizer states, RNG states, and any file
+    whose name is not on the known-good RF-DETR checkpoint allowlist.
+    """
+    p    = str(path).lower()
+    name = path.name.lower()
+
+    if name not in _RFDETR_ALLOWED_NAMES:
+        return False
+
+    if "rfdetr" not in p and "rf-detr" not in p:
+        return False
+
+    return not any(x in p for x in _RFDETR_FORBIDDEN_PATH_SUBSTRINGS)
+
 COMMON_PYTHON_CANDIDATES = [
     "/opt/conda/bin/python",
     "/usr/bin/python",
@@ -140,25 +178,70 @@ def resolve_rfdetr_python() -> str:
     return str(resolve_rfdetr_python_details().get("python_executable") or sys.executable)
 
 
-def find_best_rfdetr_checkpoint(repo_root: Path) -> Path | None:
+_NO_CHECKPOINT_MSG = (
+    "No valid RF-DETR checkpoint found. "
+    "Set INFRAGRAPH_RFDETR_CHECKPOINT to checkpoint_best_total.pth "
+    "under model_artifacts/rfdetr_v3/model or outputs/rfdetr_v3/model."
+)
+
+# Known rfdetr-specific subdirectories for the fallback restricted search
+_RFDETR_FALLBACK_SEARCH_DIRS: tuple[str, ...] = (
+    "model_artifacts/rfdetr_v3/model",
+    "model_artifacts/rfdetr_v3_smoke/model",
+    "model_artifacts/rfdetr",
+    "outputs/rfdetr_v3/model",
+    "outputs/rfdetr_v3_smoke/model",
+    "outputs/rfdetr",
+)
+
+
+def find_rfdetr_checkpoint_with_reason(repo_root: Path) -> "tuple[Path | None, str]":
+    """Return (checkpoint_path, rejection_reason).
+
+    rejection_reason is "" on success and a human-readable message on failure.
+    Never returns a Qwen LoRA file, optimizer state, RNG file, or any path
+    that fails is_valid_rfdetr_checkpoint_path().
+    """
     env_value = os.environ.get("INFRAGRAPH_RFDETR_CHECKPOINT", "").strip()
     if env_value:
         path = Path(env_value)
         if not path.is_absolute():
             path = repo_root / path
-        return path if path.exists() else path
+        if not path.exists():
+            return None, f"INFRAGRAPH_RFDETR_CHECKPOINT path does not exist: {path}"
+        if not is_valid_rfdetr_checkpoint_path(path):
+            return None, (
+                f"INFRAGRAPH_RFDETR_CHECKPOINT rejected — not a valid RF-DETR checkpoint: {path}. "
+                "Allowed names: checkpoint_best_total.pth, checkpoint_best_regular.pth, "
+                "checkpoint_best_ema.pth, last.ckpt. "
+                "Path must contain 'rfdetr' and must not contain qwen/rng_state/optimizer/scheduler."
+            )
+        return path, ""
 
     for rel in CHECKPOINT_CANDIDATES:
         path = repo_root / rel
-        if path.exists():
-            return path
-    for root in [repo_root / "model_artifacts", repo_root / "outputs"]:
-        if root.exists():
-            for pattern in ["checkpoint_best_total.pth", "checkpoint_best_regular.pth", "*.pth"]:
-                matches = sorted(root.rglob(pattern))
-                if matches:
-                    return matches[0]
-    return None
+        if path.exists() and is_valid_rfdetr_checkpoint_path(path):
+            return path, ""
+
+    # Restricted fallback: only search inside known rfdetr-specific directories
+    for rel_dir in _RFDETR_FALLBACK_SEARCH_DIRS:
+        search_dir = repo_root / rel_dir
+        if not search_dir.exists():
+            continue
+        # Prefer in allowed-name priority order, not filesystem order
+        for allowed_name in ("checkpoint_best_total.pth", "checkpoint_best_ema.pth",
+                             "checkpoint_best_regular.pth", "last.ckpt"):
+            p = search_dir / allowed_name
+            if p.exists() and is_valid_rfdetr_checkpoint_path(p):
+                return p, ""
+
+    return None, _NO_CHECKPOINT_MSG
+
+
+def find_best_rfdetr_checkpoint(repo_root: Path) -> "Path | None":
+    """Return the best RF-DETR checkpoint, or None if none found or all invalid."""
+    path, _ = find_rfdetr_checkpoint_with_reason(repo_root)
+    return path
 
 
 def rfdetr_service_base_url() -> str:
