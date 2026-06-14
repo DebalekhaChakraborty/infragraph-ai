@@ -1,0 +1,30 @@
+{
+  "scenario_id": "diagram_0058_incident_001",
+  "root_cause": "FW-01",
+  "root_cause_type": "firewall",
+  "alerts": [
+    {
+      "node": "FW-01",
+      "alert_type": "Packet drops elevated",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "RTR-01",
+      "alert_type": "Policy deny spike",
+      "severity": "major",
+      "time_offset_min": 2
+    },
+    {
+      "node": "RTR-01",
+      "alert_type": "App unreachable",
+      "severity": "major",
+      "time_offset_min": 4
+    }
+  ],
+  "expected_impacted_nodes": [
+    "RTR-02",
+    "SW-01",
+    "RTR-01"
+  ]
+}

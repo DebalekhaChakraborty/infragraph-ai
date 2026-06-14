@@ -1,0 +1,35 @@
+{
+  "scenario_id": "diagram_0276_incident_001",
+  "root_cause": "FW-EXT",
+  "root_cause_type": "firewall",
+  "alerts": [
+    {
+      "node": "FW-EXT",
+      "alert_type": "Packet drops elevated",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "WAN-01",
+      "alert_type": "Policy deny spike",
+      "severity": "major",
+      "time_offset_min": 2
+    },
+    {
+      "node": "WAN-01",
+      "alert_type": "App unreachable",
+      "severity": "major",
+      "time_offset_min": 4
+    },
+    {
+      "node": "WAN-01",
+      "alert_type": "VPN tunnel instability",
+      "severity": "minor",
+      "time_offset_min": 6
+    }
+  ],
+  "expected_impacted_nodes": [
+    "WAN-01",
+    "SW-DMZ"
+  ]
+}

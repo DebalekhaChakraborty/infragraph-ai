@@ -1,0 +1,35 @@
+{
+  "scenario_id": "diagram_0065_incident_001",
+  "root_cause": "RTR-BAK",
+  "root_cause_type": "router",
+  "alerts": [
+    {
+      "node": "RTR-BAK",
+      "alert_type": "BGP flap detected",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "FW-01",
+      "alert_type": "WAN packet loss > 5%",
+      "severity": "major",
+      "time_offset_min": 2
+    },
+    {
+      "node": "WAN-BAK",
+      "alert_type": "Site unreachable",
+      "severity": "critical",
+      "time_offset_min": 3
+    },
+    {
+      "node": "FW-01",
+      "alert_type": "Downstream service degradation",
+      "severity": "major",
+      "time_offset_min": 5
+    }
+  ],
+  "expected_impacted_nodes": [
+    "FW-01",
+    "WAN-BAK"
+  ]
+}

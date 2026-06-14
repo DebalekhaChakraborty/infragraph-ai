@@ -1,0 +1,1382 @@
+{
+  "diagram_id": "shared_services_topology",
+  "run_id": "ONB-019",
+  "source": "live_rfdetr_http_service",
+  "original_image": "/workspace/shared/infragraph-ai/runtime_state/live_ingestion/ONB-019/original.png",
+  "detected_image": "/workspace/shared/infragraph-ai/runtime_state/live_ingestion/ONB-019/detected.png",
+  "detection_source": "LIVE_RFDETR_INFERENCE",
+  "evidence_source": "live_detector",
+  "annotation_path": "/workspace/shared/infragraph-ai/assets/onboarding/ONB-019/annotation.json",
+  "local_graph_path": "/workspace/shared/infragraph-ai/assets/onboarding/ONB-019/local_graph.json",
+  "node_count": 8,
+  "edge_count": 6,
+  "ocr_text_block_count": 36,
+  "connector_count": 6,
+  "devices": [
+    {
+      "node_id": "AD-01",
+      "device_type": "service",
+      "display_label": "AD-01",
+      "canonical_id": "AD-01",
+      "ip_address": "10.255.0.1",
+      "zone": "Identity",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "live_detector",
+      "confidence": "",
+      "bbox": "[226, 392, 278, 444]",
+      "x1": "226",
+      "y1": "392",
+      "x2": "278",
+      "y2": "444"
+    },
+    {
+      "node_id": "IAM-01",
+      "device_type": "service",
+      "display_label": "IAM-01",
+      "canonical_id": "IAM-01",
+      "ip_address": "10.255.0.2",
+      "zone": "Identity",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "live_detector",
+      "confidence": "",
+      "bbox": "[478, 392, 530, 444]",
+      "x1": "478",
+      "y1": "392",
+      "x2": "530",
+      "y2": "444"
+    },
+    {
+      "node_id": "DNS-01",
+      "device_type": "service",
+      "display_label": "DNS-01",
+      "canonical_id": "DNS-01",
+      "ip_address": "10.255.0.3",
+      "zone": "DNS/NTP",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "live_detector",
+      "confidence": "",
+      "bbox": "[758, 293, 810, 345]",
+      "x1": "758",
+      "y1": "293",
+      "x2": "810",
+      "y2": "345"
+    },
+    {
+      "node_id": "NTP-01",
+      "device_type": "service",
+      "display_label": "NTP-01",
+      "canonical_id": "NTP-01",
+      "ip_address": "10.255.0.4",
+      "zone": "DNS/NTP",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "live_detector",
+      "confidence": "",
+      "bbox": "[758, 558, 810, 610]",
+      "x1": "758",
+      "y1": "558",
+      "x2": "810",
+      "y2": "610"
+    },
+    {
+      "node_id": "MON-01",
+      "device_type": "service",
+      "display_label": "MON-01",
+      "canonical_id": "MON-01",
+      "ip_address": "10.255.0.5",
+      "zone": "Monitoring",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "live_detector",
+      "confidence": "",
+      "bbox": "[1038, 359, 1090, 411]",
+      "x1": "1038",
+      "y1": "359",
+      "x2": "1090",
+      "y2": "411"
+    },
+    {
+      "node_id": "SYSLOG-01",
+      "device_type": "server",
+      "display_label": "SYSLOG-01",
+      "canonical_id": "SYSLOG-01",
+      "ip_address": "10.255.0.6",
+      "zone": "Logging",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "live_detector",
+      "confidence": "",
+      "bbox": "[1038, 591, 1090, 643]",
+      "x1": "1038",
+      "y1": "591",
+      "x2": "1090",
+      "y2": "643"
+    },
+    {
+      "node_id": "APP-01",
+      "device_type": "server",
+      "display_label": "APP-01",
+      "canonical_id": "APP-01",
+      "ip_address": "",
+      "zone": "Consumers",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "True",
+      "evidence_source": "live_detector",
+      "confidence": "",
+      "bbox": "[1262, 276, 1314, 328]",
+      "x1": "1262",
+      "y1": "276",
+      "x2": "1314",
+      "y2": "328"
+    },
+    {
+      "node_id": "BR-APP-01",
+      "device_type": "server",
+      "display_label": "BR-APP-01",
+      "canonical_id": "BR-APP-01",
+      "ip_address": "",
+      "zone": "Consumers",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "True",
+      "evidence_source": "live_detector",
+      "confidence": "",
+      "bbox": "[1262, 558, 1314, 610]",
+      "x1": "1262",
+      "y1": "558",
+      "x2": "1314",
+      "y2": "610"
+    }
+  ],
+  "connectors": [
+    {
+      "edge_id": "AD-01\u2192IAM-01",
+      "source": "AD-01",
+      "target": "IAM-01",
+      "relationship": "connected_to",
+      "protocol": "",
+      "label": "LDAP",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "live_detector",
+      "confidence": ""
+    },
+    {
+      "edge_id": "IAM-01\u2192MON-01",
+      "source": "IAM-01",
+      "target": "MON-01",
+      "relationship": "monitored_by",
+      "protocol": "",
+      "label": "API",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "live_detector",
+      "confidence": ""
+    },
+    {
+      "edge_id": "DNS-01\u2192NTP-01",
+      "source": "DNS-01",
+      "target": "NTP-01",
+      "relationship": "connected_to",
+      "protocol": "",
+      "label": "NTP",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "live_detector",
+      "confidence": ""
+    },
+    {
+      "edge_id": "MON-01\u2192SYSLOG-01",
+      "source": "MON-01",
+      "target": "SYSLOG-01",
+      "relationship": "depends_on",
+      "protocol": "",
+      "label": "Syslog",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "live_detector",
+      "confidence": ""
+    },
+    {
+      "edge_id": "APP-01\u2192IAM-01",
+      "source": "APP-01",
+      "target": "IAM-01",
+      "relationship": "depends_on",
+      "protocol": "",
+      "label": "OAuth",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "live_detector",
+      "confidence": ""
+    },
+    {
+      "edge_id": "BR-APP-01\u2192DNS-01",
+      "source": "BR-APP-01",
+      "target": "DNS-01",
+      "relationship": "depends_on",
+      "protocol": "",
+      "label": "DNS",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "live_detector",
+      "confidence": ""
+    }
+  ],
+  "interfaces": [
+    {
+      "node_id": "AD-01",
+      "device_type": "service",
+      "ip_address": "10.255.0.1",
+      "interface": "",
+      "vlan": "",
+      "zone": "Identity",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "IAM-01",
+      "device_type": "service",
+      "ip_address": "10.255.0.2",
+      "interface": "",
+      "vlan": "",
+      "zone": "Identity",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "DNS-01",
+      "device_type": "service",
+      "ip_address": "10.255.0.3",
+      "interface": "",
+      "vlan": "",
+      "zone": "DNS/NTP",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "NTP-01",
+      "device_type": "service",
+      "ip_address": "10.255.0.4",
+      "interface": "",
+      "vlan": "",
+      "zone": "DNS/NTP",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "MON-01",
+      "device_type": "service",
+      "ip_address": "10.255.0.5",
+      "interface": "",
+      "vlan": "",
+      "zone": "Monitoring",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "SYSLOG-01",
+      "device_type": "server",
+      "ip_address": "10.255.0.6",
+      "interface": "",
+      "vlan": "",
+      "zone": "Logging",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "APP-01",
+      "device_type": "server",
+      "ip_address": "",
+      "interface": "",
+      "vlan": "",
+      "zone": "Consumers",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "BR-APP-01",
+      "device_type": "server",
+      "ip_address": "",
+      "interface": "",
+      "vlan": "",
+      "zone": "Consumers",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    }
+  ],
+  "ocr_text": [
+    {
+      "text": "AD-01",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[227, 448, 277, 462]",
+      "x1": "227",
+      "y1": "448",
+      "x2": "277",
+      "y2": "462",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.255.0.1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[212, 376, 292, 388]",
+      "x1": "212",
+      "y1": "376",
+      "x2": "292",
+      "y2": "388",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "IAM-01",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[474, 448, 534, 462]",
+      "x1": "474",
+      "y1": "448",
+      "x2": "534",
+      "y2": "462",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.255.0.2",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[464, 376, 544, 388]",
+      "x1": "464",
+      "y1": "376",
+      "x2": "544",
+      "y2": "388",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DNS-01",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[754, 349, 814, 363]",
+      "x1": "754",
+      "y1": "349",
+      "x2": "814",
+      "y2": "363",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.255.0.3",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[744, 277, 824, 289]",
+      "x1": "744",
+      "y1": "277",
+      "x2": "824",
+      "y2": "289",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "NTP-01",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[754, 614, 814, 628]",
+      "x1": "754",
+      "y1": "614",
+      "x2": "814",
+      "y2": "628",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.255.0.4",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[744, 542, 824, 554]",
+      "x1": "744",
+      "y1": "542",
+      "x2": "824",
+      "y2": "554",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "MON-01",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1034, 415, 1094, 429]",
+      "x1": "1034",
+      "y1": "415",
+      "x2": "1094",
+      "y2": "429",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.255.0.5",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1024, 343, 1104, 355]",
+      "x1": "1024",
+      "y1": "343",
+      "x2": "1104",
+      "y2": "355",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "SYSLOG-01",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1019, 647, 1109, 661]",
+      "x1": "1019",
+      "y1": "647",
+      "x2": "1109",
+      "y2": "661",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.255.0.6",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1024, 575, 1104, 587]",
+      "x1": "1024",
+      "y1": "575",
+      "x2": "1104",
+      "y2": "587",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "APP-01",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1258, 332, 1318, 346]",
+      "x1": "1258",
+      "y1": "332",
+      "x2": "1318",
+      "y2": "346",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "BR-APP-01",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1243, 614, 1333, 628]",
+      "x1": "1243",
+      "y1": "614",
+      "x2": "1333",
+      "y2": "628",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Identity",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[94, 260, 142, 276]",
+      "x1": "94",
+      "y1": "260",
+      "x2": "142",
+      "y2": "276",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DNS/NTP",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[654, 227, 696, 243]",
+      "x1": "654",
+      "y1": "227",
+      "x2": "696",
+      "y2": "243",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Monitoring",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[962, 260, 1022, 276]",
+      "x1": "962",
+      "y1": "260",
+      "x2": "1022",
+      "y2": "276",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Consumers",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1214, 210, 1268, 226]",
+      "x1": "1214",
+      "y1": "210",
+      "x2": "1268",
+      "y2": "226",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "LDAP",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[354, 408, 402, 428]",
+      "x1": "354",
+      "y1": "408",
+      "x2": "402",
+      "y2": "428",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[260, 422, 280, 434]",
+      "x1": "260",
+      "y1": "422",
+      "x2": "280",
+      "y2": "434",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "ge-0/0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[464, 402, 496, 414]",
+      "x1": "464",
+      "y1": "402",
+      "x2": "496",
+      "y2": "414",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "API",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[760, 391, 808, 411]",
+      "x1": "760",
+      "y1": "391",
+      "x2": "808",
+      "y2": "411",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth0",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[512, 422, 528, 434]",
+      "x1": "512",
+      "y1": "422",
+      "x2": "528",
+      "y2": "434",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/2",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1036, 369, 1056, 381]",
+      "x1": "1036",
+      "y1": "369",
+      "x2": "1056",
+      "y2": "381",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "NTP",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[760, 441, 808, 461]",
+      "x1": "760",
+      "y1": "441",
+      "x2": "808",
+      "y2": "461",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "ge-0/0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[792, 323, 824, 335]",
+      "x1": "792",
+      "y1": "323",
+      "x2": "824",
+      "y2": "335",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[760, 568, 776, 580]",
+      "x1": "760",
+      "y1": "568",
+      "x2": "776",
+      "y2": "580",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Syslog",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1034, 491, 1094, 511]",
+      "x1": "1034",
+      "y1": "491",
+      "x2": "1094",
+      "y2": "511",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/2",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1072, 389, 1092, 401]",
+      "x1": "1072",
+      "y1": "389",
+      "x2": "1092",
+      "y2": "401",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1036, 601, 1056, 613]",
+      "x1": "1036",
+      "y1": "601",
+      "x2": "1056",
+      "y2": "613",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "OAuth",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[871, 350, 921, 370]",
+      "x1": "871",
+      "y1": "350",
+      "x2": "921",
+      "y2": "370",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1296, 306, 1312, 318]",
+      "x1": "1296",
+      "y1": "306",
+      "x2": "1312",
+      "y2": "318",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth0",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[480, 402, 496, 414]",
+      "x1": "480",
+      "y1": "402",
+      "x2": "496",
+      "y2": "414",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DNS",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1012, 441, 1060, 461]",
+      "x1": "1012",
+      "y1": "441",
+      "x2": "1060",
+      "y2": "461",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1296, 588, 1316, 600]",
+      "x1": "1296",
+      "y1": "588",
+      "x2": "1316",
+      "y2": "600",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "ge-0/0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[744, 303, 776, 315]",
+      "x1": "744",
+      "y1": "303",
+      "x2": "776",
+      "y2": "315",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    }
+  ],
+  "nodes": [
+    {
+      "node_id": "AD-01",
+      "type": "service",
+      "ip_address": "10.255.0.1",
+      "zone": "Identity",
+      "shared": false,
+      "evidence_source": "live_detector"
+    },
+    {
+      "node_id": "IAM-01",
+      "type": "service",
+      "ip_address": "10.255.0.2",
+      "zone": "Identity",
+      "shared": false,
+      "evidence_source": "live_detector"
+    },
+    {
+      "node_id": "DNS-01",
+      "type": "service",
+      "ip_address": "10.255.0.3",
+      "zone": "DNS/NTP",
+      "shared": false,
+      "evidence_source": "live_detector"
+    },
+    {
+      "node_id": "NTP-01",
+      "type": "service",
+      "ip_address": "10.255.0.4",
+      "zone": "DNS/NTP",
+      "shared": false,
+      "evidence_source": "live_detector"
+    },
+    {
+      "node_id": "MON-01",
+      "type": "service",
+      "ip_address": "10.255.0.5",
+      "zone": "Monitoring",
+      "shared": false,
+      "evidence_source": "live_detector"
+    },
+    {
+      "node_id": "SYSLOG-01",
+      "type": "server",
+      "ip_address": "10.255.0.6",
+      "zone": "Logging",
+      "shared": false,
+      "evidence_source": "live_detector"
+    },
+    {
+      "node_id": "APP-01",
+      "type": "server",
+      "ip_address": "",
+      "zone": "Consumers",
+      "shared": true,
+      "evidence_source": "live_detector"
+    },
+    {
+      "node_id": "BR-APP-01",
+      "type": "server",
+      "ip_address": "",
+      "zone": "Consumers",
+      "shared": true,
+      "evidence_source": "live_detector"
+    }
+  ],
+  "edges": [
+    {
+      "source": "AD-01",
+      "target": "IAM-01",
+      "relationship": "connected_to",
+      "label": "LDAP"
+    },
+    {
+      "source": "IAM-01",
+      "target": "MON-01",
+      "relationship": "monitored_by",
+      "label": "API"
+    },
+    {
+      "source": "DNS-01",
+      "target": "NTP-01",
+      "relationship": "connected_to",
+      "label": "NTP"
+    },
+    {
+      "source": "MON-01",
+      "target": "SYSLOG-01",
+      "relationship": "depends_on",
+      "label": "Syslog"
+    },
+    {
+      "source": "APP-01",
+      "target": "IAM-01",
+      "relationship": "depends_on",
+      "label": "OAuth"
+    },
+    {
+      "source": "BR-APP-01",
+      "target": "DNS-01",
+      "relationship": "depends_on",
+      "label": "DNS"
+    }
+  ],
+  "confidence_summary": {
+    "device_detection_avg": "\u2014",
+    "edge_extraction_avg": "\u2014",
+    "ocr_text_blocks": 36,
+    "connector_count": 6,
+    "low_confidence_items": 0
+  },
+  "text_blocks": [
+    {
+      "text": "AD-01",
+      "bbox": [
+        227,
+        448,
+        277,
+        462
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.255.0.1",
+      "bbox": [
+        212,
+        376,
+        292,
+        388
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "IAM-01",
+      "bbox": [
+        474,
+        448,
+        534,
+        462
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.255.0.2",
+      "bbox": [
+        464,
+        376,
+        544,
+        388
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "DNS-01",
+      "bbox": [
+        754,
+        349,
+        814,
+        363
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.255.0.3",
+      "bbox": [
+        744,
+        277,
+        824,
+        289
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "NTP-01",
+      "bbox": [
+        754,
+        614,
+        814,
+        628
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.255.0.4",
+      "bbox": [
+        744,
+        542,
+        824,
+        554
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "MON-01",
+      "bbox": [
+        1034,
+        415,
+        1094,
+        429
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.255.0.5",
+      "bbox": [
+        1024,
+        343,
+        1104,
+        355
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "SYSLOG-01",
+      "bbox": [
+        1019,
+        647,
+        1109,
+        661
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.255.0.6",
+      "bbox": [
+        1024,
+        575,
+        1104,
+        587
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "APP-01",
+      "bbox": [
+        1258,
+        332,
+        1318,
+        346
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "BR-APP-01",
+      "bbox": [
+        1243,
+        614,
+        1333,
+        628
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "Identity",
+      "bbox": [
+        94,
+        260,
+        142,
+        276
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "DNS/NTP",
+      "bbox": [
+        654,
+        227,
+        696,
+        243
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "Monitoring",
+      "bbox": [
+        962,
+        260,
+        1022,
+        276
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "Consumers",
+      "bbox": [
+        1214,
+        210,
+        1268,
+        226
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "LDAP",
+      "bbox": [
+        354,
+        408,
+        402,
+        428
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        260,
+        422,
+        280,
+        434
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        464,
+        402,
+        496,
+        414
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "API",
+      "bbox": [
+        760,
+        391,
+        808,
+        411
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        512,
+        422,
+        528,
+        434
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        1036,
+        369,
+        1056,
+        381
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "NTP",
+      "bbox": [
+        760,
+        441,
+        808,
+        461
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        792,
+        323,
+        824,
+        335
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        760,
+        568,
+        776,
+        580
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Syslog",
+      "bbox": [
+        1034,
+        491,
+        1094,
+        511
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        1072,
+        389,
+        1092,
+        401
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        1036,
+        601,
+        1056,
+        613
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "OAuth",
+      "bbox": [
+        871,
+        350,
+        921,
+        370
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        1296,
+        306,
+        1312,
+        318
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        480,
+        402,
+        496,
+        414
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "DNS",
+      "bbox": [
+        1012,
+        441,
+        1060,
+        461
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        1296,
+        588,
+        1316,
+        600
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        744,
+        303,
+        776,
+        315
+      ],
+      "text_type": "interface_label"
+    }
+  ],
+  "source_label": "Source: LIVE_RFDETR_INFERENCE",
+  "annotation_preview": {
+    "rendered": false,
+    "boxes_rendered": 0,
+    "boxes_skipped": 0,
+    "boxes_skipped_large": 0,
+    "connectors_rendered": 0,
+    "connectors_skipped": 0,
+    "connectors_skipped_long": 0,
+    "overlay_mode": "clean",
+    "draw_connectors": false,
+    "renderer_version": "v3_clean_overlay_v1"
+  },
+  "runtime_mode": "LIVE_RFDETR_INFERENCE",
+  "absorption_mode": "SESSION_MEMORY_ABSORPTION",
+  "rfdetr_subprocess": {
+    "ok": true,
+    "source": "live_rfdetr_http_service",
+    "detector": "RF-DETR",
+    "python_executable": "/usr/bin/python",
+    "checkpoint_path": "/workspace/shared/infragraph-ai/model_artifacts/rfdetr_v3/checkpoint_best_total.pth",
+    "checkpoint_load_strategy": "constructor_pretrain_weights",
+    "model_class": "RFDETRBase",
+    "image_path": "/workspace/shared/infragraph-ai/assets/onboarding/ONB-019/original.png",
+    "inference_runtime_ms": 19052,
+    "inference_strategy": "predict(image)",
+    "detections": [
+      {
+        "label": "cloud_or_wan",
+        "device_type": "cloud_or_wan",
+        "confidence": 0.9603,
+        "bbox": {
+          "x1": 749.0,
+          "y1": 550.2,
+          "x2": 819.5,
+          "y2": 618.2
+        }
+      },
+      {
+        "label": "firewall",
+        "device_type": "firewall",
+        "confidence": 0.9584,
+        "bbox": {
+          "x1": 1030.2,
+          "y1": 582.9,
+          "x2": 1098.5,
+          "y2": 650.9
+        }
+      },
+      {
+        "label": "cloud_or_wan",
+        "device_type": "cloud_or_wan",
+        "confidence": 0.9553,
+        "bbox": {
+          "x1": 749.6,
+          "y1": 285.2,
+          "x2": 819.2,
+          "y2": 352.6
+        }
+      },
+      {
+        "label": "cloud_or_wan",
+        "device_type": "cloud_or_wan",
+        "confidence": 0.9532,
+        "bbox": {
+          "x1": 1029.4,
+          "y1": 350.7,
+          "x2": 1098.6,
+          "y2": 418.2
+        }
+      },
+      {
+        "label": "firewall",
+        "device_type": "firewall",
+        "confidence": 0.9518,
+        "bbox": {
+          "x1": 1254.6,
+          "y1": 267.5,
+          "x2": 1322.2,
+          "y2": 336.8
+        }
+      },
+      {
+        "label": "firewall",
+        "device_type": "firewall",
+        "confidence": 0.951,
+        "bbox": {
+          "x1": 1254.4,
+          "y1": 549.6,
+          "x2": 1322.8,
+          "y2": 617.8
+        }
+      },
+      {
+        "label": "cloud_or_wan",
+        "device_type": "cloud_or_wan",
+        "confidence": 0.9499,
+        "bbox": {
+          "x1": 469.8,
+          "y1": 384.3,
+          "x2": 538.4,
+          "y2": 451.9
+        }
+      },
+      {
+        "label": "cloud_or_wan",
+        "device_type": "cloud_or_wan",
+        "confidence": 0.9495,
+        "bbox": {
+          "x1": 217.4,
+          "y1": 384.2,
+          "x2": 285.5,
+          "y2": 451.9
+        }
+      }
+    ],
+    "annotated_image_path": "/tmp/infragraph_rfdetr_http_z26fe3i9/infragraph_rfdetr_overlay.png",
+    "detector_runtime_mode": "live_rfdetr_http_service",
+    "service_python_executable": "/usr/bin/python",
+    "returncode": 0,
+    "stdout_preview": "",
+    "stderr_preview": "/usr/local/lib/python3.12/dist-packages/deprecate/proxy.py:168: FutureWarning: The `RFDETRBase` was deprecated since v1.7.0. It will be removed in v2.0.0.\n  stream(msg)\n[2026-06-14 13:05:24] [WARNING] rf-detr - Checkpoint has 8 classes but model is configured for 90. Using checkpoint class count (8). Pass num_classes=8 to suppress this warning.\n[2026-06-14 13:05:24] [WARNING] rf-detr - load_pretrain_weights: args.num_queries absent; inferred ckpt_num_queries=300 from tensor rows 3900 \u00f7 ckpt_group_detr=13.\n[2026-06-14 13:05:26] [WARNING] rf-detr - Model is not optimized for inference. Latency may be higher than expected. You can optimize the model for inference by calling model.optimize_for_inference().\n[transformers] `use_return_dict` is deprecated! Use `return_dict` instead!\n",
+    "service_url": "http://127.0.0.1:8010"
+  }
+}

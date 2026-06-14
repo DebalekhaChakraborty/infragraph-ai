@@ -1,0 +1,129 @@
+{
+  "scenario_id": "enterprise_0018",
+  "root_cause": "DC-FW-01",
+  "root_cause_diagram": "datacenter_topology",
+  "root_cause_pattern": "dc_fw_failure",
+  "severity": "critical",
+  "alerts": [
+    {
+      "node": "DC-FW-01",
+      "diagram_id": "datacenter_topology",
+      "alert_type": "packet_drop",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "APP-01",
+      "diagram_id": "app_db_topology",
+      "alert_type": "link_degradation",
+      "severity": "high",
+      "time_offset_min": 2
+    },
+    {
+      "node": "DB-MASTER",
+      "diagram_id": "app_db_topology",
+      "alert_type": "latency",
+      "severity": "medium",
+      "time_offset_min": 8
+    },
+    {
+      "node": "APP-03",
+      "diagram_id": "app_db_topology",
+      "alert_type": "link_degradation",
+      "severity": "medium",
+      "time_offset_min": 12
+    }
+  ],
+  "impacted_nodes": [
+    "DC-CORE-SW-01",
+    "DC-AGG-SW-01",
+    "APP-LB-01",
+    "DC-SRV-01",
+    "DC-SRV-02",
+    "DC-SRV-03",
+    "APP-01",
+    "APP-02",
+    "APP-03",
+    "DB-MASTER",
+    "DB-CACHE-01",
+    "DB-REPLICA-01"
+  ],
+  "impacted_diagrams": [
+    "app_db_topology",
+    "datacenter_topology"
+  ],
+  "impact_paths": [
+    [
+      "DC-FW-01",
+      "DC-CORE-SW-01"
+    ],
+    [
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "DC-AGG-SW-01"
+    ],
+    [
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "APP-LB-01"
+    ],
+    [
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "DC-AGG-SW-01",
+      "DC-SRV-01"
+    ],
+    [
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "DC-AGG-SW-01",
+      "DC-SRV-02"
+    ],
+    [
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "DC-AGG-SW-01",
+      "DC-SRV-03"
+    ],
+    [
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "APP-LB-01",
+      "APP-01"
+    ],
+    [
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "APP-LB-01",
+      "APP-02"
+    ],
+    [
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "APP-LB-01",
+      "APP-03"
+    ],
+    [
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "APP-LB-01",
+      "APP-01",
+      "DB-MASTER"
+    ],
+    [
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "APP-LB-01",
+      "APP-01",
+      "DB-CACHE-01"
+    ],
+    [
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "APP-LB-01",
+      "APP-01",
+      "DB-MASTER",
+      "DB-REPLICA-01"
+    ]
+  ]
+}

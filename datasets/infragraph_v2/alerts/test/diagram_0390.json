@@ -1,0 +1,23 @@
+{
+  "scenario_id": "diagram_0390_incident_001",
+  "root_cause": "LB-02",
+  "root_cause_type": "load_balancer",
+  "alerts": [
+    {
+      "node": "LB-02",
+      "alert_type": "Backend pool unhealthy",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "SW-APP",
+      "alert_type": "5xx spike detected",
+      "severity": "major",
+      "time_offset_min": 2
+    }
+  ],
+  "expected_impacted_nodes": [
+    "SW-APP",
+    "APP-02"
+  ]
+}

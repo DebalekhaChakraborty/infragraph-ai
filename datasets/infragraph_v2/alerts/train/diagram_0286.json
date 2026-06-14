@@ -1,0 +1,29 @@
+{
+  "scenario_id": "diagram_0286_incident_001",
+  "root_cause": "APP-01",
+  "root_cause_type": "server",
+  "alerts": [
+    {
+      "node": "APP-01",
+      "alert_type": "CPU utilization > 95%",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "DB-01",
+      "alert_type": "Service unavailable",
+      "severity": "major",
+      "time_offset_min": 2
+    },
+    {
+      "node": "LB-01",
+      "alert_type": "API latency > 5s",
+      "severity": "major",
+      "time_offset_min": 3
+    }
+  ],
+  "expected_impacted_nodes": [
+    "DB-01",
+    "LB-01"
+  ]
+}

@@ -13,15 +13,10 @@ __pycache__/
 venv/
 env/
 
-# ChromaDB / local vector index runtime files
-runtime_state/kb_index/
-runtime_state/chroma/
-runtime_state/incident_runs/
-runtime_state/**/*.sqlite3
+# ChromaDB / vector index — tracked via Git LFS (*.sqlite3, *.bin patterns in .gitattributes)
+# runtime_state/incident_runs/ kept for reproducibility
 runtime_state/**/*.sqlite3-shm
 runtime_state/**/*.sqlite3-wal
-runtime_state/**/.chroma/
-reports/kb_index/
 
 ## Large generated outputs / model checkpoints
 # outputs/
@@ -34,3 +29,7 @@ data/qwen_sop_grounded/
 data/qwen_sop_grounded_expanded/
 data/remediation_training/
 
+# aws-cli
+.aws/
+aws/
+awscliv2.zip

@@ -1,0 +1,211 @@
+[
+  {
+    "node_id": "RFDET-001",
+    "canonical_id": "RFDET-001",
+    "class_name": "cls0",
+    "type": "server",
+    "bbox": [
+      78.1,
+      451.3,
+      145.2,
+      518.5
+    ],
+    "confidence": 0.9644,
+    "is_shared_entity": false,
+    "is_ghost": false,
+    "zone": "",
+    "ip_address": "",
+    "source": "LIVE_RFDETR_INFERENCE",
+    "match_iou": 0.0
+  },
+  {
+    "node_id": "RFDET-002",
+    "canonical_id": "RFDET-002",
+    "class_name": "switch",
+    "type": "switch",
+    "bbox": [
+      246.6,
+      567.8,
+      313.4,
+      635.1
+    ],
+    "confidence": 0.9607,
+    "is_shared_entity": false,
+    "is_ghost": false,
+    "zone": "",
+    "ip_address": "",
+    "source": "LIVE_RFDETR_INFERENCE",
+    "match_iou": 0.0
+  },
+  {
+    "node_id": "RFDET-003",
+    "canonical_id": "RFDET-003",
+    "class_name": "switch",
+    "type": "switch",
+    "bbox": [
+      246.3,
+      350.1,
+      314.3,
+      419.0
+    ],
+    "confidence": 0.9577,
+    "is_shared_entity": false,
+    "is_ghost": false,
+    "zone": "",
+    "ip_address": "",
+    "source": "LIVE_RFDETR_INFERENCE",
+    "match_iou": 0.0
+  },
+  {
+    "node_id": "RFDET-004",
+    "canonical_id": "RFDET-004",
+    "class_name": "router",
+    "type": "router",
+    "bbox": [
+      525.5,
+      351.3,
+      594.1,
+      418.2
+    ],
+    "confidence": 0.9556,
+    "is_shared_entity": false,
+    "is_ghost": false,
+    "zone": "",
+    "ip_address": "",
+    "source": "LIVE_RFDETR_INFERENCE",
+    "match_iou": 0.0
+  },
+  {
+    "node_id": "RFDET-005",
+    "canonical_id": "RFDET-005",
+    "class_name": "firewall",
+    "type": "firewall",
+    "bbox": [
+      1057.8,
+      616.5,
+      1127.2,
+      684.7
+    ],
+    "confidence": 0.9525,
+    "is_shared_entity": false,
+    "is_ghost": false,
+    "zone": "",
+    "ip_address": "",
+    "source": "LIVE_RFDETR_INFERENCE",
+    "match_iou": 0.0
+  },
+  {
+    "node_id": "RFDET-006",
+    "canonical_id": "RFDET-006",
+    "class_name": "firewall",
+    "type": "firewall",
+    "bbox": [
+      1198.0,
+      716.3,
+      1267.0,
+      783.6
+    ],
+    "confidence": 0.9521,
+    "is_shared_entity": false,
+    "is_ghost": false,
+    "zone": "",
+    "ip_address": "",
+    "source": "LIVE_RFDETR_INFERENCE",
+    "match_iou": 0.0
+  },
+  {
+    "node_id": "RFDET-007",
+    "canonical_id": "RFDET-007",
+    "class_name": "firewall",
+    "type": "firewall",
+    "bbox": [
+      1197.6,
+      484.1,
+      1267.0,
+      551.6
+    ],
+    "confidence": 0.9516,
+    "is_shared_entity": false,
+    "is_ghost": false,
+    "zone": "",
+    "ip_address": "",
+    "source": "LIVE_RFDETR_INFERENCE",
+    "match_iou": 0.0
+  },
+  {
+    "node_id": "RFDET-008",
+    "canonical_id": "RFDET-008",
+    "class_name": "router",
+    "type": "router",
+    "bbox": [
+      525.5,
+      567.2,
+      594.2,
+      634.2
+    ],
+    "confidence": 0.9507,
+    "is_shared_entity": false,
+    "is_ghost": false,
+    "zone": "",
+    "ip_address": "",
+    "source": "LIVE_RFDETR_INFERENCE",
+    "match_iou": 0.0
+  },
+  {
+    "node_id": "RFDET-009",
+    "canonical_id": "RFDET-009",
+    "class_name": "firewall",
+    "type": "firewall",
+    "bbox": [
+      1057.7,
+      351.7,
+      1127.0,
+      418.0
+    ],
+    "confidence": 0.9498,
+    "is_shared_entity": false,
+    "is_ghost": false,
+    "zone": "",
+    "ip_address": "",
+    "source": "LIVE_RFDETR_INFERENCE",
+    "match_iou": 0.0
+  },
+  {
+    "node_id": "RFDET-010",
+    "canonical_id": "RFDET-010",
+    "class_name": "router",
+    "type": "router",
+    "bbox": [
+      778.4,
+      451.8,
+      845.8,
+      518.8
+    ],
+    "confidence": 0.9497,
+    "is_shared_entity": false,
+    "is_ghost": false,
+    "zone": "",
+    "ip_address": "",
+    "source": "LIVE_RFDETR_INFERENCE",
+    "match_iou": 0.0
+  },
+  {
+    "node_id": "RFDET-011",
+    "canonical_id": "RFDET-011",
+    "class_name": "firewall",
+    "type": "firewall",
+    "bbox": [
+      1196.5,
+      218.7,
+      1266.4,
+      286.3
+    ],
+    "confidence": 0.9423,
+    "is_shared_entity": false,
+    "is_ghost": false,
+    "zone": "",
+    "ip_address": "",
+    "source": "LIVE_RFDETR_INFERENCE",
+    "match_iou": 0.0
+  }
+]

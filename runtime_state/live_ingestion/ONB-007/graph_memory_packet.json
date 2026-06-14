@@ -1,0 +1,2140 @@
+{
+  "diagram_id": "datacenter_topology",
+  "run_id": "ONB-007",
+  "source": "live_rfdetr_http_service",
+  "original_image": "/workspace/shared/infragraph-ai/runtime_state/live_ingestion/ONB-007/original.png",
+  "detected_image": "/workspace/shared/infragraph-ai/runtime_state/live_ingestion/ONB-007/detected.png",
+  "detection_source": "LIVE_RFDETR_INFERENCE",
+  "evidence_source": "live_detector",
+  "annotation_path": "/workspace/shared/infragraph-ai/assets/onboarding/ONB-007/annotation.json",
+  "local_graph_path": "/workspace/shared/infragraph-ai/assets/onboarding/ONB-007/local_graph.json",
+  "node_count": 11,
+  "edge_count": 11,
+  "ocr_text_block_count": 59,
+  "connector_count": 11,
+  "devices": [
+    {
+      "node_id": "DC-FW-01",
+      "device_type": "firewall",
+      "display_label": "DC-FW-01",
+      "canonical_id": "DC-FW-01",
+      "ip_address": "10.173.1.1",
+      "zone": "DC Edge",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "True",
+      "evidence_source": "live_detector",
+      "confidence": "",
+      "bbox": "[254, 359, 306, 411]",
+      "x1": "254",
+      "y1": "359",
+      "x2": "306",
+      "y2": "411"
+    },
+    {
+      "node_id": "DC-FW-02",
+      "device_type": "firewall",
+      "display_label": "DC-FW-02",
+      "canonical_id": "DC-FW-02",
+      "ip_address": "10.173.1.2",
+      "zone": "DC Edge",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "live_detector",
+      "confidence": "",
+      "bbox": "[254, 575, 306, 627]",
+      "x1": "254",
+      "y1": "575",
+      "x2": "306",
+      "y2": "627"
+    },
+    {
+      "node_id": "DC-RTR-01",
+      "device_type": "router",
+      "display_label": "DC-RTR-01",
+      "canonical_id": "DC-RTR-01",
+      "ip_address": "10.173.1.3",
+      "zone": "DC Edge",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "True",
+      "evidence_source": "live_detector",
+      "confidence": "",
+      "bbox": "[86, 459, 138, 511]",
+      "x1": "86",
+      "y1": "459",
+      "x2": "138",
+      "y2": "511"
+    },
+    {
+      "node_id": "DC-CORE-SW-01",
+      "device_type": "switch",
+      "display_label": "DC-CORE-SW-01",
+      "canonical_id": "DC-CORE-SW-01",
+      "ip_address": "10.173.1.4",
+      "zone": "DC Core",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "live_detector",
+      "confidence": "",
+      "bbox": "[534, 359, 586, 411]",
+      "x1": "534",
+      "y1": "359",
+      "x2": "586",
+      "y2": "411"
+    },
+    {
+      "node_id": "DC-CORE-SW-02",
+      "device_type": "switch",
+      "display_label": "DC-CORE-SW-02",
+      "canonical_id": "DC-CORE-SW-02",
+      "ip_address": "10.173.1.5",
+      "zone": "DC Core",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "live_detector",
+      "confidence": "",
+      "bbox": "[534, 575, 586, 627]",
+      "x1": "534",
+      "y1": "575",
+      "x2": "586",
+      "y2": "627"
+    },
+    {
+      "node_id": "DC-AGG-SW-01",
+      "device_type": "switch",
+      "display_label": "DC-AGG-SW-01",
+      "canonical_id": "DC-AGG-SW-01",
+      "ip_address": "10.173.1.6",
+      "zone": "DC Aggregation",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "True",
+      "evidence_source": "live_detector",
+      "confidence": "",
+      "bbox": "[786, 459, 838, 511]",
+      "x1": "786",
+      "y1": "459",
+      "x2": "838",
+      "y2": "511"
+    },
+    {
+      "node_id": "DC-SRV-01",
+      "device_type": "server",
+      "display_label": "DC-SRV-01",
+      "canonical_id": "DC-SRV-01",
+      "ip_address": "10.173.1.7",
+      "zone": "DC Compute",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "live_detector",
+      "confidence": "",
+      "bbox": "[1206, 226, 1258, 278]",
+      "x1": "1206",
+      "y1": "226",
+      "x2": "1258",
+      "y2": "278"
+    },
+    {
+      "node_id": "DC-SRV-02",
+      "device_type": "server",
+      "display_label": "DC-SRV-02",
+      "canonical_id": "DC-SRV-02",
+      "ip_address": "10.173.1.8",
+      "zone": "DC Compute",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "live_detector",
+      "confidence": "",
+      "bbox": "[1066, 359, 1118, 411]",
+      "x1": "1066",
+      "y1": "359",
+      "x2": "1118",
+      "y2": "411"
+    },
+    {
+      "node_id": "DC-SRV-03",
+      "device_type": "server",
+      "display_label": "DC-SRV-03",
+      "canonical_id": "DC-SRV-03",
+      "ip_address": "10.173.1.9",
+      "zone": "DC Compute",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "live_detector",
+      "confidence": "",
+      "bbox": "[1206, 492, 1258, 544]",
+      "x1": "1206",
+      "y1": "492",
+      "x2": "1258",
+      "y2": "544"
+    },
+    {
+      "node_id": "DC-SRV-04",
+      "device_type": "server",
+      "display_label": "DC-SRV-04",
+      "canonical_id": "DC-SRV-04",
+      "ip_address": "10.173.1.10",
+      "zone": "DC Compute",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "live_detector",
+      "confidence": "",
+      "bbox": "[1066, 625, 1118, 677]",
+      "x1": "1066",
+      "y1": "625",
+      "x2": "1118",
+      "y2": "677"
+    },
+    {
+      "node_id": "DC-SRV-05",
+      "device_type": "server",
+      "display_label": "DC-SRV-05",
+      "canonical_id": "DC-SRV-05",
+      "ip_address": "10.173.1.11",
+      "zone": "DC Compute",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "live_detector",
+      "confidence": "",
+      "bbox": "[1206, 724, 1258, 776]",
+      "x1": "1206",
+      "y1": "724",
+      "x2": "1258",
+      "y2": "776"
+    }
+  ],
+  "connectors": [
+    {
+      "edge_id": "DC-RTR-01\u2192DC-FW-01",
+      "source": "DC-RTR-01",
+      "target": "DC-FW-01",
+      "relationship": "routes_to",
+      "protocol": "",
+      "label": "MPLS",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "live_detector",
+      "confidence": ""
+    },
+    {
+      "edge_id": "DC-RTR-01\u2192DC-FW-02",
+      "source": "DC-RTR-01",
+      "target": "DC-FW-02",
+      "relationship": "routes_to",
+      "protocol": "",
+      "label": "Backup",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "live_detector",
+      "confidence": ""
+    },
+    {
+      "edge_id": "DC-FW-01\u2192DC-CORE-SW-01",
+      "source": "DC-FW-01",
+      "target": "DC-CORE-SW-01",
+      "relationship": "secured_by",
+      "protocol": "",
+      "label": "DMZ",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "live_detector",
+      "confidence": ""
+    },
+    {
+      "edge_id": "DC-FW-02\u2192DC-CORE-SW-02",
+      "source": "DC-FW-02",
+      "target": "DC-CORE-SW-02",
+      "relationship": "secured_by",
+      "protocol": "",
+      "label": "VPN",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "live_detector",
+      "confidence": ""
+    },
+    {
+      "edge_id": "DC-CORE-SW-01\u2192DC-AGG-SW-01",
+      "source": "DC-CORE-SW-01",
+      "target": "DC-AGG-SW-01",
+      "relationship": "connected_to",
+      "protocol": "",
+      "label": "10G",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "live_detector",
+      "confidence": ""
+    },
+    {
+      "edge_id": "DC-CORE-SW-02\u2192DC-AGG-SW-01",
+      "source": "DC-CORE-SW-02",
+      "target": "DC-AGG-SW-01",
+      "relationship": "connected_to",
+      "protocol": "",
+      "label": "10G",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "live_detector",
+      "confidence": ""
+    },
+    {
+      "edge_id": "DC-AGG-SW-01\u2192DC-SRV-01",
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-01",
+      "relationship": "connected_to",
+      "protocol": "",
+      "label": "VLAN",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "live_detector",
+      "confidence": ""
+    },
+    {
+      "edge_id": "DC-AGG-SW-01\u2192DC-SRV-02",
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-02",
+      "relationship": "connected_to",
+      "protocol": "",
+      "label": "VLAN",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "live_detector",
+      "confidence": ""
+    },
+    {
+      "edge_id": "DC-AGG-SW-01\u2192DC-SRV-03",
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-03",
+      "relationship": "connected_to",
+      "protocol": "",
+      "label": "VLAN",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "live_detector",
+      "confidence": ""
+    },
+    {
+      "edge_id": "DC-AGG-SW-01\u2192DC-SRV-04",
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-04",
+      "relationship": "connected_to",
+      "protocol": "",
+      "label": "VLAN",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "live_detector",
+      "confidence": ""
+    },
+    {
+      "edge_id": "DC-AGG-SW-01\u2192DC-SRV-05",
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-05",
+      "relationship": "connected_to",
+      "protocol": "",
+      "label": "VLAN",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "live_detector",
+      "confidence": ""
+    }
+  ],
+  "interfaces": [
+    {
+      "node_id": "DC-FW-01",
+      "device_type": "firewall",
+      "ip_address": "10.173.1.1",
+      "interface": "",
+      "vlan": "",
+      "zone": "DC Edge",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "DC-FW-02",
+      "device_type": "firewall",
+      "ip_address": "10.173.1.2",
+      "interface": "",
+      "vlan": "",
+      "zone": "DC Edge",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "DC-RTR-01",
+      "device_type": "router",
+      "ip_address": "10.173.1.3",
+      "interface": "",
+      "vlan": "",
+      "zone": "DC Edge",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "DC-CORE-SW-01",
+      "device_type": "switch",
+      "ip_address": "10.173.1.4",
+      "interface": "",
+      "vlan": "",
+      "zone": "DC Core",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "DC-CORE-SW-02",
+      "device_type": "switch",
+      "ip_address": "10.173.1.5",
+      "interface": "",
+      "vlan": "",
+      "zone": "DC Core",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "DC-AGG-SW-01",
+      "device_type": "switch",
+      "ip_address": "10.173.1.6",
+      "interface": "",
+      "vlan": "",
+      "zone": "DC Aggregation",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "DC-SRV-01",
+      "device_type": "server",
+      "ip_address": "10.173.1.7",
+      "interface": "",
+      "vlan": "",
+      "zone": "DC Compute",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "DC-SRV-02",
+      "device_type": "server",
+      "ip_address": "10.173.1.8",
+      "interface": "",
+      "vlan": "",
+      "zone": "DC Compute",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "DC-SRV-03",
+      "device_type": "server",
+      "ip_address": "10.173.1.9",
+      "interface": "",
+      "vlan": "",
+      "zone": "DC Compute",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "DC-SRV-04",
+      "device_type": "server",
+      "ip_address": "10.173.1.10",
+      "interface": "",
+      "vlan": "",
+      "zone": "DC Compute",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "DC-SRV-05",
+      "device_type": "server",
+      "ip_address": "10.173.1.11",
+      "interface": "",
+      "vlan": "",
+      "zone": "DC Compute",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    }
+  ],
+  "ocr_text": [
+    {
+      "text": "DC-FW-01",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[240, 415, 320, 429]",
+      "x1": "240",
+      "y1": "415",
+      "x2": "320",
+      "y2": "429",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.173.1.1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[240, 343, 320, 355]",
+      "x1": "240",
+      "y1": "343",
+      "x2": "320",
+      "y2": "355",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DC-FW-02",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[240, 631, 320, 645]",
+      "x1": "240",
+      "y1": "631",
+      "x2": "320",
+      "y2": "645",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.173.1.2",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[240, 559, 320, 571]",
+      "x1": "240",
+      "y1": "559",
+      "x2": "320",
+      "y2": "571",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DC-RTR-01",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[67, 515, 157, 529]",
+      "x1": "67",
+      "y1": "515",
+      "x2": "157",
+      "y2": "529",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.173.1.3",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[72, 443, 152, 455]",
+      "x1": "72",
+      "y1": "443",
+      "x2": "152",
+      "y2": "455",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DC-CORE-SW-01",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[495, 415, 625, 429]",
+      "x1": "495",
+      "y1": "415",
+      "x2": "625",
+      "y2": "429",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.173.1.4",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[520, 343, 600, 355]",
+      "x1": "520",
+      "y1": "343",
+      "x2": "600",
+      "y2": "355",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DC-CORE-SW-02",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[495, 631, 625, 645]",
+      "x1": "495",
+      "y1": "631",
+      "x2": "625",
+      "y2": "645",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.173.1.5",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[520, 559, 600, 571]",
+      "x1": "520",
+      "y1": "559",
+      "x2": "600",
+      "y2": "571",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DC-AGG-SW-01",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[752, 515, 872, 529]",
+      "x1": "752",
+      "y1": "515",
+      "x2": "872",
+      "y2": "529",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.173.1.6",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[772, 443, 852, 455]",
+      "x1": "772",
+      "y1": "443",
+      "x2": "852",
+      "y2": "455",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DC-SRV-01",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1187, 282, 1277, 296]",
+      "x1": "1187",
+      "y1": "282",
+      "x2": "1277",
+      "y2": "296",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.173.1.7",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1192, 210, 1272, 222]",
+      "x1": "1192",
+      "y1": "210",
+      "x2": "1272",
+      "y2": "222",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DC-SRV-02",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1047, 415, 1137, 429]",
+      "x1": "1047",
+      "y1": "415",
+      "x2": "1137",
+      "y2": "429",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.173.1.8",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1052, 343, 1132, 355]",
+      "x1": "1052",
+      "y1": "343",
+      "x2": "1132",
+      "y2": "355",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DC-SRV-03",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1187, 548, 1277, 562]",
+      "x1": "1187",
+      "y1": "548",
+      "x2": "1277",
+      "y2": "562",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.173.1.9",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1192, 476, 1272, 488]",
+      "x1": "1192",
+      "y1": "476",
+      "x2": "1272",
+      "y2": "488",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DC-SRV-04",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1047, 681, 1137, 695]",
+      "x1": "1047",
+      "y1": "681",
+      "x2": "1137",
+      "y2": "695",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.173.1.10",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1048, 609, 1136, 621]",
+      "x1": "1048",
+      "y1": "609",
+      "x2": "1136",
+      "y2": "621",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DC-SRV-05",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1187, 780, 1277, 794]",
+      "x1": "1187",
+      "y1": "780",
+      "x2": "1277",
+      "y2": "794",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.173.1.11",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1188, 708, 1276, 720]",
+      "x1": "1188",
+      "y1": "708",
+      "x2": "1276",
+      "y2": "720",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DC Edge",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[52, 244, 94, 260]",
+      "x1": "52",
+      "y1": "244",
+      "x2": "94",
+      "y2": "260",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DC Core",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[458, 244, 500, 260]",
+      "x1": "458",
+      "y1": "244",
+      "x2": "500",
+      "y2": "260",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DC Aggregation",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[738, 310, 822, 326]",
+      "x1": "738",
+      "y1": "310",
+      "x2": "822",
+      "y2": "326",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DC Compute",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[962, 194, 1022, 210]",
+      "x1": "962",
+      "y1": "194",
+      "x2": "1022",
+      "y2": "210",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "MPLS",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[172, 425, 220, 445]",
+      "x1": "172",
+      "y1": "425",
+      "x2": "220",
+      "y2": "445",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[120, 489, 140, 501]",
+      "x1": "120",
+      "y1": "489",
+      "x2": "140",
+      "y2": "501",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "ge-0/0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[240, 369, 272, 381]",
+      "x1": "240",
+      "y1": "369",
+      "x2": "272",
+      "y2": "381",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Backup",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[166, 533, 226, 553]",
+      "x1": "166",
+      "y1": "533",
+      "x2": "226",
+      "y2": "553",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth0",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[120, 489, 136, 501]",
+      "x1": "120",
+      "y1": "489",
+      "x2": "136",
+      "y2": "501",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/2",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[252, 585, 272, 597]",
+      "x1": "252",
+      "y1": "585",
+      "x2": "272",
+      "y2": "597",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DMZ",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[396, 375, 444, 395]",
+      "x1": "396",
+      "y1": "375",
+      "x2": "444",
+      "y2": "395",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "ge-0/0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[288, 389, 320, 401]",
+      "x1": "288",
+      "y1": "389",
+      "x2": "320",
+      "y2": "401",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[536, 369, 552, 381]",
+      "x1": "536",
+      "y1": "369",
+      "x2": "552",
+      "y2": "381",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "VPN",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[396, 591, 444, 611]",
+      "x1": "396",
+      "y1": "591",
+      "x2": "444",
+      "y2": "611",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/2",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[288, 605, 308, 617]",
+      "x1": "288",
+      "y1": "605",
+      "x2": "308",
+      "y2": "617",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[532, 585, 552, 597]",
+      "x1": "532",
+      "y1": "585",
+      "x2": "552",
+      "y2": "597",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10G",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[662, 425, 710, 445]",
+      "x1": "662",
+      "y1": "425",
+      "x2": "710",
+      "y2": "445",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[568, 389, 584, 401]",
+      "x1": "568",
+      "y1": "389",
+      "x2": "584",
+      "y2": "401",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth0",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[788, 469, 804, 481]",
+      "x1": "788",
+      "y1": "469",
+      "x2": "804",
+      "y2": "481",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10G",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[662, 533, 710, 553]",
+      "x1": "662",
+      "y1": "533",
+      "x2": "710",
+      "y2": "553",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[568, 605, 588, 617]",
+      "x1": "568",
+      "y1": "605",
+      "x2": "588",
+      "y2": "617",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "ge-0/0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[772, 469, 804, 481]",
+      "x1": "772",
+      "y1": "469",
+      "x2": "804",
+      "y2": "481",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "VLAN",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[998, 358, 1046, 378]",
+      "x1": "998",
+      "y1": "358",
+      "x2": "1046",
+      "y2": "378",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth0",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[820, 489, 836, 501]",
+      "x1": "820",
+      "y1": "489",
+      "x2": "836",
+      "y2": "501",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/2",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1204, 236, 1224, 248]",
+      "x1": "1204",
+      "y1": "236",
+      "x2": "1224",
+      "y2": "248",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "VLAN",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[928, 425, 976, 445]",
+      "x1": "928",
+      "y1": "425",
+      "x2": "976",
+      "y2": "445",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "ge-0/0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[820, 489, 852, 501]",
+      "x1": "820",
+      "y1": "489",
+      "x2": "852",
+      "y2": "501",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1068, 369, 1084, 381]",
+      "x1": "1068",
+      "y1": "369",
+      "x2": "1084",
+      "y2": "381",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "VLAN",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[998, 491, 1046, 511]",
+      "x1": "998",
+      "y1": "491",
+      "x2": "1046",
+      "y2": "511",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/2",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[820, 489, 840, 501]",
+      "x1": "820",
+      "y1": "489",
+      "x2": "840",
+      "y2": "501",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1204, 502, 1224, 514]",
+      "x1": "1204",
+      "y1": "502",
+      "x2": "1224",
+      "y2": "514",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "VLAN",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[928, 558, 976, 578]",
+      "x1": "928",
+      "y1": "558",
+      "x2": "976",
+      "y2": "578",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[820, 489, 836, 501]",
+      "x1": "820",
+      "y1": "489",
+      "x2": "836",
+      "y2": "501",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth0",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1068, 635, 1084, 647]",
+      "x1": "1068",
+      "y1": "635",
+      "x2": "1084",
+      "y2": "647",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "VLAN",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[998, 607, 1046, 627]",
+      "x1": "998",
+      "y1": "607",
+      "x2": "1046",
+      "y2": "627",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[820, 489, 840, 501]",
+      "x1": "820",
+      "y1": "489",
+      "x2": "840",
+      "y2": "501",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "ge-0/0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1192, 734, 1224, 746]",
+      "x1": "1192",
+      "y1": "734",
+      "x2": "1224",
+      "y2": "746",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    }
+  ],
+  "nodes": [
+    {
+      "node_id": "DC-FW-01",
+      "type": "firewall",
+      "ip_address": "10.173.1.1",
+      "zone": "DC Edge",
+      "shared": true,
+      "evidence_source": "live_detector"
+    },
+    {
+      "node_id": "DC-FW-02",
+      "type": "firewall",
+      "ip_address": "10.173.1.2",
+      "zone": "DC Edge",
+      "shared": false,
+      "evidence_source": "live_detector"
+    },
+    {
+      "node_id": "DC-RTR-01",
+      "type": "router",
+      "ip_address": "10.173.1.3",
+      "zone": "DC Edge",
+      "shared": true,
+      "evidence_source": "live_detector"
+    },
+    {
+      "node_id": "DC-CORE-SW-01",
+      "type": "switch",
+      "ip_address": "10.173.1.4",
+      "zone": "DC Core",
+      "shared": false,
+      "evidence_source": "live_detector"
+    },
+    {
+      "node_id": "DC-CORE-SW-02",
+      "type": "switch",
+      "ip_address": "10.173.1.5",
+      "zone": "DC Core",
+      "shared": false,
+      "evidence_source": "live_detector"
+    },
+    {
+      "node_id": "DC-AGG-SW-01",
+      "type": "switch",
+      "ip_address": "10.173.1.6",
+      "zone": "DC Aggregation",
+      "shared": true,
+      "evidence_source": "live_detector"
+    },
+    {
+      "node_id": "DC-SRV-01",
+      "type": "server",
+      "ip_address": "10.173.1.7",
+      "zone": "DC Compute",
+      "shared": false,
+      "evidence_source": "live_detector"
+    },
+    {
+      "node_id": "DC-SRV-02",
+      "type": "server",
+      "ip_address": "10.173.1.8",
+      "zone": "DC Compute",
+      "shared": false,
+      "evidence_source": "live_detector"
+    },
+    {
+      "node_id": "DC-SRV-03",
+      "type": "server",
+      "ip_address": "10.173.1.9",
+      "zone": "DC Compute",
+      "shared": false,
+      "evidence_source": "live_detector"
+    },
+    {
+      "node_id": "DC-SRV-04",
+      "type": "server",
+      "ip_address": "10.173.1.10",
+      "zone": "DC Compute",
+      "shared": false,
+      "evidence_source": "live_detector"
+    },
+    {
+      "node_id": "DC-SRV-05",
+      "type": "server",
+      "ip_address": "10.173.1.11",
+      "zone": "DC Compute",
+      "shared": false,
+      "evidence_source": "live_detector"
+    }
+  ],
+  "edges": [
+    {
+      "source": "DC-RTR-01",
+      "target": "DC-FW-01",
+      "relationship": "routes_to",
+      "label": "MPLS"
+    },
+    {
+      "source": "DC-RTR-01",
+      "target": "DC-FW-02",
+      "relationship": "routes_to",
+      "label": "Backup"
+    },
+    {
+      "source": "DC-FW-01",
+      "target": "DC-CORE-SW-01",
+      "relationship": "secured_by",
+      "label": "DMZ"
+    },
+    {
+      "source": "DC-FW-02",
+      "target": "DC-CORE-SW-02",
+      "relationship": "secured_by",
+      "label": "VPN"
+    },
+    {
+      "source": "DC-CORE-SW-01",
+      "target": "DC-AGG-SW-01",
+      "relationship": "connected_to",
+      "label": "10G"
+    },
+    {
+      "source": "DC-CORE-SW-02",
+      "target": "DC-AGG-SW-01",
+      "relationship": "connected_to",
+      "label": "10G"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-01",
+      "relationship": "connected_to",
+      "label": "VLAN"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-02",
+      "relationship": "connected_to",
+      "label": "VLAN"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-03",
+      "relationship": "connected_to",
+      "label": "VLAN"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-04",
+      "relationship": "connected_to",
+      "label": "VLAN"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-05",
+      "relationship": "connected_to",
+      "label": "VLAN"
+    }
+  ],
+  "confidence_summary": {
+    "device_detection_avg": "\u2014",
+    "edge_extraction_avg": "\u2014",
+    "ocr_text_blocks": 59,
+    "connector_count": 11,
+    "low_confidence_items": 0
+  },
+  "text_blocks": [
+    {
+      "text": "DC-FW-01",
+      "bbox": [
+        240,
+        415,
+        320,
+        429
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.173.1.1",
+      "bbox": [
+        240,
+        343,
+        320,
+        355
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "DC-FW-02",
+      "bbox": [
+        240,
+        631,
+        320,
+        645
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.173.1.2",
+      "bbox": [
+        240,
+        559,
+        320,
+        571
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "DC-RTR-01",
+      "bbox": [
+        67,
+        515,
+        157,
+        529
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.173.1.3",
+      "bbox": [
+        72,
+        443,
+        152,
+        455
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "DC-CORE-SW-01",
+      "bbox": [
+        495,
+        415,
+        625,
+        429
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.173.1.4",
+      "bbox": [
+        520,
+        343,
+        600,
+        355
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "DC-CORE-SW-02",
+      "bbox": [
+        495,
+        631,
+        625,
+        645
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.173.1.5",
+      "bbox": [
+        520,
+        559,
+        600,
+        571
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "DC-AGG-SW-01",
+      "bbox": [
+        752,
+        515,
+        872,
+        529
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.173.1.6",
+      "bbox": [
+        772,
+        443,
+        852,
+        455
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "DC-SRV-01",
+      "bbox": [
+        1187,
+        282,
+        1277,
+        296
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.173.1.7",
+      "bbox": [
+        1192,
+        210,
+        1272,
+        222
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "DC-SRV-02",
+      "bbox": [
+        1047,
+        415,
+        1137,
+        429
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.173.1.8",
+      "bbox": [
+        1052,
+        343,
+        1132,
+        355
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "DC-SRV-03",
+      "bbox": [
+        1187,
+        548,
+        1277,
+        562
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.173.1.9",
+      "bbox": [
+        1192,
+        476,
+        1272,
+        488
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "DC-SRV-04",
+      "bbox": [
+        1047,
+        681,
+        1137,
+        695
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.173.1.10",
+      "bbox": [
+        1048,
+        609,
+        1136,
+        621
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "DC-SRV-05",
+      "bbox": [
+        1187,
+        780,
+        1277,
+        794
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.173.1.11",
+      "bbox": [
+        1188,
+        708,
+        1276,
+        720
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "DC Edge",
+      "bbox": [
+        52,
+        244,
+        94,
+        260
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "DC Core",
+      "bbox": [
+        458,
+        244,
+        500,
+        260
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "DC Aggregation",
+      "bbox": [
+        738,
+        310,
+        822,
+        326
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "DC Compute",
+      "bbox": [
+        962,
+        194,
+        1022,
+        210
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "MPLS",
+      "bbox": [
+        172,
+        425,
+        220,
+        445
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        120,
+        489,
+        140,
+        501
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        240,
+        369,
+        272,
+        381
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Backup",
+      "bbox": [
+        166,
+        533,
+        226,
+        553
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        120,
+        489,
+        136,
+        501
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        252,
+        585,
+        272,
+        597
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "DMZ",
+      "bbox": [
+        396,
+        375,
+        444,
+        395
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        288,
+        389,
+        320,
+        401
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        536,
+        369,
+        552,
+        381
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "VPN",
+      "bbox": [
+        396,
+        591,
+        444,
+        611
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        288,
+        605,
+        308,
+        617
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        532,
+        585,
+        552,
+        597
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "10G",
+      "bbox": [
+        662,
+        425,
+        710,
+        445
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        568,
+        389,
+        584,
+        401
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        788,
+        469,
+        804,
+        481
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "10G",
+      "bbox": [
+        662,
+        533,
+        710,
+        553
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        568,
+        605,
+        588,
+        617
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        772,
+        469,
+        804,
+        481
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "VLAN",
+      "bbox": [
+        998,
+        358,
+        1046,
+        378
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        820,
+        489,
+        836,
+        501
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        1204,
+        236,
+        1224,
+        248
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "VLAN",
+      "bbox": [
+        928,
+        425,
+        976,
+        445
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        820,
+        489,
+        852,
+        501
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        1068,
+        369,
+        1084,
+        381
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "VLAN",
+      "bbox": [
+        998,
+        491,
+        1046,
+        511
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        820,
+        489,
+        840,
+        501
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        1204,
+        502,
+        1224,
+        514
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "VLAN",
+      "bbox": [
+        928,
+        558,
+        976,
+        578
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        820,
+        489,
+        836,
+        501
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        1068,
+        635,
+        1084,
+        647
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "VLAN",
+      "bbox": [
+        998,
+        607,
+        1046,
+        627
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        820,
+        489,
+        840,
+        501
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        1192,
+        734,
+        1224,
+        746
+      ],
+      "text_type": "interface_label"
+    }
+  ],
+  "source_label": "Source: LIVE_RFDETR_INFERENCE",
+  "annotation_preview": {
+    "rendered": false,
+    "boxes_rendered": 0,
+    "boxes_skipped": 0,
+    "boxes_skipped_large": 0,
+    "connectors_rendered": 0,
+    "connectors_skipped": 0,
+    "connectors_skipped_long": 0,
+    "overlay_mode": "clean",
+    "draw_connectors": false,
+    "renderer_version": "v3_clean_overlay_v1"
+  },
+  "runtime_mode": "LIVE_RFDETR_INFERENCE",
+  "absorption_mode": "SESSION_MEMORY_ABSORPTION",
+  "rfdetr_subprocess": {
+    "ok": true,
+    "source": "live_rfdetr_http_service",
+    "detector": "RF-DETR",
+    "python_executable": "/usr/bin/python",
+    "checkpoint_path": "/workspace/shared/infragraph-ai/model_artifacts/rfdetr_v3/checkpoint_best_total.pth",
+    "checkpoint_load_strategy": "constructor_pretrain_weights",
+    "model_class": "RFDETRBase",
+    "image_path": "/workspace/shared/infragraph-ai/assets/onboarding/ONB-007/original.png",
+    "inference_runtime_ms": 19001,
+    "inference_strategy": "predict(image)",
+    "detections": [
+      {
+        "label": "cls0",
+        "device_type": "server",
+        "confidence": 0.9644,
+        "bbox": {
+          "x1": 78.1,
+          "y1": 451.3,
+          "x2": 145.2,
+          "y2": 518.5
+        }
+      },
+      {
+        "label": "switch",
+        "device_type": "switch",
+        "confidence": 0.9607,
+        "bbox": {
+          "x1": 246.6,
+          "y1": 567.8,
+          "x2": 313.4,
+          "y2": 635.1
+        }
+      },
+      {
+        "label": "switch",
+        "device_type": "switch",
+        "confidence": 0.9577,
+        "bbox": {
+          "x1": 246.3,
+          "y1": 350.1,
+          "x2": 314.3,
+          "y2": 419.0
+        }
+      },
+      {
+        "label": "router",
+        "device_type": "router",
+        "confidence": 0.9556,
+        "bbox": {
+          "x1": 525.5,
+          "y1": 351.3,
+          "x2": 594.1,
+          "y2": 418.2
+        }
+      },
+      {
+        "label": "firewall",
+        "device_type": "firewall",
+        "confidence": 0.9525,
+        "bbox": {
+          "x1": 1057.8,
+          "y1": 616.5,
+          "x2": 1127.2,
+          "y2": 684.7
+        }
+      },
+      {
+        "label": "firewall",
+        "device_type": "firewall",
+        "confidence": 0.9521,
+        "bbox": {
+          "x1": 1198.0,
+          "y1": 716.3,
+          "x2": 1267.0,
+          "y2": 783.6
+        }
+      },
+      {
+        "label": "firewall",
+        "device_type": "firewall",
+        "confidence": 0.9516,
+        "bbox": {
+          "x1": 1197.6,
+          "y1": 484.1,
+          "x2": 1267.0,
+          "y2": 551.6
+        }
+      },
+      {
+        "label": "router",
+        "device_type": "router",
+        "confidence": 0.9507,
+        "bbox": {
+          "x1": 525.5,
+          "y1": 567.2,
+          "x2": 594.2,
+          "y2": 634.2
+        }
+      },
+      {
+        "label": "firewall",
+        "device_type": "firewall",
+        "confidence": 0.9498,
+        "bbox": {
+          "x1": 1057.7,
+          "y1": 351.7,
+          "x2": 1127.0,
+          "y2": 418.0
+        }
+      },
+      {
+        "label": "router",
+        "device_type": "router",
+        "confidence": 0.9497,
+        "bbox": {
+          "x1": 778.4,
+          "y1": 451.8,
+          "x2": 845.8,
+          "y2": 518.8
+        }
+      },
+      {
+        "label": "firewall",
+        "device_type": "firewall",
+        "confidence": 0.9423,
+        "bbox": {
+          "x1": 1196.5,
+          "y1": 218.7,
+          "x2": 1266.4,
+          "y2": 286.3
+        }
+      }
+    ],
+    "annotated_image_path": "/tmp/infragraph_rfdetr_http_zzyoczhp/infragraph_rfdetr_overlay.png",
+    "detector_runtime_mode": "live_rfdetr_http_service",
+    "service_python_executable": "/usr/bin/python",
+    "returncode": 0,
+    "stdout_preview": "",
+    "stderr_preview": "/usr/local/lib/python3.12/dist-packages/deprecate/proxy.py:168: FutureWarning: The `RFDETRBase` was deprecated since v1.7.0. It will be removed in v2.0.0.\n  stream(msg)\n[2026-06-14 14:12:43] [WARNING] rf-detr - Checkpoint has 8 classes but model is configured for 90. Using checkpoint class count (8). Pass num_classes=8 to suppress this warning.\n[2026-06-14 14:12:43] [WARNING] rf-detr - load_pretrain_weights: args.num_queries absent; inferred ckpt_num_queries=300 from tensor rows 3900 \u00f7 ckpt_group_detr=13.\n[2026-06-14 14:12:44] [WARNING] rf-detr - Model is not optimized for inference. Latency may be higher than expected. You can optimize the model for inference by calling model.optimize_for_inference().\n[transformers] `use_return_dict` is deprecated! Use `return_dict` instead!\n",
+    "service_url": "http://127.0.0.1:8010"
+  }
+}

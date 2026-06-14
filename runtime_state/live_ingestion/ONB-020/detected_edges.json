@@ -1,0 +1,56 @@
+[
+  {
+    "source": "AD-01",
+    "target": "IAM-01",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_000",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "IAM-01",
+    "target": "MON-01",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_001",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "DNS-01",
+    "target": "NTP-01",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_002",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "MON-01",
+    "target": "SYSLOG-01",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_003",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "APP-01",
+    "target": "IAM-01",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_004",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "BR-APP-01",
+    "target": "DNS-01",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_005",
+    "source_type": "annotation_connector"
+  }
+]

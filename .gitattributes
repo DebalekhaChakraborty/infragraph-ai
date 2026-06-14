@@ -28,6 +28,7 @@
 *.png filter=lfs diff=lfs merge=lfs -text
 *.jpg filter=lfs diff=lfs merge=lfs -text
 *.jpeg filter=lfs diff=lfs merge=lfs -text
+*.sqlite3 filter=lfs diff=lfs merge=lfs -text
 runtime_state/**/*.csv filter=lfs diff=lfs merge=lfs -text
 outputs/**/*.csv filter=lfs diff=lfs merge=lfs -text
 data/**/*.csv filter=lfs diff=lfs merge=lfs -text

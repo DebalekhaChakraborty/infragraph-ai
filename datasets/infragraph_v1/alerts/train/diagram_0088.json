@@ -1,0 +1,34 @@
+{
+  "scenario_id": "diagram_0088_incident_001",
+  "root_cause": "WAN-01",
+  "root_cause_type": "cloud_or_wan",
+  "alerts": [
+    {
+      "node": "WAN-01",
+      "alert_type": "BGP session down",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "FW-EXT",
+      "alert_type": "WAN packet loss",
+      "severity": "major",
+      "time_offset_min": 2
+    },
+    {
+      "node": "FW-EXT",
+      "alert_type": "Site unreachable",
+      "severity": "critical",
+      "time_offset_min": 4
+    },
+    {
+      "node": "FW-EXT",
+      "alert_type": "Downstream degradation",
+      "severity": "minor",
+      "time_offset_min": 6
+    }
+  ],
+  "expected_impacted_nodes": [
+    "FW-EXT"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "scenario_id": "diagram_0247_incident_001",
+  "root_cause": "CLOUD-01",
+  "root_cause_type": "cloud_or_wan",
+  "alerts": [
+    {
+      "node": "CLOUD-01",
+      "alert_type": "BGP session down",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "DB-01",
+      "alert_type": "WAN packet loss",
+      "severity": "major",
+      "time_offset_min": 2
+    }
+  ],
+  "expected_impacted_nodes": [
+    "SW-01",
+    "DB-01"
+  ]
+}

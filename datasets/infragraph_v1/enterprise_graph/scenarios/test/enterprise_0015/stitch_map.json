@@ -1,0 +1,40 @@
+{
+  "shared_entities": [
+    {
+      "canonical_id": "DC-FW-01",
+      "appears_in": [
+        {
+          "diagram_id": "wan_topology",
+          "local_alias": "WAN-DC-FW-01"
+        },
+        {
+          "diagram_id": "datacenter_topology",
+          "local_alias": "DC-FW-01"
+        }
+      ]
+    }
+  ],
+  "cross_diagram_edges": [
+    {
+      "source": "BR-RTR-01",
+      "target": "WAN-PE-01",
+      "relation": "wan_dependency",
+      "source_diagram": "branch_topology",
+      "target_diagram": "wan_topology"
+    },
+    {
+      "source": "WAN-MPLS-CORE",
+      "target": "DC-FW-01",
+      "relation": "routes_to",
+      "source_diagram": "wan_topology",
+      "target_diagram": "datacenter_topology"
+    },
+    {
+      "source": "SVC-DNS-01",
+      "target": "BR-SW-01",
+      "relation": "serves",
+      "source_diagram": "shared_services_topology",
+      "target_diagram": "branch_topology"
+    }
+  ]
+}

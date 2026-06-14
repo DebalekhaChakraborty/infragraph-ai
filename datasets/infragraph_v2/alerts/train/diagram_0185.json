@@ -1,0 +1,22 @@
+{
+  "scenario_id": "diagram_0185_incident_001",
+  "root_cause": "APP-02",
+  "root_cause_type": "server",
+  "alerts": [
+    {
+      "node": "APP-02",
+      "alert_type": "CPU utilization > 95%",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "SW-01",
+      "alert_type": "Service unavailable",
+      "severity": "major",
+      "time_offset_min": 2
+    }
+  ],
+  "expected_impacted_nodes": [
+    "SW-01"
+  ]
+}

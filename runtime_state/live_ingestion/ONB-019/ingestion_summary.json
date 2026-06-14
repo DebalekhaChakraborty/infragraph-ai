@@ -1,0 +1,133 @@
+{
+  "diagram_id": "shared_services_topology",
+  "run_id": "ONB-019",
+  "source": "live_rfdetr_http_service",
+  "detection_source": "LIVE_RFDETR_INFERENCE",
+  "runtime_mode": "LIVE_RFDETR_INFERENCE",
+  "node_count": 8,
+  "edge_count": 6,
+  "annotation_preview": {
+    "rendered": false,
+    "boxes_rendered": 0,
+    "boxes_skipped": 0,
+    "boxes_skipped_large": 0,
+    "connectors_rendered": 0,
+    "connectors_skipped": 0,
+    "connectors_skipped_long": 0,
+    "overlay_mode": "clean",
+    "draw_connectors": false,
+    "renderer_version": "v3_clean_overlay_v1"
+  },
+  "rfdetr_inference_time_s": 19.052,
+  "rfdetr_error": "",
+  "use_live_rfdetr": false,
+  "rfdetr_subprocess": {
+    "ok": true,
+    "source": "live_rfdetr_http_service",
+    "detector": "RF-DETR",
+    "python_executable": "/usr/bin/python",
+    "checkpoint_path": "/workspace/shared/infragraph-ai/model_artifacts/rfdetr_v3/checkpoint_best_total.pth",
+    "checkpoint_load_strategy": "constructor_pretrain_weights",
+    "model_class": "RFDETRBase",
+    "image_path": "/workspace/shared/infragraph-ai/assets/onboarding/ONB-019/original.png",
+    "inference_runtime_ms": 19052,
+    "inference_strategy": "predict(image)",
+    "detections": [
+      {
+        "label": "cloud_or_wan",
+        "device_type": "cloud_or_wan",
+        "confidence": 0.9603,
+        "bbox": {
+          "x1": 749.0,
+          "y1": 550.2,
+          "x2": 819.5,
+          "y2": 618.2
+        }
+      },
+      {
+        "label": "firewall",
+        "device_type": "firewall",
+        "confidence": 0.9584,
+        "bbox": {
+          "x1": 1030.2,
+          "y1": 582.9,
+          "x2": 1098.5,
+          "y2": 650.9
+        }
+      },
+      {
+        "label": "cloud_or_wan",
+        "device_type": "cloud_or_wan",
+        "confidence": 0.9553,
+        "bbox": {
+          "x1": 749.6,
+          "y1": 285.2,
+          "x2": 819.2,
+          "y2": 352.6
+        }
+      },
+      {
+        "label": "cloud_or_wan",
+        "device_type": "cloud_or_wan",
+        "confidence": 0.9532,
+        "bbox": {
+          "x1": 1029.4,
+          "y1": 350.7,
+          "x2": 1098.6,
+          "y2": 418.2
+        }
+      },
+      {
+        "label": "firewall",
+        "device_type": "firewall",
+        "confidence": 0.9518,
+        "bbox": {
+          "x1": 1254.6,
+          "y1": 267.5,
+          "x2": 1322.2,
+          "y2": 336.8
+        }
+      },
+      {
+        "label": "firewall",
+        "device_type": "firewall",
+        "confidence": 0.951,
+        "bbox": {
+          "x1": 1254.4,
+          "y1": 549.6,
+          "x2": 1322.8,
+          "y2": 617.8
+        }
+      },
+      {
+        "label": "cloud_or_wan",
+        "device_type": "cloud_or_wan",
+        "confidence": 0.9499,
+        "bbox": {
+          "x1": 469.8,
+          "y1": 384.3,
+          "x2": 538.4,
+          "y2": 451.9
+        }
+      },
+      {
+        "label": "cloud_or_wan",
+        "device_type": "cloud_or_wan",
+        "confidence": 0.9495,
+        "bbox": {
+          "x1": 217.4,
+          "y1": 384.2,
+          "x2": 285.5,
+          "y2": 451.9
+        }
+      }
+    ],
+    "annotated_image_path": "/tmp/infragraph_rfdetr_http_z26fe3i9/infragraph_rfdetr_overlay.png",
+    "detector_runtime_mode": "live_rfdetr_http_service",
+    "service_python_executable": "/usr/bin/python",
+    "returncode": 0,
+    "stdout_preview": "",
+    "stderr_preview": "/usr/local/lib/python3.12/dist-packages/deprecate/proxy.py:168: FutureWarning: The `RFDETRBase` was deprecated since v1.7.0. It will be removed in v2.0.0.\n  stream(msg)\n[2026-06-14 13:05:24] [WARNING] rf-detr - Checkpoint has 8 classes but model is configured for 90. Using checkpoint class count (8). Pass num_classes=8 to suppress this warning.\n[2026-06-14 13:05:24] [WARNING] rf-detr - load_pretrain_weights: args.num_queries absent; inferred ckpt_num_queries=300 from tensor rows 3900 \u00f7 ckpt_group_detr=13.\n[2026-06-14 13:05:26] [WARNING] rf-detr - Model is not optimized for inference. Latency may be higher than expected. You can optimize the model for inference by calling model.optimize_for_inference().\n[transformers] `use_return_dict` is deprecated! Use `return_dict` instead!\n",
+    "service_url": "http://127.0.0.1:8010"
+  }
+}

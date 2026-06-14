@@ -1,0 +1,142 @@
+{
+  "scenario_id": "enterprise_0006",
+  "root_cause": "WAN-MPLS-CORE",
+  "root_cause_diagram": "wan_topology",
+  "root_cause_pattern": "wan_mpls_failure",
+  "severity": "critical",
+  "alerts": [
+    {
+      "node": "WAN-MPLS-CORE",
+      "diagram_id": "wan_topology",
+      "alert_type": "link_degradation",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "DC-SRV-01",
+      "diagram_id": "datacenter_topology",
+      "alert_type": "link_degradation",
+      "severity": "medium",
+      "time_offset_min": 3
+    },
+    {
+      "node": "DC-CORE-SW-01",
+      "diagram_id": "datacenter_topology",
+      "alert_type": "packet_drop",
+      "severity": "medium",
+      "time_offset_min": 4
+    }
+  ],
+  "impacted_nodes": [
+    "WAN-PE-01",
+    "WAN-PE-02",
+    "DC-FW-01",
+    "DC-CORE-SW-01",
+    "DC-AGG-SW-01",
+    "APP-LB-01",
+    "DC-SRV-01",
+    "DC-SRV-02",
+    "DC-SRV-03",
+    "APP-01",
+    "APP-02",
+    "DB-MASTER",
+    "DB-CACHE-01",
+    "DB-REPLICA-01"
+  ],
+  "impacted_diagrams": [
+    "app_db_topology",
+    "datacenter_topology",
+    "wan_topology"
+  ],
+  "impact_paths": [
+    [
+      "WAN-MPLS-CORE",
+      "WAN-PE-01"
+    ],
+    [
+      "WAN-MPLS-CORE",
+      "WAN-PE-02"
+    ],
+    [
+      "WAN-MPLS-CORE",
+      "DC-FW-01"
+    ],
+    [
+      "WAN-MPLS-CORE",
+      "DC-FW-01",
+      "DC-CORE-SW-01"
+    ],
+    [
+      "WAN-MPLS-CORE",
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "DC-AGG-SW-01"
+    ],
+    [
+      "WAN-MPLS-CORE",
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "APP-LB-01"
+    ],
+    [
+      "WAN-MPLS-CORE",
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "DC-AGG-SW-01",
+      "DC-SRV-01"
+    ],
+    [
+      "WAN-MPLS-CORE",
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "DC-AGG-SW-01",
+      "DC-SRV-02"
+    ],
+    [
+      "WAN-MPLS-CORE",
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "DC-AGG-SW-01",
+      "DC-SRV-03"
+    ],
+    [
+      "WAN-MPLS-CORE",
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "APP-LB-01",
+      "APP-01"
+    ],
+    [
+      "WAN-MPLS-CORE",
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "APP-LB-01",
+      "APP-02"
+    ],
+    [
+      "WAN-MPLS-CORE",
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "APP-LB-01",
+      "APP-01",
+      "DB-MASTER"
+    ],
+    [
+      "WAN-MPLS-CORE",
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "APP-LB-01",
+      "APP-01",
+      "DB-CACHE-01"
+    ],
+    [
+      "WAN-MPLS-CORE",
+      "DC-FW-01",
+      "DC-CORE-SW-01",
+      "APP-LB-01",
+      "APP-01",
+      "DB-MASTER",
+      "DB-REPLICA-01"
+    ]
+  ]
+}

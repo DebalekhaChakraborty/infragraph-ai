@@ -1,0 +1,154 @@
+[
+  {
+    "node_id": "RFDET-001",
+    "canonical_id": "RFDET-001",
+    "class_name": "cloud_or_wan",
+    "type": "cloud_or_wan",
+    "bbox": [
+      749.0,
+      550.2,
+      819.5,
+      618.2
+    ],
+    "confidence": 0.9604,
+    "is_shared_entity": false,
+    "is_ghost": false,
+    "zone": "",
+    "ip_address": "",
+    "source": "LIVE_RFDETR_INFERENCE",
+    "match_iou": 0.0
+  },
+  {
+    "node_id": "RFDET-002",
+    "canonical_id": "RFDET-002",
+    "class_name": "firewall",
+    "type": "firewall",
+    "bbox": [
+      1030.2,
+      582.9,
+      1098.5,
+      650.9
+    ],
+    "confidence": 0.9583,
+    "is_shared_entity": false,
+    "is_ghost": false,
+    "zone": "",
+    "ip_address": "",
+    "source": "LIVE_RFDETR_INFERENCE",
+    "match_iou": 0.0
+  },
+  {
+    "node_id": "RFDET-003",
+    "canonical_id": "RFDET-003",
+    "class_name": "cloud_or_wan",
+    "type": "cloud_or_wan",
+    "bbox": [
+      749.6,
+      285.2,
+      819.2,
+      352.6
+    ],
+    "confidence": 0.9553,
+    "is_shared_entity": false,
+    "is_ghost": false,
+    "zone": "",
+    "ip_address": "",
+    "source": "LIVE_RFDETR_INFERENCE",
+    "match_iou": 0.0
+  },
+  {
+    "node_id": "RFDET-004",
+    "canonical_id": "RFDET-004",
+    "class_name": "cloud_or_wan",
+    "type": "cloud_or_wan",
+    "bbox": [
+      1029.4,
+      350.7,
+      1098.6,
+      418.2
+    ],
+    "confidence": 0.9533,
+    "is_shared_entity": false,
+    "is_ghost": false,
+    "zone": "",
+    "ip_address": "",
+    "source": "LIVE_RFDETR_INFERENCE",
+    "match_iou": 0.0
+  },
+  {
+    "node_id": "RFDET-005",
+    "canonical_id": "RFDET-005",
+    "class_name": "firewall",
+    "type": "firewall",
+    "bbox": [
+      1254.6,
+      267.5,
+      1322.2,
+      336.8
+    ],
+    "confidence": 0.9518,
+    "is_shared_entity": false,
+    "is_ghost": false,
+    "zone": "",
+    "ip_address": "",
+    "source": "LIVE_RFDETR_INFERENCE",
+    "match_iou": 0.0
+  },
+  {
+    "node_id": "RFDET-006",
+    "canonical_id": "RFDET-006",
+    "class_name": "firewall",
+    "type": "firewall",
+    "bbox": [
+      1254.4,
+      549.6,
+      1322.8,
+      617.8
+    ],
+    "confidence": 0.951,
+    "is_shared_entity": false,
+    "is_ghost": false,
+    "zone": "",
+    "ip_address": "",
+    "source": "LIVE_RFDETR_INFERENCE",
+    "match_iou": 0.0
+  },
+  {
+    "node_id": "RFDET-007",
+    "canonical_id": "RFDET-007",
+    "class_name": "cloud_or_wan",
+    "type": "cloud_or_wan",
+    "bbox": [
+      469.8,
+      384.3,
+      538.4,
+      451.9
+    ],
+    "confidence": 0.9501,
+    "is_shared_entity": false,
+    "is_ghost": false,
+    "zone": "",
+    "ip_address": "",
+    "source": "LIVE_RFDETR_INFERENCE",
+    "match_iou": 0.0
+  },
+  {
+    "node_id": "RFDET-008",
+    "canonical_id": "RFDET-008",
+    "class_name": "cloud_or_wan",
+    "type": "cloud_or_wan",
+    "bbox": [
+      217.4,
+      384.2,
+      285.5,
+      451.9
+    ],
+    "confidence": 0.9496,
+    "is_shared_entity": false,
+    "is_ghost": false,
+    "zone": "",
+    "ip_address": "",
+    "source": "LIVE_RFDETR_INFERENCE",
+    "match_iou": 0.0
+  }
+]

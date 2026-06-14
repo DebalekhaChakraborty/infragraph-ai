@@ -1,0 +1,30 @@
+{
+  "scenario_id": "diagram_0341_incident_001",
+  "root_cause": "SW-01",
+  "root_cause_type": "switch",
+  "alerts": [
+    {
+      "node": "SW-01",
+      "alert_type": "Interface down",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "CLOUD-01",
+      "alert_type": "VLAN unreachable",
+      "severity": "major",
+      "time_offset_min": 2
+    },
+    {
+      "node": "LB-01",
+      "alert_type": "Multiple servers unreachable",
+      "severity": "major",
+      "time_offset_min": 3
+    }
+  ],
+  "expected_impacted_nodes": [
+    "FW-01",
+    "LB-01",
+    "CLOUD-01"
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "diagram_id": "wan_topology",
+  "diagram_type": "wan_topology",
+  "nodes": [
+    {
+      "id": "WAN-MPLS-CORE",
+      "type": "cloud_or_wan",
+      "zone": "wan-core",
+      "diagram_id": "wan_topology",
+      "is_shared_entity": false
+    },
+    {
+      "id": "WAN-ISP",
+      "type": "cloud_or_wan",
+      "zone": "wan-edge",
+      "diagram_id": "wan_topology",
+      "is_shared_entity": false
+    },
+    {
+      "id": "WAN-PE-01",
+      "type": "router",
+      "zone": "wan-edge",
+      "diagram_id": "wan_topology",
+      "is_shared_entity": false
+    },
+    {
+      "id": "WAN-PE-02",
+      "type": "router",
+      "zone": "wan-edge",
+      "diagram_id": "wan_topology",
+      "is_shared_entity": false
+    },
+    {
+      "id": "WAN-PE-03",
+      "type": "router",
+      "zone": "wan-edge",
+      "diagram_id": "wan_topology",
+      "is_shared_entity": false
+    },
+    {
+      "id": "WAN-PE-04",
+      "type": "router",
+      "zone": "wan-edge",
+      "diagram_id": "wan_topology",
+      "is_shared_entity": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-ISP",
+      "target": "WAN-MPLS-CORE",
+      "relation": "routes_to"
+    },
+    {
+      "source": "WAN-MPLS-CORE",
+      "target": "WAN-PE-01",
+      "relation": "routes_to"
+    },
+    {
+      "source": "WAN-MPLS-CORE",
+      "target": "WAN-PE-02",
+      "relation": "routes_to"
+    },
+    {
+      "source": "WAN-MPLS-CORE",
+      "target": "WAN-PE-03",
+      "relation": "routes_to"
+    },
+    {
+      "source": "WAN-MPLS-CORE",
+      "target": "WAN-PE-04",
+      "relation": "routes_to"
+    }
+  ]
+}

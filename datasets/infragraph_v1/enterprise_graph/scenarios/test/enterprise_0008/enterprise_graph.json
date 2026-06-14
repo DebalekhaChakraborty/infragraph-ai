@@ -1,0 +1,407 @@
+{
+  "scenario_id": "enterprise_0008",
+  "nodes": [
+    {
+      "id": "BR-RTR-01",
+      "type": "router",
+      "zone": "branch-edge",
+      "diagram_id": "branch_topology",
+      "is_shared_entity": false,
+      "diagram_type": "branch_topology",
+      "is_cross_diagram_bridge": true
+    },
+    {
+      "id": "BR-FW-01",
+      "type": "firewall",
+      "zone": "branch-edge",
+      "diagram_id": "branch_topology",
+      "is_shared_entity": false,
+      "diagram_type": "branch_topology",
+      "is_cross_diagram_bridge": false
+    },
+    {
+      "id": "BR-SW-01",
+      "type": "switch",
+      "zone": "branch-lan",
+      "diagram_id": "branch_topology",
+      "is_shared_entity": false,
+      "diagram_type": "branch_topology",
+      "is_cross_diagram_bridge": false
+    },
+    {
+      "id": "BR-WRK-01",
+      "type": "server",
+      "zone": "branch-lan",
+      "diagram_id": "branch_topology",
+      "is_shared_entity": false,
+      "diagram_type": "branch_topology",
+      "is_cross_diagram_bridge": false
+    },
+    {
+      "id": "BR-WRK-02",
+      "type": "server",
+      "zone": "branch-lan",
+      "diagram_id": "branch_topology",
+      "is_shared_entity": false,
+      "diagram_type": "branch_topology",
+      "is_cross_diagram_bridge": false
+    },
+    {
+      "id": "BR-WRK-03",
+      "type": "server",
+      "zone": "branch-lan",
+      "diagram_id": "branch_topology",
+      "is_shared_entity": false,
+      "diagram_type": "branch_topology",
+      "is_cross_diagram_bridge": false
+    },
+    {
+      "id": "BR-WRK-04",
+      "type": "server",
+      "zone": "branch-lan",
+      "diagram_id": "branch_topology",
+      "is_shared_entity": false,
+      "diagram_type": "branch_topology",
+      "is_cross_diagram_bridge": false
+    },
+    {
+      "id": "WAN-MPLS-CORE",
+      "type": "cloud_or_wan",
+      "zone": "wan-core",
+      "diagram_id": "wan_topology",
+      "is_shared_entity": false,
+      "diagram_type": "wan_topology",
+      "is_cross_diagram_bridge": true
+    },
+    {
+      "id": "WAN-ISP",
+      "type": "cloud_or_wan",
+      "zone": "wan-edge",
+      "diagram_id": "wan_topology",
+      "is_shared_entity": false,
+      "diagram_type": "wan_topology",
+      "is_cross_diagram_bridge": false
+    },
+    {
+      "id": "WAN-PE-01",
+      "type": "router",
+      "zone": "wan-edge",
+      "diagram_id": "wan_topology",
+      "is_shared_entity": false,
+      "diagram_type": "wan_topology",
+      "is_cross_diagram_bridge": true
+    },
+    {
+      "id": "WAN-PE-02",
+      "type": "router",
+      "zone": "wan-edge",
+      "diagram_id": "wan_topology",
+      "is_shared_entity": false,
+      "diagram_type": "wan_topology",
+      "is_cross_diagram_bridge": false
+    },
+    {
+      "id": "DC-FW-01",
+      "type": "firewall",
+      "zone": "dc-edge",
+      "diagram_id": "datacenter_topology",
+      "is_shared_entity": true,
+      "diagram_type": "datacenter_topology",
+      "is_cross_diagram_bridge": true
+    },
+    {
+      "id": "DC-FW-02",
+      "type": "firewall",
+      "zone": "dc-edge",
+      "diagram_id": "datacenter_topology",
+      "is_shared_entity": false,
+      "diagram_type": "datacenter_topology",
+      "is_cross_diagram_bridge": false
+    },
+    {
+      "id": "DC-CORE-SW-01",
+      "type": "switch",
+      "zone": "dc-core",
+      "diagram_id": "datacenter_topology",
+      "is_shared_entity": false,
+      "diagram_type": "datacenter_topology",
+      "is_cross_diagram_bridge": false
+    },
+    {
+      "id": "DC-CORE-SW-02",
+      "type": "switch",
+      "zone": "dc-core",
+      "diagram_id": "datacenter_topology",
+      "is_shared_entity": false,
+      "diagram_type": "datacenter_topology",
+      "is_cross_diagram_bridge": false
+    },
+    {
+      "id": "DC-AGG-SW-01",
+      "type": "switch",
+      "zone": "dc-agg",
+      "diagram_id": "datacenter_topology",
+      "is_shared_entity": false,
+      "diagram_type": "datacenter_topology",
+      "is_cross_diagram_bridge": false
+    },
+    {
+      "id": "DC-SRV-01",
+      "type": "server",
+      "zone": "dc-compute",
+      "diagram_id": "datacenter_topology",
+      "is_shared_entity": false,
+      "diagram_type": "datacenter_topology",
+      "is_cross_diagram_bridge": false
+    },
+    {
+      "id": "DC-SRV-02",
+      "type": "server",
+      "zone": "dc-compute",
+      "diagram_id": "datacenter_topology",
+      "is_shared_entity": false,
+      "diagram_type": "datacenter_topology",
+      "is_cross_diagram_bridge": false
+    },
+    {
+      "id": "DC-SRV-03",
+      "type": "server",
+      "zone": "dc-compute",
+      "diagram_id": "datacenter_topology",
+      "is_shared_entity": false,
+      "diagram_type": "datacenter_topology",
+      "is_cross_diagram_bridge": false
+    },
+    {
+      "id": "DC-SRV-04",
+      "type": "server",
+      "zone": "dc-compute",
+      "diagram_id": "datacenter_topology",
+      "is_shared_entity": false,
+      "diagram_type": "datacenter_topology",
+      "is_cross_diagram_bridge": false
+    },
+    {
+      "id": "DC-SRV-05",
+      "type": "server",
+      "zone": "dc-compute",
+      "diagram_id": "datacenter_topology",
+      "is_shared_entity": false,
+      "diagram_type": "datacenter_topology",
+      "is_cross_diagram_bridge": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "BR-RTR-01",
+      "target": "BR-FW-01",
+      "relation": "routes_to",
+      "edge_scope": "local",
+      "diagram_id": "branch_topology"
+    },
+    {
+      "source": "BR-FW-01",
+      "target": "BR-SW-01",
+      "relation": "secured_by",
+      "edge_scope": "local",
+      "diagram_id": "branch_topology"
+    },
+    {
+      "source": "BR-SW-01",
+      "target": "BR-WRK-01",
+      "relation": "connected_to",
+      "edge_scope": "local",
+      "diagram_id": "branch_topology"
+    },
+    {
+      "source": "BR-SW-01",
+      "target": "BR-WRK-02",
+      "relation": "connected_to",
+      "edge_scope": "local",
+      "diagram_id": "branch_topology"
+    },
+    {
+      "source": "BR-SW-01",
+      "target": "BR-WRK-03",
+      "relation": "connected_to",
+      "edge_scope": "local",
+      "diagram_id": "branch_topology"
+    },
+    {
+      "source": "BR-SW-01",
+      "target": "BR-WRK-04",
+      "relation": "connected_to",
+      "edge_scope": "local",
+      "diagram_id": "branch_topology"
+    },
+    {
+      "source": "WAN-ISP",
+      "target": "WAN-MPLS-CORE",
+      "relation": "routes_to",
+      "edge_scope": "local",
+      "diagram_id": "wan_topology"
+    },
+    {
+      "source": "WAN-MPLS-CORE",
+      "target": "WAN-PE-01",
+      "relation": "routes_to",
+      "edge_scope": "local",
+      "diagram_id": "wan_topology"
+    },
+    {
+      "source": "WAN-MPLS-CORE",
+      "target": "WAN-PE-02",
+      "relation": "routes_to",
+      "edge_scope": "local",
+      "diagram_id": "wan_topology"
+    },
+    {
+      "source": "DC-FW-01",
+      "target": "DC-CORE-SW-01",
+      "relation": "secured_by",
+      "edge_scope": "local",
+      "diagram_id": "datacenter_topology"
+    },
+    {
+      "source": "DC-FW-02",
+      "target": "DC-CORE-SW-02",
+      "relation": "secured_by",
+      "edge_scope": "local",
+      "diagram_id": "datacenter_topology"
+    },
+    {
+      "source": "DC-CORE-SW-01",
+      "target": "DC-AGG-SW-01",
+      "relation": "connected_to",
+      "edge_scope": "local",
+      "diagram_id": "datacenter_topology"
+    },
+    {
+      "source": "DC-CORE-SW-02",
+      "target": "DC-AGG-SW-01",
+      "relation": "connected_to",
+      "edge_scope": "local",
+      "diagram_id": "datacenter_topology"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-01",
+      "relation": "connected_to",
+      "edge_scope": "local",
+      "diagram_id": "datacenter_topology"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-02",
+      "relation": "connected_to",
+      "edge_scope": "local",
+      "diagram_id": "datacenter_topology"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-03",
+      "relation": "connected_to",
+      "edge_scope": "local",
+      "diagram_id": "datacenter_topology"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-04",
+      "relation": "connected_to",
+      "edge_scope": "local",
+      "diagram_id": "datacenter_topology"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "DC-SRV-05",
+      "relation": "connected_to",
+      "edge_scope": "local",
+      "diagram_id": "datacenter_topology"
+    },
+    {
+      "source": "BR-RTR-01",
+      "target": "WAN-PE-01",
+      "relation": "wan_dependency",
+      "source_diagram": "branch_topology",
+      "target_diagram": "wan_topology",
+      "edge_scope": "cross_diagram"
+    },
+    {
+      "source": "WAN-MPLS-CORE",
+      "target": "DC-FW-01",
+      "relation": "routes_to",
+      "source_diagram": "wan_topology",
+      "target_diagram": "datacenter_topology",
+      "edge_scope": "cross_diagram"
+    }
+  ],
+  "diagram_clusters": [
+    {
+      "diagram_id": "branch_topology",
+      "node_ids": [
+        "BR-RTR-01",
+        "BR-FW-01",
+        "BR-SW-01",
+        "BR-WRK-01",
+        "BR-WRK-02",
+        "BR-WRK-03",
+        "BR-WRK-04"
+      ]
+    },
+    {
+      "diagram_id": "wan_topology",
+      "node_ids": [
+        "WAN-MPLS-CORE",
+        "WAN-ISP",
+        "WAN-PE-01",
+        "WAN-PE-02"
+      ]
+    },
+    {
+      "diagram_id": "datacenter_topology",
+      "node_ids": [
+        "DC-FW-01",
+        "DC-FW-02",
+        "DC-CORE-SW-01",
+        "DC-CORE-SW-02",
+        "DC-AGG-SW-01",
+        "DC-SRV-01",
+        "DC-SRV-02",
+        "DC-SRV-03",
+        "DC-SRV-04",
+        "DC-SRV-05"
+      ]
+    }
+  ],
+  "cross_diagram_edges": [
+    {
+      "source": "BR-RTR-01",
+      "target": "WAN-PE-01",
+      "relation": "wan_dependency",
+      "source_diagram": "branch_topology",
+      "target_diagram": "wan_topology"
+    },
+    {
+      "source": "WAN-MPLS-CORE",
+      "target": "DC-FW-01",
+      "relation": "routes_to",
+      "source_diagram": "wan_topology",
+      "target_diagram": "datacenter_topology"
+    }
+  ],
+  "shared_entities": [
+    {
+      "canonical_id": "DC-FW-01",
+      "appears_in": [
+        {
+          "diagram_id": "wan_topology",
+          "local_alias": "WAN-DC-FW-01"
+        },
+        {
+          "diagram_id": "datacenter_topology",
+          "local_alias": "DC-FW-01"
+        }
+      ]
+    }
+  ]
+}

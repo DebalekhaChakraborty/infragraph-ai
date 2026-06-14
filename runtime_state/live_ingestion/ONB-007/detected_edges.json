@@ -1,0 +1,101 @@
+[
+  {
+    "source": "DC-RTR-01",
+    "target": "DC-FW-01",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_000",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "DC-RTR-01",
+    "target": "DC-FW-02",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_001",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "DC-FW-01",
+    "target": "DC-CORE-SW-01",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_002",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "DC-FW-02",
+    "target": "DC-CORE-SW-02",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_003",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "DC-CORE-SW-01",
+    "target": "DC-AGG-SW-01",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_004",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "DC-CORE-SW-02",
+    "target": "DC-AGG-SW-01",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_005",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "DC-AGG-SW-01",
+    "target": "DC-SRV-01",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_006",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "DC-AGG-SW-01",
+    "target": "DC-SRV-02",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_007",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "DC-AGG-SW-01",
+    "target": "DC-SRV-03",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_008",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "DC-AGG-SW-01",
+    "target": "DC-SRV-04",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_009",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "DC-AGG-SW-01",
+    "target": "DC-SRV-05",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_010",
+    "source_type": "annotation_connector"
+  }
+]

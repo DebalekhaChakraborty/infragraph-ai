@@ -1,0 +1,28 @@
+{
+  "scenario_id": "diagram_0108_incident_001",
+  "root_cause": "DB-01",
+  "root_cause_type": "database",
+  "alerts": [
+    {
+      "node": "DB-01",
+      "alert_type": "High DB latency",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "APP-01",
+      "alert_type": "SQL connection timeout",
+      "severity": "major",
+      "time_offset_min": 2
+    },
+    {
+      "node": "APP-01",
+      "alert_type": "App API timeout",
+      "severity": "major",
+      "time_offset_min": 4
+    }
+  ],
+  "expected_impacted_nodes": [
+    "APP-01"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "scenario_id": "diagram_0087_incident_001",
+  "root_cause": "RTR-01",
+  "root_cause_type": "router",
+  "alerts": [
+    {
+      "node": "RTR-01",
+      "alert_type": "BGP flap detected",
+      "severity": "critical",
+      "time_offset_min": 0
+    },
+    {
+      "node": "FW-01",
+      "alert_type": "WAN packet loss > 5%",
+      "severity": "major",
+      "time_offset_min": 2
+    }
+  ],
+  "expected_impacted_nodes": [
+    "WAN-01",
+    "FW-01"
+  ]
+}
