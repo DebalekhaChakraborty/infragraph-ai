@@ -77,37 +77,53 @@ def main() -> None:
     scenario_id  = args.scenario_id
 
     # Resolve model path — priority order:
-    #   1. explicit --model-path
-    #   2. model_artifacts/enterprise_gnn_rca/enterprise_gnn_rca.pt  (trained artifact)
-    #   3. <out>/enterprise_gnn_model.pt  (legacy fallback)
-    _canonical_model = _REPO_ROOT / "model_artifacts" / "enterprise_gnn_rca" / "enterprise_gnn_rca.pt"
+    #   1. explicit --model-path CLI flag
+    #   2. INFRAGRAPH_ENTERPRISE_GNN_MODEL_PATH env var
+    #   3. model_artifacts/enterprise_gnn_rca/enterprise_gnn_rca.pt  (canonical trained artifact)
+    #   4. <out>/enterprise_gnn_model.pt                              (outputs compat)
+    #   5. assets/preloaded/enterprise_gnn_rca/enterprise_gnn_model.pt (preloaded compat)
+    import os as _os_inf
+    _candidates = []
     if args.model_path:
-        model_path = Path(args.model_path)
-    elif _canonical_model.exists():
-        model_path = _canonical_model
+        _candidates = [Path(args.model_path)]
     else:
-        model_path = out_dir / "enterprise_gnn_model.pt"
+        _env_model = _os_inf.environ.get("INFRAGRAPH_ENTERPRISE_GNN_MODEL_PATH")
+        if _env_model:
+            _candidates.append(Path(_env_model))
+        _candidates += [
+            _REPO_ROOT / "model_artifacts" / "enterprise_gnn_rca" / "enterprise_gnn_rca.pt",
+            out_dir / "enterprise_gnn_model.pt",
+            _REPO_ROOT / "assets" / "preloaded" / "enterprise_gnn_rca" / "enterprise_gnn_model.pt",
+        ]
+
+    model_path: Path | None = None
+    for _c in _candidates:
+        if _c.exists():
+            model_path = _c
+            break
+
+    if model_path is None:
+        print(
+            "\n[ERROR] No model checkpoint found. Searched:\n"
+            + "\n".join(f"  {c}" for c in _candidates)
+            + "\n\nTrain first with:\n"
+            "  python scripts/build_enterprise_gnn_dataset.py\n"
+            "  python scripts/train_enterprise_gnn_rca.py \\\n"
+            "      --graphs      data/rca/enterprise_gnn/graphs.pt \\\n"
+            "      --index       data/rca/enterprise_gnn/graph_index.json \\\n"
+            "      --out-dir     model_artifacts/enterprise_gnn_rca \\\n"
+            "      --report-dir  reports/enterprise_gnn_rca \\\n"
+            "      --epochs      80\n\n"
+            "  # Optional: create compat symlinks\n"
+            "  python scripts/link_enterprise_gnn_model_compat.py"
+        )
+        sys.exit(1)
 
     print("InfraGraph AI — Enterprise GNN Inference")
     print(f"  Scenario    : {scenario_id}")
     print(f"  Dataset root: {dataset_root}")
     print(f"  Model       : {model_path}")
     print(f"  Output dir  : {out_dir}")
-
-    # ── Validate model ───────────────────────────────────────────────────────
-    if not model_path.exists():
-        print(
-            f"\n[ERROR] Model checkpoint not found: {model_path}\n"
-            f"  Expected locations:\n"
-            f"    {_canonical_model}\n"
-            f"    {out_dir / 'enterprise_gnn_model.pt'}\n"
-            f"  Train first with:\n"
-            f"    python scripts/train_enterprise_gnn_rca.py \\\n"
-            f"        --dataset-root {dataset_root} \\\n"
-            f"        --out ./model_artifacts/enterprise_gnn_rca \\\n"
-            f"        --epochs 80"
-        )
-        sys.exit(1)
 
     # ── Find scenario directory ───────────────────────────────────────────────
     found = find_scenario_dir(dataset_root, scenario_id, split=args.split)

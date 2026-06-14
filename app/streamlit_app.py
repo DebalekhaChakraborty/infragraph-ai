@@ -1296,6 +1296,38 @@ V3_ENTERPRISE_GNN_METRICS = _demo_asset_path("enterprise_gnn_rca") / "enterprise
 V3_ENTERPRISE_GNN_MODEL   = REPO_ROOT / "model_artifacts" / "enterprise_gnn_rca" / "enterprise_gnn_rca.pt"
 V3_ONBOARDING_SCRIPT = REPO_ROOT / "scripts" / "onboard_diagram_v3.py"
 
+
+def resolve_enterprise_gnn_model_path(repo_root: Path = REPO_ROOT) -> "Path | None":
+    """Return the first existing GNN model file, checking canonical then compat paths."""
+    candidates: list[Path] = []
+    _env = _os.environ.get("INFRAGRAPH_ENTERPRISE_GNN_MODEL_PATH")
+    if _env:
+        candidates.append(Path(_env))
+    candidates += [
+        repo_root / "model_artifacts" / "enterprise_gnn_rca" / "enterprise_gnn_rca.pt",
+        repo_root / "outputs"         / "enterprise_gnn_rca" / "enterprise_gnn_model.pt",
+        repo_root / "assets" / "preloaded" / "enterprise_gnn_rca" / "enterprise_gnn_model.pt",
+    ]
+    for p in candidates:
+        if p.exists():
+            return p
+    return None
+
+
+def _enterprise_gnn_model_source(path: "Path | None") -> str:
+    if path is None:
+        return "not found"
+    s = str(path)
+    if _os.environ.get("INFRAGRAPH_ENTERPRISE_GNN_MODEL_PATH") and s == _os.environ.get("INFRAGRAPH_ENTERPRISE_GNN_MODEL_PATH"):
+        return "env override"
+    if "model_artifacts" in s:
+        return "model_artifacts (canonical)"
+    if "outputs" in s:
+        return "outputs (compat)"
+    if "preloaded" in s:
+        return "assets/preloaded (compat)"
+    return "custom path"
+
 _V3_DIAG_COLORS = {
     "branch_topology":          "#10b981",
     "wan_topology":             "#3b82f6",
@@ -2317,7 +2349,8 @@ def _render_ai_pipeline_trace(
     _sop_adapter_env  = _os.environ.get("INFRAGRAPH_LORA_ADAPTER_PATH") or ""
     _sop_adapter_path = _sop_adapter_env or str(REPO_ROOT / "model_artifacts" / "qwen_lora" / "infragraph_sop_grounded")
     _sop_adapter_ok   = Path(_sop_adapter_path).exists()
-    _gnn_model_path   = str(_demo_asset_path("enterprise_gnn_rca") / "enterprise_gnn_model.pt")
+    _gnn_model_resolved = resolve_enterprise_gnn_model_path()
+    _gnn_model_path   = str(_gnn_model_resolved) if _gnn_model_resolved else "— not found —"
     _gnn_metrics_path = str(_demo_asset_path("enterprise_gnn_rca") / "enterprise_gnn_metrics.json")
     _qwen_alias       = (_os.environ.get("INFRAGRAPH_QWEN_MODEL")
                          or _os.environ.get("QWEN_MODEL")
@@ -2335,8 +2368,9 @@ def _render_ai_pipeline_trace(
         "Impacted diagram count": str(len(set(str(d) for d in impacted_diagrams if d))),
         "Vector evidence retrieved": str(vector_evidence_count),
         "GNN model path": _gnn_model_path,
+        "GNN model source": _enterprise_gnn_model_source(_gnn_model_resolved),
         "GNN metrics path": _gnn_metrics_path,
-        "GNN model available": "yes" if Path(_gnn_model_path).exists() else "no",
+        "GNN model available": "yes" if _gnn_model_resolved else "no",
         "Qwen model alias": _qwen_alias,
         "Qwen base URL": _qwen_base_url_v,
         "Qwen configured": "yes" if _qwen_configured() else "no",
@@ -2443,7 +2477,8 @@ def _render_gnn_rca_model_evidence(gnn_result: dict, metrics: dict) -> None:
     val_m        = metrics.get("val_metrics", {})
     test_m       = metrics.get("test_metrics", {})
 
-    _gnn_model_p   = str(_demo_asset_path("enterprise_gnn_rca") / "enterprise_gnn_model.pt")
+    _gnn_model_r   = resolve_enterprise_gnn_model_path()
+    _gnn_model_p   = str(_gnn_model_r) if _gnn_model_r else "— not found —"
     _gnn_metrics_p = str(_demo_asset_path("enterprise_gnn_rca") / "enterprise_gnn_metrics.json")
 
     with st.expander("Trained RCA Model Evidence", expanded=False):
@@ -2528,7 +2563,7 @@ def _render_gnn_rca_model_evidence(gnn_result: dict, metrics: dict) -> None:
             st.dataframe(pd.DataFrame(_cand_rows), use_container_width=True, hide_index=True)
 
         # Artifact paths
-        _model_exists   = Path(_gnn_model_p).exists()
+        _model_exists   = _gnn_model_r is not None
         _metrics_exists = Path(_gnn_metrics_p).exists()
         _model_suffix   = "" if _model_exists   else " <em style=\"color:#ef4444\">(not found)</em>"
         _metrics_suffix = "" if _metrics_exists else " <em style=\"color:#ef4444\">(not found)</em>"
@@ -6236,11 +6271,13 @@ def _tab_gnn_rca() -> None:
         or _sel_rec_pre.get("source_scenario_id")
         or "—"
     )
-    _gnn_result_pre   = _load_gnn_rca_result(_rca_scenario_id) if _rca_scenario_id != "—" else None
-    _gnn_model_exists = V3_ENTERPRISE_GNN_MODEL.exists()
-    _gnn_avail_str    = "Yes" if _gnn_result_pre else "No"
-    _model_avail_str  = "Yes" if _gnn_model_exists else "No"
-    _rca_src_str      = "Enterprise GNN RCA" if _gnn_result_pre else "Scenario-grounded RCA simulation"
+    _gnn_result_pre      = _load_gnn_rca_result(_rca_scenario_id) if _rca_scenario_id != "—" else None
+    _resolved_gnn_model  = resolve_enterprise_gnn_model_path()
+    _gnn_model_exists    = _resolved_gnn_model is not None
+    _gnn_model_src_str   = _enterprise_gnn_model_source(_resolved_gnn_model)
+    _gnn_avail_str       = "Yes" if _gnn_result_pre else "No"
+    _model_avail_str     = "Yes" if _gnn_model_exists else "No"
+    _rca_src_str         = "Enterprise GNN RCA" if _gnn_result_pre else "Scenario-grounded RCA simulation"
     _n_nodes_pre      = len(enterprise_graph.get("nodes", []))
     _n_edges_pre      = len(enterprise_graph.get("edges", []))
     st.markdown(
@@ -6248,7 +6285,7 @@ def _tab_gnn_rca() -> None:
         'border-radius:10px;padding:14px 16px;margin-bottom:14px">'
         '<div style="font-size:0.68rem;font-weight:700;color:#64748b;text-transform:uppercase;'
         'letter-spacing:0.08em;margin-bottom:10px">RCA Engine</div>'
-        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">'
+        '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px">'
         f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Selected scenario</div>'
         f'<div style="font-size:0.82rem;font-weight:700;color:#38bdf8;font-family:monospace">{_rca_scenario_id}</div></div>'
         f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Scenario nodes</div>'
@@ -6257,6 +6294,8 @@ def _tab_gnn_rca() -> None:
         f'<div style="font-size:0.82rem;font-weight:700;color:#f1f5f9">{_n_edges_pre}</div></div>'
         f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">GNN model available</div>'
         f'<div style="font-size:0.82rem;font-weight:700;color:{"#10b981" if _gnn_model_exists else "#f59e0b"}">{_model_avail_str}</div></div>'
+        f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">Model source</div>'
+        f'<div style="font-size:0.78rem;font-weight:600;color:{"#38bdf8" if _gnn_model_exists else "#64748b"}">{_gnn_model_src_str}</div></div>'
         f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">GNN result for scenario</div>'
         f'<div style="font-size:0.82rem;font-weight:700;color:{"#10b981" if _gnn_result_pre else "#f59e0b"}">{_gnn_avail_str}</div></div>'
         f'<div><div style="font-size:0.6rem;color:#64748b;text-transform:uppercase">RCA source</div>'
@@ -6271,14 +6310,30 @@ def _tab_gnn_rca() -> None:
 
     # ── Case A: model not trained yet ────────────────────────────────────────
     if not _gnn_model_exists:
-        st.info(
-            "Enterprise GNN model not trained yet. "
-            "Current RCA uses scenario-grounded evidence."
+        _checked_paths = [
+            str(REPO_ROOT / "model_artifacts" / "enterprise_gnn_rca" / "enterprise_gnn_rca.pt"),
+            str(REPO_ROOT / "outputs"         / "enterprise_gnn_rca" / "enterprise_gnn_model.pt"),
+            str(REPO_ROOT / "assets" / "preloaded" / "enterprise_gnn_rca" / "enterprise_gnn_model.pt"),
+        ]
+        _env_override = _os.environ.get("INFRAGRAPH_ENTERPRISE_GNN_MODEL_PATH")
+        if _env_override:
+            _checked_paths.insert(0, _env_override)
+        st.warning(
+            "No trained model file found. Current RCA uses scenario-grounded evidence.\n\n"
+            "**Paths checked:**\n" + "\n".join(f"- `{p}`" for p in _checked_paths)
         )
         st.code(
-            "python scripts/train_enterprise_gnn_rca.py "
-            "--dataset-root ./datasets/infragraph_v3 "
-            "--out ./assets/preloaded/enterprise_gnn_rca --epochs 80",
+            "# Step 1 — build GNN dataset\n"
+            "python scripts/build_enterprise_gnn_dataset.py\n\n"
+            "# Step 2 — train model\n"
+            "python scripts/train_enterprise_gnn_rca.py \\\n"
+            "  --graphs      data/rca/enterprise_gnn/graphs.pt \\\n"
+            "  --index       data/rca/enterprise_gnn/graph_index.json \\\n"
+            "  --out-dir     model_artifacts/enterprise_gnn_rca \\\n"
+            "  --report-dir  reports/enterprise_gnn_rca \\\n"
+            "  --epochs      80\n\n"
+            "# Optional — create compat symlinks\n"
+            "python scripts/link_enterprise_gnn_model_compat.py",
             language="bash",
         )
 
@@ -6295,7 +6350,7 @@ def _tab_gnn_rca() -> None:
                 str(REPO_ROOT / "scripts" / "run_enterprise_gnn_inference.py"),
                 "--dataset-root", str(REPO_ROOT / "datasets" / "infragraph_v3"),
                 "--scenario-id",  _rca_scenario_id,
-                "--model-path",   str(REPO_ROOT / "model_artifacts" / "enterprise_gnn_rca" / "enterprise_gnn_rca.pt"),
+                "--model-path",   str(_resolved_gnn_model),
                 "--out",          str(REPO_ROOT / "outputs" / "enterprise_gnn_rca"),
             ]
             with st.spinner(f"Running GNN inference for {_rca_scenario_id}..."):
