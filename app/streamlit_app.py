@@ -1382,6 +1382,8 @@ def _init_v3_state() -> None:
         st.session_state.onboard_sample_record = {}
     if "use_live_rfdetr" not in st.session_state:
         st.session_state.use_live_rfdetr = True
+    if "main_nav" not in st.session_state:
+        st.session_state.main_nav = _NAV_PAGES[0]
 
 
 def _ss_dict(key: str) -> dict:
@@ -7415,7 +7417,7 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                                    help="Use Qwen/vLLM for remediation when available.")
     with _h3:
         if st.button("Acknowledge", use_container_width=True, key="agent_ack_btn"):
-            st.toast("Incident acknowledged.", icon="✓")
+            st.toast("Incident acknowledged.", icon="✅")
     with _h4:
         if st.button("Declare Blocker", use_container_width=True, key="agent_blocker_btn"):
             st.toast("Marked as blocker. No external system contacted (demo).", icon="🚨")
@@ -7529,7 +7531,7 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
             st.success(
                 f"**AI analysis complete.** Root cause `{_run.get('root_cause', '—')}` "
                 f"identified with {_confidence_pct} confidence.",
-                icon="✓",
+                icon="✅",
             )
 
         # KPI strip
@@ -8051,8 +8053,8 @@ _NAV_PAGES = [
     "Topology RCA",
     "Enterprise Graph Brain",
     "Enterprise GNN RCA",
-    "Agentic Ops Orchestrator",
     "Graph Copilot",
+    "Agentic Ops Orchestrator",
 ]
 
 
@@ -8106,12 +8108,31 @@ def _sidebar_v3() -> None:
         )
 
         st.markdown('<div class="sb-label">Navigate</div>', unsafe_allow_html=True)
-        st.radio(
-            "Navigate",
-            _NAV_PAGES,
-            key="main_nav",
-            label_visibility="collapsed",
+        _cur_nav = st.session_state.get("main_nav", _NAV_PAGES[0])
+        _PIPELINE_NAV = [p for p in _NAV_PAGES if p != "Agentic Ops Orchestrator"]
+        for _pg in _PIPELINE_NAV:
+            if st.button(
+                _pg,
+                key=f"sb_nav_{_pg.replace(' ', '_')}",
+                use_container_width=True,
+                type="primary" if _cur_nav == _pg else "secondary",
+            ):
+                st.session_state["main_nav"] = _pg
+                st.rerun()
+        st.markdown(
+            '<div style="border-top:1px solid rgba(168,85,247,0.35);margin:14px 2px 8px"></div>'
+            '<div class="sb-label" style="color:#a78bfa;font-size:0.58rem;letter-spacing:0.12em">'
+            '⚡ AGENTIC OPS</div>',
+            unsafe_allow_html=True,
         )
+        if st.button(
+            "Agentic Ops Orchestrator",
+            key="sb_nav_ops",
+            use_container_width=True,
+            type="primary" if _cur_nav == "Agentic Ops Orchestrator" else "secondary",
+        ):
+            st.session_state["main_nav"] = "Agentic Ops Orchestrator"
+            st.rerun()
 
         st.markdown('<div class="sb-label">Pipeline Progress</div>', unsafe_allow_html=True)
         steps = [
@@ -8186,9 +8207,9 @@ The GNN identified **FW-01** as root cause with score **30.733** (margin +8.12 o
 def _main_cockpit() -> None:
     _init_v3_state()
 
-    # Flush prev/next navigation request before any widget is instantiated.
-    # Buttons cannot write directly to a widget-owned session key (main_nav),
-    # so they write to _nav_pending instead; we transfer it here.
+    # Flush prev/next navigation request before routing.
+    # Prev/next buttons write to _nav_pending; sidebar nav buttons write
+    # directly to main_nav. Transfer pending request here.
     if "_nav_pending" in st.session_state:
         st.session_state.main_nav = st.session_state.pop("_nav_pending")
 
