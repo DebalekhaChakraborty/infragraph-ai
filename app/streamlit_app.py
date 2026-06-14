@@ -4294,22 +4294,36 @@ def _tab_onboard_new_diagram() -> None:
             _err_d = f"  \n`{_RUNTIME_INGESTION_ERR}`" if _RUNTIME_INGESTION_ERR else ""
             st.error(f"runtime_ingestion failed to load at startup — restart the app to retry.{_err_d}")
         else:
-            # Show original diagram thumbnail while processing — cleared once done
+            # Show original diagram thumbnail + side status while processing — cleared once done
             _orig_preview = st.empty()
             if img_path.exists():
                 with _orig_preview.container():
-                    _thumb_col, _ = st.columns([1, 2])
+                    _thumb_col, _status_col = st.columns([1, 2])
                     with _thumb_col:
                         st.markdown('<div class="compare-badge original">Original</div>',
                                     unsafe_allow_html=True)
                         st.image(str(img_path), use_container_width=True)
+                    with _status_col:
+                        st.markdown("<div style='height:40px'></div>", unsafe_allow_html=True)
+                        _rfdetr_status_placeholder = st.empty()
 
             _external_rfdetr_result = {}
             if st.session_state.use_live_rfdetr and _rfdetr_ckpt and _run_rfdetr_detection is not None:
                 _conf = float(os.environ.get("INFRAGRAPH_RFDETR_CONFIDENCE", "0.25"))
                 _timeout = int(os.environ.get("INFRAGRAPH_RFDETR_TIMEOUT", "180"))
-                with st.spinner("Running external RF-DETR detector runtime…"):
-                    _external_rfdetr_result = _run_rfdetr_detection(
+                if img_path.exists():
+                    _rfdetr_status_placeholder.markdown(
+                        '<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;'
+                        'border:1px solid rgba(99,102,241,0.35);border-radius:8px;'
+                        'background:rgba(99,102,241,0.08)">'
+                        '<div style="width:16px;height:16px;border:2px solid #818cf8;'
+                        'border-top-color:transparent;border-radius:50%;'
+                        'animation:spin 0.8s linear infinite"></div>'
+                        '<span style="font-size:0.85rem;color:#a5b4fc;font-weight:500">'
+                        'Running InfraGraph RF-DETR…</span></div>',
+                        unsafe_allow_html=True,
+                    )
+                _external_rfdetr_result = _run_rfdetr_detection(
                         img_path,
                         Path(_rfdetr_ckpt),
                         confidence=_conf,
