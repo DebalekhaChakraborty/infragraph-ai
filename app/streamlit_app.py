@@ -4883,21 +4883,16 @@ def _tab_diagram_gallery() -> None:
         return f'<span class="badge {cls}">{label}</span>'
 
     badge_html = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 14px">'
-    badge_html += '<span class="badge badge-info">Available in Graph Memory</span>'
-    badge_html += _badge(
-        "Graph Metadata Available" if has_graph else "Graph Metadata Pending", has_graph)
-    badge_html += _badge(
-        "Connector Metadata Available" if has_conn else "Connector Metadata Pending", has_conn)
-    badge_html += _badge(
-        "OCR Metadata Available" if has_ocr else "OCR Metadata Pending", has_ocr)
-    badge_html += _badge(
-        "Enterprise Mapping Available" if has_ent else "Enterprise Mapping Pending", has_ent)
     if has_det:
-        badge_html += '<span class="badge badge-success">Trained Detector Output</span>'
+        badge_html += '<span class="badge badge-success">RF-DETR Live Detection</span>'
     elif has_ann and is_v3:
-        badge_html += '<span class="badge badge-info">Verified Annotation Overlay</span>'
+        badge_html += '<span class="badge badge-info">Verified Annotation</span>'
     else:
-        badge_html += '<span class="badge badge-warn">Detection Output Pending</span>'
+        badge_html += '<span class="badge badge-warn">Detection Pending</span>'
+    badge_html += _badge("Local Graph Ready" if (has_graph or has_conn) else "Local Graph Pending", has_graph or has_conn)
+    badge_html += _badge("Enterprise Mapped" if has_ent else "Enterprise Pending", has_ent)
+    badge_html += _badge("OCR Available" if has_ocr else "OCR Pending", has_ocr)
+    badge_html += _badge("Annotated" if has_ann else "Annotation Missing", has_ann)
     badge_html += '</div>'
     st.markdown(badge_html, unsafe_allow_html=True)
 
