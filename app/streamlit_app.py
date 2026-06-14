@@ -4745,13 +4745,15 @@ def _tab_diagram_gallery() -> None:
         st.info("No diagrams match the current filter.")
         return
 
-    sel_idx = st.selectbox(
-        "Select diagram",
-        range(min(limit, len(filtered))),
-        format_func=lambda i: f"{filtered[i]['gallery_id']} | {filtered[i]['display_name']}",
-        index=0,
-        key="gal_select",
-    )
+    _ctrl_l, _ctrl_r = st.columns(2)
+    with _ctrl_l:
+        sel_idx = st.selectbox(
+            "Select diagram",
+            range(min(limit, len(filtered))),
+            format_func=lambda i: f"{filtered[i]['gallery_id']} | {filtered[i]['display_name']}",
+            index=0,
+            key="gal_select",
+        )
     record = filtered[sel_idx]
     st.session_state.catalog_selected_record = record
     st.session_state.selected_diagram_path   = record.get("image_path", "")
@@ -4788,6 +4790,21 @@ def _tab_diagram_gallery() -> None:
     det_exists = bool(det_p and Path(det_p).exists())
     ann_exists = bool(ann_p and Path(ann_p).exists())
 
+    with _ctrl_r:
+        if is_v3 and img_exists and ann_exists and not det_exists:
+            show_overlay_connectors = st.checkbox(
+                "Show connectors",
+                value=False,
+                key=f"show_connectors_{record.get('gallery_id', record.get('source_diagram_id', 'v3'))}",
+                help="Draw subtle metadata connector lines on the verified overlay.",
+            )
+            st.caption(
+                "Verified metadata view: node identity + device type. "
+                "Confidence scores appear only on live detector outputs."
+            )
+        else:
+            show_overlay_connectors = False
+
     c1, c2 = st.columns(2)
     with c1:
         st.markdown(
@@ -4815,16 +4832,6 @@ def _tab_diagram_gallery() -> None:
             )
             st.image(det_p, use_container_width=True)
         elif is_v3 and img_exists and ann_exists:
-            show_overlay_connectors = st.checkbox(
-                "Show connectors",
-                value=False,
-                key=f"show_connectors_{record.get('gallery_id', record.get('source_diagram_id', 'v3'))}",
-                help="Draw subtle metadata connector lines on the verified overlay.",
-            )
-            st.caption(
-                "Verified metadata view: node identity + device type. "
-                "Confidence scores appear only on live detector outputs."
-            )
             with st.spinner("Rendering annotation overlay…"):
                 _overlay_path, _overlay_meta = _ensure_annotation_overlay(
                     record, REPO_ROOT,
