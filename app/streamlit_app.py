@@ -7730,8 +7730,8 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                 )
                 if _sel_al_obj.get("description"):
                     st.markdown(
-                        f'<div style="font-size:0.74rem;color:#94a3b8;margin:6px 0 4px;'
-                        f'font-style:italic">{html.escape(_sel_al_obj["description"])}</div>',
+                        f'<div style="font-size:0.88rem;color:#e2e8f0;font-weight:600;'
+                        f'margin:8px 0 6px;line-height:1.4">{html.escape(_sel_al_obj["description"])}</div>',
                         unsafe_allow_html=True,
                     )
                 if _sel_al_obj.get("neighbors"):
@@ -7811,8 +7811,8 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                 )
                 if _sel_al_obj.get("description"):
                     st.markdown(
-                        f'<div style="font-size:0.74rem;color:#94a3b8;margin:6px 0 4px;'
-                        f'font-style:italic">{html.escape(_sel_al_obj["description"])}</div>',
+                        f'<div style="font-size:0.88rem;color:#e2e8f0;font-weight:600;'
+                        f'margin:8px 0 6px;line-height:1.4">{html.escape(_sel_al_obj["description"])}</div>',
                         unsafe_allow_html=True,
                     )
                 if _sel_al_obj.get("neighbors"):
