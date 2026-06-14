@@ -7278,23 +7278,23 @@ def _qwen_or_deterministic(question: str, context: dict) -> str:
 
 def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
     """
-    Agentic Ops Orchestrator — enterprise-facing AI SRE command center.
-    Orchestrates existing InfraGraph pipeline tools end-to-end with full transparency.
-    Root cause comes from graph/GNN RCA — never from the LLM.
+    Agentic Ops Orchestrator — self-contained incident command center.
+    Fully independent of other tabs. Select an incident from the queue to
+    auto-run AI analysis: alert simulation → graph/GNN RCA → remediation.
+    Root cause always comes from graph/GNN RCA, never from the LLM.
     """
     # ── session state init ────────────────────────────────────────────────────
-    if "agent_run_result" not in st.session_state:
-        st.session_state.agent_run_result = None
-    if "agent_approval_status" not in st.session_state:
-        st.session_state.agent_approval_status = "pending"
-    if "agent_copilot_answer" not in st.session_state:
-        st.session_state.agent_copilot_answer = ""
-    if "agent_copilot_question" not in st.session_state:
-        st.session_state.agent_copilot_question = ""
-    if "agent_copilot_response_source" not in st.session_state:
-        st.session_state.agent_copilot_response_source = ""
-    if "agent_copilot_vector_evidence" not in st.session_state:
-        st.session_state.agent_copilot_vector_evidence = []
+    for _k, _dv in [
+        ("agent_run_result",              None),
+        ("agent_approval_status",         "pending"),
+        ("agent_selected_incident_id",    None),
+        ("agent_copilot_answer",          ""),
+        ("agent_copilot_question",        ""),
+        ("agent_copilot_response_source", ""),
+        ("agent_copilot_vector_evidence", []),
+    ]:
+        if _k not in st.session_state:
+            st.session_state[_k] = _dv
 
     _is_dark = st.session_state.get("theme", "dark") != "light"
 
@@ -7314,144 +7314,121 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
             f'margin:2px 4px 2px 0">{label}</span>'
         )
 
-    def _status_badge(status: str) -> str:
+    def _status_badge(status: str) -> str:  # noqa: F811
         col = _STATUS_COLOR.get(status, "#6b7280")
         ico = _STATUS_ICON.get(status, "?")
         return _badge(f"{ico} {status.upper()}", col)
 
     def _card_css(extra: str = "") -> str:
-        bg = "rgba(255,255,255,0.03)" if _is_dark else "#f8fafc"
+        bg     = "rgba(255,255,255,0.03)" if _is_dark else "#f8fafc"
         border = "rgba(255,255,255,0.08)" if _is_dark else "#e2e8f0"
         return (
             f"background:{bg};border:1px solid {border};border-radius:10px;"
-            f"padding:16px;margin-bottom:12px;{extra}"
+            f"padding:14px;margin-bottom:10px;{extra}"
         )
 
-    # ── header ────────────────────────────────────────────────────────────────
+    # ── Discover available scenarios & build incident queue ───────────────────
+    _sc_base      = V3_DATASET_ROOT / "scenarios"
+    _all_scenarios: list[str] = []
+    for _sp in ("train", "val", "test"):
+        _sp_dir = _sc_base / _sp
+        if _sp_dir.exists():
+            _all_scenarios += sorted(p.name for p in _sp_dir.iterdir() if p.is_dir())
+    if not _all_scenarios:
+        _all_scenarios = ["enterprise_v3_0000"]
+
+    _gnn_dirs = [
+        REPO_ROOT / "outputs"  / "enterprise_gnn_rca",
+        REPO_ROOT / "assets"   / "preloaded" / "enterprise_gnn_rca",
+    ]
+    _scenarios_with_gnn: set[str] = set()
+    for _gd in _gnn_dirs:
+        if _gd.exists():
+            for _gf in _gd.iterdir():
+                for _sid in _all_scenarios:
+                    if _sid in _gf.stem:
+                        _scenarios_with_gnn.add(_sid)
+
+    _SEVERITY_CYCLE  = ["critical", "high", "high", "medium", "critical", "high"]
+    _TITLE_TEMPLATES = [
+        "NFS Mount Hung on ECS Cluster",
+        "Cross-Datacenter Link Degradation",
+        "Database Cluster Failover Alert",
+        "Load Balancer Health Check Failure",
+        "BGP Route Flap — WAN Edge",
+        "Application Latency Spike",
+    ]
+    _SVC_TEMPLATES = [
+        "Storage / NFS", "Network / WAN", "Database / RDBMS",
+        "Network / LB",  "Network / BGP", "App / API Gateway",
+    ]
+    _TIME_TEMPLATES = ["2m ago", "8m ago", "14m ago", "21m ago", "35m ago", "52m ago"]
+
+    _ordered = (
+        [s for s in _all_scenarios if s in _scenarios_with_gnn]
+        + [s for s in _all_scenarios if s not in _scenarios_with_gnn]
+    )[:6]
+
+    _incidents: list[dict] = []
+    for _i, _sid in enumerate(_ordered):
+        _incidents.append({
+            "id":          f"INC-{_sid[-4:].upper()}",
+            "scenario_id": _sid,
+            "title":       _TITLE_TEMPLATES[_i % len(_TITLE_TEMPLATES)],
+            "service":     _SVC_TEMPLATES[_i % len(_SVC_TEMPLATES)],
+            "severity":    _SEVERITY_CYCLE[_i % len(_SEVERITY_CYCLE)],
+            "time":        _TIME_TEMPLATES[_i % len(_TIME_TEMPLATES)],
+            "has_gnn":     _sid in _scenarios_with_gnn,
+        })
+
+    if st.session_state["agent_selected_incident_id"] is None and _incidents:
+        st.session_state["agent_selected_incident_id"] = _incidents[0]["scenario_id"]
+
+    _sel_inc = next(
+        (inc for inc in _incidents
+         if inc["scenario_id"] == st.session_state["agent_selected_incident_id"]),
+        _incidents[0] if _incidents else None,
+    )
+    _sel_scenario = _sel_inc["scenario_id"] if _sel_inc else "enterprise_v3_0000"
+
+    # ── Page header bar ───────────────────────────────────────────────────────
     st.markdown(
-        '<div class="ws-title">Agentic Ops Orchestrator</div>'
-        '<div class="ws-desc">'
-        "Enterprise-facing AI SRE flow: simulated alerts → graph/GNN RCA → "
-        "SOP-grounded remediation → human approval → ITSM draft."
-        "</div>",
+        '<div class="ws-title" style="margin-bottom:4px">Agentic Ops Orchestrator</div>',
         unsafe_allow_html=True,
     )
-    st.markdown(
-        _badge("Simulated Alerts", "#0ea5e9")
-        + _badge("Graph/GNN RCA", "#8b5cf6")
-        + _badge("Qwen/SOP Remediation", "#f59e0b")
-        + _badge("Human Approval", "#ef4444")
-        + _badge("Demo ITSM Draft", "#22c55e"),
-        unsafe_allow_html=True,
-    )
-
-    # ── guardrails notice ─────────────────────────────────────────────────────
-    st.info(
-        "**InfraGraph AI Agentic Orchestrator** — This tab does not ask an LLM to guess "
-        "infrastructure failures. It first collects graph evidence, runs topology/GNN RCA, "
-        "retrieves SOP/KB context, then uses Qwen to generate remediation under a human "
-        "approval gate.\n\n"
-        "⚠ Alerts are **simulated** for demo.  "
-        "⚠ Root cause is from **graph/GNN RCA** — never from the LLM.  "
-        "⚠ ITSM ticket is a **demo draft only** — no external system is contacted.  "
-        "⚠ Remediation requires **human approval** before execution."
-    )
-
-    st.markdown("---")
-
-    # ── control panel ─────────────────────────────────────────────────────────
-    st.markdown("#### Run Configuration")
-    _cp1, _cp2, _cp3 = st.columns([2, 1, 1])
-
-    with _cp1:
-        # Build scenario list
-        _avail_scenarios: list[str] = []
-        _sc_base = V3_DATASET_ROOT / "scenarios"
-        for _sp in ("train", "val", "test"):
-            _sp_dir = _sc_base / _sp
-            if _sp_dir.exists():
-                _avail_scenarios += sorted(p.name for p in _sp_dir.iterdir() if p.is_dir())
-        _avail_scenarios = _avail_scenarios or ["enterprise_v3_0000"]
-
-        # Discover which scenarios already have a GNN RCA result (prefer those)
-        _gnn_dirs = [
-            REPO_ROOT / "outputs"       / "enterprise_gnn_rca",
-            REPO_ROOT / "assets"        / "preloaded" / "enterprise_gnn_rca",
-            REPO_ROOT / "demo_assets"   / "enterprise_gnn_rca",
-            REPO_ROOT / "runtime_state" / "enterprise_gnn_rca",
-        ]
-        _scenarios_with_gnn: set[str] = set()
-        for _gd in _gnn_dirs:
-            if _gd.exists():
-                for _gf in _gd.iterdir():
-                    for _sid in _avail_scenarios:
-                        if _sid in _gf.stem:
-                            _scenarios_with_gnn.add(_sid)
-
-        # Priority: current session scenario > hero demo scenario > scenario with GNN > first available
-        _sess_scenario = (
-            (st.session_state.get("enterprise_ingestion_summary") or {}).get("scenario_id")
-            or st.session_state.get("selected_scenario_id")
-            or (st.session_state.get("enterprise_rca_result") or {}).get("scenario_id")
-            or ""
-        )
-        _default_idx = 0
-        if _sess_scenario and _sess_scenario in _avail_scenarios:
-            _default_idx = _avail_scenarios.index(_sess_scenario)
-        elif _scenarios_with_gnn:
-            # Pick the first scenario that has a GNN result
-            for _i, _s in enumerate(_avail_scenarios):
-                if _s in _scenarios_with_gnn:
-                    _default_idx = _i
-                    break
-
-        _chosen_scenario = st.selectbox(
-            "Scenario",
-            _avail_scenarios,
-            index=_default_idx,
-            help="Select an enterprise scenario to orchestrate. Scenarios with ★ have GNN RCA artifacts.",
-            key="agent_scenario_select",
-        )
-        if _scenarios_with_gnn:
-            _gnn_note = ", ".join(sorted(_scenarios_with_gnn)[:3])
-            st.caption(f"GNN RCA artifacts found for: {_gnn_note}"
-                       + (" …" if len(_scenarios_with_gnn) > 3 else ""))
-
-    with _cp2:
-        _chosen_diagram = (
-            st.session_state.get("selected_diagram_id")
-            or st.session_state.get("diagram_id")
-            or ""
-        )
-        st.text_input(
-            "Diagram ID (optional)",
-            value=_chosen_diagram,
-            key="agent_diagram_input",
-            help="Leave blank to auto-select from scenario.",
-        )
-
-    with _cp3:
-        _prefer_qwen = st.checkbox(
-            "Prefer Qwen/vLLM remediation",
-            value=True,
-            key="agent_prefer_qwen",
-            help="Use Qwen/vLLM when available; falls back to SOP template if not running.",
-        )
-
-    _run_col, _rst_col = st.columns([3, 1])
-    with _run_col:
-        _run_clicked = st.button(
-            "▶  Run Agentic Incident Flow",
-            type="primary",
-            use_container_width=True,
-            key="agent_run_btn",
-            disabled=not _AGENT_OK,
-        )
-    with _rst_col:
+    _h1, _h2, _h3, _h4, _h5 = st.columns([3, 0.8, 0.8, 0.8, 0.8])
+    with _h1:
+        if _sel_inc:
+            _sv_c = {"critical": "#ef4444", "high": "#f59e0b", "medium": "#eab308"}.get(
+                _sel_inc["severity"], "#6b7280"
+            )
+            st.markdown(
+                f'<div style="font-size:1.0rem;font-weight:700;color:#f1f5f9;line-height:1.3">'
+                f'<span style="color:{_sv_c};margin-right:5px">●</span>{_sel_inc["title"]}</div>'
+                f'<div style="font-size:0.71rem;color:#64748b;margin-top:2px">'
+                f'{_sel_inc["id"]} · {_sel_inc["service"]} · {_sel_inc["time"]}'
+                f'{"  ✦ GNN" if _sel_inc["has_gnn"] else ""}</div>',
+                unsafe_allow_html=True,
+            )
+    with _h2:
+        _prefer_qwen = st.checkbox("Qwen", value=True, key="agent_prefer_qwen",
+                                   help="Use Qwen/vLLM for remediation when available.")
+    with _h3:
+        if st.button("Acknowledge", use_container_width=True, key="agent_ack_btn"):
+            st.toast("Incident acknowledged.", icon="✓")
+    with _h4:
+        if st.button("Declare Blocker", use_container_width=True, key="agent_blocker_btn"):
+            st.toast("Marked as blocker. No external system contacted (demo).", icon="🚨")
+    with _h5:
         if st.button("Reset", use_container_width=True, key="agent_reset_btn"):
-            st.session_state.agent_run_result     = None
+            st.session_state.agent_run_result      = None
             st.session_state.agent_approval_status = "pending"
             st.rerun()
+
+    st.markdown(
+        '<hr style="border:none;border-top:1px solid rgba(255,255,255,0.06);margin:8px 0 10px">',
+        unsafe_allow_html=True,
+    )
 
     if not _AGENT_OK:
         st.error(
@@ -7460,177 +7437,134 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
         )
         return
 
-    # ── execute orchestrator ──────────────────────────────────────────────────
-    if _run_clicked:
-        st.session_state.agent_approval_status = "pending"
-        _diag_override = st.session_state.get("agent_diagram_input") or None
-        with st.spinner("Running 9-step agentic incident flow…"):
-            try:
-                st.session_state.agent_run_result = _run_agent_flow(
-                    repo_root=REPO_ROOT,
-                    selected_diagram_id=_diag_override,
-                    scenario_id=_chosen_scenario,
-                    prefer_qwen=_prefer_qwen,
-                    mode="demo",
-                )
-            except Exception as _exc:
-                st.error(f"Orchestrator error: {_exc}")
-                return
-        st.rerun()
+    # ── 3-column workspace: incidents | findings | remediation ────────────────
+    _col_list, _col_findings, _col_rem = st.columns([0.85, 2.1, 1.55])
 
-    _run: dict | None = st.session_state.agent_run_result
-    if not _run:
+    # ── LEFT — Active Incident Queue ──────────────────────────────────────────
+    with _col_list:
         st.markdown(
-            '<div style="text-align:center;padding:40px;opacity:0.5;font-size:0.9rem">'
-            "Click <strong>Run Agentic Incident Flow</strong> to start the orchestration."
-            "</div>",
+            '<div style="font-size:0.62rem;font-weight:700;color:#64748b;text-transform:uppercase;'
+            'letter-spacing:.1em;margin-bottom:8px">Active Incidents</div>',
             unsafe_allow_html=True,
         )
-        return
-
-    # ══════════════════════════════════════════════════════════════════════════
-    # Incident Command Center
-    # ══════════════════════════════════════════════════════════════════════════
-    st.markdown("---")
-
-    # Resolve approval status from session (user may have approved/rejected)
-    _approval_status = st.session_state.get("agent_approval_status", "pending")
-    _run["approval_gate"]["status"] = _approval_status
-    _ticket = _run.get("ticket_draft", {})
-    _ticket["approval_status"] = _approval_status
-
-    _confidence_pct = f"{_run.get('confidence', 0):.0%}"
-    _imp_diag       = _run.get("impacted_diagrams", [])
-    _ag             = _run.get("approval_gate", {})
-    _rca_src        = _run.get("rca_source", "")
-    _is_fallback    = "fallback" in _rca_src or _run.get("status") == "partial"
-    _is_gnn         = "GNN" in _rca_src
-
-    # ── A. Incident Status Banner ─────────────────────────────────────────────
-    if _is_fallback:
-        st.warning(
-            f"**Partial orchestration — GNN RCA not loaded.**  "
-            f"Root cause derived from graph-grounded RCA fallback (confidence fixed at 50%). "
-            f"Run the **Enterprise GNN RCA** tab first to load a real GNN result for this scenario, "
-            f"then re-run the orchestrator.",
-            icon="⚠️",
-        )
-    else:
-        st.success(
-            f"**Full orchestration complete.**  "
-            f"Root cause `{_run.get('root_cause', '—')}` identified by **{_rca_src}** "
-            f"(confidence {_confidence_pct}). {len(_imp_diag)} diagram(s) impacted.",
-            icon="✓",
-        )
-
-    # ── KPI strip ─────────────────────────────────────────────────────────────
-    _m1, _m2, _m3, _m4, _m5, _m6 = st.columns(6)
-    for _col, _lbl, _val, _hi_color in (
-        (_m1, "Root Cause",     _run.get("root_cause") or "—",       "#f1f5f9"),
-        (_m2, "RCA Source",     _rca_src.replace("_", " "),          "#8b5cf6" if _is_gnn else "#f59e0b"),
-        (_m3, "Confidence",     _confidence_pct,                     "#22c55e" if float(_run.get("confidence",0)) >= 0.8 else "#f59e0b"),
-        (_m4, "Impacted Diags", str(len(_imp_diag)),                 "#ef4444" if len(_imp_diag) >= 3 else "#f59e0b"),
-        (_m5, "Risk Level",     _ag.get("risk_level", "—").upper(),  {"HIGH":"#ef4444","MEDIUM":"#f59e0b","LOW":"#22c55e"}.get(_ag.get("risk_level","").upper(),"#6b7280")),
-        (_m6, "Approval",       _approval_status.upper(),            {"APPROVED":"#22c55e","REJECTED":"#ef4444","PENDING":"#f59e0b"}.get(_approval_status.upper(),"#6b7280")),
-    ):
-        with _col:
+        for _inc in _incidents:
+            _is_active = (_inc["scenario_id"] == st.session_state["agent_selected_incident_id"])
+            _sv_color  = {"critical": "#ef4444", "high": "#f59e0b", "medium": "#eab308"}.get(
+                _inc["severity"], "#6b7280"
+            )
+            _inc_bg  = "rgba(99,102,241,0.12)" if _is_active else "rgba(255,255,255,0.02)"
+            _inc_bdr = "rgba(99,102,241,0.5)"  if _is_active else "rgba(255,255,255,0.07)"
+            _title_short = (_inc["title"][:24] + "…") if len(_inc["title"]) > 24 else _inc["title"]
+            if st.button(
+                _title_short,
+                key=f"inc_sel_{_inc['scenario_id']}",
+                use_container_width=True,
+                help=f"{_inc['id']} · {_inc['service']}",
+            ):
+                if not _is_active:
+                    st.session_state["agent_selected_incident_id"] = _inc["scenario_id"]
+                    st.session_state.agent_run_result      = None
+                    st.session_state.agent_approval_status = "pending"
+                    st.rerun()
+            _gnn_tag = " GNN" if _inc["has_gnn"] else ""
             st.markdown(
-                f'<div style="{_card_css()}text-align:center">'
-                f'<div style="font-size:0.62rem;opacity:0.55;text-transform:uppercase;letter-spacing:.06em">{_lbl}</div>'
-                f'<div style="font-size:0.9rem;font-weight:700;margin-top:5px;color:{_hi_color};word-break:break-word">{_val}</div>'
-                f"</div>",
+                f'<div style="font-size:0.62rem;color:#64748b;margin:-6px 0 8px 2px">'
+                f'<span style="color:{_sv_color}">●</span> {_inc["severity"]} · '
+                f'{_inc["time"]}{_gnn_tag}</div>',
                 unsafe_allow_html=True,
             )
 
-    st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
+    # ── Auto-run orchestration for selected scenario ───────────────────────────
+    _run: dict | None = st.session_state.agent_run_result
+    if _run is None:
+        with _col_findings:
+            with st.spinner(f"AI analysis running for {_sel_scenario}…"):
+                try:
+                    st.session_state.agent_run_result = _run_agent_flow(
+                        repo_root=REPO_ROOT,
+                        selected_diagram_id=None,
+                        scenario_id=_sel_scenario,
+                        prefer_qwen=st.session_state.get("agent_prefer_qwen", True),
+                        mode="demo",
+                    )
+                    st.session_state.agent_approval_status = "pending"
+                except Exception as _exc:
+                    st.error(f"Orchestrator error: {_exc}")
+                    return
+        st.rerun()
+        return
 
-    # ── B/C/D. 3-column incident workspace ────────────────────────────────────
-    _col_lft, _col_mid, _col_rgt = st.columns([1.15, 1.5, 1.35])
+    # ── Resolve run variables ─────────────────────────────────────────────────
+    _approval_status = st.session_state.get("agent_approval_status", "pending")
+    _run["approval_gate"]["status"] = _approval_status
+    _ticket          = _run.get("ticket_draft", {})
+    _ticket["approval_status"] = _approval_status
+    _confidence_pct  = f"{_run.get('confidence', 0):.0%}"
+    _imp_diag        = _run.get("impacted_diagrams", [])
+    _ag              = _run.get("approval_gate", {})
+    _rca_src         = _run.get("rca_source", "")
+    _is_fallback     = "fallback" in _rca_src or _run.get("status") == "partial"
+    _is_gnn          = "GNN" in _rca_src
 
-    # helper locals
-    _step1 = next((s for s in _run.get("steps", []) if s.get("step_id") == 1), {})
-    _step2 = next((s for s in _run.get("steps", []) if s.get("step_id") == 2), {})
-    _step4 = next((s for s in _run.get("steps", []) if s.get("step_id") == 4), {})
-    _step5 = next((s for s in _run.get("steps", []) if s.get("step_id") == 5), {})
+    _step1       = next((s for s in _run.get("steps", []) if s.get("step_id") == 1), {})
+    _step2       = next((s for s in _run.get("steps", []) if s.get("step_id") == 2), {})
+    _step4       = next((s for s in _run.get("steps", []) if s.get("step_id") == 4), {})
+    _step5       = next((s for s in _run.get("steps", []) if s.get("step_id") == 5), {})
     _al_payload  = _step1.get("payload") or {}
     _tl_count    = _al_payload.get("alert_count", 0)
     _alert_nodes = _al_payload.get("alert_nodes", _al_payload.get("alerts", []))
     _tp          = _step2.get("payload") or {}
+    _rem_src     = _run.get("remediation_source", "—")
 
-    # ── LEFT — Alert Stream ───────────────────────────────────────────────────
-    with _col_lft:
-        st.markdown(
-            '<div style="font-size:0.63rem;font-weight:700;color:#64748b;text-transform:uppercase;'
-            'letter-spacing:.1em;margin-bottom:8px">Alert Stream</div>',
-            unsafe_allow_html=True,
-        )
-        st.markdown(
-            f'<div style="{_card_css()}border-left:3px solid #0ea5e9">',
-            unsafe_allow_html=True,
-        )
-        st.markdown(
-            _badge(f"{_tl_count} Simulated Alert(s)", "#0ea5e9"),
-            unsafe_allow_html=True,
-        )
-        st.caption(_step1.get("summary", "Alert telemetry collected from scenario graph."))
-        if _alert_nodes:
-            for _an in _alert_nodes[:10]:
-                _an_id = _an if isinstance(_an, str) else _an.get("node", _an.get("node_id", str(_an)))
+    # ── MIDDLE — AI Expert Summary & Findings ─────────────────────────────────
+    with _col_findings:
+        # Status banner
+        if _is_fallback:
+            st.warning(
+                "**Partial analysis** — graph-grounded RCA fallback active. "
+                "Run Enterprise GNN RCA for this scenario for full AI confidence.",
+                icon="⚠️",
+            )
+        else:
+            st.success(
+                f"**AI analysis complete.** Root cause `{_run.get('root_cause', '—')}` "
+                f"identified with {_confidence_pct} confidence.",
+                icon="✓",
+            )
+
+        # KPI strip
+        _k1, _k2, _k3, _k4 = st.columns(4)
+        for _kc, _kl, _kv, _kcolor in [
+            (_k1, "Root Cause",  _run.get("root_cause") or "—",   "#f1f5f9"),
+            (_k2, "Confidence",  _confidence_pct,                  "#22c55e" if float(_run.get("confidence", 0)) >= 0.8 else "#f59e0b"),
+            (_k3, "Impacted",    f"{len(_imp_diag)} diagrams",     "#ef4444" if len(_imp_diag) >= 3 else "#f59e0b"),
+            (_k4, "Risk",        ((_ag.get("risk_level") or "—")).upper(), {"HIGH": "#ef4444", "MEDIUM": "#f59e0b", "LOW": "#22c55e"}.get(((_ag.get("risk_level") or "")).upper(), "#6b7280")),
+        ]:
+            with _kc:
                 st.markdown(
-                    f'<div style="font-size:0.71rem;color:#cbd5e1;padding:2px 0;'
-                    f'border-bottom:1px solid rgba(255,255,255,0.04)">'
-                    f'⚡ <code style="font-size:0.68rem">{html.escape(str(_an_id))}</code></div>',
+                    f'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);'
+                    f'border-radius:8px;padding:8px 10px;text-align:center;margin-bottom:8px">'
+                    f'<div style="font-size:0.57rem;color:#64748b;text-transform:uppercase;letter-spacing:.07em">{_kl}</div>'
+                    f'<div style="font-size:0.8rem;font-weight:700;color:{_kcolor};word-break:break-word;margin-top:3px">{_kv}</div>'
+                    f'</div>',
                     unsafe_allow_html=True,
                 )
-        elif _tl_count:
-            st.caption(f"{_tl_count} alert events from scenario graph.")
-        _ev1 = _step1.get("evidence", [])
-        for _ev in _ev1[:4]:
-            st.markdown(
-                f'<div style="font-size:0.70rem;color:#64748b;padding:1px 0">· {html.escape(str(_ev))}</div>',
-                unsafe_allow_html=True,
-            )
-        st.markdown("</div>", unsafe_allow_html=True)
 
-        if _tp:
-            st.markdown(
-                f'<div style="{_card_css()}">',
-                unsafe_allow_html=True,
-            )
-            st.markdown(
-                _badge(_run.get("topology_source", "—").replace("_", " "), "#0f766e"),
-                unsafe_allow_html=True,
-            )
-            st.caption(f"Scenario: {_run.get('scenario_id', '—')}")
-            st.markdown(
-                f'<div style="font-size:0.71rem;color:#94a3b8">'
-                f'Nodes {_tp.get("node_count", 0)} &nbsp;·&nbsp; '
-                f'Edges {_tp.get("edge_count", 0)} &nbsp;·&nbsp; '
-                f'Cross {_tp.get("cross_edge_count", 0)} &nbsp;·&nbsp; '
-                f'Domains {_tp.get("domain_count", 0)}</div>',
-                unsafe_allow_html=True,
-            )
-            st.markdown("</div>", unsafe_allow_html=True)
-
-    # ── MIDDLE — AI Findings / RCA Evidence / Blast Radius ───────────────────
-    with _col_mid:
         st.markdown(
             '<div style="font-size:0.63rem;font-weight:700;color:#64748b;text-transform:uppercase;'
-            'letter-spacing:.1em;margin-bottom:8px">AI Findings</div>',
+            'letter-spacing:.1em;margin-bottom:8px">AI Expert Summary &amp; Findings</div>',
             unsafe_allow_html=True,
         )
 
+        # RCA Evidence card
         _rca_border = "#8b5cf6" if _is_gnn else "#f59e0b"
-        st.markdown(
-            f'<div style="{_card_css()}border-left:4px solid {_rca_border}">',
-            unsafe_allow_html=True,
-        )
+        st.markdown(f'<div style="{_card_css()}border-left:4px solid {_rca_border}">', unsafe_allow_html=True)
         st.markdown(
             _badge("Enterprise GNN RCA", "#8b5cf6") if _is_gnn else _badge("Graph-grounded RCA", "#f59e0b"),
             unsafe_allow_html=True,
         )
-        st.markdown(f"**Root Cause:** `{_run.get('root_cause') or '—'}`")
-        st.markdown(f"**Diagram:** `{_run.get('root_cause_diagram') or '—'}`")
+        st.markdown(f"**Root Cause Node:** `{_run.get('root_cause') or '—'}`")
+        st.markdown(f"**Source Diagram:** `{_run.get('root_cause_diagram') or '—'}`")
         st.markdown(f"**Confidence:** {_confidence_pct}")
         _bullets = (_step5.get("evidence") or [])[:5]
         if _bullets:
@@ -7641,93 +7575,152 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
             st.caption(f"⚠ {_step4.get('summary', '')}")
         st.markdown("</div>", unsafe_allow_html=True)
 
-        _br_border = "#ef4444" if len(_imp_diag) >= 3 else "#f59e0b" if _imp_diag else "#22c55e"
+        # Alert stream (compact)
         st.markdown(
-            f'<div style="{_card_css()}border-left:4px solid {_br_border}">',
+            '<div style="font-size:0.63rem;font-weight:700;color:#64748b;text-transform:uppercase;'
+            'letter-spacing:.1em;margin:4px 0 8px">Alert Stream</div>',
             unsafe_allow_html=True,
         )
+        st.markdown(f'<div style="{_card_css()}border-left:3px solid #0ea5e9">', unsafe_allow_html=True)
+        st.markdown(_badge(f"{_tl_count} Simulated Alerts", "#0ea5e9"), unsafe_allow_html=True)
+        st.caption(_step1.get("summary", "Alert telemetry collected from scenario graph."))
+        if _alert_nodes:
+            for _an in _alert_nodes[:8]:
+                _an_id = _an if isinstance(_an, str) else _an.get("node", _an.get("node_id", str(_an)))
+                st.markdown(
+                    f'<div style="font-size:0.70rem;color:#cbd5e1;padding:1px 0">'
+                    f'⚡ <code style="font-size:0.67rem">{html.escape(str(_an_id))}</code></div>',
+                    unsafe_allow_html=True,
+                )
+        elif _tl_count:
+            st.caption(f"{_tl_count} alert events from scenario graph.")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # Blast Radius
+        _br_border = "#ef4444" if len(_imp_diag) >= 3 else "#f59e0b" if _imp_diag else "#22c55e"
+        st.markdown(f'<div style="{_card_css()}border-left:4px solid {_br_border}">', unsafe_allow_html=True)
         st.markdown(f"**Blast Radius — {len(_imp_diag)} diagram(s) impacted**")
         if _imp_diag:
-            for _d in _imp_diag[:8]:
+            for _d in _imp_diag[:6]:
                 st.markdown(f"&emsp;• `{_d}`")
-            if len(_imp_diag) > 8:
-                st.caption(f"…and {len(_imp_diag)-8} more")
+            if len(_imp_diag) > 6:
+                st.caption(f"…and {len(_imp_diag)-6} more")
         else:
             st.caption("No impacted diagrams identified.")
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # ── RIGHT — Remediation Pipeline / Confidence Gate / Approval / ITSM ─────
-    with _col_rgt:
+    # ── RIGHT — Remediation Pipeline ──────────────────────────────────────────
+    with _col_rem:
         st.markdown(
             '<div style="font-size:0.63rem;font-weight:700;color:#64748b;text-transform:uppercase;'
             'letter-spacing:.1em;margin-bottom:8px">Remediation Pipeline</div>',
             unsafe_allow_html=True,
         )
 
-        _rem_src    = _run.get("remediation_source", "—")
-        _rem_border = "#22c55e" if _rem_src == "qwen_vllm" else "#f59e0b"
-        _rem_color  = "#22c55e" if _rem_src == "qwen_vllm" else "#f59e0b"
-        _rl       = _ag.get("risk_level", "—")
-        _rl_color = {"high": "#ef4444", "medium": "#f59e0b", "low": "#22c55e"}.get(_rl, "#6b7280")
-        st.markdown(
-            f'<div style="{_card_css()}border-left:4px solid {_rem_border}">',
-            unsafe_allow_html=True,
-        )
-        st.markdown(_badge(f"Remediation: {_rem_src}", _rem_color), unsafe_allow_html=True)
-        st.markdown(f"**Risk level:** " + _badge(_rl.upper(), _rl_color), unsafe_allow_html=True)
+        # Auto Remediation toggle
+        st.toggle("Auto Remediation", value=False, key="agent_auto_rem",
+                  help="When enabled, remediation executes automatically on approval (demo only).")
+
+        # Source + risk
+        _rem_color = "#22c55e" if _rem_src == "qwen_vllm" else "#f59e0b"
+        _rl        = (_ag.get("risk_level") or "").lower()
+        _rl_color  = {"high": "#ef4444", "medium": "#f59e0b", "low": "#22c55e"}.get(_rl, "#6b7280")
+        st.markdown(f'<div style="{_card_css()}border-left:4px solid {_rem_color}">', unsafe_allow_html=True)
+        st.markdown(_badge(f"Source: {_rem_src}", _rem_color), unsafe_allow_html=True)
+        st.markdown("**Risk level:** " + _badge((_rl or "—").upper(), _rl_color), unsafe_allow_html=True)
         st.caption(_ag.get("reason", ""))
+
+        # Remediation steps
+        _rem_steps = [l.strip() for l in (_ticket.get("remediation_summary") or "").splitlines() if l.strip()]
+        if not _rem_steps:
+            _rem_steps = [
+                f"1. SSH to `{_run.get('root_cause', '?')}`",
+                "2. Check interface counters and syslog",
+                "3. Validate upstream dependency path",
+                "4. Apply vendor-recommended patch / restart",
+                "5. Confirm alert suppression across impacted diagrams",
+            ]
+        for _rs in _rem_steps[:6]:
+            st.markdown(
+                f'<div style="font-size:0.71rem;color:#cbd5e1;padding:2px 0;'
+                f'border-bottom:1px solid rgba(255,255,255,0.04)">{html.escape(str(_rs))}</div>',
+                unsafe_allow_html=True,
+            )
         st.markdown("</div>", unsafe_allow_html=True)
 
+        # Confidence gate
+        _conf_val   = float(_run.get("confidence", 0))
+        _conf_color = "#22c55e" if _conf_val >= 0.8 else "#f59e0b" if _conf_val >= 0.5 else "#ef4444"
+        st.markdown(f'<div style="{_card_css()}">', unsafe_allow_html=True)
+        st.markdown(
+            f'<div style="font-size:0.65rem;color:#64748b;margin-bottom:4px">Confidence Gate</div>'
+            f'<div style="font-size:1.4rem;font-weight:800;color:{_conf_color}">{_confidence_pct}</div>'
+            f'<div style="font-size:0.63rem;color:#64748b;margin-top:2px">'
+            f'{"GNN inference" if _is_gnn else "Graph-grounded estimate"}</div>',
+            unsafe_allow_html=True,
+        )
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # Human Approval Gate
         _ap_border = {"approved": "#22c55e", "rejected": "#ef4444", "pending": "#f59e0b"}.get(
             _approval_status, "#6b7280"
         )
-        st.markdown(
-            f'<div style="{_card_css()}border-left:4px solid {_ap_border}">',
-            unsafe_allow_html=True,
-        )
-        st.markdown("**Human Approval Gate**")
+        st.markdown(f'<div style="{_card_css()}border-left:4px solid {_ap_border}">', unsafe_allow_html=True)
+        st.markdown("**Human Approval**")
         if _approval_status == "pending":
-            _ap_col1, _ap_col2 = st.columns(2)
-            with _ap_col1:
+            _ap1, _ap2 = st.columns(2)
+            with _ap1:
                 if st.button("✓ Approve", type="primary", use_container_width=True,
                              key="agent_approve_btn"):
                     st.session_state.agent_approval_status = "approved"
                     st.toast("Demo ticket approved. No external ITSM system was called.", icon="✅")
                     st.rerun()
-            with _ap_col2:
+            with _ap2:
                 if st.button("✗ Reject", use_container_width=True, key="agent_reject_btn"):
                     st.session_state.agent_approval_status = "rejected"
-                    st.toast("Ticket marked for review. No actions taken.", icon="⚠️")
+                    st.toast("Ticket marked for review.", icon="⚠️")
                     st.rerun()
-            st.caption(_ag.get("recommended_next_action", ""))
+            st.caption(_ag.get("recommended_next_action", "Pending human review."))
         elif _approval_status == "approved":
-            st.success("Approved — demo only, no external system contacted.")
+            st.success("Approved — demo only.")
         else:
-            st.warning("Rejected / needs review. No actions taken.")
+            st.warning("Rejected / needs review.")
         st.markdown("</div>", unsafe_allow_html=True)
 
-        # Compact ITSM snapshot
-        st.markdown(
-            f'<div style="{_card_css()}border-left:4px solid #22c55e">',
-            unsafe_allow_html=True,
-        )
+        # Manual Review / Apply buttons
+        _mr1, _mr2 = st.columns(2)
+        with _mr1:
+            st.button("Manual Review", use_container_width=True, key="agent_manual_btn")
+        with _mr2:
+            _apply_ok = _approval_status == "approved"
+            if st.button(
+                "Apply Remediation",
+                use_container_width=True,
+                key="agent_apply_btn",
+                type="primary" if _apply_ok else "secondary",
+                disabled=not _apply_ok,
+                help="Approve first. Demo only — no real actions taken.",
+            ):
+                st.toast("Demo: remediation would execute here. No real actions taken.", icon="⚡")
+
+        # ITSM Snapshot
+        st.markdown(f'<div style="{_card_css()}border-left:4px solid #22c55e">', unsafe_allow_html=True)
         st.markdown(_badge("Demo ITSM Draft", "#22c55e"), unsafe_allow_html=True)
         for _fk, _fv in [
-            ("Ticket ID",   _ticket.get("ticket_id", "—")),
-            ("Priority",    _ticket.get("priority", "—")),
-            ("Assigned to", _ticket.get("assignment_group", "—")),
-            ("Status",      _approval_status.upper()),
+            ("Ticket",   _ticket.get("ticket_id", "—")),
+            ("Priority", _ticket.get("priority", "—")),
+            ("Assigned", _ticket.get("assignment_group", "—")),
+            ("Status",   _approval_status.upper()),
         ]:
             st.markdown(
-                f'<div style="font-size:0.71rem;color:#94a3b8">{_fk}: '
-                f'<span style="color:#f1f5f9;font-weight:600">'
-                f'{html.escape(str(_fv))}</span></div>',
+                f'<div style="font-size:0.70rem;color:#94a3b8">{_fk}: '
+                f'<span style="color:#f1f5f9;font-weight:600">{html.escape(str(_fv))}</span></div>',
                 unsafe_allow_html=True,
             )
         st.markdown("</div>", unsafe_allow_html=True)
 
     # ── Incident Copilot widget ───────────────────────────────────────────────
-    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
     with st.expander("Incident Copilot", expanded=False):
         st.markdown(
             '<div style="font-size:0.78rem;color:#94a3b8;margin-bottom:10px">'
@@ -7735,9 +7728,7 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
             '</div>',
             unsafe_allow_html=True,
         )
-
-        # Quick prompts (row of 3 + row of 2)
-        _IC_PROMPTS = [
+        _IC_PROMPTS  = [
             "Why is this the root cause?",
             "Show impacted diagrams",
             "Explain the blast radius",
@@ -7748,26 +7739,17 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
         _ic_r1 = st.columns(3)
         _ic_r2 = st.columns(2)
         for _qi, _qp_txt in enumerate(_IC_PROMPTS):
-            _ic_col = (_ic_r1 + _ic_r2)[_qi]
-            with _ic_col:
+            with (_ic_r1 + _ic_r2)[_qi]:
                 if st.button(_qp_txt, key=f"ic_qp_{_qi}", use_container_width=True):
                     _ic_clicked = _qp_txt
 
         st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
-
-        # Free-text input + submit
-        _ic_q      = st.text_input(
-            "Question",
-            key="agent_copilot_input",
-            label_visibility="collapsed",
-            placeholder="Ask about this incident…",
-        )
+        _ic_q      = st.text_input("Question", key="agent_copilot_input",
+                                    label_visibility="collapsed", placeholder="Ask about this incident…")
         _ic_submit = st.button("Ask Copilot", key="agent_copilot_submit", type="primary")
 
-        # Compute answer when a prompt or submit fires
-        _active_q = _ic_clicked or (_ic_q.strip() if _ic_submit and _ic_q.strip() else None)
+        _active_q: "str | None" = _ic_clicked or (_ic_q.strip() if _ic_submit and _ic_q.strip() else None)
         if _active_q:
-            # Build context scoped to the active run
             _ic_ctx = _copilot_context()
             _ic_ctx["enterprise_rca_result"] = {
                 "root_cause":         _run.get("root_cause", ""),
@@ -7779,7 +7761,6 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                 "impact_path":        [],
             }
             _ic_ctx["active_run_evidence"] = (_step5.get("evidence") or [])
-            # Vector retrieval
             _ic_vec, _ = _retrieve_vector_evidence_global(_active_q, k=6)
             if not _ic_vec:
                 _ic_vec, _ = _retrieve_vector_evidence(_active_q, k=6)
@@ -7794,15 +7775,12 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                 st.session_state.get("last_copilot_response_source", "—")
             )
 
-        # Answer area
         if st.session_state.get("agent_copilot_answer"):
             st.divider()
             if st.session_state.get("agent_copilot_question"):
                 st.caption(f"Q: {st.session_state['agent_copilot_question']}")
             st.markdown(st.session_state["agent_copilot_answer"])
-
-            # Transparency footer
-            _ic_src = st.session_state.get("agent_copilot_response_source", "—")
+            _ic_src   = st.session_state.get("agent_copilot_response_source", "—")
             _ic_vec_r = st.session_state.get("agent_copilot_vector_evidence") or []
             _det_chk  = "✓" if _ic_src in ("deterministic_fallback", "qwen_vllm") else "○"
             _vec_chk  = "✓" if _ic_vec_r else "○"
@@ -7816,9 +7794,9 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                 unsafe_allow_html=True,
             )
 
-    # ── ITSM Ticket Draft — full detail (collapsed) ──────────────────────────
+    # ── ITSM full detail (collapsed) ──────────────────────────────────────────
     with st.expander(
-        f"ITSM Ticket Draft — {_ticket.get('ticket_id', '—')}  |  "
+        f"ITSM Ticket — {_ticket.get('ticket_id', '—')}  |  "
         f"{_ticket.get('priority', '—')}  |  {_approval_status.upper()}",
         expanded=False,
     ):
@@ -7830,10 +7808,8 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                 st.markdown(f"**Approval Status:** {_ticket.get('approval_status', '—').upper()}")
             with _tf2:
                 _tid = _ticket.get("impacted_diagrams", [])
-                st.markdown(
-                    f"**Impacted Diagrams ({len(_tid)}):** "
-                    + ", ".join(str(d) for d in _tid[:6])
-                )
+                st.markdown(f"**Impacted Diagrams ({len(_tid)}):** "
+                            + ", ".join(str(d) for d in _tid[:6]))
                 if _ticket.get("evidence_summary"):
                     st.markdown("**Evidence Summary:**")
                     st.text(_ticket.get("evidence_summary", ""))
@@ -7872,7 +7848,6 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                 if _pl:
                     with st.expander("Raw payload", expanded=False):
                         st.json(_pl)
-
         st.markdown("---")
         st.markdown(
             f"| Field | Value |\n|---|---|\n"
