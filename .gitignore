@@ -20,7 +20,7 @@ runtime_state/**/*.sqlite3-wal
 
 ## Large generated outputs / model checkpoints
 # outputs/
-model_artifacts/
+# model_artifacts/ — tracked via Git LFS (*.pt, *.joblib, *.bin patterns)
 # data/rca/enterprise_gnn/*.pt
 # yolov8*.pt
 
