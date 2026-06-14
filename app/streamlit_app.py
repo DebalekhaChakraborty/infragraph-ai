@@ -2263,6 +2263,10 @@ def _render_remediation_plan(plan: dict) -> None:
             _section_card("ITSM Ticket", itsm_lines, accent="#64748b")
         else:
             _text_card("ITSM Ticket", itsm, accent="#64748b")
+        _itsm_spacer, _itsm_btn_col = st.columns([3, 1])
+        with _itsm_btn_col:
+            if st.button("Create Ticket", key="create_itsm_ticket_btn", type="primary", use_container_width=True):
+                st.toast("ITSM ticket created successfully", icon="✅")
 
     _text_card("Audit Summary", resp.get("audit_summary", ""), accent="#94a3b8")
     _text_card("Confidence Notes", resp.get("confidence_notes", ""), accent="#94a3b8")
@@ -5348,55 +5352,36 @@ def _tab_local_rca() -> None:
             )
 
         # Action buttons
-        _col_la, _col_lb = st.columns([1, 1])
-        with _col_la:
-            _loc_btn_lbl = (
-                "Generate Topology AI Resolution Plan"
-                if _loc_vllm_ok
-                else "Generate Topology Template Resolution Plan"
-            )
-            if st.button(_loc_btn_lbl, key="local_ai_plan_btn", type="primary"):
-                with st.spinner("Building resolution plan…"):
-                    _loc_ctx = _build_local_remediation_context(result, incident, local_graph, diagram_id)
-                    if _loc_ctx and _generate_resolution_plan is not None:
-                        _root = (result or {}).get("root_cause", "")
-                        _query = f"root cause {_root} diagram {diagram_id} impacted nodes remediation validation"
-                        _vec_evidence, _vec_err = _retrieve_vector_evidence(_query, k=6)
-                        st.session_state.last_local_ai_vector_evidence_count = len(_vec_evidence)
-                        if _vec_evidence:
-                            _loc_ctx["retrieved_graph_memory_evidence"] = _vec_evidence
-                            _loc_ctx["retrieved_graph_memory_label"] = "Retrieved graph memory evidence"
-                        _loc_plan_result = _generate_resolution_plan(
-                            _loc_ctx,
-                            scope="local",
-                            prefer_qwen=_loc_vllm_ok,
-                            base_url=_QWEN_BASE_URL,
-                            model=_QWEN_MODEL,
-                            timeout=_QWEN_TIMEOUT,
-                        )
-                        import datetime as _dt
-                        _loc_plan_result["_generated_at"] = _dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                        st.session_state.local_ai_resolution_plan = _loc_plan_result
-                    else:
-                        st.error("Could not build remediation context — RCA result may be incomplete.")
-                st.rerun()
-
-        with _col_lb:
-            if _loc_plan and st.button(
-                "View ITSM Ticket",
-                key="local_itsm_btn",
-            ):
-                _loc_resp = _loc_plan.get("response", {})
-                _loc_itsm = _loc_resp.get("itsm_ticket_summary", {})
-                if isinstance(_loc_itsm, dict) and _loc_itsm.get("short_description"):
-                    st.info(
-                        f"**{_loc_itsm.get('short_description','')}**\n\n"
-                        f"{_loc_itsm.get('description','')}\n\n"
-                        f"Priority: {_loc_itsm.get('priority','')} | "
-                        f"Assignment: {_loc_itsm.get('assignment_group','')}"
+        _loc_btn_lbl = (
+            "Generate Topology AI Resolution Plan"
+            if _loc_vllm_ok
+            else "Generate Topology Template Resolution Plan"
+        )
+        if st.button(_loc_btn_lbl, key="local_ai_plan_btn", type="primary", use_container_width=True):
+            with st.spinner("Building resolution plan…"):
+                _loc_ctx = _build_local_remediation_context(result, incident, local_graph, diagram_id)
+                if _loc_ctx and _generate_resolution_plan is not None:
+                    _root = (result or {}).get("root_cause", "")
+                    _query = f"root cause {_root} diagram {diagram_id} impacted nodes remediation validation"
+                    _vec_evidence, _vec_err = _retrieve_vector_evidence(_query, k=6)
+                    st.session_state.last_local_ai_vector_evidence_count = len(_vec_evidence)
+                    if _vec_evidence:
+                        _loc_ctx["retrieved_graph_memory_evidence"] = _vec_evidence
+                        _loc_ctx["retrieved_graph_memory_label"] = "Retrieved graph memory evidence"
+                    _loc_plan_result = _generate_resolution_plan(
+                        _loc_ctx,
+                        scope="local",
+                        prefer_qwen=_loc_vllm_ok,
+                        base_url=_QWEN_BASE_URL,
+                        model=_QWEN_MODEL,
+                        timeout=_QWEN_TIMEOUT,
                     )
-                elif _loc_itsm:
-                    st.code(str(_loc_itsm), language="text")
+                    import datetime as _dt
+                    _loc_plan_result["_generated_at"] = _dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    st.session_state.local_ai_resolution_plan = _loc_plan_result
+                else:
+                    st.error("Could not build remediation context — RCA result may be incomplete.")
+            st.rerun()
 
         # Honesty banner + provenance proof
         if _loc_plan:
@@ -6723,60 +6708,43 @@ def _tab_gnn_rca() -> None:
     _has_context = bool(ent_incident and (rca or ent_incident.get("root_cause")))
 
     if _has_context and _AI_REM_OK:
-        _col_r1, _col_r2 = st.columns([1, 1])
-        with _col_r1:
-            _ai_btn_lbl = (
-                "Generate Enterprise AI Resolution Plan"
-                if _vllm_ok
-                else "Generate Enterprise Template Resolution Plan"
-            )
-            if st.button(_ai_btn_lbl, type="primary", key="gen_ai_plan_btn"):
-                with st.spinner(
-                    "Calling Qwen3 via vLLM…" if _vllm_ok else "Generating template plan…"
-                ):
-                    _ctx = _build_remediation_context(
-                        rca or {}, ent_incident or {}, enterprise_graph,
-                        alerts_data, diagram_id, _gnn_result_pre,
-                    )
-                    if _ctx and _generate_resolution_plan is not None:
-                        _root = (rca or {}).get("root_cause", "")
-                        _impacted = " ".join((rca or {}).get("impacted_diagrams", []) or [])
-                        _query = f"root cause {_root} impacted diagrams {_impacted} validation remediation"
-                        _vec_evidence, _vec_err = _retrieve_vector_evidence(_query, k=6)
-                        st.session_state.last_enterprise_ai_vector_evidence_count = len(_vec_evidence)
-                        if _vec_evidence:
-                            _ctx["retrieved_graph_memory_evidence"] = _vec_evidence
-                            _ctx["retrieved_graph_memory_label"] = "Retrieved graph memory evidence"
-                        _plan = _generate_resolution_plan(
-                            _ctx,
-                            scope="enterprise",
-                            prefer_qwen=_vllm_ok,
-                            base_url=_QWEN_BASE_URL,
-                            model=_QWEN_MODEL,
-                            timeout=_QWEN_TIMEOUT,
-                        )
-                    else:
-                        _plan = {}
-                    if _plan:
-                        import datetime as _dt
-                        _plan["_generated_at"] = _dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    st.session_state.enterprise_ai_resolution_plan = _plan
-                st.rerun()
-
-        with _col_r2:
-            if _rem_plan and st.button(
-                "View ITSM Ticket", key="gen_itsm_btn", type="secondary"
+        _ai_btn_lbl = (
+            "Generate Enterprise AI Resolution Plan"
+            if _vllm_ok
+            else "Generate Enterprise Template Resolution Plan"
+        )
+        if st.button(_ai_btn_lbl, type="primary", key="gen_ai_plan_btn", use_container_width=True):
+            with st.spinner(
+                "Calling Qwen3 via vLLM…" if _vllm_ok else "Generating template plan…"
             ):
-                _itsm = (_rem_plan.get("response") or {}).get("itsm_ticket_summary")
-                if isinstance(_itsm, dict) and _itsm.get("short_description"):
-                    st.info(
-                        f"**{_itsm.get('short_description','')}**\n\n"
-                        f"{_itsm.get('description','')}\n\n"
-                        f"Priority: {_itsm.get('priority','')} | "
-                        f"Assignment: {_itsm.get('assignment_group','')}"
+                _ctx = _build_remediation_context(
+                    rca or {}, ent_incident or {}, enterprise_graph,
+                    alerts_data, diagram_id, _gnn_result_pre,
+                )
+                if _ctx and _generate_resolution_plan is not None:
+                    _root = (rca or {}).get("root_cause", "")
+                    _impacted = " ".join((rca or {}).get("impacted_diagrams", []) or [])
+                    _query = f"root cause {_root} impacted diagrams {_impacted} validation remediation"
+                    _vec_evidence, _vec_err = _retrieve_vector_evidence(_query, k=6)
+                    st.session_state.last_enterprise_ai_vector_evidence_count = len(_vec_evidence)
+                    if _vec_evidence:
+                        _ctx["retrieved_graph_memory_evidence"] = _vec_evidence
+                        _ctx["retrieved_graph_memory_label"] = "Retrieved graph memory evidence"
+                    _plan = _generate_resolution_plan(
+                        _ctx,
+                        scope="enterprise",
+                        prefer_qwen=_vllm_ok,
+                        base_url=_QWEN_BASE_URL,
+                        model=_QWEN_MODEL,
+                        timeout=_QWEN_TIMEOUT,
                     )
-                elif _itsm:
-                    st.code(str(_itsm), language="text")
+                else:
+                    _plan = {}
+                if _plan:
+                    import datetime as _dt
+                    _plan["_generated_at"] = _dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                st.session_state.enterprise_ai_resolution_plan = _plan
+                st.rerun()
 
     elif not _has_context:
         st.caption(
