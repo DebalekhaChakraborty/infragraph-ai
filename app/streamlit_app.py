@@ -1,4 +1,4 @@
-﻿"""
+"""
 InfraGraph AI Command Center — Streamlit cockpit.
 
 Two sections in Diagram Intelligence (Tab 1):
@@ -4151,267 +4151,236 @@ def _tab_onboard_new_diagram() -> None:
         )
         return
 
-    left, right = st.columns([1, 1])
-    with left:
-        _s_col, _b_col = st.columns([3, 2])
-        with _s_col:
-            sel_idx = st.selectbox(
-                "Select sample diagram",
-                range(len(samples)),
-                format_func=lambda i: f"{samples[i]['sample_id']} | {samples[i]['display_name']}",
-                index=None,
-                placeholder="Select a diagram from the pool…",
-                key="onboard_sample_select",
-            )
+    _s_col, _b_col = st.columns([3, 2])
+    with _s_col:
+        sel_idx = st.selectbox(
+            "Select sample diagram",
+            range(len(samples)),
+            format_func=lambda i: f"{samples[i]['sample_id']} | {samples[i]['display_name']}",
+            index=None,
+            placeholder="Select a diagram from the pool…",
+            key="onboard_sample_select",
+        )
 
-        if sel_idx is None:
-            is_this_sample_active = False
-            img_path = Path("")
+    if sel_idx is None:
+        is_this_sample_active = False
+        img_path = Path("")
+    else:
+        sample   = samples[sel_idx]
+        did      = sample.get("source_diagram_id", "")
+        img_path = Path(sample.get("image_path", ""))
+
+        onboard_status = st.session_state.get("onboard_status", "not_started")
+        onboarded_sid  = (
+            _ss_dict("onboard_sample_record").get("sample_id", "")
+            if onboard_status != "not_started" else ""
+        )
+        is_this_sample_active = onboarded_sid == sample.get("sample_id", "")
+
+    if is_this_sample_active:
+        src_label = st.session_state.get("detection_source", "")
+        badge_cls = (
+            "badge-success"
+            if src_label == "LIVE_RFDETR_INFERENCE" or src_label.startswith(("Live RF-DETR", "RF-DETR"))
+            else "badge-info"
+        )
+        st.markdown(
+            f'<span class="badge badge-info">Ingested</span> '
+            f'<span class="badge {badge_cls}">{src_label}</span>',
+            unsafe_allow_html=True,
+        )
+
+    # ── action button (side-by-side with selectbox) ───────────────────────
+    _btn_disabled = (sel_idx is None) or (not img_path.exists())
+    with _b_col:
+        _run_clicked = st.button("Run Live Diagram Intelligence", type="primary",
+                                 use_container_width=True, disabled=_btn_disabled)
+    if _run_clicked:
+        if not _RUNTIME_INGESTION or _run_ingestion is None:
+            _err_d = f"  \n`{_RUNTIME_INGESTION_ERR}`" if _RUNTIME_INGESTION_ERR else ""
+            st.error(f"runtime_ingestion failed to load at startup — restart the app to retry.{_err_d}")
         else:
-            sample   = samples[sel_idx]
-            did      = sample.get("source_diagram_id", "")
-            img_path = Path(sample.get("image_path", ""))
-
-            onboard_status = st.session_state.get("onboard_status", "not_started")
-            onboarded_sid  = (
-                _ss_dict("onboard_sample_record").get("sample_id", "")
-                if onboard_status != "not_started" else ""
-            )
-            is_this_sample_active = onboarded_sid == sample.get("sample_id", "")
-
-        if is_this_sample_active:
-            src_label = st.session_state.get("detection_source", "")
-            badge_cls = (
-                "badge-success"
-                if src_label == "LIVE_RFDETR_INFERENCE" or src_label.startswith(("Live RF-DETR", "RF-DETR"))
-                else "badge-info"
-            )
-            st.markdown(
-                f'<span class="badge badge-info">Ingested</span> '
-                f'<span class="badge {badge_cls}">{src_label}</span>',
-                unsafe_allow_html=True,
-            )
-
-        # ── action button (side-by-side with selectbox) ───────────────────────
-        _btn_disabled = (sel_idx is None) or (not img_path.exists())
-        with _b_col:
-            _run_clicked = st.button("Run Live Diagram Intelligence", type="primary",
-                                     use_container_width=True, disabled=_btn_disabled)
-        if _run_clicked:
-            if not _RUNTIME_INGESTION or _run_ingestion is None:
-                _err_d = f"  \n`{_RUNTIME_INGESTION_ERR}`" if _RUNTIME_INGESTION_ERR else ""
-                st.error(f"runtime_ingestion failed to load at startup — restart the app to retry.{_err_d}")
-            else:
-                _external_rfdetr_result = {}
-                if st.session_state.use_live_rfdetr and _rfdetr_ckpt and _run_rfdetr_detection is not None:
-                    _conf = float(os.environ.get("INFRAGRAPH_RFDETR_CONFIDENCE", "0.25"))
-                    _timeout = int(os.environ.get("INFRAGRAPH_RFDETR_TIMEOUT", "180"))
-                    with st.spinner("Running external RF-DETR detector runtime…"):
-                        _external_rfdetr_result = _run_rfdetr_detection(
-                            img_path,
-                            Path(_rfdetr_ckpt),
-                            confidence=_conf,
-                            timeout=_timeout,
-                        )
-                elif st.session_state.use_live_rfdetr:
-                    _fallback_err = _RFDETR_BRIDGE_ERR or "RF-DETR bridge unavailable"
-                    if not _rfdetr_ckpt:
-                        _fallback_err = "RF-DETR checkpoint not found"
-                    _external_rfdetr_result = {
-                        "ok": False,
-                        "source": "verified_annotation_fallback",
-                        "detector_runtime_mode": "verified_annotation_fallback",
-                        "error": _fallback_err,
-                        "fallback_reason": _fallback_err,
-                        "checkpoint_path": "",
-                    }
-
-                _STEPS = [
-                    "Loading image",
-                    "Resolving external RF-DETR runtime",
-                    "Running live detector or verified annotation fallback",
-                    "Extracting OCR / text metadata",
-                    "Extracting connectors",
-                    "Building node table",
-                    "Building edge table",
-                    "Creating local graph memory packet",
-                    "Ready for absorption",
-                ]
-                _res_c1, _res_c2, _res_c3 = st.columns(3)
-                prog       = _res_c1.progress(0)
-                steps_area = _res_c1.empty()
-
-                ann_p  = sample.get("annotation_path", "")
-                lg_p   = sample.get("local_graph_path", "")
-                ent_p  = sample.get("enterprise_graph_path", "")
-                stitch = sample.get("stitch_map_path", "")
-                alerts = sample.get("alerts_path", "")
-
-                with st.spinner("Running live diagram intelligence…"):
-                    ingestion = _run_ingestion(
-                        repo_root             = REPO_ROOT,
-                        image_path            = img_path,
-                        diagram_id            = did,
-                        run_id                = sample["sample_id"],
-                        annotation_path       = Path(ann_p)  if ann_p  else None,
-                        local_graph_path      = Path(lg_p)   if lg_p   else None,
-                        enterprise_graph_path = Path(ent_p)  if ent_p  else None,
-                        stitch_map_path       = Path(stitch) if stitch else None,
-                        alerts_path           = Path(alerts) if alerts else None,
-                        use_live_rfdetr       = False,
-                        rfdetr_model          = None,
-                        external_rfdetr_result= _external_rfdetr_result,
+            _external_rfdetr_result = {}
+            if st.session_state.use_live_rfdetr and _rfdetr_ckpt and _run_rfdetr_detection is not None:
+                _conf = float(os.environ.get("INFRAGRAPH_RFDETR_CONFIDENCE", "0.25"))
+                _timeout = int(os.environ.get("INFRAGRAPH_RFDETR_TIMEOUT", "180"))
+                with st.spinner("Running external RF-DETR detector runtime…"):
+                    _external_rfdetr_result = _run_rfdetr_detection(
+                        img_path,
+                        Path(_rfdetr_ckpt),
+                        confidence=_conf,
+                        timeout=_timeout,
                     )
-
-                for idx, step in enumerate(_STEPS, 1):
-                    steps_area.markdown(
-                        "\n".join(
-                            f'<div style="font-size:0.78rem;'
-                            f'color:{"#10b981" if i <= idx else "#334155"};padding:2px 0">'
-                            f'{"✓" if i <= idx else "○"} {s}</div>'
-                            for i, s in enumerate(_STEPS, 1)
-                        ),
-                        unsafe_allow_html=True,
-                    )
-                    prog.progress(idx / len(_STEPS))
-
-                import pandas as _pd
-                st.session_state.selected_diagram_path      = str(img_path)
-                st.session_state.selected_diagram_id        = did
-                st.session_state.local_graph                = ingestion.get("local_graph")
-                st.session_state.node_table                 = _pd.DataFrame(ingestion.get("node_table_rows", []))
-                st.session_state.edge_table                 = _pd.DataFrame(ingestion.get("edge_table_rows", []))
-                st.session_state.validation_packet          = ingestion.get("packet") or {}
-                st.session_state.live_ingestion_run_dir     = str(ingestion.get("run_dir", ""))
-                st.session_state.detection_source           = ingestion.get("detection_source", "")
-                st.session_state.live_detection_result       = _external_rfdetr_result
-                st.session_state.detected_image_path        = str(ingestion.get("detected_image", ""))
-                st.session_state.enterprise_absorbed        = False
-                st.session_state.local_rca_result           = {}
-                st.session_state.local_incident             = {}
-                st.session_state.enterprise_rca_result      = {}
-                st.session_state.enterprise_incident        = {}
-                st.session_state.enterprise_ingestion_summary = {}
-                st.session_state.enterprise_graph_before    = None
-                st.session_state.enterprise_graph_after     = None
-                st.session_state.allow_local_simulation     = False
-                st.session_state.allow_enterprise_simulation = False
-                st.session_state.allow_deterministic_copilot = False
-                st.session_state.onboard_status             = "ingested_not_absorbed"
-                st.session_state.onboard_sample_record      = sample
-                st.session_state.enterprise_scenario_path  = sample.get("source_scenario_path", "")
-                st.session_state.catalog_selected_record    = {
-                    **sample,
-                    "detected_preview_path": str(ingestion.get("detected_image", "")),
+            elif st.session_state.use_live_rfdetr:
+                _fallback_err = _RFDETR_BRIDGE_ERR or "RF-DETR bridge unavailable"
+                if not _rfdetr_ckpt:
+                    _fallback_err = "RF-DETR checkpoint not found"
+                _external_rfdetr_result = {
+                    "ok": False,
+                    "source": "verified_annotation_fallback",
+                    "detector_runtime_mode": "verified_annotation_fallback",
+                    "error": _fallback_err,
+                    "fallback_reason": _fallback_err,
+                    "checkpoint_path": "",
                 }
 
-                det_src   = ingestion.get("detection_source", "")
-                badge_cls = "badge-success" if det_src == "LIVE_RFDETR_INFERENCE" else "badge-warn"
-                t_s       = ingestion.get("rfdetr_inference_time_s", 0) or 0
-                time_str  = f" ({t_s:.2f}s)" if t_s > 0 else ""
-                with _res_c1:
+            _STEPS = [
+                "Loading image",
+                "Resolving external RF-DETR runtime",
+                "Running live detector or verified annotation fallback",
+                "Extracting OCR / text metadata",
+                "Extracting connectors",
+                "Building node table",
+                "Building edge table",
+                "Creating local graph memory packet",
+                "Ready for absorption",
+            ]
+            _res_c1, _res_c2, _res_c3 = st.columns(3)
+            prog       = _res_c1.progress(0)
+            steps_area = _res_c1.empty()
+
+            ann_p  = sample.get("annotation_path", "")
+            lg_p   = sample.get("local_graph_path", "")
+            ent_p  = sample.get("enterprise_graph_path", "")
+            stitch = sample.get("stitch_map_path", "")
+            alerts = sample.get("alerts_path", "")
+
+            with st.spinner("Running live diagram intelligence…"):
+                ingestion = _run_ingestion(
+                    repo_root             = REPO_ROOT,
+                    image_path            = img_path,
+                    diagram_id            = did,
+                    run_id                = sample["sample_id"],
+                    annotation_path       = Path(ann_p)  if ann_p  else None,
+                    local_graph_path      = Path(lg_p)   if lg_p   else None,
+                    enterprise_graph_path = Path(ent_p)  if ent_p  else None,
+                    stitch_map_path       = Path(stitch) if stitch else None,
+                    alerts_path           = Path(alerts) if alerts else None,
+                    use_live_rfdetr       = False,
+                    rfdetr_model          = None,
+                    external_rfdetr_result= _external_rfdetr_result,
+                )
+
+            for idx, step in enumerate(_STEPS, 1):
+                steps_area.markdown(
+                    "\n".join(
+                        f'<div style="font-size:0.78rem;'
+                        f'color:{"#10b981" if i <= idx else "#334155"};padding:2px 0">'
+                        f'{"✓" if i <= idx else "○"} {s}</div>'
+                        for i, s in enumerate(_STEPS, 1)
+                    ),
+                    unsafe_allow_html=True,
+                )
+                prog.progress(idx / len(_STEPS))
+
+            import pandas as _pd
+            st.session_state.selected_diagram_path      = str(img_path)
+            st.session_state.selected_diagram_id        = did
+            st.session_state.local_graph                = ingestion.get("local_graph")
+            st.session_state.node_table                 = _pd.DataFrame(ingestion.get("node_table_rows", []))
+            st.session_state.edge_table                 = _pd.DataFrame(ingestion.get("edge_table_rows", []))
+            st.session_state.validation_packet          = ingestion.get("packet") or {}
+            st.session_state.live_ingestion_run_dir     = str(ingestion.get("run_dir", ""))
+            st.session_state.detection_source           = ingestion.get("detection_source", "")
+            st.session_state.live_detection_result       = _external_rfdetr_result
+            st.session_state.detected_image_path        = str(ingestion.get("detected_image", ""))
+            st.session_state.enterprise_absorbed        = False
+            st.session_state.local_rca_result           = {}
+            st.session_state.local_incident             = {}
+            st.session_state.enterprise_rca_result      = {}
+            st.session_state.enterprise_incident        = {}
+            st.session_state.enterprise_ingestion_summary = {}
+            st.session_state.enterprise_graph_before    = None
+            st.session_state.enterprise_graph_after     = None
+            st.session_state.allow_local_simulation     = False
+            st.session_state.allow_enterprise_simulation = False
+            st.session_state.allow_deterministic_copilot = False
+            st.session_state.onboard_status             = "ingested_not_absorbed"
+            st.session_state.onboard_sample_record      = sample
+            st.session_state.enterprise_scenario_path  = sample.get("source_scenario_path", "")
+            st.session_state.catalog_selected_record    = {
+                **sample,
+                "detected_preview_path": str(ingestion.get("detected_image", "")),
+            }
+
+            det_src   = ingestion.get("detection_source", "")
+            badge_cls = "badge-success" if det_src == "LIVE_RFDETR_INFERENCE" else "badge-warn"
+            t_s       = ingestion.get("rfdetr_inference_time_s", 0) or 0
+            time_str  = f" ({t_s:.2f}s)" if t_s > 0 else ""
+            with _res_c1:
+                st.markdown(
+                    f'<span class="badge {badge_cls}">{det_src}{time_str}</span>',
+                    unsafe_allow_html=True,
+                )
+            with _res_c2:
+                if _external_rfdetr_result.get("ok"):
+                    _det_runtime_mode = (
+                        _external_rfdetr_result.get("detector_runtime_mode")
+                        or _external_rfdetr_result.get("source")
+                        or "live_rfdetr_subprocess"
+                    )
+                    _runtime_lines = [
+                        '<div class="info-card" style="border-color:rgba(59,130,246,0.45)">',
+                        f'<strong>Detector runtime mode: {_det_runtime_mode}</strong><br>',
+                        'Detector: RF-DETR<br>',
+                    ]
+                    if _det_runtime_mode == "live_rfdetr_http_service":
+                        _runtime_lines.append(f'Service URL: <code>{_external_rfdetr_result.get("service_url","")}</code><br>')
+                    else:
+                        _runtime_lines.append(f'Python executable: <code>{_external_rfdetr_result.get("python_executable","")}</code><br>')
+                    _runtime_lines.extend([
+                        f'Checkpoint path: <code>{_external_rfdetr_result.get("checkpoint_path","")}</code><br>',
+                        f'Inference runtime: {_external_rfdetr_result.get("inference_runtime_ms",0)} ms<br>',
+                        f'Detection count: {len(_external_rfdetr_result.get("detections", []))}<br>',
+                        f'Source: {_external_rfdetr_result.get("source","live_rfdetr_subprocess")}',
+                    ])
+                    if _external_rfdetr_result.get("fallback_reason"):
+                        _runtime_lines.append(f'<br>Fallback reason: {_external_rfdetr_result.get("fallback_reason")}')
+                    _runtime_lines.append('</div>')
                     st.markdown(
-                        f'<span class="badge {badge_cls}">{det_src}{time_str}</span>',
+                        "".join(_runtime_lines),
                         unsafe_allow_html=True,
                     )
-                with _res_c2:
-                    if _external_rfdetr_result.get("ok"):
-                        _det_runtime_mode = (
-                            _external_rfdetr_result.get("detector_runtime_mode")
-                            or _external_rfdetr_result.get("source")
-                            or "live_rfdetr_subprocess"
-                        )
-                        _runtime_lines = [
-                            '<div class="info-card" style="border-color:rgba(59,130,246,0.45)">',
-                            f'<strong>Detector runtime mode: {_det_runtime_mode}</strong><br>',
-                            'Detector: RF-DETR<br>',
-                        ]
-                        if _det_runtime_mode == "live_rfdetr_http_service":
-                            _runtime_lines.append(f'Service URL: <code>{_external_rfdetr_result.get("service_url","")}</code><br>')
-                        else:
-                            _runtime_lines.append(f'Python executable: <code>{_external_rfdetr_result.get("python_executable","")}</code><br>')
-                        _runtime_lines.extend([
-                            f'Checkpoint path: <code>{_external_rfdetr_result.get("checkpoint_path","")}</code><br>',
-                            f'Inference runtime: {_external_rfdetr_result.get("inference_runtime_ms",0)} ms<br>',
-                            f'Detection count: {len(_external_rfdetr_result.get("detections", []))}<br>',
-                            f'Source: {_external_rfdetr_result.get("source","live_rfdetr_subprocess")}',
-                        ])
-                        if _external_rfdetr_result.get("fallback_reason"):
-                            _runtime_lines.append(f'<br>Fallback reason: {_external_rfdetr_result.get("fallback_reason")}')
-                        _runtime_lines.append('</div>')
-                        st.markdown(
-                            "".join(_runtime_lines),
-                            unsafe_allow_html=True,
-                        )
-                        # Detection rows shown in Graph Memory Extracted → Devices tab below
-                    elif _external_rfdetr_result:
-                        st.warning("Live RF-DETR unavailable — using verified annotation fallback")
-                        st.caption(f"RF-DETR error: {_external_rfdetr_result.get('error', 'unknown error')}")
-                        if _external_rfdetr_result.get("fallback_reason"):
-                            st.caption(f"Fallback reason: {_external_rfdetr_result.get('fallback_reason')}")
-                        st.markdown(
-                            '<div class="warn-card">'
-                            '<strong>Detector runtime mode: verified_annotation_fallback</strong><br>'
-                            'Source: verified training annotation / safe curated sample'
-                            '</div>',
-                            unsafe_allow_html=True,
-                        )
-                    rfdetr_err = ingestion.get("rfdetr_error", "")
-                    if rfdetr_err:
-                        st.warning(f"RF-DETR: {rfdetr_err}")
-                pkt = ingestion.get("packet") or {}
-                with _res_c3:
+                    # Detection rows shown in Graph Memory Extracted → Devices tab below
+                elif _external_rfdetr_result:
+                    st.warning("Live RF-DETR unavailable — using verified annotation fallback")
+                    st.caption(f"RF-DETR error: {_external_rfdetr_result.get('error', 'unknown error')}")
+                    if _external_rfdetr_result.get("fallback_reason"):
+                        st.caption(f"Fallback reason: {_external_rfdetr_result.get('fallback_reason')}")
                     st.markdown(
-                        '<div class="info-card">'
-                        '<strong>Live Diagram Intelligence Output</strong><br>'
-                        f'source: <code>{pkt.get("source", pkt.get("detection_source", ""))}</code><br>'
-                        f'runtime mode: <code>{pkt.get("runtime_mode", "")}</code><br>'
-                        f'nodes detected: {pkt.get("node_count", 0)}<br>'
-                        f'edges inferred: {pkt.get("edge_count", 0)}<br>'
-                        f'graph packet ID: <code>{sample["sample_id"]}</code><br>'
-                        f'absorption mode: <code>{pkt.get("absorption_mode", "SESSION_MEMORY_ABSORPTION")}</code><br>'
-                        'refresh behavior: refresh resets onboarded graph'
+                        '<div class="warn-card">'
+                        '<strong>Detector runtime mode: verified_annotation_fallback</strong><br>'
+                        'Source: verified training annotation / safe curated sample'
                         '</div>',
                         unsafe_allow_html=True,
                     )
-                    st.success(
-                        f"Ingestion complete — {pkt.get('node_count', 0)} nodes, "
-                        f"{pkt.get('edge_count', 0)} edges. "
-                        "Proceed to Tab 2 (Topology RCA) or Tab 3 (Enterprise Brain)."
-                    )
-                # Ingestion just completed — the selected sample is now active.
-                # is_this_sample_active was computed before the button ran (stale),
-                # so force it to True so _tab_diagram_outputs_section() renders below.
-                is_this_sample_active = True
-
-    with right:
-        if sel_idx is None:
-            pass
-        elif img_path.exists():
-            det_img = st.session_state.get("detected_image_path", "")
-            active_sid = _ss_dict("onboard_sample_record").get("sample_id", "")
-            if det_img and Path(det_img).exists() and active_sid == sample.get("sample_id", ""):
-                # Detection has been run — show annotated output
-                det_src = st.session_state.get("detection_source", "")
-                badge_cls = "predicted" if det_src == "LIVE_RFDETR_INFERENCE" else "prepared"
+                rfdetr_err = ingestion.get("rfdetr_error", "")
+                if rfdetr_err:
+                    st.warning(f"RF-DETR: {rfdetr_err}")
+            pkt = ingestion.get("packet") or {}
+            with _res_c3:
                 st.markdown(
-                    f'<div class="compare-badge {badge_cls}">{det_src}</div>',
+                    '<div class="info-card">'
+                    '<strong>Live Diagram Intelligence Output</strong><br>'
+                    f'source: <code>{pkt.get("source", pkt.get("detection_source", ""))}</code><br>'
+                    f'runtime mode: <code>{pkt.get("runtime_mode", "")}</code><br>'
+                    f'nodes detected: {pkt.get("node_count", 0)}<br>'
+                    f'edges inferred: {pkt.get("edge_count", 0)}<br>'
+                    f'graph packet ID: <code>{sample["sample_id"]}</code><br>'
+                    f'absorption mode: <code>{pkt.get("absorption_mode", "SESSION_MEMORY_ABSORPTION")}</code><br>'
+                    'refresh behavior: refresh resets onboarded graph'
+                    '</div>',
                     unsafe_allow_html=True,
                 )
-                st.image(det_img, use_container_width=True)
-            else:
-                # Not yet run — show original image with onboarding note
-                st.markdown(
-                    '<div class="compare-badge original">Original</div>',
-                    unsafe_allow_html=True,
+                st.success(
+                    f"Ingestion complete — {pkt.get('node_count', 0)} nodes, "
+                    f"{pkt.get('edge_count', 0)} edges. "
+                    "Proceed to Tab 2 (Topology RCA) or Tab 3 (Enterprise Brain)."
                 )
-                st.image(str(img_path), use_container_width=True)
-                st.caption(
-                    "This diagram is not yet in active graph memory. "
-                    "Run **Live Diagram Intelligence** to onboard it."
-                )
-        else:
-            st.caption("Diagram image not found.")
+            # Ingestion just completed — the selected sample is now active.
+            # is_this_sample_active was computed before the button ran (stale),
+            # so force it to True so _tab_diagram_outputs_section() renders below.
+            is_this_sample_active = True
 
     # Only show graph outputs if LDI was actually run for the currently selected sample.
     # Stale local_graph from a previous run or catalog load must not bleed through.
