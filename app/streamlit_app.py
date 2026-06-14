@@ -2407,8 +2407,15 @@ def _render_qwen_runtime_proof(plan_result: dict) -> None:
         st.table(pd.DataFrame([{"Field": k, "Value": v} for k, v in rows.items()]))
 
         if raw_len > 0:
-            with st.expander("Raw model output (first 300 chars)", expanded=False):
-                st.code(raw_output[:300], language="json")
+            with st.expander("Raw model output", expanded=False):
+                st.markdown(
+                    f'<div style="max-height:260px;overflow-y:auto;background:#0f172a;'
+                    f'border:1px solid rgba(148,163,184,0.15);border-radius:8px;'
+                    f'padding:12px 14px;font-family:monospace;font-size:0.78rem;'
+                    f'color:#86efac;white-space:pre-wrap;word-break:break-all">'
+                    f'{html.escape(raw_output)}</div>',
+                    unsafe_allow_html=True,
+                )
         else:
             st.caption("No raw model output — template mode or plan not yet generated.")
 
