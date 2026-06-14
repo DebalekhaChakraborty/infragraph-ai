@@ -3415,6 +3415,578 @@ def _render_enterprise_pyvis(
     return True
 
 
+# ── RCA Journey role constants (shared across journey functions) ───────────────
+_JOURNEY_ROLE_COLORS: dict[str, str] = {
+    "first_observed_alert": "#f97316",
+    "alert_node":           "#fb923c",
+    "dependency_hop":       "#60a5fa",
+    "cross_diagram_bridge": "#22d3ee",
+    "gnn_root_cause":       "#ef4444",
+    "impacted_service":     "#facc15",
+}
+_JOURNEY_ROLE_LABELS: dict[str, str] = {
+    "first_observed_alert": "First alert",
+    "alert_node":           "Alert node",
+    "dependency_hop":       "Dependency hop",
+    "cross_diagram_bridge": "Cross-diagram bridge",
+    "gnn_root_cause":       "GNN root cause",
+    "impacted_service":     "Impacted service",
+}
+_JOURNEY_ROLE_ICONS: dict[str, str] = {
+    "first_observed_alert": "⚡",
+    "alert_node":           "🔔",
+    "dependency_hop":       "→",
+    "cross_diagram_bridge": "⇒",
+    "gnn_root_cause":       "🎯",
+    "impacted_service":     "💥",
+}
+
+
+def _build_rca_journey_context(
+    enterprise_graph: dict,
+    ent_incident: "dict | None",
+    rca: "dict | None",
+    gnn_result: "dict | None" = None,
+) -> dict:
+    """Build RCA journey steps with normalized node IDs and role assignments."""
+    node_aliases, id_to_node = _build_node_aliases(enterprise_graph)
+
+    def _res(raw: str) -> str:
+        return node_aliases.get(str(raw), str(raw)) if raw else ""
+
+    def _res_list(lst) -> "list[str]":
+        return [_res(str(x)) for x in (lst or []) if x]
+
+    inc   = ent_incident or {}
+    rca_d = rca or {}
+    gnn_d = gnn_result or {}
+
+    alert_timeline     = list(inc.get("alert_timeline", []) or [])
+    impact_path_raw    = list(rca_d.get("impact_path") or inc.get("impact_path", []) or [])
+    root_cause_raw     = str(rca_d.get("root_cause") or inc.get("root_cause", "") or "")
+    root_cause_norm    = _res(root_cause_raw)
+    root_cause_diag    = str(rca_d.get("root_cause_diagram", "") or "")
+    impacted_raw       = list(rca_d.get("impacted_nodes") or inc.get("impacted_nodes", []) or [])
+    impacted_diags     = list(rca_d.get("impacted_diagrams") or inc.get("impacted_diagrams", []) or [])
+
+    # Build lookup structures
+    cross_edges  = enterprise_graph.get("cross_diagram_edges", [])
+    cross_nodes  = set()
+    for e in cross_edges:
+        cross_nodes.add(str(e.get("source", e.get("source_node", "")) or ""))
+        cross_nodes.add(str(e.get("target", e.get("target_node", "")) or ""))
+
+    tl_by_node: dict[str, dict] = {}
+    for ev in alert_timeline:
+        nk = _res(str(ev.get("node", "") or ""))
+        if nk and nk not in tl_by_node:
+            tl_by_node[nk] = ev
+
+    bridge_nodes = {
+        _res(str(e.get("node", "")))
+        for e in alert_timeline if e.get("correlation_role") == "bridge"
+    } | {n for n in cross_nodes if n in id_to_node}
+
+    # first observed node
+    _first_raw = str(
+        inc.get("first_observed_node") or
+        next((e.get("node", "") for e in alert_timeline if e.get("is_first_observed")),
+             alert_timeline[0].get("node", "") if alert_timeline else "")
+    )
+    first_obs_norm = _res(_first_raw)
+
+    # edge index for path edge lookups
+    all_edges = enterprise_graph.get("edges", []) + cross_edges
+    edge_idx: dict[tuple[str, str], dict] = {}
+    for e in all_edges:
+        src = str(e.get("source", e.get("source_node", "")) or "")
+        tgt = str(e.get("target", e.get("target_node", "")) or "")
+        if src and tgt:
+            edge_idx.setdefault((src, tgt), e)
+
+    def _find_edge(a: str, b: str) -> "dict | None":
+        return edge_idx.get((a, b)) or edge_idx.get((b, a))
+
+    def _get_diag(nid: str) -> str:
+        return str((id_to_node.get(nid) or {}).get("diagram_id", "") or "")
+
+    def _assign_role(norm_id: str) -> str:
+        if norm_id == first_obs_norm:
+            return "first_observed_alert"
+        if norm_id == root_cause_norm:
+            return "gnn_root_cause"
+        if norm_id in bridge_nodes:
+            return "cross_diagram_bridge"
+        if norm_id in tl_by_node:
+            return "alert_node"
+        return "dependency_hop"
+
+    def _make_reason(norm_id: str, role: str, ev: "dict | None") -> str:
+        if role == "first_observed_alert":
+            return (ev or {}).get("message", (ev or {}).get("description", "First alert observed")) or "First alert observed"
+        if role == "gnn_root_cause":
+            score = None
+            for cand in (gnn_d.get("top_candidates") or rca_d.get("top_candidates") or []):
+                c_norm = _res(str(cand.get("node_id", "") or ""))
+                if c_norm == norm_id:
+                    score = cand.get("score")
+                    break
+            if score is None:
+                first_c = ((gnn_d.get("top_candidates") or rca_d.get("top_candidates") or [{}])[0])
+                score = first_c.get("score") if first_c else None
+            score_str = f", GNN score {score:.3f}" if score is not None else ""
+            return f"GNN rank #1{score_str}"
+        if role == "cross_diagram_bridge":
+            return (ev or {}).get("message", "Cross-diagram dependency bridge") or "Cross-diagram dependency bridge"
+        if role == "alert_node":
+            return (ev or {}).get("message", "Alert converging on this node") or "Alert converging on this node"
+        return "Dependency hop on impact path"
+
+    # Build journey steps
+    steps: list[dict] = []
+    seen: set[str]    = set()
+    path_so_far: list[str] = []
+
+    def _add(raw_id: str, role: str, reason: str, ev: "dict | None" = None) -> None:
+        nonlocal path_so_far
+        norm_id = _res(raw_id) or raw_id
+        if norm_id in seen:
+            return
+        seen.add(norm_id)
+        prev = path_so_far[-1] if path_so_far else None
+        path_so_far = path_so_far + [norm_id]
+        edge_from_prev = None
+        if prev:
+            e = _find_edge(prev, norm_id)
+            if e:
+                is_cross = (e.get("edge_scope") == "cross_diagram" or e.get("edge_type") == "cross_diagram")
+                edge_from_prev = {
+                    "source":   prev,
+                    "target":   norm_id,
+                    "label":    str(e.get("label", e.get("relationship", "")) or ""),
+                    "is_cross": is_cross,
+                }
+        diag = str((ev or {}).get("diagram_id", "") or "") or _get_diag(norm_id)
+        steps.append({
+            "step":              len(steps) + 1,
+            "node_id":           raw_id,
+            "normalized_node_id": norm_id,
+            "diagram_id":        diag,
+            "role":              role,
+            "reason":            reason,
+            "edge_from_previous": edge_from_prev,
+            "path_so_far":       list(path_so_far),
+        })
+
+    # Strategy: use impact_path as backbone if available, else alert timeline
+    impact_path_norm = _res_list(impact_path_raw)
+    if impact_path_norm:
+        for i, norm_id in enumerate(impact_path_norm):
+            raw_id = str(impact_path_raw[i]) if i < len(impact_path_raw) else norm_id
+            ev     = tl_by_node.get(norm_id)
+            role   = _assign_role(norm_id)
+            _add(raw_id, role, _make_reason(norm_id, role, ev), ev)
+    else:
+        sorted_tl = sorted(alert_timeline, key=lambda x: str(x.get("timestamp", x.get("time", ""))))
+        for ev in sorted_tl:
+            raw_id = str(ev.get("node", "") or "")
+            if not raw_id:
+                continue
+            norm_id = _res(raw_id)
+            role    = _assign_role(norm_id)
+            _add(raw_id, role, _make_reason(norm_id, role, ev), ev)
+
+    # Ensure root cause appears
+    if root_cause_norm and root_cause_norm not in seen:
+        ev = tl_by_node.get(root_cause_norm)
+        _add(root_cause_raw, "gnn_root_cause", _make_reason(root_cause_norm, "gnn_root_cause", ev), ev)
+
+    # Append impacted services
+    impacted_norm = _res_list(impacted_raw)
+    for i, norm_id in enumerate(impacted_norm):
+        if norm_id not in seen and norm_id != root_cause_norm:
+            raw_id = str(impacted_raw[i]) if i < len(impacted_raw) else norm_id
+            ev     = tl_by_node.get(norm_id)
+            _add(raw_id, "impacted_service", "Impacted by root cause propagation", ev)
+
+    # Unmatched
+    all_raw = (
+        {str(ev.get("node", "")) for ev in alert_timeline if ev.get("node")} |
+        {str(n) for n in impact_path_raw if n} |
+        ({root_cause_raw} if root_cause_raw else set()) |
+        {str(n) for n in impacted_raw if n}
+    )
+    unmatched = sorted(r for r in all_raw if r and r not in node_aliases and r not in id_to_node)
+
+    # Current step from session state slider
+    n_steps  = len(steps)
+    raw_idx  = st.session_state.get("rca_journey_slider", 1)
+    step_idx = max(0, min(int(raw_idx) - 1, n_steps - 1)) if n_steps else 0
+
+    return {
+        "steps":             steps,
+        "root_cause":        root_cause_norm or None,
+        "root_cause_diagram": root_cause_diag,
+        "impact_path":       impact_path_norm,
+        "impacted_nodes":    impacted_norm,
+        "impacted_diagrams": impacted_diags,
+        "unmatched_nodes":   unmatched,
+        "current_step_index": step_idx,
+        "current_step":      steps[step_idx] if steps else {},
+        "node_aliases":      node_aliases,
+        "id_to_node":        id_to_node,
+        "alert_timeline":    alert_timeline,
+    }
+
+
+def _render_rca_journey_stepper(jctx: dict, slider_key: str = "rca_journey_slider") -> None:
+    """Render the RCA investigation journey stepper panel above the graph."""
+    steps = jctx.get("steps", [])
+    if not steps:
+        return
+
+    n_steps = len(steps)
+    st.markdown(
+        '<div class="section-label" style="margin-top:14px">RCA Investigation Journey</div>'
+        '<div style="font-size:0.73rem;color:#64748b;margin-bottom:8px">'
+        'First observed alert → dependency path → cross-diagram bridge → GNN root cause → impacted services</div>',
+        unsafe_allow_html=True,
+    )
+
+    step_idx = st.slider(
+        "RCA journey step", min_value=1, max_value=n_steps, value=1, step=1,
+        key=slider_key,
+        help="Step through the RCA investigation journey",
+    )
+    current = steps[step_idx - 1]
+
+    # Timeline table
+    rows = []
+    for i, step in enumerate(steps):
+        is_cur  = (i == step_idx - 1)
+        is_past = (i < step_idx - 1)
+        role    = step["role"]
+        rc      = _JOURNEY_ROLE_COLORS.get(role, "#94a3b8")
+        icon    = _JOURNEY_ROLE_ICONS.get(role, "·")
+        rl      = _JOURNEY_ROLE_LABELS.get(role, role)
+        row_bg  = "rgba(255,255,255,0.08)" if is_cur else ("rgba(255,255,255,0.03)" if is_past else "transparent")
+        opacity = "1" if is_cur else ("0.7" if is_past else "0.35")
+        ind     = "▶" if is_cur else ("✓" if is_past else str(i + 1))
+        ind_c   = "#38bdf8" if is_cur else ("#4ade80" if is_past else "#475569")
+        reason_txt = (step.get("reason") or "")[:60]
+        rows.append(
+            f'<tr style="background:{row_bg};opacity:{opacity}">'
+            f'<td style="padding:5px 8px;color:{ind_c};font-weight:700;white-space:nowrap">{ind}</td>'
+            f'<td style="padding:5px 8px"><span style="color:{rc}">{icon}</span>'
+            f' <span style="color:{rc};font-size:0.72rem">{rl}</span></td>'
+            f'<td style="padding:5px 8px"><code style="font-size:0.73rem;color:#67e8f9">'
+            f'{step["normalized_node_id"]}</code></td>'
+            f'<td style="padding:5px 8px"><code style="font-size:0.7rem;color:#a78bfa">'
+            f'{step.get("diagram_id", "—")}</code></td>'
+            f'<td style="padding:5px 8px;font-size:0.68rem;color:#94a3b8">{reason_txt}</td>'
+            f'</tr>'
+        )
+
+    st.markdown(
+        '<div style="overflow-x:auto;margin-bottom:8px">'
+        '<table style="width:100%;border-collapse:collapse;font-size:0.78rem">'
+        '<thead><tr style="border-bottom:1px solid #1e293b">'
+        '<th style="padding:5px 8px;color:#64748b;text-align:left">#</th>'
+        '<th style="padding:5px 8px;color:#64748b;text-align:left">Role</th>'
+        '<th style="padding:5px 8px;color:#64748b;text-align:left">Node</th>'
+        '<th style="padding:5px 8px;color:#64748b;text-align:left">Diagram</th>'
+        '<th style="padding:5px 8px;color:#64748b;text-align:left">Evidence</th>'
+        '</tr></thead><tbody>' + ''.join(rows) + '</tbody></table></div>',
+        unsafe_allow_html=True,
+    )
+
+    role     = current["role"]
+    rc       = _JOURNEY_ROLE_COLORS.get(role, "#94a3b8")
+    icon     = _JOURNEY_ROLE_ICONS.get(role, "·")
+    rl       = _JOURNEY_ROLE_LABELS.get(role, role)
+    ef       = current.get("edge_from_previous")
+    edge_info = ""
+    if ef:
+        bridge_lbl = " (cross-diagram)" if ef.get("is_cross") else ""
+        edge_info  = f' via <code style="font-size:0.7rem">{ef.get("label","link")}{bridge_lbl}</code>'
+    st.markdown(
+        f'<div class="traversal-card">'
+        f'<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">'
+        f'<span style="font-size:1.2rem">{icon}</span>'
+        f'<div class="traversal-step-lbl" style="color:{rc}">Step {step_idx} — {rl}</div>'
+        f'<span class="diag-label">{current.get("diagram_id","")}</span>'
+        f'</div>'
+        f'<div class="traversal-node">{current["normalized_node_id"]}</div>'
+        f'<div style="font-size:0.76rem;color:#94a3b8;margin-top:4px">'
+        f'{current.get("reason","")}{edge_info}</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    chips = []
+    for i, step in enumerate(steps):
+        nid  = step["normalized_node_id"]
+        role = step["role"]
+        rc2  = _JOURNEY_ROLE_COLORS.get(role, "#94a3b8")
+        cls  = "current" if i == step_idx - 1 else ("visited" if i < step_idx - 1 else "")
+        label = f'{i+1}:{nid}'
+        chips.append(f'<span class="node-chip {cls}" style="color:{rc2 if cls else "#475569"}">{label}</span>')
+    st.markdown(
+        '<div style="padding:6px 0;line-height:2.6">'
+        + ' <span style="color:#1e293b;font-size:0.75rem">→</span> '.join(chips)
+        + '</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def _render_enterprise_pyvis_rca_journey(
+    enterprise_graph: dict,
+    jctx: dict,
+    absorbed_ids: "set[str]",
+    height: int = 800,
+) -> bool:
+    """PyVis renderer that visualizes the RCA journey with role-colored nodes and dimmed background topology."""
+    try:
+        from pyvis.network import Network  # type: ignore
+    except Exception:
+        return False
+
+    steps          = jctx.get("steps", [])
+    step_idx       = jctx.get("current_step_index", 0)
+    current_step   = jctx.get("current_step", {})
+    current_node   = current_step.get("normalized_node_id", "")
+    root_cause     = jctx.get("root_cause", "")
+
+    # Journey lookup
+    journey_map: dict[str, dict] = {s["normalized_node_id"]: s for s in steps}
+    # path so far = nodes in steps[0..step_idx]
+    path_so_far = [s["normalized_node_id"] for s in steps[: step_idx + 1]]
+    path_set    = set(path_so_far)
+    path_pairs: set[tuple[str, str]] = set()
+    for a, b in zip(path_so_far, path_so_far[1:]):
+        path_pairs.add((a, b))
+        path_pairs.add((b, a))  # undirected match
+
+    # Edge step label: for each consecutive pair in path_so_far, label = "Step N"
+    edge_step_lbl: dict[tuple[str, str], str] = {}
+    for i, (a, b) in enumerate(zip(path_so_far, path_so_far[1:])):
+        lbl = f"Step {i+1}"
+        edge_step_lbl[(a, b)] = lbl
+        edge_step_lbl[(b, a)] = lbl
+
+    _RCOL: dict[str, str] = {
+        "first_observed_alert": "#f97316",
+        "alert_node":           "#fb923c",
+        "dependency_hop":       "#60a5fa",
+        "cross_diagram_bridge": "#22d3ee",
+        "gnn_root_cause":       "#ef4444",
+        "impacted_service":     "#facc15",
+    }
+    _RSIZ: dict[str, int] = {
+        "first_observed_alert": 34,
+        "alert_node":           28,
+        "dependency_hop":       26,
+        "cross_diagram_bridge": 30,
+        "gnn_root_cause":       44,
+        "impacted_service":     26,
+    }
+
+    net = Network(height=f"{height}px", width="100%", directed=True,
+                  bgcolor="#0b1220", font_color="#e2e8f0")
+    net.barnes_hut(gravity=-4200, central_gravity=0.22, spring_length=180, spring_strength=0.042)
+
+    # group map
+    groups: dict[str, str] = {}
+    _cls = enterprise_graph.get("diagram_clusters", {})
+    if isinstance(_cls, dict):
+        for did, cl in _cls.items():
+            for nid in (cl.get("node_ids", []) if isinstance(cl, dict) else cl if isinstance(cl, list) else []):
+                groups[nid] = did
+    elif isinstance(_cls, list):
+        for cl in _cls:
+            if isinstance(cl, dict):
+                for nid in cl.get("node_ids", []):
+                    groups[nid] = cl.get("diagram_id", "")
+
+    node_map = {n.get("id"): n for n in enterprise_graph.get("nodes", [])}
+
+    for n in enterprise_graph.get("nodes", []):
+        nid    = n.get("id", "")
+        ntype  = n.get("type", "server")
+        diag   = groups.get(nid, n.get("diagram_id", ""))
+        step_d = journey_map.get(nid)
+        in_path = nid in path_set
+        is_cur  = (nid == current_node and current_node)
+        is_root = (nid == root_cause and root_cause)
+
+        if is_cur:
+            color, size, bw, border = "#ffffff", 46, 7, "#ffffff"
+            font = {"size": 16, "color": "#ffffff", "bold": True}
+            node_label = str(step_d["step"]) if step_d else nid
+        elif is_root and in_path:
+            color, size, bw, border = "#ef4444", 44, 6, "#ffffff"
+            font = {"size": 14, "color": "#ffffff"}
+            node_label = str(step_d["step"]) if step_d else nid
+        elif step_d and in_path:
+            role   = step_d["role"]
+            color  = _RCOL.get(role, "#60a5fa")
+            size   = _RSIZ.get(role, 28)
+            bw     = 4
+            border = color
+            font   = {"size": 12, "color": "#e2e8f0"}
+            node_label = str(step_d["step"])
+        elif step_d:
+            # Future journey step (not yet revealed)
+            color, size, bw, border = "#1e293b", 16, 2, "#334155"
+            font = {"size": 9, "color": "#334155"}
+            node_label = nid
+        else:
+            # Non-journey background topology — dim
+            color, size, bw, border = "#172033", 12, 1, "#1e3a5f"
+            font = {"size": 9, "color": "#1e3a5f"}
+            node_label = nid
+
+        step_info = ""
+        if step_d:
+            role_lbl = _JOURNEY_ROLE_LABELS.get(step_d["role"], step_d["role"])
+            step_info = f"<br><b>Journey step {step_d['step']} — {role_lbl}</b><br><i>{step_d.get('reason','')}</i>"
+
+        title = (
+            f"<b>{nid}</b><br>type: {ntype}<br>diagram: {diag}"
+            + step_info
+            + ("<br><b>⚡ CURRENT STEP</b>" if is_cur else "")
+            + ("<br><b>🎯 GNN ROOT CAUSE</b>" if is_root else "")
+        )
+        net.add_node(nid, label=node_label, title=title, group=diag,
+                     color={"background": color, "border": border},
+                     size=size, borderWidth=bw, borderWidthSelected=8,
+                     font=font)
+
+    def _add_edges_rca(edge_list: list, force_cross: bool = False) -> None:
+        for e in edge_list:
+            src = str(e.get("source", e.get("source_node", "")) or "")
+            tgt = str(e.get("target", e.get("target_node", "")) or "")
+            if src not in node_map or tgt not in node_map:
+                continue
+            is_cross   = force_cross or e.get("edge_scope") == "cross_diagram" or e.get("edge_type") == "cross_diagram"
+            is_journey = (src, tgt) in path_pairs
+            step_lbl   = edge_step_lbl.get((src, tgt), "")
+            if is_journey:
+                net.add_edge(src, tgt,
+                             label=step_lbl,
+                             color="#22d3ee", width=6, dashes=False,
+                             title=f"Journey path — {e.get('relationship','')}")
+            elif is_cross:
+                net.add_edge(src, tgt,
+                             label=str(e.get("label", ""))[:10],
+                             color="#a855f7", width=2.5, dashes=True,
+                             title=f"Cross-diagram — {e.get('relationship','')}")
+            else:
+                net.add_edge(src, tgt,
+                             label="",
+                             color="#172033", width=0.7, dashes=False,
+                             title=e.get("relationship", ""))
+
+    _add_edges_rca(enterprise_graph.get("edges", []))
+    _add_edges_rca(enterprise_graph.get("cross_diagram_edges", []), force_cross=True)
+
+    with tempfile.NamedTemporaryFile("w", delete=False, suffix=".html", encoding="utf-8") as tmp:
+        tmp_path = Path(tmp.name)
+    try:
+        net.save_graph(str(tmp_path))
+        components.html(tmp_path.read_text(encoding="utf-8"), height=height + 20, scrolling=False)
+    finally:
+        try:
+            tmp_path.unlink()
+        except Exception:
+            pass
+    return True
+
+
+def _render_rca_explanation_card(
+    jctx: dict,
+    rca: "dict | None",
+    gnn_result: "dict | None" = None,
+) -> None:
+    """Render the RCA explanation and blast radius card."""
+    rca_d  = rca or {}
+    gnn_d  = gnn_result or {}
+    steps  = jctx.get("steps", [])
+
+    root_cause   = jctx.get("root_cause") or rca_d.get("root_cause", "—")
+    root_diag    = jctx.get("root_cause_diagram") or rca_d.get("root_cause_diagram", "—")
+    mode         = rca_d.get("mode", "—")
+    alert_cnt    = rca_d.get("alert_count", len(jctx.get("alert_timeline", [])))
+    imp_nodes    = jctx.get("impacted_nodes", [])
+    imp_diags    = jctx.get("impacted_diagrams", [])
+    impact_path  = jctx.get("impact_path", [])
+
+    # Find top GNN score
+    top_score = None
+    for cand in (gnn_d.get("top_candidates") or rca_d.get("top_candidates") or []):
+        c_norm = jctx.get("node_aliases", {}).get(str(cand.get("node_id", "") or ""), str(cand.get("node_id", "") or ""))
+        if c_norm == root_cause or str(cand.get("node_id", "")) == root_cause:
+            top_score = cand.get("score")
+            break
+    if top_score is None:
+        first_c = ((gnn_d.get("top_candidates") or rca_d.get("top_candidates") or [{}])[0])
+        top_score = first_c.get("score") if isinstance(first_c, dict) else None
+
+    converging = [s for s in steps if s["role"] in ("alert_node", "first_observed_alert")]
+    bridges    = [s for s in steps if s["role"] == "cross_diagram_bridge"]
+
+    score_str = f"GNN score: **{top_score:.3f}**" if top_score is not None else ""
+
+    st.markdown('<hr class="ws-rule" style="margin:10px 0">', unsafe_allow_html=True)
+    st.markdown('<div class="section-label" style="margin-top:4px">RCA Explanation</div>', unsafe_allow_html=True)
+
+    col_a, col_b = st.columns([3, 2])
+    with col_a:
+        st.markdown(
+            f'<div class="info-card" style="margin-bottom:8px">'
+            f'<div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;margin-bottom:4px">Root Cause</div>'
+            f'<div style="font-family:\'JetBrains Mono\',monospace;font-size:1.05rem;font-weight:700;color:#ef4444;margin-bottom:2px">{root_cause}</div>'
+            f'<div style="font-size:0.73rem;color:#94a3b8;margin-bottom:4px">Diagram: <code style="color:#a78bfa">{root_diag}</code>'
+            + (f'&nbsp;·&nbsp;{score_str}' if score_str else '') +
+            f'</div>'
+            f'<div style="font-size:0.72rem;color:#64748b">RCA mode: {mode}</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+        evidence = []
+        if converging:
+            diag_set = set(s.get("diagram_id", "?") for s in converging)
+            evidence.append(f"**{len(converging)} converging alerts** across {', '.join(diag_set)}")
+        if bridges:
+            evidence.append(f"**{len(bridges)} cross-diagram bridge(s)**: {', '.join(s['normalized_node_id'] for s in bridges[:3])}")
+        if impact_path:
+            path_str = " → ".join(f"`{n}`" for n in impact_path[:5]) + (" …" if len(impact_path) > 5 else "")
+            evidence.append(f"**Impact path**: {path_str}")
+        if imp_diags:
+            evidence.append(f"**Impacted diagrams**: {', '.join(f'`{d}`' for d in imp_diags[:5])}")
+        if evidence:
+            st.markdown("**Evidence:**")
+            for item in evidence:
+                st.markdown(f"- {item}")
+
+    with col_b:
+        st.markdown(
+            f'<div class="info-card">'
+            f'<div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;margin-bottom:8px">Blast Radius</div>'
+            f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+            f'<div><div style="font-size:0.6rem;color:#64748b">Impacted nodes</div>'
+            f'<div style="font-size:1.4rem;font-weight:700;color:#facc15">{len(imp_nodes)}</div></div>'
+            f'<div><div style="font-size:0.6rem;color:#64748b">Impacted diagrams</div>'
+            f'<div style="font-size:1.4rem;font-weight:700;color:#a78bfa">{len(imp_diags)}</div></div>'
+            f'<div><div style="font-size:0.6rem;color:#64748b">Alert count</div>'
+            f'<div style="font-size:1.4rem;font-weight:700;color:#f97316">{alert_cnt}</div></div>'
+            f'<div><div style="font-size:0.6rem;color:#64748b">Journey steps</div>'
+            f'<div style="font-size:1.4rem;font-weight:700;color:#38bdf8">{len(steps)}</div></div>'
+            f'</div></div>',
+            unsafe_allow_html=True,
+        )
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 1 — DIAGRAM INTELLIGENCE
 # ══════════════════════════════════════════════════════════════════════════════
@@ -5959,95 +6531,79 @@ def _tab_gnn_rca() -> None:
     )
     absorbed_ids = {n.get("canonical_id", n.get("id")) for n in local_graph.get("nodes", [])}
 
-    # ── Build unified propagation context (with node ID normalization) ────────
-    pvc = _build_propagation_visual_context(enterprise_graph, ent_incident, rca)
+    # ── Build RCA journey context (normalized node IDs + step roles) ───────────
+    jctx = _build_rca_journey_context(enterprise_graph, ent_incident, rca, _gnn_result_pre)
 
-    # ── Propagation Journey panel — explicit step timeline above graph ─────────
-    _render_propagation_journey_panel(pvc)
+    # ── RCA Investigation Journey stepper panel ───────────────────────────────
+    _render_rca_journey_stepper(jctx)
 
-    # ── Render mode selector (default: Stable 2D PyVis) ──────────────────────
+    # ── Render mode selector ──────────────────────────────────────────────────
     _render_mode = st.radio(
         "Graph render mode",
-        ["Stable 2D propagation graph (PyVis)",
+        ["Stable 2D RCA Journey Graph",
          "Experimental 3D FalconVue"],
         horizontal=True,
         key="gnn_render_mode",
         label_visibility="collapsed",
     )
 
-    # ── Developer debug panel ─────────────────────────────────────────────────
+    # ── Developer details ─────────────────────────────────────────────────────
     with st.expander("Developer details", expanded=False):
-        st.caption(f"Renderer selected: {_render_mode}")
-        st.caption(f"Browser renderer expected: {'FalconVue WebGL (CDN)' if 'FalconVue' in _render_mode else 'PyVis iframe (local)'}")
-        st.caption(f"FalconVue module loaded: {'Yes' if _FALCONVUE_OK else 'No'}")
-        st.caption(f"PyVis available: {'Yes' if _pyvis_available() else 'No'}")
-        st.caption(f"Nodes passed: {len(enterprise_graph.get('nodes', []))}")
-        st.caption(f"Edges passed: {len(enterprise_graph.get('edges', []))} intra + {len(enterprise_graph.get('cross_diagram_edges', []))} cross")
-        st.caption(f"Alert timeline length: {len(pvc['alert_timeline'])}")
-        st.caption(f"Propagation steps (derived): {len(pvc['propagation_steps'])}")
-        st.caption(f"Current step node (normalized): {pvc['current_step_node'] or '—'}")
-        st.caption(f"Current path so far: {len(pvc['current_path_so_far'])} nodes → {pvc['current_path_so_far'][:4]}")
-        st.caption(f"Impact path (normalized): {len(pvc['impact_path'])} nodes")
-        st.caption(f"Root cause (normalized): {pvc['root_cause'] or '—'}")
-        st.caption(f"Impacted diagrams: {', '.join(pvc['impacted_diagrams']) or '—'}")
-        st.caption(f"Node alias map: {len(pvc['node_aliases'])} aliases → {len(pvc['id_to_node'])} unique graph nodes")
-        _graph_ids   = set(pvc["id_to_node"].keys())
-        _alias_set   = set(pvc["node_aliases"].keys())
-        _tl_raw_ids  = {str(e.get("node", "")) for e in pvc["alert_timeline"] if e.get("node")}
-        _ip_raw_ids  = {
-            str(n) for n in (
-                (rca or {}).get("impact_path") or (ent_incident or {}).get("impact_path") or []
-            )
-        }
-        _unmatched = sorted((_tl_raw_ids | _ip_raw_ids) - _graph_ids - _alias_set)
-        if _unmatched:
-            st.caption(f"⚠ Unmatched node IDs (not in graph): {', '.join(_unmatched[:10])}")
+        st.caption(f"Renderer: {_render_mode}")
+        st.caption(f"FalconVue loaded: {'Yes' if _FALCONVUE_OK else 'No'} | PyVis: {'Yes' if _pyvis_available() else 'No'}")
+        st.caption(f"Journey steps: {len(jctx['steps'])}")
+        st.caption(f"Current step index: {jctx['current_step_index']}")
+        st.caption(f"Current step node (raw): {jctx.get('current_step',{}).get('node_id','—')}")
+        st.caption(f"Current step node (normalized): {jctx.get('current_step',{}).get('normalized_node_id','—')}")
+        st.caption(f"Root cause (raw): {(rca or {}).get('root_cause','—')}")
+        st.caption(f"Root cause (normalized): {jctx.get('root_cause','—')}")
+        st.caption(f"Normalized path length: {len(jctx.get('current_step',{}).get('path_so_far',[]))}")
+        st.caption(f"Alert timeline: {len(jctx['alert_timeline'])} events")
+        st.caption(f"Node aliases: {len(jctx['node_aliases'])} → {len(jctx['id_to_node'])} unique nodes")
+        st.caption(f"Nodes passed to graph: {len(enterprise_graph.get('nodes',[]))}")
+        st.caption(f"Edges: {len(enterprise_graph.get('edges',[]))} intra + {len(enterprise_graph.get('cross_diagram_edges',[]))} cross")
+        if jctx["unmatched_nodes"]:
+            st.caption(f"⚠ Unmatched alert/path nodes: {', '.join(jctx['unmatched_nodes'][:10])}")
         else:
             st.caption("✓ All alert/path node IDs resolve to graph nodes")
-        _tl_samples = [
-            (str(e.get("node", "")), pvc["node_aliases"].get(str(e.get("node", "")), "—"))
-            for e in pvc["alert_timeline"][:4] if e.get("node")
-        ]
-        if _tl_samples:
-            for _raw, _norm in _tl_samples:
-                st.caption(f"  ID norm: {_raw!r} → {_norm!r}")
+        for s in jctx["steps"][:4]:
+            st.caption(f"  Step {s['step']}: {s['node_id']!r} → {s['normalized_node_id']!r} [{s['role']}]")
 
-    # ── Render the graph in the selected mode ─────────────────────────────────
+    # ── Render the graph ──────────────────────────────────────────────────────
     if "FalconVue" in _render_mode:
         if _FALCONVUE_OK and _render_falconvue_graph is not None:
+            _cur_step = jctx.get("current_step", {})
             try:
                 _render_falconvue_graph(
                     enterprise_graph, absorbed_ids, rca,
                     incident=ent_incident or {},
                     height=800,
                     mode="scenario",
-                    current_step_node=pvc["current_step_node"],
-                    traversal_path=pvc["current_path_so_far"],
-                    alert_timeline=pvc["alert_timeline"],
+                    current_step_node=_cur_step.get("normalized_node_id"),
+                    traversal_path=_cur_step.get("path_so_far", []),
+                    alert_timeline=jctx["alert_timeline"],
                 )
             except Exception as _fv_exc:
                 st.error(f"FalconVue renderer error: {_fv_exc}")
-                st.info("Switch to **Stable 2D propagation graph (PyVis)** for a reliable view.")
+                st.info("Switch to **Stable 2D RCA Journey Graph** for a reliable view.")
         else:
-            st.warning("FalconVue module not loaded in this environment.")
-            st.info("Switch to **Stable 2D propagation graph (PyVis)** above.")
+            st.warning("FalconVue module not loaded.")
+            st.info("Switch to **Stable 2D RCA Journey Graph** above.")
 
-    else:  # Stable 2D PyVis — default
+    else:  # Stable 2D RCA Journey Graph — default
         if _pyvis_available():
-            _legend = (
-                "Root: red | Step: white | Alert: orange | Impacted: yellow | "
-                "Traversal: purple | Absorbed: cyan | Shared: sky-blue"
-                if rca else
-                "Alert nodes: orange | Absorbed nodes: cyan | Step: white"
+            _legend_j = (
+                "⚡ First alert: orange | 🎯 Root cause: red/large | "
+                "⇒ Cross-diagram bridge: cyan | Step labels on nodes · Dim = background topology"
             )
-            st.caption(f"Drag nodes · zoom/pan · hover for details · {_legend}")
-            _render_enterprise_pyvis(
-                enterprise_graph, absorbed_ids, rca, height=800,
-                current_step_node=pvc["current_step_node"],
-                traversal_path=pvc["current_path_so_far"],
-            )
+            st.caption(f"Drag · zoom · hover for details · {_legend_j}")
+            _render_enterprise_pyvis_rca_journey(enterprise_graph, jctx, absorbed_ids, height=800)
         else:
-            st.warning("Install `pyvis>=0.3.2` for interactive graph, or switch to Experimental 3D FalconVue.")
+            st.warning("Install `pyvis>=0.3.2` for the RCA journey graph.")
+
+    # ── RCA Explanation card ──────────────────────────────────────────────────
+    if rca:
+        _render_rca_explanation_card(jctx, rca, _gnn_result_pre)
 
     # ── Enterprise RCA Result ─────────────────────────────────────────────────
     if rca:
