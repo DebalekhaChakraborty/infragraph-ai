@@ -238,50 +238,105 @@ def simulate_enterprise_alert_intake(
     }
 
 
+def _parse_gnn_result(data: dict, path: str) -> dict:
+    """Normalise a raw GNN RCA JSON into a consistent agent result dict."""
+    # Accept both 'predicted_root_cause' (inference output) and 'root_cause' (older schema)
+    root_cause = (
+        data.get("predicted_root_cause")
+        or data.get("root_cause")
+        or ""
+    )
+    top_candidates = data.get("top_candidates") or data.get("ranking") or []
+
+    # Derive confidence: explicit field first, else top candidate score
+    confidence = data.get("confidence")
+    if confidence is None and top_candidates:
+        confidence = top_candidates[0].get("score", 0.0)
+    confidence = float(confidence or 0.0)
+
+    impacted_diagrams = data.get("impacted_diagrams") or []
+    # Also collect unique diagram_ids from top candidates when impacted_diagrams is sparse
+    if len(impacted_diagrams) < 2 and top_candidates:
+        from_candidates = list(dict.fromkeys(
+            c["diagram_id"] for c in top_candidates[:10]
+            if c.get("diagram_id")
+        ))
+        impacted_diagrams = impacted_diagrams or from_candidates
+
+    return {
+        "gnn_result":         data,
+        "root_cause":         root_cause,
+        "root_cause_diagram": data.get("root_cause_diagram", ""),
+        "confidence":         confidence,
+        "top_candidates":     top_candidates,
+        "impacted_diagrams":  impacted_diagrams,
+        "rca_source":         "Enterprise GNN RCA",
+        "ok":                 True,
+        "path":               path,
+    }
+
+
 def load_or_run_enterprise_gnn_rca(repo_root: Path, scenario_id: str) -> dict:
     """
     Load pre-computed GNN RCA result JSON for scenario.
-    Falls back to generic result or warning — never crashes the orchestrator.
+    Searches all known output locations and normalises both old and new schemas.
+    Falls back with a warning listing all checked paths — never crashes the orchestrator.
     """
-    candidates = [
-        repo_root / "outputs" / "enterprise_gnn_rca" / f"{scenario_id}_enterprise_gnn_rca_result.json",
-        repo_root / "assets" / "preloaded" / "enterprise_gnn_rca" / f"{scenario_id}_enterprise_gnn_rca_result.json",
-        repo_root / "outputs" / "enterprise_gnn_rca" / "enterprise_gnn_rca_result.json",
+    sid = scenario_id or ""
+
+    # All directories to search, in priority order
+    search_dirs = [
+        repo_root / "outputs"  / "enterprise_gnn_rca",
+        repo_root / "assets"   / "preloaded" / "enterprise_gnn_rca",
+        repo_root / "demo_assets" / "enterprise_gnn_rca",
+        repo_root / "runtime_state" / "enterprise_gnn_rca",
     ]
-    for path in candidates:
-        if path.exists():
-            try:
-                data = json.loads(path.read_text(encoding="utf-8"))
-                return {
-                    "gnn_result":        data,
-                    "root_cause":        data.get("root_cause", ""),
-                    "root_cause_diagram": data.get("root_cause_diagram", ""),
-                    "confidence":        float(data.get("confidence", 0.0)),
-                    "top_candidates":    data.get("ranking", data.get("top_candidates", [])),
-                    "impacted_diagrams": data.get("impacted_diagrams", []),
-                    "rca_source":        "Enterprise GNN RCA",
-                    "ok":                True,
-                    "path":              str(path),
-                }
-            except Exception:
-                continue
+    # Filename variants to try per directory
+    name_variants = (
+        [
+            f"{sid}_enterprise_gnn_rca_result.json",
+            f"{sid}.json",
+        ]
+        if sid else []
+    ) + ["enterprise_gnn_rca_result.json"]
+
+    checked: list[str] = []
+    for d in search_dirs:
+        for name in name_variants:
+            path = d / name
+            checked.append(str(path))
+            if path.exists():
+                try:
+                    data = json.loads(path.read_text(encoding="utf-8"))
+                    if not isinstance(data, dict):
+                        continue
+                    # Must have at least a root-cause field to be a valid result
+                    if not (data.get("predicted_root_cause") or data.get("root_cause")):
+                        continue
+                    return _parse_gnn_result(data, str(path))
+                except Exception:
+                    continue
 
     model_exists = (
         repo_root / "model_artifacts" / "enterprise_gnn_rca" / "enterprise_gnn_rca.pt"
     ).exists()
+    checked_str = "; ".join(checked[:6])
     return {
-        "gnn_result":        None,
-        "root_cause":        "",
+        "gnn_result":         None,
+        "root_cause":         "",
         "root_cause_diagram": "",
-        "confidence":        0.0,
-        "top_candidates":    [],
-        "impacted_diagrams": [],
-        "rca_source":        "scenario_grounded_fallback",
-        "ok":                False,
-        "model_exists":      model_exists,
+        "confidence":         0.0,
+        "top_candidates":     [],
+        "impacted_diagrams":  [],
+        "rca_source":         "scenario_grounded_fallback",
+        "ok":                 False,
+        "model_exists":       model_exists,
+        "checked_paths":      checked,
         "warning": (
-            f"No GNN RCA result for scenario '{scenario_id}'. "
-            + ("Model exists — run inference first." if model_exists else "Model not found.")
+            f"No GNN RCA result found for scenario '{sid}'. "
+            + ("Model exists — run Enterprise GNN RCA tab first." if model_exists
+               else "Model not found in model_artifacts/.")
+            + f" Checked: {checked_str}"
         ),
     }
 
@@ -376,7 +431,15 @@ def build_remediation_context(
     edges = enterprise_graph.get("edges", [])
     cross = enterprise_graph.get("cross_diagram_edges", [])
     clusters = enterprise_graph.get("diagram_clusters", {})
-    n_domains = len(clusters) if isinstance(clusters, dict) else 0
+    if isinstance(clusters, dict):
+        n_domains = len(clusters)
+    elif isinstance(clusters, list):
+        n_domains = len(clusters)
+    else:
+        n_domains = 0
+    # Derive from unique node diagram_ids if clusters missing
+    if n_domains == 0 and nodes:
+        n_domains = len(set(n.get("diagram_id", "") for n in nodes if n.get("diagram_id")))
 
     return _make_remediation_input(
         incident_id=ent_incident.get("incident_id", f"AGT-{run_id[:6]}"),

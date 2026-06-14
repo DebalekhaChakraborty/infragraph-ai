@@ -128,7 +128,14 @@ def run_agentic_incident_flow(
         edges    = eg.get("edges", [])
         cross    = eg.get("cross_diagram_edges", [])
         clusters = eg.get("diagram_clusters", {})
-        n_dom    = len(clusters) if isinstance(clusters, dict) else 0
+        if isinstance(clusters, dict):
+            n_dom = len(clusters)
+        elif isinstance(clusters, list):
+            n_dom = len(clusters)
+        else:
+            n_dom = 0
+        if n_dom == 0 and nodes:
+            n_dom = len(set(n.get("diagram_id", "") for n in nodes if n.get("diagram_id")))
 
         steps.append(_step(
             2, "Topology Context Agent",
@@ -452,6 +459,9 @@ def run_agentic_incident_flow(
     # ══════════════════════════════════════════════════════════════════
     # Assemble and persist AgentRun
     # ══════════════════════════════════════════════════════════════════
+    _is_fallback = "fallback" in rca_source or rca_source in ("unknown", "error_fallback")
+    _run_status  = "partial" if _is_fallback else "success"
+
     agent_run = AgentRun(
         run_id=run_id,
         scenario_id=scenario_id or "",
@@ -459,7 +469,7 @@ def run_agentic_incident_flow(
         mode=mode,
         started_at=started_at,
         completed_at=_now_iso(),
-        status="success",
+        status=_run_status,
         alert_source=alert_source,
         topology_source=topology_source,
         rca_source=rca_source,
