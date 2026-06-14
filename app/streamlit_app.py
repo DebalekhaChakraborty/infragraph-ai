@@ -4601,9 +4601,8 @@ def _render_evidence_tables(record: dict) -> None:
         f"and Copilot.  Detection source: **{det_src}**"
     )
 
-    tab_dev, tab_conn, tab_iface, tab_ocr, tab_ni, tab_ei, tab_pkt = st.tabs(
-        ["Devices", "Connectors", "Interfaces & IPs", "OCR / Text",
-         "Node inventory", "Edge inventory", "Graph Memory Packet"]
+    tab_dev, tab_conn, tab_iface, tab_ocr, tab_pkt = st.tabs(
+        ["Devices", "Connectors", "Interfaces & IPs", "OCR / Text", "Graph Memory Packet"]
     )
 
     with tab_dev:
@@ -4644,22 +4643,6 @@ def _render_evidence_tables(record: dict) -> None:
             st.dataframe(df, use_container_width=True, hide_index=True)
         else:
             st.info("No OCR / text evidence available for this record.")
-
-    with tab_ni:
-        nt = st.session_state.get("node_table")
-        if nt is not None and not nt.empty:
-            st.dataframe(nt, use_container_width=True, hide_index=True)
-            st.caption(f"{len(nt)} nodes · raw extraction output")
-        else:
-            st.info("No node data — run Diagram Intelligence first.")
-
-    with tab_ei:
-        et = st.session_state.get("edge_table")
-        if et is not None and not et.empty:
-            st.dataframe(et, use_container_width=True, hide_index=True)
-            st.caption(f"{len(et)} edges · raw extraction output")
-        else:
-            st.info("No edge data — run Diagram Intelligence first.")
 
     with tab_pkt:
         counts = {
