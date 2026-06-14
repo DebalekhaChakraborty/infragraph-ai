@@ -21,7 +21,6 @@ Caching:
 from __future__ import annotations
 
 import importlib
-import inspect
 import json
 import math
 import shutil
@@ -86,6 +85,12 @@ _DEFAULT_COLOR: tuple[int, int, int] = (168, 168, 168)
 
 # ── module-level model cache ──────────────────────────────────────────────────
 _MODEL_CACHE: dict[str, Any] = {}
+_MODEL_STRATEGY_CACHE: dict[str, str] = {}
+
+
+def get_checkpoint_load_strategy(checkpoint_path_str: str) -> str:
+    """Return the loading strategy name used for the given checkpoint (cached after load)."""
+    return _MODEL_STRATEGY_CACHE.get(checkpoint_path_str, "unknown")
 
 
 # Allowed checkpoint filenames — anything else (optimizer, rng_state, qwen) is rejected
@@ -177,43 +182,90 @@ def load_rfdetr_model(checkpoint_path_str: str) -> Any:
     if not ckpt.exists():
         raise RuntimeError(f"Checkpoint not found: {ckpt}")
 
-    # Strategy 1: constructor with pretrain_weights kwarg
+    ckpt_str = str(ckpt)
+    failures: list[str] = []
+
+    # ── Group 1: constructor-based loading (unconditional) ────────────────────
+    # RFDETRBase may be wrapped by a deprecation proxy whose __init__ signature
+    # appears as (*args, **kwargs), making inspect.signature() useless.  Try
+    # every known constructor kwarg unconditionally and confirm with .predict.
+    for strategy, kwargs in (
+        ("constructor_pretrain_weights", {"pretrain_weights": ckpt_str}),
+        ("constructor_checkpoint_path", {"checkpoint_path": ckpt_str}),
+        ("constructor_weights",         {"weights": ckpt_str}),
+        ("constructor_model_path",      {"model_path": ckpt_str}),
+    ):
+        try:
+            m = model_cls(**kwargs)
+            if hasattr(m, "predict"):
+                _MODEL_CACHE[checkpoint_path_str] = m
+                _MODEL_STRATEGY_CACHE[checkpoint_path_str] = strategy
+                return m
+            failures.append(f"{strategy}: returned object has no 'predict' attribute")
+        except Exception as exc:
+            failures.append(f"{strategy}: {exc}")
+
+    # ── Group 2: default constructor → method-based loading ───────────────────
     try:
-        sig = inspect.signature(model_cls.__init__)
-        if "pretrain_weights" in sig.parameters:
-            model = model_cls(pretrain_weights=str(ckpt))
-            _MODEL_CACHE[checkpoint_path_str] = model
-            return model
-    except Exception:
-        pass
+        model = model_cls()
+    except Exception as exc:
+        raise RuntimeError(
+            f"Could not instantiate {model_cls.__name__}() with no arguments: {exc}\n"
+            + "\n".join(f"  {f}" for f in failures)
+        )
 
-    # Strategy 2: default constructor → load/load_checkpoint/load_weights method
-    model = model_cls()
-    for method in ("load", "load_checkpoint", "load_weights"):
-        if hasattr(model, method):
-            try:
-                getattr(model, method)(str(ckpt))
-                _MODEL_CACHE[checkpoint_path_str] = model
-                return model
-            except Exception:
-                pass
+    for method_name in ("load", "load_checkpoint", "load_weights", "from_checkpoint"):
+        if not hasattr(model, method_name):
+            continue
+        try:
+            result = getattr(model, method_name)(ckpt_str)
+            candidate = result if (result is not None and hasattr(result, "predict")) else model
+            if hasattr(candidate, "predict"):
+                _MODEL_CACHE[checkpoint_path_str] = candidate
+                _MODEL_STRATEGY_CACHE[checkpoint_path_str] = f"method_{method_name}"
+                return candidate
+            failures.append(f"method_{method_name}: returned object has no 'predict'")
+        except Exception as exc:
+            failures.append(f"method_{method_name}: {exc}")
 
-    # Strategy 3: torch.load + load_state_dict
+    # ── Group 3: torch.load + safe inner-model load_state_dict ───────────────
+    # Never call model.load_state_dict() directly — RFDETRBase wraps the real
+    # network; probe common inner-model attribute paths instead.
     try:
         import torch  # type: ignore
-        ckpt_data = torch.load(str(ckpt), map_location="cpu")
+        ckpt_data = torch.load(ckpt_str, map_location="cpu")
         state = (
             ckpt_data.get("model")
             or ckpt_data.get("state_dict")
-            or ckpt_data
+            or (ckpt_data if isinstance(ckpt_data, dict) else None)
         )
-        model.load_state_dict(state, strict=False)
-        _MODEL_CACHE[checkpoint_path_str] = model
-        return model
+        if state is not None:
+            inner_candidates = [
+                ("model.model",  getattr(model, "model", None)),
+                ("model.net",    getattr(getattr(model, "model", None), "net", None)),
+                ("model.module", getattr(getattr(model, "model", None), "module", None)),
+            ]
+            for attr_path, inner in inner_candidates:
+                if inner is None or not hasattr(inner, "load_state_dict"):
+                    continue
+                try:
+                    inner.load_state_dict(state, strict=False)
+                    _MODEL_CACHE[checkpoint_path_str] = model
+                    _MODEL_STRATEGY_CACHE[checkpoint_path_str] = (
+                        "torch_load_state_dict_" + attr_path
+                    )
+                    return model
+                except Exception as exc:
+                    failures.append(f"torch_load_state_dict({attr_path}): {exc}")
+        else:
+            failures.append("torch.load: checkpoint contains no 'model'/'state_dict' key")
     except Exception as exc:
-        raise RuntimeError(
-            f"Could not load checkpoint {ckpt} with any strategy: {exc}"
-        )
+        failures.append(f"torch.load: {exc}")
+
+    raise RuntimeError(
+        f"Could not load RF-DETR checkpoint {ckpt} with any strategy.\n"
+        + "\n".join(f"  {f}" for f in failures)
+    )
 
 
 # ══════════════════════════════════════════════════════════════════════════════

@@ -81,6 +81,8 @@ def main() -> int:
     try:
         import live_rfdetr_detector as live
         model = live.load_rfdetr_model(str(checkpoint_path))
+        checkpoint_load_strategy = live.get_checkpoint_load_strategy(str(checkpoint_path))
+        model_class = type(model).__name__
     except Exception as exc:
         message = str(exc)
         if "No module named" in message or "not installed" in message:
@@ -138,6 +140,8 @@ def main() -> int:
             "detector": "RF-DETR",
             "python_executable": sys.executable,
             "checkpoint_path": str(checkpoint_path),
+            "checkpoint_load_strategy": checkpoint_load_strategy,
+            "model_class": model_class,
             "image_path": str(image_path),
             "inference_runtime_ms": runtime_ms,
             "inference_strategy": strategy,
