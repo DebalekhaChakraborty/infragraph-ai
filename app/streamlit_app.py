@@ -5244,22 +5244,6 @@ def _tab_enterprise_graph_brain() -> None:
             else:
                 st.info("Install pyvis for interactive graph.")
 
-    # ── Static previews (secondary) ──────────────────────────────────────────
-    _preview_scen = _selected_scenario_path()
-    with st.expander("Static story preview", expanded=False):
-        if not _preview_scen:
-            st.caption("Static preview not generated for this selected scenario.")
-        else:
-            for name, cap in [
-                ("preview_stitching_story.png", "Source Diagrams → Local Graphs → Enterprise Graph"),
-                ("preview_contact_sheet.png",   "Contact sheet — all scenario diagrams"),
-            ]:
-                p = _preview_scen / name
-                if p.exists():
-                    _img(p, cap)
-                else:
-                    st.caption(f"Static preview not generated for this selected scenario: {name}")
-
     # ── Global InfraGraph Galaxy ──────────────────────────────────────────────
     _GLOBAL_GRAPH_PATH   = _runtime_path("global_graph_memory") / "infragraph_global_graph.json"
     _GLOBAL_SUMMARY_PATH = _runtime_path("global_graph_memory") / "summary.json"
