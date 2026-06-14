@@ -6387,65 +6387,42 @@ def _tab_gnn_rca() -> None:
         st.session_state.pop("enterprise_incident", None)
         ent_incident = {}
 
-    col_eb1, col_eb2 = st.columns([1, 1])
-    with col_eb1:
-        if st.button(
-            "Generate Cross-Diagram Alert Stream",
-            type="primary" if not ent_incident else "secondary",
-            key="gen_ent_alerts_btn",
-            help="Build a cross-diagram hero incident from scenario evidence (3+ diagrams)",
-        ):
-            with st.spinner("Building cross-diagram alert stream…"):
-                if _INCIDENT_SIM_OK and _build_cross_hero_incident_pkg:
-                    try:
-                        ent_inc = _build_cross_hero_incident_pkg(
-                            enterprise_graph,
-                            alerts_data,
-                            diagram_id,
-                            gnn_result=_gnn_result_pre,
-                        )
-                        st.session_state.pop("_ent_gen_error", None)
-                    except Exception as _gen_exc:
-                        st.session_state["_ent_gen_error"] = str(_gen_exc)
-                        ent_inc = _simulate_enterprise_rca(alerts_data, enterprise_graph)
-                        ent_inc["alert_timeline"]    = []
-                        ent_inc["propagation_steps"] = []
-                else:
+    if st.button(
+        "Generate Cross-Diagram Alert Stream",
+        type="primary" if not ent_incident else "secondary",
+        key="gen_ent_alerts_btn",
+        use_container_width=True,
+        help="Build a cross-diagram hero incident from scenario evidence (3+ diagrams)",
+    ):
+        with st.spinner("Building cross-diagram alert stream…"):
+            if _INCIDENT_SIM_OK and _build_cross_hero_incident_pkg:
+                try:
+                    ent_inc = _build_cross_hero_incident_pkg(
+                        enterprise_graph,
+                        alerts_data,
+                        diagram_id,
+                        gnn_result=_gnn_result_pre,
+                    )
+                    st.session_state.pop("_ent_gen_error", None)
+                except Exception as _gen_exc:
+                    st.session_state["_ent_gen_error"] = str(_gen_exc)
                     ent_inc = _simulate_enterprise_rca(alerts_data, enterprise_graph)
                     ent_inc["alert_timeline"]    = []
                     ent_inc["propagation_steps"] = []
-                st.session_state.enterprise_incident          = ent_inc
-                st.session_state.enterprise_rca_result        = {}
-                st.session_state.pop("enterprise_ai_resolution_plan", None)
-            st.rerun()
+            else:
+                ent_inc = _simulate_enterprise_rca(alerts_data, enterprise_graph)
+                ent_inc["alert_timeline"]    = []
+                ent_inc["propagation_steps"] = []
+            st.session_state.enterprise_incident          = ent_inc
+            st.session_state.enterprise_rca_result        = {}
+            st.session_state.pop("enterprise_ai_resolution_plan", None)
+        st.rerun()
 
     # Surface any generation or import error
     if _INCIDENT_SIM_ERR and not _INCIDENT_SIM_OK:
         st.error(f"Incident simulation module unavailable: {_INCIDENT_SIM_ERR}")
     elif st.session_state.get("_ent_gen_error"):
         st.error(f"Alert stream error: {st.session_state['_ent_gen_error']}")
-
-    if ent_incident:
-        with col_eb2:
-            rca_btn_lbl = ("Run Enterprise RCA"
-                           if not _gnn_result_pre
-                           else "Run Enterprise GNN RCA")
-            if st.button(
-                rca_btn_lbl,
-                type="primary",
-                key="ent_rca_run_btn",
-                help="Derive root cause from the alert stream",
-            ):
-                with st.spinner("Running enterprise RCA…"):
-                    if (_INCIDENT_SIM_OK
-                            and isinstance(ent_incident, dict)
-                            and ent_incident.get("root_cause") is not None):
-                        rca_result = _incident_to_enterprise_rca(ent_incident)
-                    else:
-                        rca_result = _simulate_enterprise_rca(alerts_data, enterprise_graph)
-                    st.session_state.enterprise_rca_result = rca_result
-                    _persist_incident(ent_incident, "enterprise")
-                st.rerun()
 
     # ── Cross-diagram incident card + timeline ────────────────────────────────
     if ent_incident:
@@ -6533,6 +6510,27 @@ def _tab_gnn_rca() -> None:
 
     # ── Build RCA journey context (normalized node IDs + step roles) ───────────
     jctx = _build_rca_journey_context(enterprise_graph, ent_incident, rca, _gnn_result_pre)
+
+    # ── Run Enterprise RCA button (before the journey stepper) ───────────────
+    if ent_incident:
+        _rca_btn_lbl = "Run Enterprise RCA" if not _gnn_result_pre else "Run Enterprise GNN RCA"
+        if st.button(
+            _rca_btn_lbl,
+            type="primary",
+            key="ent_rca_run_btn",
+            use_container_width=True,
+            help="Derive root cause from the alert stream",
+        ):
+            with st.spinner("Running enterprise RCA…"):
+                if (_INCIDENT_SIM_OK
+                        and isinstance(ent_incident, dict)
+                        and ent_incident.get("root_cause") is not None):
+                    rca_result = _incident_to_enterprise_rca(ent_incident)
+                else:
+                    rca_result = _simulate_enterprise_rca(alerts_data, enterprise_graph)
+                st.session_state.enterprise_rca_result = rca_result
+                _persist_incident(ent_incident, "enterprise")
+            st.rerun()
 
     # ── RCA Investigation Journey stepper panel ───────────────────────────────
     _render_rca_journey_stepper(jctx)
