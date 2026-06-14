@@ -3992,6 +3992,8 @@ def _render_rca_explanation_card(
 # ══════════════════════════════════════════════════════════════════════════════
 def _tab_diagram_outputs_section() -> None:
     """Show outputs after diagram has been processed into local graph."""
+    if st.session_state.get("onboard_status", "not_started") == "not_started":
+        return
     local_graph = st.session_state.get("local_graph")
     if not local_graph:
         return
@@ -4444,7 +4446,10 @@ def _tab_onboard_new_diagram() -> None:
                 unsafe_allow_html=True,
             )
 
-    _tab_diagram_outputs_section()
+    # Only show graph outputs if LDI was actually run for the currently selected sample.
+    # Stale local_graph from a previous run or catalog load must not bleed through.
+    if is_this_sample_active:
+        _tab_diagram_outputs_section()
 
 
 def _selected_diagram_record() -> dict:
