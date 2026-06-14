@@ -6337,37 +6337,30 @@ def _tab_gnn_rca() -> None:
             language="bash",
         )
 
-    # ── Case B: model exists but no result for this scenario ─────────────────
+    # ── Case B: model exists but no result — auto-run inference ─────────────
     elif not _gnn_result_pre and _rca_scenario_id != "—":
-        st.info("Enterprise GNN model is available. Generate RCA result for this selected scenario.")
-        if st.button(
-            "Generate Enterprise GNN RCA for Selected Scenario",
-            type="primary",
-            key="gen_gnn_rca_btn",
-        ):
-            _inf_cmd = [
-                "python",
-                str(REPO_ROOT / "scripts" / "run_enterprise_gnn_inference.py"),
-                "--dataset-root", str(REPO_ROOT / "datasets" / "infragraph_v3"),
-                "--scenario-id",  _rca_scenario_id,
-                "--model-path",   str(_resolved_gnn_model),
-                "--out",          str(REPO_ROOT / "outputs" / "enterprise_gnn_rca"),
-            ]
-            with st.spinner(f"Running GNN inference for {_rca_scenario_id}..."):
-                import subprocess as _sp
-                _inf_result = _sp.run(
-                    _inf_cmd, capture_output=True, text=True, cwd=str(REPO_ROOT),
-                )
-            if _inf_result.returncode == 0:
-                st.success("GNN inference complete. Reloading result...")
-                st.rerun()
-            else:
-                st.error("GNN inference failed.")
-                st.code(_inf_result.stderr or _inf_result.stdout, language="text")
+        _inf_cmd = [
+            "python",
+            str(REPO_ROOT / "scripts" / "run_enterprise_gnn_inference.py"),
+            "--dataset-root", str(REPO_ROOT / "datasets" / "infragraph_v3"),
+            "--scenario-id",  _rca_scenario_id,
+            "--model-path",   str(_resolved_gnn_model),
+            "--out",          str(REPO_ROOT / "outputs" / "enterprise_gnn_rca"),
+        ]
+        with st.spinner(f"Running GNN inference for {_rca_scenario_id}…"):
+            import subprocess as _sp
+            _inf_result = _sp.run(
+                _inf_cmd, capture_output=True, text=True, cwd=str(REPO_ROOT),
+            )
+        if _inf_result.returncode == 0:
+            st.rerun()
+        else:
+            st.error("GNN inference failed.")
+            st.code(_inf_result.stderr or _inf_result.stdout, language="text")
 
     # ── Case C: result exists ─────────────────────────────────────────────────
     elif _gnn_result_pre:
-        st.success(f"Enterprise GNN RCA result loaded for **{_rca_scenario_id}**.", icon=None)
+        st.caption(f"GNN RCA loaded · {_rca_scenario_id}")
 
     st.markdown('<hr class="ws-rule">', unsafe_allow_html=True)
 
