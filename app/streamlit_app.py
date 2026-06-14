@@ -4195,6 +4195,14 @@ def _tab_onboard_new_diagram() -> None:
             _err_d = f"  \n`{_RUNTIME_INGESTION_ERR}`" if _RUNTIME_INGESTION_ERR else ""
             st.error(f"runtime_ingestion failed to load at startup — restart the app to retry.{_err_d}")
         else:
+            # Show original diagram while processing — cleared once done
+            _orig_preview = st.empty()
+            if img_path.exists():
+                with _orig_preview.container():
+                    st.markdown('<div class="compare-badge original">Original</div>',
+                                unsafe_allow_html=True)
+                    st.image(str(img_path), use_container_width=True)
+
             _external_rfdetr_result = {}
             if st.session_state.use_live_rfdetr and _rfdetr_ckpt and _run_rfdetr_detection is not None:
                 _conf = float(os.environ.get("INFRAGRAPH_RFDETR_CONFIDENCE", "0.25"))
@@ -4267,6 +4275,8 @@ def _tab_onboard_new_diagram() -> None:
                     unsafe_allow_html=True,
                 )
                 prog.progress(idx / len(_STEPS))
+
+            _orig_preview.empty()  # replace original preview with detection output below
 
             import pandas as _pd
             st.session_state.selected_diagram_path      = str(img_path)
