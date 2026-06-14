@@ -33,13 +33,24 @@ from typing import Any
 # ── checkpoint priority ────────────────────────────────────────────────────────
 # New canonical locations checked first; legacy outputs/ checked as fallback.
 _CHECKPOINT_PRIORITY: list[str] = [
+    # Canonical: flat layout (model_artifacts/rfdetr_v3/<file>)
+    "model_artifacts/rfdetr_v3/checkpoint_best_total.pth",
+    "model_artifacts/rfdetr_v3/checkpoint_best_ema.pth",
+    "model_artifacts/rfdetr_v3/checkpoint_best_regular.pth",
+    "model_artifacts/rfdetr_v3/last.ckpt",
+    # Canonical: model/ subdirectory layout
     "model_artifacts/rfdetr_v3/model/checkpoint_best_total.pth",
     "model_artifacts/rfdetr_v3/model/checkpoint_best_ema.pth",
     "model_artifacts/rfdetr_v3/model/checkpoint_best_regular.pth",
     "model_artifacts/rfdetr_v3/model/last.ckpt",
+    "model_artifacts/rfdetr_v3_smoke/checkpoint_best_total.pth",
+    "model_artifacts/rfdetr_v3_smoke/checkpoint_best_ema.pth",
     "model_artifacts/rfdetr_v3_smoke/model/checkpoint_best_total.pth",
     "model_artifacts/rfdetr_v3_smoke/model/checkpoint_best_ema.pth",
-    # legacy paths — backward compatibility
+    # legacy outputs/ mirrors
+    "outputs/rfdetr_v3/checkpoint_best_total.pth",
+    "outputs/rfdetr_v3/checkpoint_best_ema.pth",
+    "outputs/rfdetr_v3/checkpoint_best_regular.pth",
     "outputs/rfdetr_v3/model/checkpoint_best_total.pth",
     "outputs/rfdetr_v3/model/checkpoint_best_ema.pth",
     "outputs/rfdetr_v3/model/checkpoint_best_regular.pth",
@@ -102,8 +113,11 @@ def find_best_rfdetr_checkpoint(repo_root: Path) -> "Path | None":
 
     # Restricted fallback: only inside known rfdetr-specific directories,
     # only for allowed checkpoint names — never a generic *.pth glob.
+    # Flat layout (rfdetr_v3/) is checked before model/ subdirectory.
     for search_dir in [
+        repo_root / "model_artifacts" / "rfdetr_v3",
         repo_root / "model_artifacts" / "rfdetr_v3" / "model",
+        repo_root / "outputs" / "rfdetr_v3",
         repo_root / "outputs" / "rfdetr_v3" / "model",  # legacy
     ]:
         if not search_dir.exists():

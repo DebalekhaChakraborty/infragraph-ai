@@ -16,16 +16,26 @@ from pathlib import Path
 
 
 CHECKPOINT_CANDIDATES = [
+    # Canonical: flat layout (model_artifacts/rfdetr_v3/<file>)
+    "model_artifacts/rfdetr_v3/checkpoint_best_total.pth",
+    "model_artifacts/rfdetr_v3/checkpoint_best_ema.pth",
+    "model_artifacts/rfdetr_v3/checkpoint_best_regular.pth",
+    # Canonical: model/ subdirectory layout
+    "model_artifacts/rfdetr_v3/model/checkpoint_best_total.pth",
+    "model_artifacts/rfdetr_v3/model/checkpoint_best_ema.pth",
+    "model_artifacts/rfdetr_v3/model/checkpoint_best_regular.pth",
+    # Legacy rfdetr (v1/v2)
     "model_artifacts/rfdetr/checkpoint_best_total.pth",
     "model_artifacts/rfdetr/checkpoint_best_regular.pth",
-    "model_artifacts/rfdetr_v3/model/checkpoint_best_total.pth",
-    "model_artifacts/rfdetr_v3/model/checkpoint_best_regular.pth",
-    "model_artifacts/rfdetr_v3/model/checkpoint_best_ema.pth",
+    # outputs/ mirrors
+    "outputs/rfdetr_v3/checkpoint_best_total.pth",
+    "outputs/rfdetr_v3/checkpoint_best_ema.pth",
+    "outputs/rfdetr_v3/checkpoint_best_regular.pth",
+    "outputs/rfdetr_v3/model/checkpoint_best_total.pth",
+    "outputs/rfdetr_v3/model/checkpoint_best_ema.pth",
+    "outputs/rfdetr_v3/model/checkpoint_best_regular.pth",
     "outputs/rfdetr/checkpoint_best_total.pth",
     "outputs/rfdetr/checkpoint_best_regular.pth",
-    "outputs/rfdetr_v3/model/checkpoint_best_total.pth",
-    "outputs/rfdetr_v3/model/checkpoint_best_regular.pth",
-    "outputs/rfdetr_v3/model/checkpoint_best_ema.pth",
 ]
 
 # Allowed checkpoint filenames — anything else is not an RF-DETR detector checkpoint
@@ -184,12 +194,17 @@ _NO_CHECKPOINT_MSG = (
     "under model_artifacts/rfdetr_v3/model or outputs/rfdetr_v3/model."
 )
 
-# Known rfdetr-specific subdirectories for the fallback restricted search
+# Known rfdetr-specific subdirectories for the fallback restricted search.
+# Flat layout (rfdetr_v3/) is listed before model/ subdirectory layout.
 _RFDETR_FALLBACK_SEARCH_DIRS: tuple[str, ...] = (
+    "model_artifacts/rfdetr_v3",
     "model_artifacts/rfdetr_v3/model",
+    "model_artifacts/rfdetr_v3_smoke",
     "model_artifacts/rfdetr_v3_smoke/model",
     "model_artifacts/rfdetr",
+    "outputs/rfdetr_v3",
     "outputs/rfdetr_v3/model",
+    "outputs/rfdetr_v3_smoke",
     "outputs/rfdetr_v3_smoke/model",
     "outputs/rfdetr",
 )
