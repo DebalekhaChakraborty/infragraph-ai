@@ -76,8 +76,17 @@ def main() -> None:
     out_dir      = Path(args.out)
     scenario_id  = args.scenario_id
 
-    # Resolve model path
-    model_path = Path(args.model_path) if args.model_path else out_dir / "enterprise_gnn_model.pt"
+    # Resolve model path — priority order:
+    #   1. explicit --model-path
+    #   2. model_artifacts/enterprise_gnn_rca/enterprise_gnn_rca.pt  (trained artifact)
+    #   3. <out>/enterprise_gnn_model.pt  (legacy fallback)
+    _canonical_model = _REPO_ROOT / "model_artifacts" / "enterprise_gnn_rca" / "enterprise_gnn_rca.pt"
+    if args.model_path:
+        model_path = Path(args.model_path)
+    elif _canonical_model.exists():
+        model_path = _canonical_model
+    else:
+        model_path = out_dir / "enterprise_gnn_model.pt"
 
     print("InfraGraph AI — Enterprise GNN Inference")
     print(f"  Scenario    : {scenario_id}")
@@ -89,10 +98,13 @@ def main() -> None:
     if not model_path.exists():
         print(
             f"\n[ERROR] Model checkpoint not found: {model_path}\n"
+            f"  Expected locations:\n"
+            f"    {_canonical_model}\n"
+            f"    {out_dir / 'enterprise_gnn_model.pt'}\n"
             f"  Train first with:\n"
             f"    python scripts/train_enterprise_gnn_rca.py \\\n"
             f"        --dataset-root {dataset_root} \\\n"
-            f"        --out {out_dir} \\\n"
+            f"        --out ./model_artifacts/enterprise_gnn_rca \\\n"
             f"        --epochs 80"
         )
         sys.exit(1)

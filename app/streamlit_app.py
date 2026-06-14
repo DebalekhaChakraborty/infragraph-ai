@@ -1277,7 +1277,7 @@ V3_DIAGRAM_IDS = {
 }
 V3_REQUIRED_DIAGRAMS = list(V3_DIAGRAM_IDS.values())
 V3_ENTERPRISE_GNN_METRICS = _demo_asset_path("enterprise_gnn_rca") / "enterprise_gnn_metrics.json"
-V3_ENTERPRISE_GNN_MODEL   = _demo_asset_path("enterprise_gnn_rca") / "enterprise_gnn_model.pt"
+V3_ENTERPRISE_GNN_MODEL   = REPO_ROOT / "model_artifacts" / "enterprise_gnn_rca" / "enterprise_gnn_rca.pt"
 V3_ONBOARDING_SCRIPT = REPO_ROOT / "scripts" / "onboard_diagram_v3.py"
 
 _V3_DIAG_COLORS = {
@@ -6344,6 +6344,7 @@ def _tab_gnn_rca() -> None:
                 str(REPO_ROOT / "scripts" / "run_enterprise_gnn_inference.py"),
                 "--dataset-root", str(REPO_ROOT / "datasets" / "infragraph_v3"),
                 "--scenario-id",  _rca_scenario_id,
+                "--model-path",   str(REPO_ROOT / "model_artifacts" / "enterprise_gnn_rca" / "enterprise_gnn_rca.pt"),
                 "--out",          str(REPO_ROOT / "outputs" / "enterprise_gnn_rca"),
             ]
             with st.spinner(f"Running GNN inference for {_rca_scenario_id}..."):
