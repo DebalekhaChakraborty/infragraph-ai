@@ -519,6 +519,15 @@ div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] p { color: #9
 .compare-badge.predicted { background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.2); }
 .compare-badge.prepared  { background: rgba(245,158,11,0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.2); }
 .compare-badge.missing   { background: rgba(100,116,139,0.1); color: #94a3b8; border: 1px solid rgba(100,116,139,0.2); }
+
+/* ── Primary buttons ── */
+[data-testid="stBaseButton-primary"],
+[data-testid="stBaseButton-primary"] p,
+[data-testid="stBaseButton-primary"] * { background: #2563eb !important; color: #ffffff !important; border: none !important; font-weight: 600 !important; }
+[data-testid="stBaseButton-primary"]:hover { background: #1d4ed8 !important; color: #ffffff !important; }
+[data-testid="stBaseButton-primary"]:active { background: #1e40af !important; color: #ffffff !important; }
+[data-testid="stBaseButton-primary"]:disabled,
+[data-testid="stBaseButton-primary"][disabled] { background: #93c5fd !important; color: #ffffff !important; opacity: 0.6 !important; }
 </style>
 """
 
@@ -554,6 +563,13 @@ label, [data-testid="stWidgetLabel"] p, [data-testid="stWidgetLabel"] span { col
 [data-testid="stSidebar"] [data-testid="stMarkdown"] * { color: #1e293b !important; }
 [data-testid="stRadio"] label, [data-testid="stRadio"] p { color: #1e293b !important; }
 [data-testid="stToggle"] label, [data-testid="stToggle"] p { color: #1e293b !important; }
+[data-testid="stBaseButton-primary"],
+[data-testid="stBaseButton-primary"] p,
+[data-testid="stBaseButton-primary"] * { background: #2563eb !important; color: #ffffff !important; border: none !important; font-weight: 600 !important; }
+[data-testid="stBaseButton-primary"]:hover { background: #1d4ed8 !important; color: #ffffff !important; }
+[data-testid="stBaseButton-primary"]:active { background: #1e40af !important; color: #ffffff !important; }
+[data-testid="stBaseButton-primary"]:disabled,
+[data-testid="stBaseButton-primary"][disabled] { background: #93c5fd !important; color: #ffffff !important; opacity: 0.6 !important; }
 [data-testid="stBaseButton-secondary"],
 .stButton button { background: #ffffff !important; color: #334155 !important; border: 1px solid rgba(0,0,0,0.14) !important; }
 div[data-testid="stTabs"] div[role="tablist"] { background: rgba(0,0,0,0.05) !important; border-color: rgba(0,0,0,0.09) !important; }
