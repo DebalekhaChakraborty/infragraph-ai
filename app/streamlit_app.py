@@ -7469,8 +7469,19 @@ def _sidebar_v3() -> None:
         else:
             st.info("Standard Mode: ON — annotation overlay enabled when detector unavailable")
 
-        st.markdown('<div class="sb-label">System Readiness</div>', unsafe_allow_html=True)
-        _render_readiness_panel()
+        st.markdown('<div class="sb-label">Navigate</div>', unsafe_allow_html=True)
+        st.radio(
+            "Navigate",
+            [
+                "Diagram Intelligence",
+                "Topology RCA",
+                "Enterprise Graph Brain",
+                "Enterprise GNN RCA",
+                "Graph Copilot",
+            ],
+            key="main_nav",
+            label_visibility="collapsed",
+        )
 
         st.markdown('<div class="sb-label">Pipeline Progress</div>', unsafe_allow_html=True)
         steps = [
@@ -7574,22 +7585,16 @@ def _main_cockpit() -> None:
         unsafe_allow_html=True,
     )
 
-    tabs = st.tabs([
-        "Diagram Intelligence",
-        "Topology RCA",
-        "Enterprise Graph Brain",
-        "Enterprise GNN RCA",
-        "Graph Copilot",
-    ])
-    with tabs[0]:
+    _nav = st.session_state.get("main_nav", "Diagram Intelligence")
+    if _nav == "Diagram Intelligence":
         _tab_diagram_intelligence()
-    with tabs[1]:
+    elif _nav == "Topology RCA":
         _tab_local_rca()
-    with tabs[2]:
+    elif _nav == "Enterprise Graph Brain":
         _tab_enterprise_graph_brain()
-    with tabs[3]:
+    elif _nav == "Enterprise GNN RCA":
         _tab_gnn_rca()
-    with tabs[4]:
+    else:
         _tab_graph_copilot()
 
 
