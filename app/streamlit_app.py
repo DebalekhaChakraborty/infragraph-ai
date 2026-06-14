@@ -7287,6 +7287,14 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
         st.session_state.agent_run_result = None
     if "agent_approval_status" not in st.session_state:
         st.session_state.agent_approval_status = "pending"
+    if "agent_copilot_answer" not in st.session_state:
+        st.session_state.agent_copilot_answer = ""
+    if "agent_copilot_question" not in st.session_state:
+        st.session_state.agent_copilot_question = ""
+    if "agent_copilot_response_source" not in st.session_state:
+        st.session_state.agent_copilot_response_source = ""
+    if "agent_copilot_vector_evidence" not in st.session_state:
+        st.session_state.agent_copilot_vector_evidence = []
 
     _is_dark = st.session_state.get("theme", "dark") != "light"
 
@@ -7536,39 +7544,54 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
 
     st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
 
-    # ── B. RCA Outcome card + C. Blast Radius card ────────────────────────────
-    _left, _right = st.columns(2)
+    # ── B/C/D. 3-column incident workspace ────────────────────────────────────
+    _col_lft, _col_mid, _col_rgt = st.columns([1.15, 1.5, 1.35])
 
-    with _left:
-        # B — RCA Outcome
-        _rca_border = "#8b5cf6" if _is_gnn else "#f59e0b"
+    # helper locals
+    _step1 = next((s for s in _run.get("steps", []) if s.get("step_id") == 1), {})
+    _step2 = next((s for s in _run.get("steps", []) if s.get("step_id") == 2), {})
+    _step4 = next((s for s in _run.get("steps", []) if s.get("step_id") == 4), {})
+    _step5 = next((s for s in _run.get("steps", []) if s.get("step_id") == 5), {})
+    _al_payload  = _step1.get("payload") or {}
+    _tl_count    = _al_payload.get("alert_count", 0)
+    _alert_nodes = _al_payload.get("alert_nodes", _al_payload.get("alerts", []))
+    _tp          = _step2.get("payload") or {}
+
+    # ── LEFT — Alert Stream ───────────────────────────────────────────────────
+    with _col_lft:
         st.markdown(
-            f'<div style="{_card_css()}border-left:4px solid {_rca_border}">',
+            '<div style="font-size:0.63rem;font-weight:700;color:#64748b;text-transform:uppercase;'
+            'letter-spacing:.1em;margin-bottom:8px">Alert Stream</div>',
             unsafe_allow_html=True,
         )
         st.markdown(
-            _badge("Enterprise GNN RCA", "#8b5cf6") if _is_gnn else _badge("Fallback RCA", "#f59e0b"),
+            f'<div style="{_card_css()}border-left:3px solid #0ea5e9">',
             unsafe_allow_html=True,
         )
-        st.markdown(f"**Root Cause Node:** `{_run.get('root_cause') or '—'}`")
-        st.markdown(f"**Source Diagram:** `{_run.get('root_cause_diagram') or '—'}`")
-        st.markdown(f"**Confidence:** {_confidence_pct}")
-
-        _ev_step = next((s for s in _run.get("steps", []) if s["step_id"] == 5), {})
-        _bullets  = (_ev_step.get("evidence") or [])[:5]
-        if _bullets:
-            st.markdown("**Evidence:**")
-            for _ev in _bullets:
-                st.markdown(f"&emsp;• {_ev}")
-
-        _step4 = next((s for s in _run.get("steps", []) if s["step_id"] == 4), {})
-        if _step4.get("status") == "warning":
-            st.caption(f"⚠ {_step4.get('summary', '')}")
+        st.markdown(
+            _badge(f"{_tl_count} Simulated Alert(s)", "#0ea5e9"),
+            unsafe_allow_html=True,
+        )
+        st.caption(_step1.get("summary", "Alert telemetry collected from scenario graph."))
+        if _alert_nodes:
+            for _an in _alert_nodes[:10]:
+                _an_id = _an if isinstance(_an, str) else _an.get("node", _an.get("node_id", str(_an)))
+                st.markdown(
+                    f'<div style="font-size:0.71rem;color:#cbd5e1;padding:2px 0;'
+                    f'border-bottom:1px solid rgba(255,255,255,0.04)">'
+                    f'⚡ <code style="font-size:0.68rem">{html.escape(str(_an_id))}</code></div>',
+                    unsafe_allow_html=True,
+                )
+        elif _tl_count:
+            st.caption(f"{_tl_count} alert events from scenario graph.")
+        _ev1 = _step1.get("evidence", [])
+        for _ev in _ev1[:4]:
+            st.markdown(
+                f'<div style="font-size:0.70rem;color:#64748b;padding:1px 0">· {html.escape(str(_ev))}</div>',
+                unsafe_allow_html=True,
+            )
         st.markdown("</div>", unsafe_allow_html=True)
 
-        # Topology context (below RCA card)
-        _step2 = next((s for s in _run.get("steps", []) if s["step_id"] == 2), {})
-        _tp    = _step2.get("payload", {})
         if _tp:
             st.markdown(
                 f'<div style="{_card_css()}">',
@@ -7578,25 +7601,46 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                 _badge(_run.get("topology_source", "—").replace("_", " "), "#0f766e"),
                 unsafe_allow_html=True,
             )
-            st.markdown(f"**Scenario:** `{_run.get('scenario_id', '—')}`")
+            st.caption(f"Scenario: {_run.get('scenario_id', '—')}")
             st.markdown(
-                f"**Nodes:** {_tp.get('node_count', 0)} &nbsp;|&nbsp; "
-                f"**Edges:** {_tp.get('edge_count', 0)} &nbsp;|&nbsp; "
-                f"**Cross-diagram:** {_tp.get('cross_edge_count', 0)} &nbsp;|&nbsp; "
-                f"**Domains:** {_tp.get('domain_count', 0)}",
+                f'<div style="font-size:0.71rem;color:#94a3b8">'
+                f'Nodes {_tp.get("node_count", 0)} &nbsp;·&nbsp; '
+                f'Edges {_tp.get("edge_count", 0)} &nbsp;·&nbsp; '
+                f'Cross {_tp.get("cross_edge_count", 0)} &nbsp;·&nbsp; '
+                f'Domains {_tp.get("domain_count", 0)}</div>',
                 unsafe_allow_html=True,
             )
-            _step1 = next((s for s in _run.get("steps", []) if s["step_id"] == 1), {})
-            _tl_count = (_step1.get("payload") or {}).get("alert_count", 0)
-            if _tl_count:
-                st.markdown(
-                    _badge(f"{_tl_count} simulated alert(s)", "#0ea5e9"),
-                    unsafe_allow_html=True,
-                )
             st.markdown("</div>", unsafe_allow_html=True)
 
-    with _right:
-        # C — Blast Radius
+    # ── MIDDLE — AI Findings / RCA Evidence / Blast Radius ───────────────────
+    with _col_mid:
+        st.markdown(
+            '<div style="font-size:0.63rem;font-weight:700;color:#64748b;text-transform:uppercase;'
+            'letter-spacing:.1em;margin-bottom:8px">AI Findings</div>',
+            unsafe_allow_html=True,
+        )
+
+        _rca_border = "#8b5cf6" if _is_gnn else "#f59e0b"
+        st.markdown(
+            f'<div style="{_card_css()}border-left:4px solid {_rca_border}">',
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            _badge("Enterprise GNN RCA", "#8b5cf6") if _is_gnn else _badge("Graph-grounded RCA", "#f59e0b"),
+            unsafe_allow_html=True,
+        )
+        st.markdown(f"**Root Cause:** `{_run.get('root_cause') or '—'}`")
+        st.markdown(f"**Diagram:** `{_run.get('root_cause_diagram') or '—'}`")
+        st.markdown(f"**Confidence:** {_confidence_pct}")
+        _bullets = (_step5.get("evidence") or [])[:5]
+        if _bullets:
+            st.markdown("**Evidence:**")
+            for _ev in _bullets:
+                st.markdown(f"&emsp;• {_ev}")
+        if _step4.get("status") == "warning":
+            st.caption(f"⚠ {_step4.get('summary', '')}")
+        st.markdown("</div>", unsafe_allow_html=True)
+
         _br_border = "#ef4444" if len(_imp_diag) >= 3 else "#f59e0b" if _imp_diag else "#22c55e"
         st.markdown(
             f'<div style="{_card_css()}border-left:4px solid {_br_border}">',
@@ -7609,37 +7653,44 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
             if len(_imp_diag) > 8:
                 st.caption(f"…and {len(_imp_diag)-8} more")
         else:
-            st.caption("No impacted diagrams identified (check GNN RCA result).")
+            st.caption("No impacted diagrams identified.")
         st.markdown("</div>", unsafe_allow_html=True)
 
-        # D — Remediation & Approval Gate
+    # ── RIGHT — Remediation Pipeline / Confidence Gate / Approval / ITSM ─────
+    with _col_rgt:
+        st.markdown(
+            '<div style="font-size:0.63rem;font-weight:700;color:#64748b;text-transform:uppercase;'
+            'letter-spacing:.1em;margin-bottom:8px">Remediation Pipeline</div>',
+            unsafe_allow_html=True,
+        )
+
         _rem_src    = _run.get("remediation_source", "—")
         _rem_border = "#22c55e" if _rem_src == "qwen_vllm" else "#f59e0b"
+        _rem_color  = "#22c55e" if _rem_src == "qwen_vllm" else "#f59e0b"
+        _rl       = _ag.get("risk_level", "—")
+        _rl_color = {"high": "#ef4444", "medium": "#f59e0b", "low": "#22c55e"}.get(_rl, "#6b7280")
         st.markdown(
             f'<div style="{_card_css()}border-left:4px solid {_rem_border}">',
             unsafe_allow_html=True,
         )
-        _rem_color = "#22c55e" if _rem_src == "qwen_vllm" else "#f59e0b"
-        st.markdown(
-            _badge(f"Remediation: {_rem_src}", _rem_color),
-            unsafe_allow_html=True,
-        )
-        _rl = _ag.get("risk_level", "—")
-        _rl_color = {"high": "#ef4444", "medium": "#f59e0b", "low": "#22c55e"}.get(_rl, "#6b7280")
-        st.markdown(
-            f"**Risk level:** " + _badge(_rl.upper(), _rl_color),
-            unsafe_allow_html=True,
-        )
+        st.markdown(_badge(f"Remediation: {_rem_src}", _rem_color), unsafe_allow_html=True)
+        st.markdown(f"**Risk level:** " + _badge(_rl.upper(), _rl_color), unsafe_allow_html=True)
         st.caption(_ag.get("reason", ""))
+        st.markdown("</div>", unsafe_allow_html=True)
 
-        st.markdown("**Human Approval Gate**")
-        _ap_color = {"approved": "#22c55e", "rejected": "#ef4444", "pending": "#f59e0b"}.get(
+        _ap_border = {"approved": "#22c55e", "rejected": "#ef4444", "pending": "#f59e0b"}.get(
             _approval_status, "#6b7280"
         )
+        st.markdown(
+            f'<div style="{_card_css()}border-left:4px solid {_ap_border}">',
+            unsafe_allow_html=True,
+        )
+        st.markdown("**Human Approval Gate**")
         if _approval_status == "pending":
             _ap_col1, _ap_col2 = st.columns(2)
             with _ap_col1:
-                if st.button("✓ Approve", type="primary", use_container_width=True, key="agent_approve_btn"):
+                if st.button("✓ Approve", type="primary", use_container_width=True,
+                             key="agent_approve_btn"):
                     st.session_state.agent_approval_status = "approved"
                     st.toast("Demo ticket approved. No external ITSM system was called.", icon="✅")
                     st.rerun()
@@ -7655,11 +7706,121 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
             st.warning("Rejected / needs review. No actions taken.")
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # ── E. ITSM Ticket Draft card ─────────────────────────────────────────────
-    st.markdown("---")
+        # Compact ITSM snapshot
+        st.markdown(
+            f'<div style="{_card_css()}border-left:4px solid #22c55e">',
+            unsafe_allow_html=True,
+        )
+        st.markdown(_badge("Demo ITSM Draft", "#22c55e"), unsafe_allow_html=True)
+        for _fk, _fv in [
+            ("Ticket ID",   _ticket.get("ticket_id", "—")),
+            ("Priority",    _ticket.get("priority", "—")),
+            ("Assigned to", _ticket.get("assignment_group", "—")),
+            ("Status",      _approval_status.upper()),
+        ]:
+            st.markdown(
+                f'<div style="font-size:0.71rem;color:#94a3b8">{_fk}: '
+                f'<span style="color:#f1f5f9;font-weight:600">'
+                f'{html.escape(str(_fv))}</span></div>',
+                unsafe_allow_html=True,
+            )
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # ── Incident Copilot widget ───────────────────────────────────────────────
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    with st.expander("Incident Copilot", expanded=False):
+        st.markdown(
+            '<div style="font-size:0.78rem;color:#94a3b8;margin-bottom:10px">'
+            'Ask about the active incident, RCA evidence, blast radius, or remediation plan.'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+
+        # Quick prompts (row of 3 + row of 2)
+        _IC_PROMPTS = [
+            "Why is this the root cause?",
+            "Show impacted diagrams",
+            "Explain the blast radius",
+            "Explain the remediation plan",
+            "What evidence supports the RCA?",
+        ]
+        _ic_clicked: "str | None" = None
+        _ic_r1 = st.columns(3)
+        _ic_r2 = st.columns(2)
+        for _qi, _qp_txt in enumerate(_IC_PROMPTS):
+            _ic_col = (_ic_r1 + _ic_r2)[_qi]
+            with _ic_col:
+                if st.button(_qp_txt, key=f"ic_qp_{_qi}", use_container_width=True):
+                    _ic_clicked = _qp_txt
+
+        st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
+
+        # Free-text input + submit
+        _ic_q      = st.text_input(
+            "Question",
+            key="agent_copilot_input",
+            label_visibility="collapsed",
+            placeholder="Ask about this incident…",
+        )
+        _ic_submit = st.button("Ask Copilot", key="agent_copilot_submit", type="primary")
+
+        # Compute answer when a prompt or submit fires
+        _active_q = _ic_clicked or (_ic_q.strip() if _ic_submit and _ic_q.strip() else None)
+        if _active_q:
+            # Build context scoped to the active run
+            _ic_ctx = _copilot_context()
+            _ic_ctx["enterprise_rca_result"] = {
+                "root_cause":         _run.get("root_cause", ""),
+                "root_cause_diagram": _run.get("root_cause_diagram", ""),
+                "confidence":         _run.get("confidence", 0),
+                "impacted_diagrams":  _run.get("impacted_diagrams", []),
+                "mode":               _run.get("rca_source", ""),
+                "rca_source":         _run.get("rca_source", ""),
+                "impact_path":        [],
+            }
+            _ic_ctx["active_run_evidence"] = (_step5.get("evidence") or [])
+            # Vector retrieval
+            _ic_vec, _ = _retrieve_vector_evidence_global(_active_q, k=6)
+            if not _ic_vec:
+                _ic_vec, _ = _retrieve_vector_evidence(_active_q, k=6)
+            if _ic_vec:
+                _ic_ctx["retrieved_graph_memory_evidence"] = _ic_vec
+            st.session_state["agent_copilot_vector_evidence"] = _ic_vec
+            with st.spinner("Thinking…"):
+                _ic_ans = _qwen_or_deterministic(_active_q, _ic_ctx)
+            st.session_state["agent_copilot_answer"]          = _ic_ans
+            st.session_state["agent_copilot_question"]        = _active_q
+            st.session_state["agent_copilot_response_source"] = (
+                st.session_state.get("last_copilot_response_source", "—")
+            )
+
+        # Answer area
+        if st.session_state.get("agent_copilot_answer"):
+            st.divider()
+            if st.session_state.get("agent_copilot_question"):
+                st.caption(f"Q: {st.session_state['agent_copilot_question']}")
+            st.markdown(st.session_state["agent_copilot_answer"])
+
+            # Transparency footer
+            _ic_src = st.session_state.get("agent_copilot_response_source", "—")
+            _ic_vec_r = st.session_state.get("agent_copilot_vector_evidence") or []
+            _det_chk  = "✓" if _ic_src in ("deterministic_fallback", "qwen_vllm") else "○"
+            _vec_chk  = "✓" if _ic_vec_r else "○"
+            _qwn_chk  = "✓" if _ic_src == "qwen_vllm" else "○"
+            st.markdown(
+                f'<div style="font-size:0.64rem;color:#475569;margin-top:6px;padding-top:6px;'
+                f'border-top:1px solid rgba(255,255,255,0.06)">'
+                f'{_det_chk} Deterministic graph tools &nbsp;·&nbsp; '
+                f'{_vec_chk} Vector retrieval ({len(_ic_vec_r)} docs) &nbsp;·&nbsp; '
+                f'{_qwn_chk} Qwen enrichment</div>',
+                unsafe_allow_html=True,
+            )
+
+    # ── ITSM Ticket Draft — full detail (collapsed) ──────────────────────────
     with st.expander(
-        f"ITSM Ticket Draft — {_ticket.get('ticket_id', '—')}  |  {_ticket.get('priority', '—')}  |  {_approval_status.upper()}",
-        expanded=True,
+        f"ITSM Ticket Draft — {_ticket.get('ticket_id', '—')}  |  "
+        f"{_ticket.get('priority', '—')}  |  {_approval_status.upper()}",
+        expanded=False,
     ):
         if _ticket:
             _tf1, _tf2 = st.columns(2)
@@ -7669,7 +7830,10 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                 st.markdown(f"**Approval Status:** {_ticket.get('approval_status', '—').upper()}")
             with _tf2:
                 _tid = _ticket.get("impacted_diagrams", [])
-                st.markdown(f"**Impacted Diagrams ({len(_tid)}):** " + ", ".join(str(d) for d in _tid[:6]))
+                st.markdown(
+                    f"**Impacted Diagrams ({len(_tid)}):** "
+                    + ", ".join(str(d) for d in _tid[:6])
+                )
                 if _ticket.get("evidence_summary"):
                     st.markdown("**Evidence Summary:**")
                     st.text(_ticket.get("evidence_summary", ""))
