@@ -1,4 +1,4 @@
-# Python / cache
+# Python
 __pycache__/
 *.pyc
 *.pyo
@@ -13,23 +13,17 @@ __pycache__/
 venv/
 env/
 
-# ChromaDB / vector index — tracked via Git LFS (*.sqlite3, *.bin patterns in .gitattributes)
-# runtime_state/incident_runs/ kept for reproducibility
-runtime_state/**/*.sqlite3-shm
-runtime_state/**/*.sqlite3-wal
+# SQLite WAL journal files (transient, never commit)
+**/*.sqlite3-shm
+**/*.sqlite3-wal
 
-## Large generated outputs / model checkpoints
-# outputs/
-# model_artifacts/ — tracked via Git LFS (*.pt, *.joblib, *.bin patterns)
-# data/rca/enterprise_gnn/*.pt
-# yolov8*.pt
-
-# Generated training data (rebuilt from scripts)
-# data/qwen_sop_grounded/
-# data/qwen_sop_grounded_expanded/
-# data/remediation_training/
-
-# aws-cli
-.aws/
-aws/
+# AWS CLI installer artifacts
 awscliv2.zip
+.aws/
+
+# 8 GB GRPO actor checkpoint — exceeds GitHub LFS 2 GB limit; stored in S3
+# s3://my-hackathons/infragraph-ai/training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/model_world_size_1_rank_0.pt
+training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/model_world_size_1_rank_0.pt
+
+# Agent run outputs — ephemeral per-run state, not versioned
+runtime_state/agent_runs/
