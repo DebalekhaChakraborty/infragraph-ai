@@ -4901,34 +4901,6 @@ def _tab_diagram_gallery() -> None:
     badge_html += '</div>'
     st.markdown(badge_html, unsafe_allow_html=True)
 
-    # ── Load graph metadata action ────────────────────────────────────────────
-    lg_path = _resolve_manifest_path(record.get("local_graph_path", ""), REPO_ROOT)
-    if has_graph and lg_path and Path(lg_path).exists():
-        if st.button("Load Graph Metadata", type="secondary",
-                     use_container_width=False, key="gal_load_graph"):
-            lg = json.loads(Path(lg_path).read_text(encoding="utf-8"))
-            st.session_state.local_graph          = lg
-            st.session_state.selected_diagram_id  = record.get("source_diagram_id", "")
-            st.session_state.selected_diagram_path = record.get("image_path", "")
-            st.session_state.catalog_selected_record = record
-            # Load graph_memory_packet if available alongside the local graph
-            _gmp_path = Path(lg_path).parent / "graph_memory_packet.json"
-            if _gmp_path.exists():
-                st.session_state.validation_packet  = json.loads(
-                    _gmp_path.read_text(encoding="utf-8")
-                )
-                st.session_state.live_ingestion_run_dir = str(Path(lg_path).parent)
-            n_rows = [{"node_id": n.get("id", ""), "type": n.get("type", ""),
-                        "ip_address": n.get("ip_address", ""), "zone": n.get("zone", ""),
-                        "shared": n.get("is_shared_entity", False),
-                        "evidence_source": "verified_metadata"} for n in lg.get("nodes", [])]
-            e_rows = [{"source": e.get("source", ""), "target": e.get("target", ""),
-                        "relationship": e.get("relationship", ""), "label": e.get("label", "")}
-                      for e in lg.get("edges", [])]
-            st.session_state.node_table = pd.DataFrame(n_rows)
-            st.session_state.edge_table = pd.DataFrame(e_rows)
-            st.success(f"Graph metadata loaded: {len(n_rows)} nodes, {len(e_rows)} edges.")
-
     # ── Source details + overlay diagnostics expander ────────────────────────
     with st.expander("Source details", expanded=False):
         st.markdown(
