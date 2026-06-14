@@ -4993,6 +4993,7 @@ def _tab_local_rca() -> None:
         "Generate Topology Alert Stream",
         type="primary" if not incident else "secondary",
         key="gen_local_alerts_btn",
+        use_container_width=True,
         help="Analyse the diagram topology and produce a realistic alert timeline",
     ):
         with st.spinner("Analysing topology and generating alert stream…"):
