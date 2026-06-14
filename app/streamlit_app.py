@@ -7950,7 +7950,10 @@ def _render_page_nav() -> None:
                 key="nav_prev_btn",
                 use_container_width=True,
             ):
-                st.session_state.main_nav = _NAV_PAGES[idx - 1]
+                # Cannot write to a widget-owned key after it is instantiated.
+                # Store the request in a non-widget key; _main_cockpit transfers
+                # it to main_nav on the next run, before the radio is created.
+                st.session_state["_nav_pending"] = _NAV_PAGES[idx - 1]
                 st.rerun()
     with col_next:
         if idx < len(_NAV_PAGES) - 1:
@@ -7959,7 +7962,7 @@ def _render_page_nav() -> None:
                 key="nav_next_btn",
                 use_container_width=True,
             ):
-                st.session_state.main_nav = _NAV_PAGES[idx + 1]
+                st.session_state["_nav_pending"] = _NAV_PAGES[idx + 1]
                 st.rerun()
 
 
@@ -8056,6 +8059,13 @@ The GNN identified **FW-01** as root cause with score **30.733** (margin +8.12 o
 # ══════════════════════════════════════════════════════════════════════════════
 def _main_cockpit() -> None:
     _init_v3_state()
+
+    # Flush prev/next navigation request before any widget is instantiated.
+    # Buttons cannot write directly to a widget-owned session key (main_nav),
+    # so they write to _nav_pending instead; we transfer it here.
+    if "_nav_pending" in st.session_state:
+        st.session_state.main_nav = st.session_state.pop("_nav_pending")
+
     st.markdown(_CSS, unsafe_allow_html=True)
     if st.session_state.get("theme") == "light":
         st.markdown(_LIGHT_OVERRIDES, unsafe_allow_html=True)
