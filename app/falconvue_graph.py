@@ -552,6 +552,33 @@ def _assemble_html(
             f'{step_node_label}</span></div>'
         )
 
+    error_overlay = (
+        "<div id='fv-err' style='"
+        "display:none;position:fixed;top:0;left:0;width:100%;height:100%;"
+        "background:rgba(11,18,32,0.95);z-index:9999;"
+        "align-items:center;justify-content:center;flex-direction:column;"
+        "text-align:center;padding:40px;box-sizing:border-box'>"
+        "<div style='font-size:1.3rem;font-weight:800;color:#f97316;margin-bottom:14px'>"
+        "&#9888; FalconVue 3D renderer failed to load</div>"
+        "<div style='font-size:0.88rem;color:#94a3b8;max-width:480px;line-height:1.6'>"
+        "CDN scripts (<code>ForceGraph3D</code> / <code>SpriteText</code>) did not load — "
+        "likely blocked by a network policy or offline environment.<br><br>"
+        "<strong style='color:#22d3ee'>Switch to Stable 2D propagation graph (PyVis)</strong> "
+        "in the render mode selector above for a reliable view."
+        "</div></div>"
+        # JS: reveal overlay after 4 s if either library is still undefined
+        "<script>"
+        "(function(){"
+        "  setTimeout(function(){"
+        "    if(typeof ForceGraph3D==='undefined'||typeof SpriteText==='undefined'){"
+        "      var el=document.getElementById('fv-err');"
+        "      if(el){el.style.display='flex';}"
+        "    }"
+        "  },4000);"
+        "})();"
+        "</script>"
+    )
+
     return (
         "<!DOCTYPE html><html><head><meta charset='utf-8'>"
         "<style>" + css + "</style>"
@@ -581,6 +608,7 @@ def _assemble_html(
         "<div id='tt'></div>"
         + f"<div id='gm' style='width:100%;height:{height}px'></div>"
         + "</div>"
+        + error_overlay
 
         "<script src='https://cdn.jsdelivr.net/npm/three-spritetext@1.9.0"
         "/dist/three-spritetext.min.js'></script>"

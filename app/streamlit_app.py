@@ -3017,16 +3017,23 @@ def _simulate_enterprise_rca(alerts: dict, enterprise_graph: dict) -> dict:
 # ══════════════════════════════════════════════════════════════════════════════
 # ENTERPRISE PYVIS
 # ══════════════════════════════════════════════════════════════════════════════
-def _render_enterprise_pyvis(enterprise_graph: dict, absorbed_ids: set[str],
-                               rca: dict | None, height: int = 760) -> bool:
+def _render_enterprise_pyvis(
+    enterprise_graph: dict,
+    absorbed_ids: "set[str]",
+    rca: "dict | None",
+    height: int = 760,
+    current_step_node: "str | None" = None,
+    traversal_path: "list[str] | None" = None,
+) -> bool:
     try:
         from pyvis.network import Network  # type: ignore
     except Exception:
         return False
 
-    root       = (rca or {}).get("root_cause")
-    alert_set  = set((rca or {}).get("alert_nodes", []))
-    impacted   = set((rca or {}).get("impacted_nodes", []))
+    root        = (rca or {}).get("root_cause")
+    alert_set   = set((rca or {}).get("alert_nodes", []))
+    impacted    = set((rca or {}).get("impacted_nodes", []))
+    trav_set    = set(traversal_path or []) - ({current_step_node} if current_step_node else set())
     path_set: set[tuple[str, str]] = set()
     for a, b in zip((rca or {}).get("impact_path", []),
                     (rca or {}).get("impact_path", [])[1:]):
@@ -3036,27 +3043,39 @@ def _render_enterprise_pyvis(enterprise_graph: dict, absorbed_ids: set[str],
                   bgcolor="#0b1220", font_color="#e2e8f0")
     net.barnes_hut(gravity=-4200, central_gravity=0.22, spring_length=180, spring_strength=0.042)
 
-    groups = {}
+    # Build node → diagram group map (list or dict cluster format)
+    groups: dict[str, str] = {}
     _clusters = enterprise_graph.get("diagram_clusters", {})
     if isinstance(_clusters, dict):
         for did, cluster in _clusters.items():
-            for nid in (cluster.get("node_ids", []) if isinstance(cluster, dict) else []):
+            for nid in (cluster.get("node_ids", []) if isinstance(cluster, dict) else cluster if isinstance(cluster, list) else []):
                 groups[nid] = did
+    elif isinstance(_clusters, list):
+        for cluster in _clusters:
+            if isinstance(cluster, dict):
+                for nid in cluster.get("node_ids", []):
+                    groups[nid] = cluster.get("diagram_id", "")
+
     node_map = {n.get("id"): n for n in enterprise_graph.get("nodes", [])}
 
     for n in enterprise_graph.get("nodes", []):
-        nid  = n.get("id", "")
-        ntype = n.get("type", "server")
+        nid    = n.get("id", "")
+        ntype  = n.get("type", "server")
         shared = n.get("is_shared_entity", False)
         diag   = groups.get(nid, n.get("diagram_id", ""))
         col_base = _V3_DIAG_COLORS.get(diag, "#64748b")
 
-        if nid == root:
+        # Priority: step node > root > alert > impacted > traversal > absorbed > shared > default
+        if nid == current_step_node and current_step_node:
+            color, size, bw = "#ffffff", 40, 6
+        elif nid == root and root:
             color, size, bw = "#ef4444", 38, 5
         elif nid in alert_set:
             color, size, bw = "#f97316", 30, 4
         elif nid in impacted:
             color, size, bw = "#facc15", 26, 3
+        elif nid in trav_set:
+            color, size, bw = "#a855f7", 24, 4
         elif nid in absorbed_ids:
             color, size, bw = "#22d3ee", 28, 4
         elif shared:
@@ -3064,39 +3083,49 @@ def _render_enterprise_pyvis(enterprise_graph: dict, absorbed_ids: set[str],
         else:
             color, size, bw = col_base, 20, 2
 
-        border = "#ffffff" if nid == root else ("#fbbf24" if shared else "#3a4a5a")
+        border = "#ffffff" if (nid == root or nid == current_step_node) else ("#fbbf24" if shared else "#3a4a5a")
         title  = (
             f"<b>{nid}</b><br>type: {ntype}<br>"
             f"diagram: {diag}<br>ip: {n.get('ip_address','—')}<br>zone: {n.get('zone','—')}"
+            + ("<br><b>⚡ CURRENT STEP</b>" if nid == current_step_node else "")
+            + ("<br><b>🔴 ROOT CAUSE</b>" if nid == root else "")
             + ("<br><b>shared entity</b>" if shared else "")
             + ("<br><b>newly absorbed</b>" if nid in absorbed_ids else "")
-            + ("<br><b>ROOT CAUSE</b>" if nid == root else "")
+            + ("<br><b>traversal path</b>" if nid in trav_set else "")
         )
         net.add_node(nid, label=nid, title=title,
                      group=diag,
                      color={"background": color, "border": border},
                      size=size, borderWidth=bw, borderWidthSelected=6)
 
-    for e in enterprise_graph.get("edges", []):
-        src, tgt = e.get("source", ""), e.get("target", "")
-        if src not in node_map or tgt not in node_map:
-            continue
-        is_cross = e.get("edge_scope") == "cross_diagram" or e.get("edge_type") == "cross_diagram"
-        is_path  = (src, tgt) in path_set
-        net.add_edge(
-            src, tgt,
-            label=str(e.get("label", ""))[:16],
-            color="#22d3ee" if is_cross else ("#06b6d4" if is_path else "#4a5568"),
-            width=4 if is_path else (2 if is_cross else 1),
-            dashes=is_cross,
-            title=f"{e.get('relationship','')} | {e.get('edge_scope','')}",
-        )
+    def _add_edges(edge_list: list, force_cross: bool = False) -> None:
+        for e in edge_list:
+            src, tgt = e.get("source", ""), e.get("target", "")
+            if src not in node_map or tgt not in node_map:
+                continue
+            is_cross = (
+                force_cross
+                or e.get("edge_scope") == "cross_diagram"
+                or e.get("edge_type") == "cross_diagram"
+            )
+            is_path = (src, tgt) in path_set
+            net.add_edge(
+                src, tgt,
+                label=str(e.get("label", ""))[:16],
+                color="#ffffff" if is_path else ("#22d3ee" if is_cross else "#4a5568"),
+                width=5 if is_path else (2.5 if is_cross else 1),
+                dashes=is_cross and not is_path,
+                title=f"{e.get('relationship','')} | {e.get('edge_scope','')}",
+            )
+
+    _add_edges(enterprise_graph.get("edges", []))
+    _add_edges(enterprise_graph.get("cross_diagram_edges", []), force_cross=True)
 
     with tempfile.NamedTemporaryFile("w", delete=False, suffix=".html", encoding="utf-8") as tmp:
         tmp_path = Path(tmp.name)
     try:
         net.save_graph(str(tmp_path))
-        components.html(tmp_path.read_text(encoding="utf-8"), height=height+20, scrolling=False)
+        components.html(tmp_path.read_text(encoding="utf-8"), height=height + 20, scrolling=False)
     finally:
         try:
             tmp_path.unlink()
@@ -5674,51 +5703,100 @@ def _tab_gnn_rca() -> None:
     )
     absorbed_ids = {n.get("canonical_id", n.get("id")) for n in local_graph.get("nodes", [])}
 
-    _fv_rendered = False
-    _fv_alert_tl = (ent_incident or {}).get("alert_timeline", [])
-    if _FALCONVUE_OK and _render_falconvue_graph is not None:
-        try:
-            _render_falconvue_graph(
-                enterprise_graph, absorbed_ids, rca,
-                incident=ent_incident or {},
-                height=800,
-                mode="scenario",
-                current_step_node=_prop_step_node or None,
-                traversal_path=_prop_trav_path,
-                alert_timeline=_fv_alert_tl,
-            )
-            _fv_rendered = True
-        except Exception as _fv_exc:
-            st.error(f"FalconVue renderer error: {_fv_exc}")
+    # ── Build unified propagation context ────────────────────────────────────
+    _pvc_alert_tl    = (ent_incident or {}).get("alert_timeline", [])
+    _pvc_prop_steps  = (ent_incident or {}).get("propagation_steps", [])
+    # Derive propagation steps from sorted alert timeline when empty
+    if not _pvc_prop_steps and _pvc_alert_tl:
+        _sorted_tl      = sorted(_pvc_alert_tl, key=lambda x: str(x.get("timestamp", x.get("time", ""))))
+        _pvc_prop_steps = [{"node": ev.get("node", ""), "timestamp": ev.get("timestamp", "")}
+                           for ev in _sorted_tl if ev.get("node")]
+    _prop_visual_ctx = {
+        "alert_timeline":     _pvc_alert_tl,
+        "propagation_steps":  _pvc_prop_steps,
+        "current_step_node":  _prop_step_node or None,
+        "traversal_path":     _prop_trav_path,
+        "root_cause":         (rca or {}).get("root_cause"),
+        "impact_path":        (rca or {}).get("impact_path", []),
+        "impacted_nodes":     (rca or {}).get("impacted_nodes", []),
+        "impacted_diagrams":  (rca or {}).get("impacted_diagrams", []),
+    }
 
+    # ── Render mode selector (default: Stable 2D PyVis) ──────────────────────
+    _render_mode = st.radio(
+        "Graph render mode",
+        ["Stable 2D propagation graph (PyVis)",
+         "Experimental 3D FalconVue",
+         "Static RCA overlay"],
+        horizontal=True,
+        key="gnn_render_mode",
+        label_visibility="collapsed",
+    )
+
+    # ── Developer debug panel ─────────────────────────────────────────────────
     with st.expander("Developer details", expanded=False):
-        st.caption(f"FalconVue renderer loaded: {'Yes' if _FALCONVUE_OK else 'No'}")
-        st.caption(f"Render mode: scenario")
-        st.caption(f"Graph nodes passed: {len(enterprise_graph.get('nodes', []))}")
-        st.caption(f"Graph links passed: {len(enterprise_graph.get('edges', []))} intra + {len(enterprise_graph.get('cross_diagram_edges', []))} cross")
-        st.caption(f"RCA root cause: {(rca or {}).get('root_cause', '—')}")
-        st.caption(f"Alert nodes from timeline: {len(_fv_alert_tl)}")
+        st.caption(f"Renderer selected: {_render_mode}")
+        st.caption(f"Browser renderer expected: {'FalconVue WebGL (CDN)' if 'FalconVue' in _render_mode else 'PyVis iframe (local)'}")
+        st.caption(f"FalconVue module loaded: {'Yes' if _FALCONVUE_OK else 'No'}")
+        st.caption(f"PyVis available: {'Yes' if _pyvis_available() else 'No'}")
+        st.caption(f"Nodes passed: {len(enterprise_graph.get('nodes', []))}")
+        st.caption(f"Edges passed: {len(enterprise_graph.get('edges', []))} intra + {len(enterprise_graph.get('cross_diagram_edges', []))} cross")
+        st.caption(f"Alert timeline length: {len(_pvc_alert_tl)}")
+        st.caption(f"Propagation steps length: {len(_pvc_prop_steps)}")
         st.caption(f"Current step node: {_prop_step_node or '—'}")
+        st.caption(f"Traversal path length: {len(_prop_trav_path)}")
         st.caption(f"Impact path length: {len((rca or {}).get('impact_path', []))}")
+        st.caption(f"Root cause: {(rca or {}).get('root_cause', '—')}")
+        st.caption(f"Impacted diagrams: {', '.join((rca or {}).get('impacted_diagrams', [])) or '—'}")
 
-    if not _fv_rendered:
-        if _pyvis_available():
-            st.caption(
-                "Drag nodes · zoom/pan · hover for details · "
-                + ("Root: red | Alert: orange | Impacted: yellow | Absorbed: cyan | Shared: ring"
-                   if rca else "Alert nodes: orange | Absorbed nodes: cyan")
-            )
-            _render_enterprise_pyvis(enterprise_graph, absorbed_ids, rca, height=800)
+    # ── Render the graph in the selected mode ─────────────────────────────────
+    if "FalconVue" in _render_mode:
+        if _FALCONVUE_OK and _render_falconvue_graph is not None:
+            try:
+                _render_falconvue_graph(
+                    enterprise_graph, absorbed_ids, rca,
+                    incident=ent_incident or {},
+                    height=800,
+                    mode="scenario",
+                    current_step_node=_prop_visual_ctx["current_step_node"],
+                    traversal_path=_prop_visual_ctx["traversal_path"],
+                    alert_timeline=_prop_visual_ctx["alert_timeline"],
+                )
+            except Exception as _fv_exc:
+                st.error(f"FalconVue renderer error: {_fv_exc}")
+                st.info("Switch to **Stable 2D propagation graph (PyVis)** for a reliable view.")
         else:
-            st.warning("Install `pyvis>=0.3.2` for interactive graph.")
-            _pv_scen = _selected_scenario_path()
-            if _pv_scen:
-                _pv_name = "preview_rca_overlay.png" if rca else "preview_enterprise_graph.png"
-                _pv_p = _pv_scen / _pv_name
-                if _pv_p.exists():
-                    _img(_pv_p, "Scenario Enterprise Graph (static preview)")
-                else:
-                    st.caption("Static preview not generated for this selected scenario.")
+            st.warning("FalconVue module not loaded in this environment.")
+            st.info("Switch to **Stable 2D propagation graph (PyVis)** above.")
+
+    elif "Static" in _render_mode:
+        _pv_scen = _selected_scenario_path()
+        if _pv_scen:
+            _pv_name = "preview_rca_overlay.png" if rca else "preview_enterprise_graph.png"
+            _pv_p    = _pv_scen / _pv_name
+            if _pv_p.exists():
+                _img(_pv_p, "Scenario Enterprise Graph (static preview)")
+            else:
+                st.caption("Static preview not generated for this selected scenario.")
+        else:
+            st.caption("No scenario selected.")
+
+    else:  # Stable 2D PyVis — default
+        if _pyvis_available():
+            _legend = (
+                "Root: red | Step: white | Alert: orange | Impacted: yellow | "
+                "Traversal: purple | Absorbed: cyan | Shared: sky-blue"
+                if rca else
+                "Alert nodes: orange | Absorbed nodes: cyan | Step: white"
+            )
+            st.caption(f"Drag nodes · zoom/pan · hover for details · {_legend}")
+            _render_enterprise_pyvis(
+                enterprise_graph, absorbed_ids, rca, height=800,
+                current_step_node=_prop_visual_ctx["current_step_node"],
+                traversal_path=_prop_visual_ctx["traversal_path"],
+            )
+        else:
+            st.warning("Install `pyvis>=0.3.2` for interactive graph, or switch to Experimental 3D FalconVue.")
 
     # ── Enterprise RCA Result ─────────────────────────────────────────────────
     if rca:
@@ -6131,6 +6209,36 @@ def _retrieve_vector_evidence(query: str, k: int = 8) -> tuple[list[dict], str]:
         return [], f"{_VECTOR_SETUP_MESSAGE} ({exc})"
 
 
+def _retrieve_vector_evidence_global(query: str, k: int = 8) -> tuple[list[dict], str]:
+    """Retrieve from the global copilot memory (built by build_graph_copilot_memory.py)."""
+    mods, err = _vector_modules()
+    if err:
+        return [], err
+    try:
+        return mods["retrieve"](
+            query,
+            k=k,
+            collection_name="infragraph_global_memory",
+            persist_dir=str(REPO_ROOT / "vector_store"),
+        ), ""
+    except Exception:
+        return [], ""
+
+
+def _build_global_graph_copilot_ctx() -> "dict | None":
+    """Load a normalized graph copilot context from global memory + session state."""
+    try:
+        from graph_copilot.graph_context import load_global_graph_context  # type: ignore
+        ctx = _copilot_context()
+        return load_global_graph_context(
+            scenario_graph=ctx.get("enterprise_graph_after"),
+            enterprise_rca=ctx.get("enterprise_rca_result"),
+            incident=ctx.get("enterprise_incident"),
+        )
+    except Exception:
+        return None
+
+
 def _format_retrieved_evidence(evidence: list[dict]) -> str:
     lines = []
     for idx, item in enumerate(evidence[:8], 1):
@@ -6147,11 +6255,31 @@ def _format_retrieved_evidence(evidence: list[dict]) -> str:
 
 def _answer_with_vector_context(question: str) -> str:
     context = _copilot_context()
-    evidence, err = _retrieve_vector_evidence(question, k=8)
+
+    # Step 1 — deterministic graph query (no LLM; exact lookup from graph memory)
+    graph_answer = ""
+    try:
+        from graph_copilot.query_engine import run_query, format_query_result  # type: ignore
+        gctx = _build_global_graph_copilot_ctx()
+        if gctx:
+            result = run_query(gctx, question)
+            if result:
+                graph_answer = format_query_result(result)
+                context["deterministic_graph_answer"] = graph_answer
+    except Exception:
+        pass
+
+    # Step 2 — vector retrieval: try global memory first, fall back to session memory
+    evidence, err = _retrieve_vector_evidence_global(question, k=8)
+    if not evidence:
+        evidence, err = _retrieve_vector_evidence(question, k=8)
+
     st.session_state.last_vector_evidence = evidence
-    st.session_state.last_vector_error = err
+    st.session_state.last_vector_error    = err
     if evidence:
         context["retrieved_graph_memory_evidence"] = evidence
+
+    # Step 3 — LLM / deterministic answer, grounded in graph facts + vector evidence
     return _qwen_or_deterministic(question, context)
 
 
@@ -6338,94 +6466,146 @@ def _qwen_or_deterministic(question: str, context: dict) -> str:
 
 def _tab_graph_copilot() -> None:
     st.markdown(
-        '<div class="ws-title">Graph Copilot — Ask the Enterprise Graph</div>'
-        '<div class="ws-desc">Questions are answered from loaded graph JSON evidence. '
-        'Qwen/vLLM for richer responses when configured.</div>',
+        '<div class="ws-title">Graph Copilot — Ask the InfraGraph Galaxy</div>'
+        '<div class="ws-desc">Deterministic graph lookup + vector evidence + Qwen enrichment. '
+        'Answers cite node IDs, edge IDs, diagram IDs and evidence IDs.</div>',
         unsafe_allow_html=True,
     )
 
-    if not st.session_state.enterprise_graph_after:
+    # ── Status card ───────────────────────────────────────────────────────────
+    _gctx = _build_global_graph_copilot_ctx()
+    mods, vector_err = _vector_modules()
+    _vector_ok = not bool(vector_err)
+
+    _status_cols = st.columns(5)
+    _status_vals = [
+        ("Graph nodes",    str(_gctx["total_nodes"])     if _gctx else "—"),
+        ("Graph edges",    str(_gctx["total_edges"])     if _gctx else "—"),
+        ("Diagrams",       str(_gctx["total_diagrams"])  if _gctx else "—"),
+        ("Scenarios",      str(_gctx["total_scenarios"]) if _gctx else "—"),
+        ("Vector memory",  "enabled" if _vector_ok else "not installed"),
+    ]
+    for col, (label, val) in zip(_status_cols, _status_vals):
+        with col:
+            color = "#22d3ee" if (val not in ("—", "not installed")) else "#64748b"
+            st.markdown(
+                f'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);'
+                f'border-radius:8px;padding:8px 12px;text-align:center">'
+                f'<div style="font-size:0.62rem;color:#64748b;text-transform:uppercase;letter-spacing:.08em">{label}</div>'
+                f'<div style="font-size:1.0rem;font-weight:700;color:{color}">{val}</div>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+
+    # ── Mode / tool status row ────────────────────────────────────────────────
+    _tool_cols = st.columns(3)
+    with _tool_cols[0]:
+        _qe_ok = _gctx is not None
         st.markdown(
-            '<div class="warn-card">Open <strong>Tab 3 (Enterprise Graph Brain)</strong> first '
-            'to load enterprise graph context.</div>',
+            f'<span class="badge {"badge-success" if _qe_ok else "badge-warn"}">'
+            f'Exact graph tools {"enabled" if _qe_ok else "unavailable"}</span>',
             unsafe_allow_html=True,
         )
-        return
+    with _tool_cols[1]:
+        st.markdown(
+            f'<span class="badge {"badge-success" if _vector_ok else "badge-warn"}">'
+            f'Vector memory {"enabled" if _vector_ok else "not installed"}</span>',
+            unsafe_allow_html=True,
+        )
+    with _tool_cols[2]:
+        _qwen_ok = _qwen_configured()
+        st.markdown(
+            f'<span class="badge {"badge-success" if _qwen_ok else "badge-warn"}">'
+            f'Qwen {"enabled" if _qwen_ok else "not configured (deterministic mode)"}</span>',
+            unsafe_allow_html=True,
+        )
 
-    if _qwen_configured():
-        qwen_url = _QWEN_BASE_URL
-        st.success(f"Copilot mode: Qwen/vLLM @ {qwen_url}")
-    else:
+    st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
+
+    # ── Strict-mode gate ──────────────────────────────────────────────────────
+    if not _qwen_ok:
         if _strict_mode() and not st.session_state.allow_deterministic_copilot:
             st.error("Qwen not configured. Strict mode requires explicit approval for deterministic answers.")
             if st.button("Use deterministic graph response", key="approve_copilot"):
                 st.session_state.allow_deterministic_copilot = True
                 st.rerun()
             return
-        st.warning("Copilot mode: deterministic graph evidence (Qwen not configured)")
 
-    mods, vector_err = _vector_modules()
-    if vector_err:
-        st.info("Vector memory is not installed. Run pip install chromadb sentence-transformers.")
-    else:
-        st.success("Vector memory enabled: ChromaDB local store")
-        if st.button("Index Current Graph Memory", key="index_vector_memory"):
-            with st.spinner("Indexing graph memory into ChromaDB…"):
-                count, err = _index_current_context_to_vector_memory()
-            if err:
-                st.error(err)
-            else:
-                st.success(f"Indexed {count} graph memory document(s).")
+    # ── Memory action buttons ─────────────────────────────────────────────────
+    _mem_cols = st.columns(2)
+    with _mem_cols[0]:
+        if _vector_ok:
+            if st.button("Build / Refresh Global Copilot Memory", key="build_global_memory",
+                         use_container_width=True):
+                with st.spinner("Indexing global graph memory into ChromaDB…"):
+                    count, err = _index_current_context_to_vector_memory()
+                if err:
+                    st.error(err)
+                else:
+                    st.success(f"Indexed {count} document(s) into graph memory.")
+        else:
+            st.info(_VECTOR_SETUP_MESSAGE)
+    with _mem_cols[1]:
+        if not st.session_state.enterprise_graph_after:
+            st.warning("Load Tab 3 (Enterprise Graph Brain) to enable full graph context.")
 
+    st.markdown('<hr style="border:none;border-top:1px solid rgba(255,255,255,0.06);margin:10px 0">',
+                unsafe_allow_html=True)
+
+    # ── Suggested investigation questions ─────────────────────────────────────
     suggestions = [
-        "Where was this diagram stitched into the enterprise graph?",
-        "Which nodes were absorbed from the selected diagram?",
-        "Which shared entities were matched?",
-        "Which cross-diagram links were created?",
-        "What is the root cause?",
+        "What is connected to the root cause node?",
         "Which diagrams are impacted?",
         "Show the impact path from root cause.",
-        "Generate an ITSM ticket summary.",
+        "What is the root cause?",
+        "Show blast radius if FW-01 fails.",
+        "Which cross-diagram edges connect the diagrams?",
+        "Show upstream dependency path.",
+        "What alerts are in the timeline?",
         "What should L1 check first?",
+        "Which nodes were absorbed from the selected diagram?",
+        "Which shared entities were matched?",
+        "Generate an ITSM ticket summary.",
     ]
     cols = st.columns(3)
     for idx, question in enumerate(suggestions):
         with cols[idx % 3]:
             if st.button(question, key=f"v3_q_{idx}", use_container_width=True):
-                st.session_state.v3_chat_messages.append({"role": "user",      "content": question})
+                st.session_state.v3_chat_messages.append({"role": "user", "content": question})
                 st.session_state.v3_chat_messages.append({"role": "assistant", "content": _answer_with_vector_context(question)})
                 st.rerun()
 
-    qwen_url = _QWEN_BASE_URL
-    if _qwen_configured():
-        st.caption(f"Qwen: {qwen_url} · model={_QWEN_MODEL}")
+    if _qwen_ok:
+        st.caption(f"Qwen: {_QWEN_BASE_URL} · model={_QWEN_MODEL}")
     else:
-        st.caption("Qwen not configured — answers use loaded graph JSON evidence only.")
+        st.caption("Deterministic mode: answers from exact graph queries and retrieved evidence only.")
 
+    # ── Chat history ──────────────────────────────────────────────────────────
     for msg in st.session_state.v3_chat_messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-    evidence = st.session_state.get("last_vector_evidence") or []
-    vector_err = st.session_state.get("last_vector_error", "")
-    if evidence or vector_err:
-        with st.expander("Retrieved Graph Memory Evidence", expanded=bool(evidence)):
-            if vector_err and not evidence:
-                st.info("Vector memory is not installed. Run pip install chromadb sentence-transformers.")
+    # ── Retrieved evidence expander ───────────────────────────────────────────
+    evidence   = st.session_state.get("last_vector_evidence") or []
+    _vec_err   = st.session_state.get("last_vector_error", "")
+    if evidence:
+        with st.expander(f"Retrieved Graph Evidence ({len(evidence)} items)", expanded=False):
             for idx, item in enumerate(evidence, 1):
                 meta = item.get("metadata") or {}
                 evidence_id = meta.get("evidence_id") or f"E{idx:03d}"
                 st.markdown(
                     f"<div style='border:1px solid rgba(148,163,184,0.25);border-radius:8px;"
                     f"padding:10px 12px;margin:8px 0;background:rgba(15,23,42,0.4)'>"
-                    f"<div style='font-weight:800;color:#e2e8f0'>{idx}. Evidence {html.escape(str(evidence_id))}</div>"
+                    f"<div style='font-weight:800;color:#e2e8f0'>{idx}. {html.escape(str(evidence_id))}</div>"
                     f"<div style='font-size:0.75rem;color:#94a3b8;margin:4px 0'>"
-                    f"source={html.escape(str(meta.get('source_type', 'unknown')))} · "
-                    f"scenario={html.escape(str(meta.get('scenario_id', '')))} · "
-                    f"diagram={html.escape(str(meta.get('diagram_id', '')))} · "
-                    f"node={html.escape(str(meta.get('node_id', '')))}</div>"
+                    f"type={html.escape(str(meta.get('source_type','?')))} · "
+                    f"scenario={html.escape(str(meta.get('scenario_id','')))} · "
+                    f"diagram={html.escape(str(meta.get('diagram_id','')))} · "
+                    f"node={html.escape(str(meta.get('node_id','')))}</div>"
                     f"<div style='font-size:0.82rem;color:#cbd5e1;line-height:1.45'>"
-                    f"{html.escape(str(item.get('text', ''))[:900])}</div></div>",
+                    f"{html.escape(str(item.get('text',''))[:900])}</div></div>",
                     unsafe_allow_html=True,
                 )
 

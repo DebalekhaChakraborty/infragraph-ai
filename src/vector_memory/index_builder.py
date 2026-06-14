@@ -269,3 +269,207 @@ def build_vector_docs_from_graph_memory(
         ))
 
     return _assign_evidence_ids(docs)
+
+
+def build_vector_docs_from_enterprise_graph(
+    enterprise_graph: dict,
+    scenario_id: str = "",
+    alert_timeline: "list[dict] | None" = None,
+    propagation_steps: "list[dict] | None" = None,
+    enterprise_rca: "dict | None" = None,
+) -> list[dict]:
+    """Build fine-grained vector docs from an enterprise graph — one doc per
+    node, edge, cross-diagram edge, diagram cluster, IP/interface, alert event,
+    propagation step, GNN candidate, and impact-path edge.
+
+    This produces the dense index needed for the Graph Copilot to answer
+    exact investigative questions about any node/IP/edge in the graph.
+    """
+    docs: list[dict] = []
+    eg    = _as_dict(enterprise_graph)
+    rca   = _as_dict(enterprise_rca)
+    scen  = scenario_id or str(eg.get("scenario_id") or "")
+    run_id = scen or "enterprise"
+
+    # ── Build node → diagram map ─────────────────────────────────────────────
+    node_diag: dict[str, str] = {}
+    _clusters_raw = eg.get("diagram_clusters", {})
+    if isinstance(_clusters_raw, dict):
+        for did, cl in _clusters_raw.items():
+            nids = cl if isinstance(cl, list) else (cl.get("node_ids", []) if isinstance(cl, dict) else [])
+            for nid in nids:
+                node_diag[nid] = did
+    elif isinstance(_clusters_raw, list):
+        for cl in _clusters_raw:
+            if isinstance(cl, dict):
+                for nid in cl.get("node_ids", []):
+                    node_diag[nid] = cl.get("diagram_id", "")
+
+    # ── One doc per enterprise node ──────────────────────────────────────────
+    for n in _as_list(eg.get("nodes")):
+        if not isinstance(n, dict):
+            continue
+        nid    = str(n.get("id") or n.get("node_id") or "")
+        ntype  = str(n.get("type") or "device")
+        ip     = str(n.get("ip_address") or "")
+        zone   = str(n.get("zone") or "")
+        diag   = node_diag.get(nid) or str(n.get("diagram_id") or "")
+        shared = bool(n.get("is_shared_entity"))
+        text   = f"Enterprise node {nid} is a {ntype} in diagram {diag}."
+        if zone:
+            text += f" Zone: {zone}."
+        if ip:
+            text += f" IP address: {ip}."
+        if shared:
+            text += " It is a shared entity bridging multiple diagrams."
+        docs.append(_make_doc(text, {
+            **_base_metadata("enterprise_node", scenario_id=scen, diagram_id=diag,
+                             node_id=nid, scope="enterprise", path=run_id),
+            "ip_address": ip,
+        }))
+
+    # ── One doc per intra-diagram edge ───────────────────────────────────────
+    for idx, e in enumerate(_as_list(eg.get("edges"))):
+        if not isinstance(e, dict):
+            continue
+        src    = str(e.get("source") or "")
+        tgt    = str(e.get("target") or "")
+        rel    = str(e.get("relationship") or e.get("label") or "connected_to")
+        diag   = node_diag.get(src) or str(e.get("diagram_id") or "")
+        scope  = str(e.get("edge_scope") or "intra_diagram")
+        text   = f"Enterprise edge: {src} {rel} {tgt} within diagram {diag} (scope: {scope})."
+        docs.append(_make_doc(text, {
+            **_base_metadata("enterprise_edge", scenario_id=scen, diagram_id=diag,
+                             edge_id=f"{src}->{tgt}:{idx}", scope="enterprise", path=run_id),
+            "source_node":  src,
+            "target_node":  tgt,
+            "relationship": rel,
+            "edge_scope":   scope,
+        }))
+
+    # ── One doc per cross-diagram edge ───────────────────────────────────────
+    for idx, e in enumerate(_as_list(eg.get("cross_diagram_edges"))):
+        if not isinstance(e, dict):
+            continue
+        src    = str(e.get("source") or e.get("source_node") or "")
+        tgt    = str(e.get("target") or e.get("target_node") or "")
+        sd     = str(e.get("source_diagram") or node_diag.get(src) or "")
+        td     = str(e.get("target_diagram") or node_diag.get(tgt) or "")
+        rel    = str(e.get("label") or e.get("relationship") or "cross_link")
+        text   = (
+            f"Cross-diagram edge: {sd}:{src} → {td}:{tgt} ({rel}). "
+            f"Bridges {sd} and {td}."
+        )
+        docs.append(_make_doc(text, {
+            **_base_metadata("cross_diagram_edge", scenario_id=scen, diagram_id=sd,
+                             edge_id=f"cross:{src}->{tgt}:{idx}", scope="cross_diagram",
+                             path=run_id),
+            "source_node":    src,
+            "target_node":    tgt,
+            "source_diagram": sd,
+            "target_diagram": td,
+            "relationship":   rel,
+            "edge_scope":     "cross_diagram",
+        }))
+
+    # ── One doc per diagram cluster ──────────────────────────────────────────
+    if isinstance(_clusters_raw, dict):
+        for did, cl in _clusters_raw.items():
+            nids = cl if isinstance(cl, list) else (cl.get("node_ids", []) if isinstance(cl, dict) else [])
+            text = (
+                f"Diagram cluster {did} contains {len(nids)} nodes in scenario {scen}: "
+                + ", ".join(str(n) for n in nids[:20])
+                + (f" ... and {len(nids)-20} more" if len(nids) > 20 else "") + "."
+            )
+            docs.append(_make_doc(text, _base_metadata(
+                "diagram_cluster", scenario_id=scen, diagram_id=did, scope="enterprise", path=run_id,
+            )))
+
+    # ── One doc per IP / interface ───────────────────────────────────────────
+    for n in _as_list(eg.get("nodes")):
+        if not isinstance(n, dict):
+            continue
+        nid = str(n.get("id") or "")
+        ip  = str(n.get("ip_address") or "")
+        if ip and nid:
+            diag = node_diag.get(nid) or str(n.get("diagram_id") or "")
+            docs.append(_make_doc(
+                f"IP/interface: node {nid} in diagram {diag} has IP address {ip}.",
+                {
+                    **_base_metadata("enterprise_ip", scenario_id=scen, diagram_id=diag,
+                                     node_id=nid, scope="enterprise", path=run_id),
+                    "ip_address": ip,
+                },
+            ))
+
+    # ── One doc per alert timeline event ─────────────────────────────────────
+    for idx, ev in enumerate(_as_list(alert_timeline)):
+        if not isinstance(ev, dict):
+            continue
+        node   = str(ev.get("node") or ev.get("node_id") or "")
+        atype  = str(ev.get("alert_type") or ev.get("title") or "alert")
+        sev    = str(ev.get("severity") or "")
+        diag   = str(ev.get("diagram_id") or node_diag.get(node) or "")
+        ts     = str(ev.get("timestamp") or ev.get("time") or "")
+        text   = f"Alert timeline event {idx+1}: {atype} on {node} in {diag}."
+        if sev:
+            text += f" Severity: {sev}."
+        if ts:
+            text += f" Timestamp: {ts}."
+        docs.append(_make_doc(text, _base_metadata(
+            "alert_timeline_event", scenario_id=scen, diagram_id=diag,
+            node_id=node, incident_id=scen, scope="enterprise", path=run_id,
+        )))
+
+    # ── One doc per propagation step ─────────────────────────────────────────
+    for idx, step in enumerate(_as_list(propagation_steps)):
+        if not isinstance(step, dict):
+            continue
+        node   = str(step.get("node") or "")
+        ts     = str(step.get("timestamp") or "")
+        diag   = node_diag.get(node) or ""
+        text   = f"Propagation step {idx+1}: reached node {node}."
+        if ts:
+            text += f" Timestamp: {ts}."
+        if diag:
+            text += f" Diagram: {diag}."
+        docs.append(_make_doc(text, _base_metadata(
+            "propagation_step", scenario_id=scen, diagram_id=diag,
+            node_id=node, scope="enterprise", path=run_id,
+        )))
+
+    # ── One doc per GNN RCA candidate ────────────────────────────────────────
+    rca_mode = str(rca.get("mode") or rca.get("rca_source") or "")
+    for rank, cand in enumerate(_as_list(rca.get("top_candidates")), 1):
+        if not isinstance(cand, dict):
+            continue
+        nid   = str(cand.get("node_id") or cand.get("node") or cand.get("id") or "")
+        score = cand.get("score", "")
+        ctype = str(cand.get("type") or "")
+        diag  = node_diag.get(nid) or ""
+        text  = f"GNN RCA candidate rank {rank}: node {nid}"
+        if ctype:
+            text += f" (type {ctype})"
+        if score:
+            text += f" score {score}"
+        if diag:
+            text += f" in diagram {diag}"
+        text += "."
+        docs.append(_make_doc(text, _base_metadata(
+            "gnn_candidate", scenario_id=scen, diagram_id=diag,
+            node_id=nid, rca_source=rca_mode, scope="enterprise", path=run_id,
+        )))
+
+    # ── One doc per impact-path edge ─────────────────────────────────────────
+    impact_path = _as_list(rca.get("impact_path"))
+    for i, (a, b) in enumerate(zip(impact_path, impact_path[1:])):
+        a, b = str(a), str(b)
+        diag = node_diag.get(a) or node_diag.get(b) or ""
+        docs.append(_make_doc(
+            f"Impact path edge {i+1}: {a} → {b} (RCA propagation in scenario {scen}).",
+            _base_metadata("impact_path_edge", scenario_id=scen, diagram_id=diag,
+                           edge_id=f"path:{a}->{b}", rca_source=rca_mode,
+                           scope="enterprise", path=run_id),
+        ))
+
+    return _assign_evidence_ids(docs)
