@@ -385,6 +385,55 @@ def _conf_str(raw, detection_source: str) -> str:
         return ""
 
 
+def _numeric_conf_values(
+    rows: list[dict],
+    keys: tuple[str, ...] = ("confidence", "score"),
+) -> list[float]:
+    """Extract numeric confidence values from a list of row dicts, trying multiple keys."""
+    vals: list[float] = []
+    for row in rows or []:
+        for key in keys:
+            raw = row.get(key)
+            if raw in (None, "", "—"):
+                continue
+            try:
+                vals.append(float(raw))
+                break
+            except (TypeError, ValueError):
+                continue
+    return vals
+
+
+def _confidence_summary(
+    detected_nodes: list[dict],
+    detected_edges: list[dict],
+    device_rows: list[dict],
+    connector_rows: list[dict],
+    ocr_rows: list[dict],
+) -> dict:
+    """Build confidence_summary, preferring live detected_nodes/edges over table rows."""
+    node_conf = _numeric_conf_values(detected_nodes)
+    if not node_conf:
+        node_conf = _numeric_conf_values(device_rows)
+
+    edge_conf = _numeric_conf_values(detected_edges)
+    if not edge_conf:
+        edge_conf = _numeric_conf_values(connector_rows)
+
+    conf_source = "detected_nodes" if _numeric_conf_values(detected_nodes) else "device_rows"
+
+    return {
+        "device_detection_avg":   round(sum(node_conf) / len(node_conf), 3) if node_conf else "—",
+        "edge_extraction_avg":    round(sum(edge_conf) / len(edge_conf), 3) if edge_conf else "—",
+        "ocr_text_blocks":        len(ocr_rows),
+        "connector_count":        len(connector_rows),
+        "low_confidence_items":   sum(1 for c in node_conf if c < 0.90),
+        "device_confidence_count": len(node_conf),
+        "edge_confidence_count":   len(edge_conf),
+        "confidence_source":       conf_source,
+    }
+
+
 def build_device_rows(
     local_graph: dict,
     annotation: dict,
@@ -828,15 +877,9 @@ def run_live_v3_ingestion(
     ]
 
     # ── confidence summary (only real detector values) ────────────────────────
-    nc = [float(r["confidence"]) for r in device_rows if r.get("confidence")]
-    ec = [float(r["confidence"]) for r in connector_rows if r.get("confidence")]
-    confidence_summary = {
-        "device_detection_avg": round(sum(nc) / len(nc), 3) if nc else "—",
-        "edge_extraction_avg":  round(sum(ec) / len(ec), 3) if ec else "—",
-        "ocr_text_blocks":      len(ocr_rows),
-        "connector_count":      len(connector_rows),
-        "low_confidence_items": sum(1 for c in nc if c < 0.90),
-    }
+    confidence_summary = _confidence_summary(
+        detected_nodes, detected_edges, device_rows, connector_rows, ocr_rows,
+    )
 
     runtime_mode = (
         "LIVE_RFDETR_INFERENCE"
@@ -1194,15 +1237,9 @@ def run_ingestion(
         for e in graph_edges
     ]
 
-    nc = [float(r["confidence"]) for r in device_rows if r.get("confidence")]
-    ec = [float(r["confidence"]) for r in connector_rows if r.get("confidence")]
-    confidence_summary = {
-        "device_detection_avg": round(sum(nc) / len(nc), 3) if nc else "—",
-        "edge_extraction_avg":  round(sum(ec) / len(ec), 3) if ec else "—",
-        "ocr_text_blocks":      len(ocr_rows),
-        "connector_count":      len(connector_rows),
-        "low_confidence_items": sum(1 for c in nc if c < 0.90),
-    }
+    confidence_summary = _confidence_summary(
+        detected_nodes, detected_edges, device_rows, connector_rows, ocr_rows,
+    )
 
     runtime_mode = (
         "LIVE_RFDETR_INFERENCE"
