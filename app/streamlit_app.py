@@ -4101,9 +4101,46 @@ def _tab_onboard_new_diagram() -> None:
         unsafe_allow_html=True,
     )
 
-    # Resolve RF-DETR availability (no UI shown here)
-    _rfdetr_ckpt = _find_rfdetr_ckpt(REPO_ROOT) if _RFDETR_BRIDGE_OK and _find_rfdetr_ckpt else None
-    st.session_state.use_live_rfdetr = bool(_rfdetr_ckpt)
+    # ── RF-DETR runtime status ────────────────────────────────────────────────
+    _rfdetr_resolution = _cached_rfdetr_python_resolution()
+    _rfdetr_python     = str(_rfdetr_resolution.get("python_executable") or _rfdetr_resolution.get("resolved_detector_python") or "")
+    _rfdetr_runtime    = _rfdetr_resolution.get("runtime") or {"ok": bool(_rfdetr_resolution.get("import_ok"))}
+    _rfdetr_http       = _cached_rfdetr_http_health()
+    _rfdetr_ckpt       = _find_rfdetr_ckpt(REPO_ROOT) if _RFDETR_BRIDGE_OK and _find_rfdetr_ckpt else None
+
+    _rf_stat_col, _rf_cb_col = st.columns([3, 1])
+    with _rf_stat_col:
+        _badges = []
+        if _rfdetr_ckpt:
+            _badges.append(f'<span class="badge badge-success">Checkpoint: {_rfdetr_ckpt.name}</span>')
+        else:
+            _badges.append('<span class="badge badge-warn">Checkpoint not found</span>')
+        if _rfdetr_http.get("ok"):
+            _badges.append(f'<span class="badge badge-success">HTTP service healthy · {_rfdetr_http.get("service_url","")}</span>')
+        elif _rfdetr_http.get("service_url"):
+            _badges.append('<span class="badge badge-warn">HTTP service unavailable</span>')
+        if _rfdetr_runtime.get("ok"):
+            _badges.append('<span class="badge badge-success">RF-DETR import OK</span>')
+        else:
+            _badges.append('<span class="badge badge-warn">RF-DETR import unavailable</span>')
+        if _rfdetr_python:
+            _badges.append(f'<span class="badge badge-info">Python: {_rfdetr_python}</span>')
+        st.markdown(
+            '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px">' +
+            "".join(_badges) + '</div>',
+            unsafe_allow_html=True,
+        )
+    with _rf_cb_col:
+        use_rfdetr = st.checkbox(
+            "Use live RF-DETR",
+            value=st.session_state.get("use_live_rfdetr", True),
+            key="use_live_rfdetr_cb",
+            disabled=not bool(_rfdetr_ckpt),
+        )
+        st.session_state.use_live_rfdetr = use_rfdetr and bool(_rfdetr_ckpt)
+
+    st.markdown("<hr style='border:none;border-top:1px solid rgba(255,255,255,0.06);margin:6px 0 12px'>",
+                unsafe_allow_html=True)
 
     # ── Load onboarding manifest ──────────────────────────────────────────────
     samples = _load_onboarding_manifest(str(REPO_ROOT))
