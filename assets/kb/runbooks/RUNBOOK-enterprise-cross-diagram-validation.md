@@ -1,4 +1,4 @@
----
+﻿---
 kb_id: RUNBOOK-ENT-XDIAG-001
 runbook_id: ENT-XDIAG-001
 title: "Enterprise Cross-Diagram Incident Validation Runbook"
@@ -86,7 +86,7 @@ Define the validation procedure for enterprise-wide incidents that span two or m
 
 ## Rollback / Safety Notes
 
-- Maintain a single authoritative incident record (ServiceNow ticket) for the entire cross-diagram incident — do not split into per-diagram tickets during active remediation.
+- Maintain a single authoritative incident record (ITSM ticket) for the entire cross-diagram incident — do not split into per-diagram tickets during active remediation.
 - All diagram-level changes must be recorded in the central ticket with timestamps.
 - If remediation of a downstream diagram worsens the root-source diagram, stop immediately and re-evaluate the blast-radius sequencing.
 - Shared services changes (DNS, NTP, IAM) require approval from the Shared Services team lead regardless of which SOP initiated the change request.
@@ -98,7 +98,7 @@ Define the validation procedure for enterprise-wide incidents that span two or m
 - Fewer than two diagrams have active alerts — use the diagram-specific SOP directly rather than this runbook.
 - A disaster recovery or business continuity plan has already been activated — this runbook is for normal incident response, not DR failover.
 
-## ServiceNow Routing
+## ITSM Routing
 
 - **Assignment Group**: Network Engineering — Enterprise Operations (lead)
 - **Co-Assignees**: Owner team for each affected topology diagram

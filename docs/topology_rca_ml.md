@@ -1,4 +1,4 @@
-# Topology RCA ML Pipeline
+﻿# Topology RCA ML Pipeline
 
 Classical ML pipeline that predicts the root-cause node in a network topology
 diagram from observable event streams.  No remediation content is produced.
@@ -240,7 +240,7 @@ With `--cluster-file`, four additional fields are appended:
 These are allowed in `assets/preloaded/` and pass `validate_rca_outputs.py`.
 
 The output contains **no** `recommended_actions`, `remediation_steps`,
-`resolution_steps`, `rollback_steps`, `validation_steps`, or `servicenow_ticket` fields.
+`resolution_steps`, `rollback_steps`, `validation_steps`, or `itsm_ticket` fields.
 
 Default output (no `--with-eval`) contains **no evaluation fields** — safe for
 production and Streamlit use.  Use `scripts/validate_rca_outputs.py` to verify.

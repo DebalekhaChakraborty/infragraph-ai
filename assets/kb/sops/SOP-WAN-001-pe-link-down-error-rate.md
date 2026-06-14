@@ -1,4 +1,4 @@
----
+﻿---
 kb_id: SOP-WAN-001
 title: "WAN Provider Edge Link Down and High Error Rate Response"
 doc_type: sop
@@ -92,7 +92,7 @@ Provide structured triage and remediation steps for incidents where the WAN Prov
 
 - Do not apply PE-router configuration changes without carrier coordination if the fault is physical.
 - Any BGP session clear must be approved by a senior network engineer — clearing BGP on a PE-router can briefly blackhole traffic for all downstream sites.
-- Document carrier case numbers, circuit IDs, and all engineer actions in the ServiceNow record.
+- Document carrier case numbers, circuit IDs, and all engineer actions in the ITSM record.
 - If the backup path is activated as primary, create a follow-up task to restore the original primary path and revert the routing change during a planned maintenance window.
 - Retain interface counters and BGP state outputs captured during triage as evidence.
 
@@ -102,7 +102,7 @@ Provide structured triage and remediation steps for incidents where the WAN Prov
 - Both primary and backup WAN paths are down — escalate immediately to senior network engineering and management; manual intervention beyond this SOP is required.
 - The incident has not been confirmed active within the last 30 minutes (alerts may have auto-cleared).
 
-## ServiceNow Routing
+## ITSM Routing
 
 - **Assignment Group**: Network Engineering — WAN Operations
 - **Category**: Network / WAN / Carrier

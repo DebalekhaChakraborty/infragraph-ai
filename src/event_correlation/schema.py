@@ -1,4 +1,4 @@
-"""
+﻿"""
 schema.py — Cluster output schema builders and integrity enforcement.
 
 No remediation, root-cause, or evaluation fields are ever produced here.
@@ -21,7 +21,7 @@ FORBIDDEN_KEYS: frozenset[str] = frozenset({
     "rollback_steps",
     "resolution",
     "resolution_steps",
-    "servicenow_incident_summary",
+    "itsm_ticket_summary",
     "recommended_actions",
     "evaluation",
     "ground_truth_node",

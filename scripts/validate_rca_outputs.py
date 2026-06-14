@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 validate_rca_outputs.py — Verify RCA preloaded output files are demo-safe.
 
@@ -47,7 +47,7 @@ _FORBIDDEN_REMEDIATION: frozenset[str] = frozenset({
     "resolution_steps",
     "rollback_steps",
     "validation_steps",
-    "servicenow_incident_summary",
+    "itsm_ticket_summary",
     "resolution",
     "rollback",
 })

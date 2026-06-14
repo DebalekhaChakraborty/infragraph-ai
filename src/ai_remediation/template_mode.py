@@ -1,4 +1,4 @@
-"""
+﻿"""
 Template remediation mode — deterministic, not model-generated.
 
 Used when vLLM / Qwen3 is unavailable.  Output is clearly labelled
@@ -444,7 +444,7 @@ def _generate_local_template(context: dict) -> dict:
         "or if the incident shows signs of cross-diagram propagation."
     )
 
-    snow = {
+    itsm = {
         "short_description": f"[TOPOLOGY] Network incident on {diagram_id} — root cause: {root_str}",
         "description": (
             f"Local incident on diagram '{diagram_id}'. "
@@ -507,7 +507,7 @@ def _generate_local_template(context: dict) -> dict:
         do_not_execute_if=_do_not_execute("local", root_cause),
         rollback_or_safety_notes=rollback,
         escalation_recommendation=escalation,
-        servicenow_incident_summary=snow,
+        itsm_ticket_summary=itsm,
         audit_summary=audit,
         confidence_notes=confidence,
         runbook_chain=runbook_chain,
@@ -620,7 +620,7 @@ def _generate_enterprise_template(context: dict) -> dict:
             "senior network engineering is recommended. " + escalation
         )
 
-    snow = {
+    itsm = {
         "short_description": (
             f"[ENTERPRISE] Cross-diagram network incident — scenario {scenario_id}; "
             f"root cause: {root_str}"
@@ -689,7 +689,7 @@ def _generate_enterprise_template(context: dict) -> dict:
         do_not_execute_if=_do_not_execute("enterprise", root_cause),
         rollback_or_safety_notes=rollback,
         escalation_recommendation=escalation,
-        servicenow_incident_summary=snow,
+        itsm_ticket_summary=itsm,
         audit_summary=audit,
         confidence_notes=confidence,
         runbook_chain=runbook_chain,

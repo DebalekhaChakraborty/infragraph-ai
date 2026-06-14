@@ -1,4 +1,4 @@
-"""
+﻿"""
 verl_reward.py — vERL custom reward function for InfraGraph RCA remediation.
 
 Entry point called by vERL during rollout scoring:
@@ -76,7 +76,7 @@ def _json_format(candidate: "str | dict") -> float:
     required = {
         "executive_summary", "probable_root_cause", "scope", "risk_level",
         "automation_eligibility", "blast_radius", "validation_steps",
-        "remediation_steps", "rollback_or_safety_notes", "servicenow_incident_summary",
+        "remediation_steps", "rollback_or_safety_notes", "itsm_ticket_summary",
     }
     if not data:
         return 0.0
@@ -164,13 +164,13 @@ def _enterprise_escalation(candidate: "str | dict", ref: dict) -> float:
     return 0.0
 
 
-def _servicenow_summary(candidate: "str | dict") -> float:
+def _itsm_ticket_summary(candidate: "str | dict") -> float:
     data = _parse_json(candidate)
-    snow = data.get("servicenow_incident_summary")
-    if not isinstance(snow, dict):
+    itsm = data.get("itsm_ticket_summary")
+    if not isinstance(itsm, dict):
         return 0.0
     required = {"short_description", "description", "affected_ci", "priority", "assignment_group"}
-    present  = {k for k in required if snow.get(k)}
+    present  = {k for k in required if itsm.get(k)}
     return len(present) / len(required)
 
 
@@ -184,7 +184,7 @@ _WEIGHTS = {
     "validation_before_remediation": 0.12,
     "rollback_safety":               0.12,
     "enterprise_escalation":         0.08,
-    "servicenow_summary":            0.06,
+    "itsm_ticket_summary":            0.06,
 }
 assert abs(sum(_WEIGHTS.values()) - 1.0) < 1e-9
 
@@ -222,7 +222,7 @@ def compute_score(
             "validation_before_remediation": _validation_before_remediation(solution_str),
             "rollback_safety":               _rollback_safety(solution_str),
             "enterprise_escalation":         _enterprise_escalation(solution_str, ref),
-            "servicenow_summary":            _servicenow_summary(solution_str),
+            "itsm_ticket_summary":            _itsm_ticket_summary(solution_str),
         }
         total = sum(_WEIGHTS[k] * v for k, v in scores.items())
         return round(max(0.0, min(1.0, total)), 4)
@@ -259,7 +259,7 @@ if __name__ == "__main__":
             "Do not execute if APP-LB-01 not confirmed by graph evidence.",
         ],
         "escalation_recommendation": "Escalate to enterprise NOC for cross-diagram impact.",
-        "servicenow_incident_summary": {
+        "itsm_ticket_summary": {
             "short_description": "InfraGraph RCA root cause APP-LB-01",
             "description": "Graph-grounded RCA found APP-LB-01.",
             "affected_ci": "APP-LB-01",

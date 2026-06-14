@@ -1,4 +1,4 @@
-"""Build sample LoRA + GRPO/vERL alignment records from InfraGraph RCA artifacts."""
+﻿"""Build sample LoRA + GRPO/vERL alignment records from InfraGraph RCA artifacts."""
 from __future__ import annotations
 
 import argparse
@@ -151,7 +151,7 @@ def _chosen_response(record: dict) -> dict:
             if scope == "enterprise" else
             "Escalate to network engineering if local validation does not confirm recovery."
         ),
-        "servicenow_incident_summary": {
+        "itsm_ticket_summary": {
             "short_description": f"InfraGraph RCA root cause {root}",
             "description": f"Graph-grounded RCA found {root}; impacted diagrams: {', '.join(diagrams) or 'single diagram'}.",
             "affected_ci": root,

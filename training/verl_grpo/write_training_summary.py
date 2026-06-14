@@ -1,4 +1,4 @@
-"""
+﻿"""
 write_training_summary.py — Generate a post-run training summary.
 
 Creates:
@@ -149,7 +149,7 @@ def write_summary(run_dir: Path, dry_run: bool) -> Path:
         ("validation_before_remediation", "12%  — validation steps precede remediation"),
         ("rollback_safety",               "12%  — rollback notes + do_not_execute safeguards"),
         ("enterprise_escalation",         " 8%  — escalation for cross-diagram incidents"),
-        ("servicenow_summary",            " 6%  — structured ServiceNow dict present"),
+        ("itsm_ticket_summary",            " 6%  — structured ITSM dict present"),
     ]
 
     md = f"""# InfraGraph AI — Qwen3-4B LoRA + GRPO/vERL Training Summary

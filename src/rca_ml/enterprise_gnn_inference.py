@@ -1,4 +1,4 @@
-"""
+﻿"""
 enterprise_gnn_inference.py — Prediction and evaluation for Enterprise GNN RCA.
 
 Output uses label "Enterprise GNN RCA" (rca_source field).
@@ -23,7 +23,7 @@ _FI_PAGERANK      = FEATURE_NAMES.index("pagerank")
 
 _FORBIDDEN_KEYS = frozenset({
     "remediation", "recommended_actions", "remediation_steps", "resolution_steps",
-    "rollback_steps", "validation_steps", "servicenow_incident_summary",
+    "rollback_steps", "validation_steps", "itsm_ticket_summary",
     "resolution", "rollback",
     # evaluation leakage at top level (must be nested under "evaluation" key only)
     "expected_root_cause", "correct",

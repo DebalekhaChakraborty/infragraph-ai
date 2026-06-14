@@ -1,4 +1,4 @@
-"""
+﻿"""
 Stage 4 of InfraGraph AI: LLM explanation layer.
 
 Generates a human-readable RCA explanation from topology (heuristic) and GNN
@@ -151,7 +151,7 @@ def build_user_prompt(evidence):
         5. **Impacted Nodes/Services** — list and propagation path
         6. **Recommended Next Actions** — numbered, L1/L2 actionable steps only,
            grounded in the evidence (no invented tools or systems)
-        7. **ServiceNow Incident Summary** — short-description, affected-CI,
+        7. **ITSM Ticket Summary** — short-description, affected-CI,
            priority, assignment-group, symptom, root-cause, services-impacted,
            suggested-action (key:value format)
         8. **Confidence and Limitations**
@@ -339,17 +339,17 @@ def build_mock_explanation(evidence):
     ]
     actions_str = "\n".join(f"{i+1}. {a}" for i, a in enumerate(actions))
 
-    # ServiceNow
-    sn_priority = "P1" if graph["impacted_node_count"] >= 5 else "P2"
-    sn_services = ", ".join(impacted[:5])
-    snow = (
+    # ITSM
+    itsm_priority = "P1" if graph["impacted_node_count"] >= 5 else "P2"
+    itsm_services = ", ".join(impacted[:5])
+    itsm = (
         f"**Short description**: Network fault on {gt} causing {graph['impacted_node_count']}-service outage  \n"
         f"**Affected CI**: {gt} ({gt_type})  \n"
-        f"**Priority**: {sn_priority} -- {graph['impacted_node_count']} downstream nodes impacted  \n"
+        f"**Priority**: {itsm_priority} -- {graph['impacted_node_count']} downstream nodes impacted  \n"
         f"**Assignment group**: Network Operations  \n"
         f"**Symptom**: Alerts on {', '.join(alerting)}; {graph['impacted_node_count']} downstream services unreachable  \n"
         f"**Root cause (automated)**: {gt} identified by GNN RCA (confidence: {confidence})  \n"
-        f"**Services impacted**: {sn_services}  \n"
+        f"**Services impacted**: {itsm_services}  \n"
         f"**Suggested action**: Inspect {gt} interfaces, ACLs, and upstream connectivity"
     )
 
@@ -419,9 +419,9 @@ def build_mock_explanation(evidence):
         "",
         "---",
         "",
-        "## ServiceNow Incident Summary",
+        "## ITSM Ticket Summary",
         "",
-        snow,
+        itsm,
         "",
         "---",
         "",

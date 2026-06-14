@@ -1,4 +1,4 @@
-"""
+﻿"""
 AI remediation input/output schema definitions.
 
 Unified schema for both local (single-diagram) and enterprise (cross-diagram)
@@ -24,7 +24,7 @@ Output schema
   "do_not_execute_if":           [str, ...],
   "rollback_or_safety_notes":    [str, ...],
   "escalation_recommendation":   str,
-  "servicenow_incident_summary": {
+  "itsm_ticket_summary": {
       "short_description": str,
       "description":       str,
       "affected_ci":       str,
@@ -130,7 +130,7 @@ def empty_remediation_output(scope: str = "enterprise") -> dict:
         "do_not_execute_if":           [],
         "rollback_or_safety_notes":    [],
         "escalation_recommendation":   "",
-        "servicenow_incident_summary": {
+        "itsm_ticket_summary": {
             "short_description": "",
             "description":       "",
             "affected_ci":       "",
@@ -168,7 +168,7 @@ def make_remediation_output(
     do_not_execute_if: list[str] | None = None,
     rollback_or_safety_notes: list[str] | None = None,
     escalation_recommendation: str = "",
-    servicenow_incident_summary: "dict | None" = None,
+    itsm_ticket_summary: "dict | None" = None,
     audit_summary: str = "",
     confidence_notes: str = "",
     runbook_chain: "list[dict] | None" = None,
@@ -192,7 +192,7 @@ def make_remediation_output(
         "do_not_execute_if":           do_not_execute_if or [],
         "rollback_or_safety_notes":    rollback_or_safety_notes or [],
         "escalation_recommendation":   escalation_recommendation,
-        "servicenow_incident_summary": servicenow_incident_summary or {
+        "itsm_ticket_summary": itsm_ticket_summary or {
             "short_description": "",
             "description":       "",
             "affected_ci":       "",
@@ -230,7 +230,7 @@ OUTPUT_SCHEMA_TEMPLATE: dict = {
     "do_not_execute_if":        ["<condition that blocks execution>"],
     "rollback_or_safety_notes": ["<safety note 1>", "<safety note 2>"],
     "escalation_recommendation": "<when and to whom to escalate>",
-    "servicenow_incident_summary": {
+    "itsm_ticket_summary": {
         "short_description": "<one-line incident title>",
         "description":       "<multi-sentence incident detail>",
         "affected_ci":       "<primary affected node or service>",

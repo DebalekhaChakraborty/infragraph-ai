@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 expand_sop_grounded_qwen_training_data.py
 
@@ -378,9 +378,9 @@ def _validate_record(
         if not asst_obj.get(field):
             violations.append(f"assistant output '{field}' is empty or missing")
 
-    snow = asst_obj.get("servicenow_incident_summary", {})
-    if not (snow and snow.get("short_description", "").strip()):
-        violations.append("servicenow_incident_summary.short_description is empty")
+    itsm = asst_obj.get("itsm_ticket_summary", {})
+    if not (itsm and itsm.get("short_description", "").strip()):
+        violations.append("itsm_ticket_summary.short_description is empty")
 
     # No forbidden leakage keys anywhere in the record
     all_keys = _collect_all_keys(record)

@@ -1,4 +1,4 @@
----
+﻿---
 kb_id: SOP-DC-FW-001
 title: "Datacenter Firewall Packet Drop and Link Error Response"
 doc_type: sop
@@ -91,7 +91,7 @@ Provide structured triage and remediation steps for incidents where the datacent
 - Apply one change at a time; validate; then proceed to the next change.
 - If the incident worsens after a change, immediately revert to the previous configuration snapshot.
 - Notify NOC and all dependent diagram owners (app_db, branch, shared_services) before making changes.
-- Retain all deny-log excerpts and interface counter outputs as evidence in the ServiceNow record.
+- Retain all deny-log excerpts and interface counter outputs as evidence in the ITSM record.
 
 ## Do Not Execute If
 
@@ -101,7 +101,7 @@ Provide structured triage and remediation steps for incidents where the datacent
 - A parallel change-management window is already in progress on any device in the same traffic path.
 - The alert timestamps are more than 2 hours old — validate that the incident is still active before proceeding.
 
-## ServiceNow Routing
+## ITSM Routing
 
 - **Assignment Group**: Network Engineering — Datacenter Operations
 - **Category**: Network / Firewall

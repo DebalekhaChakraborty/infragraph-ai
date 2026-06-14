@@ -1,4 +1,4 @@
-# AI Training And Remediation Story
+﻿# AI Training And Remediation Story
 
 InfraGraph AI converts static infrastructure diagrams into graph memory, simulates topology-aware incidents, ranks root causes over connected diagrams, and generates safe remediation plans grounded in graph evidence.
 
@@ -65,7 +65,7 @@ This is not a completed full-scale training run. It is a runnable preparation la
 
 - Full-scale Qwen LoRA/GRPO training run.
 - Live monitoring tool connectors.
-- CMDB and ServiceNow integration.
+- CMDB and ITSM integration.
 - Real customer topology validation.
 
 ## Exact Hackathon Wording

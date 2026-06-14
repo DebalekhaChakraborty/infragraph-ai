@@ -1,4 +1,4 @@
-# InfraGraph AI — Qwen3-4B LoRA + GRPO/vERL Alignment (AMD ROCm)
+﻿# InfraGraph AI — Qwen3-4B LoRA + GRPO/vERL Alignment (AMD ROCm)
 
 This directory implements the RL alignment pipeline for a graph-grounded
 remediation agent based on Qwen3-4B, LoRA adapters, and GRPO via vERL.
@@ -128,7 +128,7 @@ Eight deterministic components (no model call):
 | `validation_before_remediation` | 12 % | Validation steps precede remediation steps |
 | `rollback_safety` | 12 % | Rollback notes + `do_not_execute_if` safeguards present |
 | `enterprise_escalation` | 8 % | Escalation recommended for cross-diagram incidents |
-| `servicenow_summary` | 6 % | Structured ServiceNow dict with all five fields |
+| `itsm_ticket_summary` | 6 % | Structured ITSM dict with all five fields |
 
 ---
 

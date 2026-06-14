@@ -1,4 +1,4 @@
----
+﻿---
 kb_id: RB-ROLLBACK-001
 runbook_id: ROLLBACK-001
 title: "Cross-Domain Rollback and Safety Validation Runbook"
@@ -85,7 +85,7 @@ Validate that a remediation action has succeeded and determine whether a rollbac
 3. **Apply rollback in reverse order of changes**: If multiple changes were made, roll them back in reverse chronological order (last change first).
 4. **Confirm rollback took effect**: Run the same read-only verification commands as in Triage Steps — confirm the state matches the pre-change baseline snapshot.
 5. **Re-evaluate RCA**: After rollback, re-run the RCA analysis or request a GNN RCA re-run to re-assess the root cause with the reverted state.
-6. **Update ServiceNow**: Log the rollback in the original ServiceNow ticket with timestamps, reason, and the new post-rollback state.
+6. **Update ITSM**: Log the rollback in the original ITSM ticket with timestamps, reason, and the new post-rollback state.
 
 ## Validation Steps
 
@@ -98,7 +98,7 @@ Validate that a remediation action has succeeded and determine whether a rollbac
 
 ## Safety Notes
 
-- **All rollbacks must be logged in the central ServiceNow incident ticket** with timestamps and approver names.
+- **All rollbacks must be logged in the central ITSM ticket ticket** with timestamps and approver names.
 - No change should be rolled back without first notifying the team that originally applied the change.
 - If the rollback itself causes an alert storm or degradation, stop immediately and escalate to the Network Engineering Manager and NOC.
 - Rollback of a firewall ACL change requires dual Security Ops approval — same as the original change.
@@ -111,7 +111,7 @@ Validate that a remediation action has succeeded and determine whether a rollbac
 - The original incident has been caused by a known carrier outage or vendor issue — rollback of internal changes will not restore service until the external dependency is resolved.
 - A security incident investigation (SIRT) is in progress — preserve the changed state as forensic evidence and coordinate rollback timing with the SIRT team.
 
-## ServiceNow Routing
+## ITSM Routing
 
 - **Assignment Group**: Network Engineering — Enterprise Operations (lead), plus domain-specific teams for affected CIs
 - **Category**: Network / Post-Change Validation

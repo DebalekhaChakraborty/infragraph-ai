@@ -1,4 +1,4 @@
-# InfraGraph AI RCA Explanation -- diagram_0373
+﻿# InfraGraph AI RCA Explanation -- diagram_0373
 
 > Generated: 2026-06-09 16:10 UTC  
 > Provider: mock (deterministic template)
@@ -65,7 +65,7 @@ The firewall **FW-01** initiated the incident. Its position in the topology as a
 
 ---
 
-## ServiceNow Incident Summary
+## ITSM Ticket Summary
 
 **Short description**: Network fault on FW-01 causing 10-service outage  
 **Affected CI**: FW-01 (firewall)  

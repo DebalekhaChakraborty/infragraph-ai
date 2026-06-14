@@ -1,4 +1,4 @@
----
+﻿---
 kb_id: RB-DB-001
 runbook_id: DB-001
 title: "Database Connection Pool and Query Latency Recovery"
@@ -69,7 +69,7 @@ Recover a database node experiencing connection pool exhaustion or high query la
 3. **Reduce upstream connection pressure**: Coordinate with the application team to reduce application connection pool size (`max_pool_size` in the connection pool config) — restart the connection pool proxy if applicable (e.g., PgBouncer: `systemctl restart pgbouncer`).
 4. **Promote replica (failover — if master is unrecoverable)**: Only with explicit DBA and NOC approval. Promote: `pg_ctl promote -D {data_dir}` — this is irreversible without a rebuild of the old master.
 5. **Clear replication lag**: If replica lag is the trigger, confirm replication slot is not stuck: `SELECT slot_name, active, restart_lsn FROM pg_replication_slots;` — drop stuck slots with DBA approval: `SELECT pg_drop_replication_slot('{slot_name}');`
-6. **Update CMDB**: Log the change in ServiceNow with affected CI = DB-MASTER or DB-REPLICA, change type = Emergency.
+6. **Update CMDB**: Log the change in ITSM with affected CI = DB-MASTER or DB-REPLICA, change type = Emergency.
 
 ## Automation Hooks
 
@@ -77,7 +77,7 @@ Recover a database node experiencing connection pool exhaustion or high query la
 - **Connector**: internal_db_api
 - **Dry-run**: `db_admin_cli show-blocking-queries --host={db_host}` — read-only, lists blocking queries
 - **Automation gate**: `approval_required=true` for all write operations (terminate, promote, drop slot)
-- **Rollback hook**: Not applicable for termination. Failover rollback requires DBA-led rebuild — document in ServiceNow.
+- **Rollback hook**: Not applicable for termination. Failover rollback requires DBA-led rebuild — document in ITSM.
 
 ## Validation Steps
 
@@ -103,7 +103,7 @@ Recover a database node experiencing connection pool exhaustion or high query la
 - Root cause has not been confirmed as database-tier — if upstream (load balancer, application) is the root cause, address that domain first.
 - Replica promotion is not warranted (master is recoverable within 15 minutes).
 
-## ServiceNow Routing
+## ITSM Routing
 
 - **Assignment Group**: Database Engineering — Platform Reliability
 - **Category**: Database / Connection Pool

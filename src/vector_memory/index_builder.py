@@ -1,4 +1,4 @@
-"""Build semantic vector documents from graph-memory evidence."""
+﻿"""Build semantic vector documents from graph-memory evidence."""
 from __future__ import annotations
 
 import json
@@ -232,7 +232,7 @@ def build_vector_docs_from_graph_memory(
             "do_not_execute_if": "AI resolution do-not-execute conditions",
             "rollback_or_safety_notes": "AI resolution rollback and safety notes",
             "escalation_recommendation": "AI resolution escalation recommendation",
-            "servicenow_incident_summary": "AI resolution ServiceNow summary",
+            "itsm_ticket_summary": "AI resolution ITSM summary",
             "audit_summary": "AI resolution audit summary",
             "confidence_notes": "AI resolution confidence notes",
         }

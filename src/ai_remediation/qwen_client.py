@@ -1,4 +1,4 @@
-"""
+﻿"""
 vLLM / OpenAI-compatible client for Qwen3 remediation generation.
 
 Calls the locally-served model via POST /v1/chat/completions.
@@ -138,9 +138,9 @@ def _check_required_fields(response: dict) -> str:
         val = response.get(field)
         if not isinstance(val, list) or not val:
             return f"Missing or empty required field: {field!r}"
-    snow = response.get("servicenow_incident_summary")
-    if not isinstance(snow, dict) or not str(snow.get("short_description", "")).strip():
-        return "Missing or empty: servicenow_incident_summary.short_description"
+    itsm = response.get("itsm_ticket_summary")
+    if not isinstance(itsm, dict) or not str(itsm.get("short_description", "")).strip():
+        return "Missing or empty: itsm_ticket_summary.short_description"
     return ""
 
 

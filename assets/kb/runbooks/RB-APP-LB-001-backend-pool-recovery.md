@@ -1,4 +1,4 @@
----
+﻿---
 kb_id: RB-APP-LB-001
 runbook_id: APP-LB-001
 title: "Application Load Balancer Backend Pool Recovery"
@@ -73,7 +73,7 @@ Recover a load balancer backend pool that is reporting unhealthy members or fail
 4. **Health endpoint validation**: Confirm the application health endpoint returns HTTP 200: `curl -s -o /dev/null -w "%{http_code}" http://{member_ip}:{port}/health`.
 5. **Re-add to pool**: Once the member health endpoint returns 200 consistently for 60 seconds, re-add to the load balancer pool: `lb_admin_cli add-member --pool={pool_id} --member={member_id} --weight=50`.
 6. **Ramp weight**: After 2 minutes with no errors, restore the member weight to 100: `lb_admin_cli set-weight --pool={pool_id} --member={member_id} --weight=100`.
-7. **Update CMDB**: Log the change in ServiceNow with affected CI = APP-LB-* node, change type = Emergency.
+7. **Update CMDB**: Log the change in ITSM with affected CI = APP-LB-* node, change type = Emergency.
 
 ## Automation Hooks
 
@@ -106,7 +106,7 @@ Recover a load balancer backend pool that is reporting unhealthy members or fail
 - All backend pool members are currently healthy (investigate alternate root cause).
 - A concurrent change is in progress on the load balancer by another operator.
 
-## ServiceNow Routing
+## ITSM Routing
 
 - **Assignment Group**: Application Engineering — Platform Reliability
 - **Category**: Application / Load Balancer

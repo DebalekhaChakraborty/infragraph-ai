@@ -1,4 +1,4 @@
-# Qwen Explanation Layer
+﻿# Qwen Explanation Layer
 
 `scripts/generate_qwen_rca_explanation.py` is Stage 4 of InfraGraph AI.
 It takes the structured evidence produced by the heuristic RCA (Stage 2) and
@@ -22,7 +22,7 @@ The earlier stages produce structured JSON:
 An L1 engineer still has to read and interpret those JSON files.
 The Qwen layer bridges the gap: it turns the structured evidence into
 a narrative incident report with an executive summary, propagation explanation,
-ServiceNow ticket fields, and actionable L1/L2 remediation steps.
+ITSM ticket fields, and actionable L1/L2 remediation steps.
 
 ---
 
@@ -84,7 +84,7 @@ node names or actions that are not grounded in the actual topology.
 **User prompt** includes the full evidence JSON and asks for eight sections in
 order: Executive Summary, What Happened, Root Cause Conclusion, Heuristic vs
 GNN Comparison, Impacted Nodes/Services, Recommended Next Actions,
-ServiceNow Incident Summary, Confidence and Limitations.
+ITSM Ticket Summary, Confidence and Limitations.
 
 ---
 
@@ -175,7 +175,7 @@ All files written to `outputs/qwen_explanation/`:
 
 The end-to-end loop: a synthetic network diagram enters Stage 1, propagates
 through vision detection (Stage 2), graph intelligence (Stages 2-3), and
-surfaces as a natural-language incident report with ServiceNow-ready fields
+surfaces as a natural-language incident report with ITSM-ready fields
 (Stage 4) — all without any manual analysis.
 
 ---
@@ -198,7 +198,7 @@ of learned propagation-direction signals over rule-based scoring.
 Root cause: FW-01 (firewall)
 Confidence: HIGH (GNN score: 30.73, margin over 2nd-ranked: 8.12)
 
-## ServiceNow Incident Summary
+## ITSM Ticket Summary
 
 Short description: Network fault on FW-01 causing 10-service outage
 Affected CI: FW-01 (firewall)

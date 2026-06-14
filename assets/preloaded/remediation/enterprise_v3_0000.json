@@ -1,4 +1,4 @@
-{
+﻿{
   "scenario_id": "enterprise_v3_0000",
   "case_id": "ent_enterprise_v3_0000",
   "incident_id": "INC-enterprise_v3_0000",
@@ -100,7 +100,7 @@
       "Stage changes in the least-critical diagram first; validate before proceeding."
     ],
     "escalation_recommendation": "This incident spans 4 topology domains — immediate escalation to senior network engineering is recommended. Escalate to network engineering team if root-cause node cannot be restored within 30 minutes, or if the incident spans more than 3 topology domains. Notify on-call SRE if customer-facing services remain impacted.",
-    "servicenow_incident_summary": {
+    "itsm_ticket_summary": {
       "short_description": "[ENTERPRISE] Cross-diagram network incident — scenario enterprise_v3_0000; root cause: DC-FW-01",
       "description": "Cross-diagram incident on scenario enterprise_v3_0000. Root cause: DC-FW-01 (datacenter_topology). Impact: 4 diagram(s), 7 alert event(s). Impact path: DC-FW-01 → DC-CORE-SW-01 → APP-LB-01 → APP-01 → DB-MASTER → IAM-01. Impacted nodes: DC-FW-01, DC-CORE-SW-01, APP-LB-01, APP-01, DB-MASTER…. RCA source: Enterprise GNN RCA. Status: Under investigation.",
       "affected_ci": "DC-FW-01",

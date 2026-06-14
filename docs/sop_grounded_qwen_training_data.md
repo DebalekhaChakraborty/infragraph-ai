@@ -1,4 +1,4 @@
-# SOP-Grounded Qwen Training Data
+﻿# SOP-Grounded Qwen Training Data
 
 Supervised fine-tuning dataset for InfraGraph AI remediation behavior alignment.
 
@@ -103,7 +103,7 @@ Strict JSON matching the remediation output schema from `response_schema.py`:
 - `evidence_from_graph` — KB evidence refs appear before CE-* evidence
 - `triage_steps`, `remediation_steps`, `validation_steps`
 - `pre_checks`, `post_checks`, `do_not_execute_if`, `rollback_or_safety_notes`
-- `escalation_recommendation`, `servicenow_incident_summary`
+- `escalation_recommendation`, `itsm_ticket_summary`
 - `audit_summary`, `confidence_notes`
 
 ---

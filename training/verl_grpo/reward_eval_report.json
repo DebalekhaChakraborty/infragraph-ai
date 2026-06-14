@@ -1,4 +1,4 @@
-{
+﻿{
   "summary": {
     "records": 16,
     "average_chosen_score": 0.8931,
@@ -41,9 +41,9 @@
           "score": 1.0,
           "reason": "single-diagram record does not require enterprise escalation"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 1.0,
-          "reason": "5/5 ServiceNow fields present"
+          "reason": "5/5 ITSM fields present"
         }
       },
       "rejected_details": {
@@ -75,9 +75,9 @@
           "score": 1.0,
           "reason": "single-diagram record does not require enterprise escalation"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 0.0,
-          "reason": "ServiceNow summary missing"
+          "reason": "ITSM summary missing"
         }
       }
     },
@@ -116,9 +116,9 @@
           "score": 1.0,
           "reason": "enterprise escalation present for cross-diagram incident"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 1.0,
-          "reason": "5/5 ServiceNow fields present"
+          "reason": "5/5 ITSM fields present"
         }
       },
       "rejected_details": {
@@ -150,9 +150,9 @@
           "score": 0.0,
           "reason": "cross-diagram incident missing enterprise escalation"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 0.0,
-          "reason": "ServiceNow summary missing"
+          "reason": "ITSM summary missing"
         }
       }
     },
@@ -191,9 +191,9 @@
           "score": 1.0,
           "reason": "single-diagram record does not require enterprise escalation"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 1.0,
-          "reason": "5/5 ServiceNow fields present"
+          "reason": "5/5 ITSM fields present"
         }
       },
       "rejected_details": {
@@ -225,9 +225,9 @@
           "score": 1.0,
           "reason": "single-diagram record does not require enterprise escalation"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 0.0,
-          "reason": "ServiceNow summary missing"
+          "reason": "ITSM summary missing"
         }
       }
     },
@@ -266,9 +266,9 @@
           "score": 1.0,
           "reason": "enterprise escalation present for cross-diagram incident"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 1.0,
-          "reason": "5/5 ServiceNow fields present"
+          "reason": "5/5 ITSM fields present"
         }
       },
       "rejected_details": {
@@ -300,9 +300,9 @@
           "score": 0.0,
           "reason": "cross-diagram incident missing enterprise escalation"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 0.0,
-          "reason": "ServiceNow summary missing"
+          "reason": "ITSM summary missing"
         }
       }
     },
@@ -341,9 +341,9 @@
           "score": 1.0,
           "reason": "enterprise escalation present for cross-diagram incident"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 1.0,
-          "reason": "5/5 ServiceNow fields present"
+          "reason": "5/5 ITSM fields present"
         }
       },
       "rejected_details": {
@@ -375,9 +375,9 @@
           "score": 0.0,
           "reason": "cross-diagram incident missing enterprise escalation"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 0.0,
-          "reason": "ServiceNow summary missing"
+          "reason": "ITSM summary missing"
         }
       }
     },
@@ -416,9 +416,9 @@
           "score": 1.0,
           "reason": "enterprise escalation present for cross-diagram incident"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 1.0,
-          "reason": "5/5 ServiceNow fields present"
+          "reason": "5/5 ITSM fields present"
         }
       },
       "rejected_details": {
@@ -450,9 +450,9 @@
           "score": 0.0,
           "reason": "cross-diagram incident missing enterprise escalation"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 0.0,
-          "reason": "ServiceNow summary missing"
+          "reason": "ITSM summary missing"
         }
       }
     },
@@ -491,9 +491,9 @@
           "score": 1.0,
           "reason": "enterprise escalation present for cross-diagram incident"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 1.0,
-          "reason": "5/5 ServiceNow fields present"
+          "reason": "5/5 ITSM fields present"
         }
       },
       "rejected_details": {
@@ -525,9 +525,9 @@
           "score": 0.0,
           "reason": "cross-diagram incident missing enterprise escalation"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 0.0,
-          "reason": "ServiceNow summary missing"
+          "reason": "ITSM summary missing"
         }
       }
     },
@@ -566,9 +566,9 @@
           "score": 1.0,
           "reason": "enterprise escalation present for cross-diagram incident"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 1.0,
-          "reason": "5/5 ServiceNow fields present"
+          "reason": "5/5 ITSM fields present"
         }
       },
       "rejected_details": {
@@ -600,9 +600,9 @@
           "score": 0.0,
           "reason": "cross-diagram incident missing enterprise escalation"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 0.0,
-          "reason": "ServiceNow summary missing"
+          "reason": "ITSM summary missing"
         }
       }
     },
@@ -641,9 +641,9 @@
           "score": 1.0,
           "reason": "single-diagram record does not require enterprise escalation"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 1.0,
-          "reason": "5/5 ServiceNow fields present"
+          "reason": "5/5 ITSM fields present"
         }
       },
       "rejected_details": {
@@ -675,9 +675,9 @@
           "score": 1.0,
           "reason": "single-diagram record does not require enterprise escalation"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 0.0,
-          "reason": "ServiceNow summary missing"
+          "reason": "ITSM summary missing"
         }
       }
     },
@@ -716,9 +716,9 @@
           "score": 1.0,
           "reason": "single-diagram record does not require enterprise escalation"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 1.0,
-          "reason": "5/5 ServiceNow fields present"
+          "reason": "5/5 ITSM fields present"
         }
       },
       "rejected_details": {
@@ -750,9 +750,9 @@
           "score": 1.0,
           "reason": "single-diagram record does not require enterprise escalation"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 0.0,
-          "reason": "ServiceNow summary missing"
+          "reason": "ITSM summary missing"
         }
       }
     },
@@ -791,9 +791,9 @@
           "score": 1.0,
           "reason": "enterprise escalation present for cross-diagram incident"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 1.0,
-          "reason": "5/5 ServiceNow fields present"
+          "reason": "5/5 ITSM fields present"
         }
       },
       "rejected_details": {
@@ -825,9 +825,9 @@
           "score": 0.0,
           "reason": "cross-diagram incident missing enterprise escalation"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 0.0,
-          "reason": "ServiceNow summary missing"
+          "reason": "ITSM summary missing"
         }
       }
     },
@@ -866,9 +866,9 @@
           "score": 1.0,
           "reason": "enterprise escalation present for cross-diagram incident"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 1.0,
-          "reason": "5/5 ServiceNow fields present"
+          "reason": "5/5 ITSM fields present"
         }
       },
       "rejected_details": {
@@ -900,9 +900,9 @@
           "score": 0.0,
           "reason": "cross-diagram incident missing enterprise escalation"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 0.0,
-          "reason": "ServiceNow summary missing"
+          "reason": "ITSM summary missing"
         }
       }
     },
@@ -941,9 +941,9 @@
           "score": 1.0,
           "reason": "enterprise escalation present for cross-diagram incident"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 1.0,
-          "reason": "5/5 ServiceNow fields present"
+          "reason": "5/5 ITSM fields present"
         }
       },
       "rejected_details": {
@@ -975,9 +975,9 @@
           "score": 0.0,
           "reason": "cross-diagram incident missing enterprise escalation"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 0.0,
-          "reason": "ServiceNow summary missing"
+          "reason": "ITSM summary missing"
         }
       }
     },
@@ -1016,9 +1016,9 @@
           "score": 1.0,
           "reason": "single-diagram record does not require enterprise escalation"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 1.0,
-          "reason": "5/5 ServiceNow fields present"
+          "reason": "5/5 ITSM fields present"
         }
       },
       "rejected_details": {
@@ -1050,9 +1050,9 @@
           "score": 1.0,
           "reason": "single-diagram record does not require enterprise escalation"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 0.0,
-          "reason": "ServiceNow summary missing"
+          "reason": "ITSM summary missing"
         }
       }
     },
@@ -1091,9 +1091,9 @@
           "score": 1.0,
           "reason": "enterprise escalation present for cross-diagram incident"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 1.0,
-          "reason": "5/5 ServiceNow fields present"
+          "reason": "5/5 ITSM fields present"
         }
       },
       "rejected_details": {
@@ -1125,9 +1125,9 @@
           "score": 0.0,
           "reason": "cross-diagram incident missing enterprise escalation"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 0.0,
-          "reason": "ServiceNow summary missing"
+          "reason": "ITSM summary missing"
         }
       }
     },
@@ -1166,9 +1166,9 @@
           "score": 1.0,
           "reason": "single-diagram record does not require enterprise escalation"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 1.0,
-          "reason": "5/5 ServiceNow fields present"
+          "reason": "5/5 ITSM fields present"
         }
       },
       "rejected_details": {
@@ -1200,9 +1200,9 @@
           "score": 1.0,
           "reason": "single-diagram record does not require enterprise escalation"
         },
-        "servicenow_summary": {
+        "itsm_ticket_summary": {
           "score": 0.0,
-          "reason": "ServiceNow summary missing"
+          "reason": "ITSM summary missing"
         }
       }
     }

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 build_scenario_library.py — Build a clean, leakage-free scenario library from
 datasets/infragraph_v3.
@@ -49,8 +49,8 @@ FORBIDDEN_EVENT_KEYS: frozenset[str] = frozenset({
     "rollback",
     "rollback_or_safety_notes",
     "rollback_plan",
-    "servicenow",
-    "servicenow_incident_summary",
+    "itsm",
+    "itsm_ticket_summary",
     "impacted_nodes",
     "impacted_diagrams",
     "impact_paths",

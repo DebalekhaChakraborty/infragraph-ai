@@ -1,4 +1,4 @@
-# SOP/KB-Grounded Remediation RAG
+﻿# SOP/KB-Grounded Remediation RAG
 
 Retrieval-augmented generation for remediation plans backed by SOP, runbook, and known-resolution documents.
 
@@ -80,7 +80,7 @@ evidence_tags:
 ## Validation Steps
 ## Rollback / Safety Notes
 ## Do Not Execute If
-## ServiceNow Routing
+## ITSM Routing
 ## Evidence Tags
 ```
 

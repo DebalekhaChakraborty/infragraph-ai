@@ -1,4 +1,4 @@
-# Remediation Pipeline
+﻿# Remediation Pipeline
 
 Generates remediation plans from clean Enterprise GNN RCA outputs and event
 correlation evidence.
@@ -164,7 +164,7 @@ INFRAGRAPH_TEMPLATE_ONLY=1 bash scripts/run_final_demo_pipeline.sh
     "do_not_execute_if":           ["..."],
     "rollback_or_safety_notes":    ["..."],
     "escalation_recommendation":   "...",
-    "servicenow_incident_summary": {
+    "itsm_ticket_summary": {
       "short_description": "...",
       "description":       "...",
       "affected_ci":       "DC-FW-01",
@@ -209,11 +209,11 @@ and must not be presented as model-generated or AI output.
 `risk_level`, `automation_eligibility`, `blast_radius`, `evidence_from_graph`,
 `pre_checks`, `triage_steps`, `validation_steps`, `remediation_steps`, `post_checks`,
 `do_not_execute_if`, `rollback_or_safety_notes`, `escalation_recommendation`,
-`servicenow_incident_summary`, `audit_summary`, `confidence_notes`.
+`itsm_ticket_summary`, `audit_summary`, `confidence_notes`.
 
 **Non-empty lists**: `remediation_steps`, `validation_steps`, `rollback_or_safety_notes`.
 
-**Non-empty**: `servicenow_incident_summary.short_description`.
+**Non-empty**: `itsm_ticket_summary.short_description`.
 
 **Forbidden anywhere**: `expected_root_cause`, `ground_truth_node`, `correct_top1`,
 `correct_top_k`, `reciprocal_rank`, `evaluation`.

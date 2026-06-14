@@ -1,4 +1,4 @@
-"""Deterministic rewards for InfraGraph RCA remediation alignment records."""
+﻿"""Deterministic rewards for InfraGraph RCA remediation alignment records."""
 from __future__ import annotations
 
 import argparse
@@ -47,7 +47,7 @@ def json_format_reward(candidate_response: str | dict, reference_record: dict) -
     required = {
         "executive_summary", "probable_root_cause", "scope", "risk_level",
         "automation_eligibility", "blast_radius", "validation_steps",
-        "remediation_steps", "rollback_or_safety_notes", "servicenow_incident_summary",
+        "remediation_steps", "rollback_or_safety_notes", "itsm_ticket_summary",
     }
     if not data:
         return _score(0.0, "response is not valid JSON")
@@ -132,14 +132,14 @@ def enterprise_escalation_reward(candidate_response: str | dict, reference_recor
     return _score(0.0, "cross-diagram incident missing enterprise escalation")
 
 
-def servicenow_summary_reward(candidate_response: str | dict, _reference_record: dict) -> dict:
+def itsm_ticket_reward(candidate_response: str | dict, _reference_record: dict) -> dict:
     data, _ = _parse(candidate_response)
-    snow = data.get("servicenow_incident_summary")
-    if not isinstance(snow, dict):
-        return _score(0.0, "ServiceNow summary missing")
+    itsm = data.get("itsm_ticket_summary")
+    if not isinstance(itsm, dict):
+        return _score(0.0, "ITSM summary missing")
     required = {"short_description", "description", "affected_ci", "priority", "assignment_group"}
-    present = {k for k in required if snow.get(k)}
-    return _score(len(present) / len(required), f"{len(present)}/{len(required)} ServiceNow fields present")
+    present = {k for k in required if itsm.get(k)}
+    return _score(len(present) / len(required), f"{len(present)}/{len(required)} ITSM fields present")
 
 
 REWARD_FNS = {
@@ -150,7 +150,7 @@ REWARD_FNS = {
     "validation_before_remediation": validation_before_remediation_reward,
     "rollback_safety": rollback_safety_reward,
     "enterprise_escalation": enterprise_escalation_reward,
-    "servicenow_summary": servicenow_summary_reward,
+    "itsm_ticket_summary": itsm_ticket_reward,
 }
 
 
@@ -163,7 +163,7 @@ def overall_reward(candidate_response: str | dict, reference_record: dict) -> di
         "validation_before_remediation": 0.12,
         "rollback_safety": 0.12,
         "enterprise_escalation": 0.08,
-        "servicenow_summary": 0.06,
+        "itsm_ticket_summary": 0.06,
     }
     details = {name: fn(candidate_response, reference_record) for name, fn in REWARD_FNS.items()}
     total = sum(weights[name] * details[name]["score"] for name in weights)

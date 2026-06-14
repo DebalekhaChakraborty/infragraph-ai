@@ -1,4 +1,4 @@
-# Scenario Library
+﻿# Scenario Library
 
 ## Why scenario_library/ exists
 
@@ -67,7 +67,7 @@ Each event contains: `event_id`, `time_offset_min`, `node`, `diagram_id`,
 **The following keys must NEVER appear in events.json:**
 `root_cause`, `root_cause_diagram`, `root_cause_pattern`, `recommended_actions`,
 `remediation_steps`, `triage_steps`, `rollback`, `rollback_or_safety_notes`,
-`servicenow`, `impacted_nodes`, `impacted_diagrams`, `impact_paths`,
+`itsm`, `impacted_nodes`, `impacted_diagrams`, `impact_paths`,
 `validation_steps`, `post_checks`, `pre_checks`.
 
 The build script enforces this with an explicit validation step and will exit
@@ -150,7 +150,7 @@ making the source location explicit.
 
 1. `events.json` feeds the simulation UI — it must contain only observable events.
 2. `labels.json` feeds ML training and evaluation — it must stay out of the UI.
-3. Remediation actions, rollback notes, ServiceNow summaries, and resolution plans
+3. Remediation actions, rollback notes, ITSM summaries, and resolution plans
    come **only** from the AI Resolution Agent (Qwen3/vLLM) at inference time.
 4. If a model or script needs to evaluate remediation quality, it reads
    `labels.json` and compares against the agent's output — it does not pre-load

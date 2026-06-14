@@ -1,4 +1,4 @@
----
+﻿---
 kb_id: RB-WAN-001
 runbook_id: WAN-001
 title: "WAN PE Link and MPLS/BGP Circuit Recovery"
@@ -76,7 +76,7 @@ Recover a WAN Provider Edge (PE) link or MPLS/BGP circuit that is down or degrad
 3. **Interface bounce (if Layer 1 / Layer 2 issue)**: `interface {interface_id} / shutdown / no shutdown` — disruptive, requires maintenance window and NOC approval. Warn downstream teams before execution.
 4. **Carrier escalation (if physical circuit is down)**: Open carrier ticket immediately with: circuit ID, failure start time, impacted sites. Request circuit restoration ETA.
 5. **Failover to backup circuit (if primary is unrecoverable)**: Modify route maps or adjust BGP local-preference to route traffic via backup: `route-map BACKUP-PATH permit 10 / set local-preference 200`. Requires NOC approval.
-6. **Update CMDB**: Log the change in ServiceNow with affected CI = WAN-PE-* node, circuit ID, and carrier ticket number.
+6. **Update CMDB**: Log the change in ITSM with affected CI = WAN-PE-* node, circuit ID, and carrier ticket number.
 
 ## Automation Hooks
 
@@ -101,7 +101,7 @@ Recover a WAN Provider Edge (PE) link or MPLS/BGP circuit that is down or degrad
 - Capture running configuration before any change: `show running-config | include {interface_id}`.
 - Do not modify BGP policies without the Network Engineering Manager's approval if > 1 site is impacted.
 - Carrier failover (diverting traffic to alternate circuit) must be coordinated with the carrier and NOC — do not make unilateral routing changes.
-- Maintain a carrier escalation ticket number in the ServiceNow incident for traceability.
+- Maintain a carrier escalation ticket number in the ITSM ticket for traceability.
 
 ## Do Not Execute If
 
@@ -110,7 +110,7 @@ Recover a WAN Provider Edge (PE) link or MPLS/BGP circuit that is down or degrad
 - An alternate/backup circuit is not available — do not remove the primary path without confirming a fallback exists.
 - A carrier maintenance window is already in progress on the circuit.
 
-## ServiceNow Routing
+## ITSM Routing
 
 - **Assignment Group**: Network Engineering — WAN Operations
 - **Category**: Network / WAN Circuit

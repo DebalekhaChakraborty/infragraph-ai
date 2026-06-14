@@ -1,4 +1,4 @@
-{
+﻿{
   "executive_summary": "Cross-diagram incident affecting 2 topology domain(s) (wan_topology, app_db_topology). 3 alert event(s) detected. Primary suspected root cause: WAN-PE-01 in wan_topology. Immediate triage recommended to validate and restore service.",
   "probable_root_cause": "WAN-PE-01 (in wan_topology)",
   "scope": "enterprise",
@@ -74,7 +74,7 @@
     "Stage changes in the least-critical diagram first; validate before proceeding."
   ],
   "escalation_recommendation": "Escalate to network engineering team if root-cause node cannot be restored within 30 minutes, or if the incident spans more than 3 topology domains. Notify on-call SRE if customer-facing services remain impacted.",
-  "servicenow_incident_summary": {
+  "itsm_ticket_summary": {
     "short_description": "[ENTERPRISE] Cross-diagram network incident — scenario enterprise_v3_0074; root cause: WAN-PE-01",
     "description": "Cross-diagram incident on scenario enterprise_v3_0074. Root cause: WAN-PE-01 (wan_topology). Impact: 2 diagram(s), 3 alert event(s). Impact path: WAN-PE-01 → WAN-PE-02 → APP-LB-01. Impacted nodes: WAN-PE-01, WAN-PE-02, APP-LB-01. RCA source: Enterprise GNN RCA. Status: Under investigation.",
     "affected_ci": "WAN-PE-01",

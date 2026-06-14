@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 predict_topology_rca.py — Run root-cause prediction for one topology RCA case.
 
@@ -44,7 +44,7 @@ from rca_ml.topology_model import (  # noqa: E402
 
 _FORBIDDEN_KEYS = frozenset({
     "recommended_actions", "remediation_steps", "resolution_steps",
-    "rollback_steps", "validation_steps", "servicenow_ticket",
+    "rollback_steps", "validation_steps", "itsm_ticket",
     "remediation", "resolution", "rollback",
     # top-level evaluation leakage (must be under "evaluation" key only)
     "expected_root_cause", "ground_truth_node", "correct",

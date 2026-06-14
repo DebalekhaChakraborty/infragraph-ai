@@ -1,4 +1,4 @@
----
+﻿---
 kb_id: RB-DC-FW-001
 runbook_id: DC-FW-001
 title: "Datacenter Firewall Packet Drop and ACL Recovery"
@@ -74,7 +74,7 @@ Recover a datacenter firewall experiencing packet drops due to ACL mismatches, s
 3. **CPU relief (if CPU overload)**: Identify and temporarily disable or tune the DPI inspection policy causing overload — do not remove security policies without explicit Security Ops sign-off. Consider offloading logging to a remote syslog if logging is the CPU consumer.
 4. **Emergency ACL revert (if a recent policy change caused the issue)**: Identify the last change: `show archive log config all | tail -20`. Revert with change management approval: `configure replace nvram:archive-{config_version}`.
 5. **Failover to backup firewall (if primary is unrecoverable)**: Activate the HA standby unit with NOC and Security Ops approval: `failover active` on the standby unit. Confirm state synchronisation before failover.
-6. **Update CMDB**: Log the change in ServiceNow with affected CI = DC-FW-* node, rule name, change type = Emergency Security Change.
+6. **Update CMDB**: Log the change in ITSM with affected CI = DC-FW-* node, rule name, change type = Emergency Security Change.
 
 ## Automation Hooks
 
@@ -109,7 +109,7 @@ Recover a datacenter firewall experiencing packet drops due to ACL mismatches, s
 - A scheduled firewall maintenance window is already in progress.
 - Change management approval has not been obtained.
 
-## ServiceNow Routing
+## ITSM Routing
 
 - **Assignment Group**: Network Engineering — Security Operations
 - **Category**: Security / Firewall

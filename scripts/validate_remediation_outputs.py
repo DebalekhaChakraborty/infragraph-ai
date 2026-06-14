@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 validate_remediation_outputs.py — Verify remediation output files are correct.
 
@@ -9,7 +9,7 @@ Validates each JSON for:
   - Required top-level envelope keys
   - Required nested remediation keys
   - Non-empty mandatory list fields
-  - Non-empty ServiceNow short_description
+  - Non-empty ITSM short_description
   - No forbidden evaluation-leakage keys anywhere
 
 Does NOT scan RCA output directories — those are checked by validate_rca_outputs.py.
@@ -62,7 +62,7 @@ _REQUIRED_REMEDIATION_KEYS: frozenset[str] = frozenset({
     "do_not_execute_if",
     "rollback_or_safety_notes",
     "escalation_recommendation",
-    "servicenow_incident_summary",
+    "itsm_ticket_summary",
     "audit_summary",
     "confidence_notes",
 })
@@ -136,11 +136,11 @@ def _check_file(path: Path) -> list[str]:
         if not isinstance(val, list) or len(val) == 0:
             violations.append(f"remediation[{key!r}] must be a non-empty list")
 
-    # ServiceNow short_description must be non-empty
-    snow = rem.get("servicenow_incident_summary", {})
-    if not isinstance(snow, dict) or not snow.get("short_description", "").strip():
+    # ITSM short_description must be non-empty
+    itsm = rem.get("itsm_ticket_summary", {})
+    if not isinstance(itsm, dict) or not itsm.get("short_description", "").strip():
         violations.append(
-            "remediation.servicenow_incident_summary.short_description must be non-empty"
+            "remediation.itsm_ticket_summary.short_description must be non-empty"
         )
 
     # evidence_from_graph must be non-empty

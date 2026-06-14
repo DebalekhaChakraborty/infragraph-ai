@@ -1,4 +1,4 @@
----
+﻿---
 kb_id: SOP-APP-LB-001
 title: "Application Load Balancer Backend Pool Unhealthy Response"
 doc_type: sop
@@ -86,7 +86,7 @@ Provide structured triage and remediation steps for incidents where an applicati
 
 - Do not remove a backend member from the pool unless it is confirmed unhealthy — premature removal reduces redundancy.
 - If adjusting health check parameters, revert immediately if the unhealthy member rate increases.
-- Document all changes applied to the load balancer configuration in the ServiceNow record.
+- Document all changes applied to the load balancer configuration in the ITSM record.
 - Coordinate with the application team before restarting backend services — some applications have warm-up periods that affect response time after restart.
 - Notify database team if the triage reveals database-tier involvement — escalate concurrently per SOP-DB-001.
 
@@ -97,7 +97,7 @@ Provide structured triage and remediation steps for incidents where an applicati
 - A database-tier incident is in progress — resolve the database issue first before attempting load balancer remediation.
 - The alert timestamps are stale (more than 1 hour old without active alert recurrence).
 
-## ServiceNow Routing
+## ITSM Routing
 
 - **Assignment Group**: Platform Engineering — Application Delivery
 - **Category**: Application / Load Balancer

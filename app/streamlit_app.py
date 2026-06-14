@@ -1,4 +1,4 @@
-"""
+﻿"""
 InfraGraph AI Command Center — Streamlit cockpit.
 
 Two sections in Diagram Intelligence (Tab 1):
@@ -2231,10 +2231,10 @@ def _render_remediation_plan(plan: dict) -> None:
     _section_card("Rollback / Safety", resp.get("rollback_or_safety_notes", []), accent="#f97316")
     _text_card("Escalation Recommendation", resp.get("escalation_recommendation", ""), accent="#a78bfa")
 
-    snow = resp.get("servicenow_incident_summary")
-    if snow:
-        if isinstance(snow, dict):
-            snow_lines = []
+    itsm = resp.get("itsm_ticket_summary")
+    if itsm:
+        if isinstance(itsm, dict):
+            itsm_lines = []
             for key, label in [
                 ("short_description", "Short description"),
                 ("description", "Description"),
@@ -2242,11 +2242,11 @@ def _render_remediation_plan(plan: dict) -> None:
                 ("priority", "Priority"),
                 ("assignment_group", "Assignment group"),
             ]:
-                if snow.get(key):
-                    snow_lines.append(f"{label}: {snow[key]}")
-            _section_card("ITSM Ticket", snow_lines, accent="#64748b")
+                if itsm.get(key):
+                    itsm_lines.append(f"{label}: {itsm[key]}")
+            _section_card("ITSM Ticket", itsm_lines, accent="#64748b")
         else:
-            _text_card("ITSM Ticket", snow, accent="#64748b")
+            _text_card("ITSM Ticket", itsm, accent="#64748b")
 
     _text_card("Audit Summary", resp.get("audit_summary", ""), accent="#94a3b8")
     _text_card("Confidence Notes", resp.get("confidence_notes", ""), accent="#94a3b8")
@@ -4562,19 +4562,19 @@ def _tab_local_rca() -> None:
         with _col_lb:
             if _loc_plan and st.button(
                 "View ITSM Ticket",
-                key="local_snow_btn",
+                key="local_itsm_btn",
             ):
                 _loc_resp = _loc_plan.get("response", {})
-                _loc_snow = _loc_resp.get("servicenow_incident_summary", {})
-                if isinstance(_loc_snow, dict) and _loc_snow.get("short_description"):
+                _loc_itsm = _loc_resp.get("itsm_ticket_summary", {})
+                if isinstance(_loc_itsm, dict) and _loc_itsm.get("short_description"):
                     st.info(
-                        f"**{_loc_snow.get('short_description','')}**\n\n"
-                        f"{_loc_snow.get('description','')}\n\n"
-                        f"Priority: {_loc_snow.get('priority','')} | "
-                        f"Assignment: {_loc_snow.get('assignment_group','')}"
+                        f"**{_loc_itsm.get('short_description','')}**\n\n"
+                        f"{_loc_itsm.get('description','')}\n\n"
+                        f"Priority: {_loc_itsm.get('priority','')} | "
+                        f"Assignment: {_loc_itsm.get('assignment_group','')}"
                     )
-                elif _loc_snow:
-                    st.code(str(_loc_snow), language="text")
+                elif _loc_itsm:
+                    st.code(str(_loc_itsm), language="text")
 
         # Honesty banner + provenance proof
         if _loc_plan:
@@ -5939,18 +5939,18 @@ def _tab_gnn_rca() -> None:
 
         with _col_r2:
             if _rem_plan and st.button(
-                "View ITSM Ticket", key="gen_snow_btn", type="secondary"
+                "View ITSM Ticket", key="gen_itsm_btn", type="secondary"
             ):
-                _snow = (_rem_plan.get("response") or {}).get("servicenow_incident_summary")
-                if isinstance(_snow, dict) and _snow.get("short_description"):
+                _itsm = (_rem_plan.get("response") or {}).get("itsm_ticket_summary")
+                if isinstance(_itsm, dict) and _itsm.get("short_description"):
                     st.info(
-                        f"**{_snow.get('short_description','')}**\n\n"
-                        f"{_snow.get('description','')}\n\n"
-                        f"Priority: {_snow.get('priority','')} | "
-                        f"Assignment: {_snow.get('assignment_group','')}"
+                        f"**{_itsm.get('short_description','')}**\n\n"
+                        f"{_itsm.get('description','')}\n\n"
+                        f"Priority: {_itsm.get('priority','')} | "
+                        f"Assignment: {_itsm.get('assignment_group','')}"
                     )
-                elif _snow:
-                    st.code(str(_snow), language="text")
+                elif _itsm:
+                    st.code(str(_itsm), language="text")
 
     elif not _has_context:
         st.caption(
@@ -6251,7 +6251,7 @@ def _deterministic_graph_copilot(question: str, context: dict) -> str:
         active_path = ent_path or local_path
         return (f"Impact path: {' → '.join(active_path)}" if active_path
                 else "No impact path loaded — run Enterprise GNN RCA or Topology RCA first.")
-    if "servicenow" in q or "incident" in q or "snow" in q:
+    if "itsm" in q or "incident" in q or "ticket" in q:
         root = ent_rca.get("root_cause", "unknown")
         return (
             "### ITSM Ticket\n\n"
@@ -6285,7 +6285,7 @@ def _deterministic_graph_copilot(question: str, context: dict) -> str:
         f"- Enterprise root cause: `{ent_rca.get('root_cause', 'not simulated yet')}`\n"
         f"- RCA mode: {ent_rca.get('mode', 'not simulated yet')}\n\n"
         + (f"Retrieved graph memory evidence:\n{retrieved_text}\n\n" if retrieved_text else "")
-        + "Ask: root cause | stitched | absorbed | shared | cross-diagram | path | servicenow | l1"
+        + "Ask: root cause | stitched | absorbed | shared | cross-diagram | path | itsm | l1"
     )
 
 
@@ -6533,7 +6533,7 @@ The GNN identified **FW-01** as root cause with score **30.733** (margin +8.12 o
 | Upstream neighbours | RTR-01, RTR-02 — both silent |
 | GNN score margin | 30.733 vs 22.613 (FW-02) |"""
 
-    if any(kw in q for kw in ["servicenow", "ticket", "snow", "p1"]):
+    if any(kw in q for kw in ["itsm", "ticket", "p1"]):
         return """\
 **ITSM Ticket:**
 

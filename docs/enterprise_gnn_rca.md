@@ -1,10 +1,10 @@
-# Enterprise GNN RCA Pipeline
+﻿# Enterprise GNN RCA Pipeline
 
 Graph neural network that predicts the root-cause node in an enterprise
 multi-diagram topology from observable event streams.
 
 Output: ranked node list with confidence scores.
-No remediation, no validation steps, no rollback, no ServiceNow output.
+No remediation, no validation steps, no rollback, no ITSM output.
 Those are generated later by the AI Resolution Agent.
 
 ---
@@ -304,7 +304,7 @@ that appear in multiple diagrams).  `"diagram_id"` in the result uses the
 earliest-event diagram, not the canonical node diagram.
 
 The output never contains: `remediation`, `recommended_actions`, `remediation_steps`,
-`resolution_steps`, `rollback_steps`, `validation_steps`, `servicenow_incident_summary`.
+`resolution_steps`, `rollback_steps`, `validation_steps`, `itsm_ticket_summary`.
 Remediation is generated later by the AI Resolution Agent, not pre-computed here.
 
 `"rca_source": "Enterprise GNN RCA"` is applied only when a trained `.pt` model

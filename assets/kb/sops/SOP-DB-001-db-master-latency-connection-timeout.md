@@ -1,4 +1,4 @@
----
+﻿---
 kb_id: SOP-DB-001
 title: "Database Master Node Latency and Connection Timeout Response"
 doc_type: sop
@@ -92,7 +92,7 @@ Provide structured triage and remediation steps for incidents where the database
 
 - Never kill a session without DBA approval and without first capturing the session's query and wait state.
 - Do not reduce `max_connections` at the database level without coordinating with all application teams that share the database.
-- Document every session killed and configuration change applied in the ServiceNow record.
+- Document every session killed and configuration change applied in the ITSM record.
 - If a connection pool parameter is changed in the application, ensure the original value is recorded for rollback.
 - Notify the application team before terminating sessions — some application frameworks do not handle unexpected session termination gracefully.
 
@@ -103,7 +103,7 @@ Provide structured triage and remediation steps for incidents where the database
 - A current deployment or schema migration is in progress — killing sessions may corrupt in-flight DDL operations.
 - The incident has been open for more than 2 hours without active alerts — validate the incident is still ongoing.
 
-## ServiceNow Routing
+## ITSM Routing
 
 - **Assignment Group**: Database Engineering — Data Platform
 - **Category**: Database / Performance
