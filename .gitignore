@@ -36,3 +36,10 @@ model_artifacts/qwen_lora/
 data/qwen_sop_grounded/
 data/qwen_sop_grounded_expanded/
 data/remediation_training/
+
+# RF-DETR / model binaries stay in S3 or local runtime, not Git
+model_artifacts/**/*.pth
+model_artifacts/**/*.pt
+model_artifacts/**/*.ckpt
+model_artifacts/**/*.safetensors
+model_artifacts/**/*.bin

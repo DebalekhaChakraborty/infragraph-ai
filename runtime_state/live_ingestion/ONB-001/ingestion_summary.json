@@ -1,0 +1,67 @@
+{
+  "diagram_id": "branch_topology",
+  "run_id": "ONB-001",
+  "source": "verified training annotation / safe curated sample",
+  "detection_source": "Verified Annotation Overlay",
+  "runtime_mode": "VERIFIED_ANNOTATION_FALLBACK",
+  "node_count": 8,
+  "edge_count": 7,
+  "annotation_preview": {
+    "rendered": true,
+    "boxes_rendered": 8,
+    "boxes_skipped": 0,
+    "boxes_skipped_large": 0,
+    "connectors_rendered": 0,
+    "connectors_skipped": 7,
+    "connectors_skipped_long": 0,
+    "overlay_mode": "clean",
+    "draw_connectors": false,
+    "renderer_version": "v3_clean_overlay_v1",
+    "out_path": "/workspace/shared/infragraph-ai/runtime_state/live_ingestion/ONB-001/detected.png",
+    "meta_path": "/workspace/shared/infragraph-ai/runtime_state/live_ingestion/ONB-001/detected.meta.json"
+  },
+  "rfdetr_inference_time_s": 0.0,
+  "rfdetr_error": "Could not load checkpoint /workspace/shared/infragraph-ai/model_artifacts/qwen_lora/infragraph_sop_grounded/checkpoint-33/rng_state.pth with any strategy: Weights only load failed. This file can still be loaded, to do so you have two options, \u001b[1mdo those steps only if you trust the source of the checkpoint\u001b[0m. \n\t(1) In PyTorch 2.6, we changed the default value of the `weights_only` argument in `torch.load` from `False` to `True`. Re-running `torch.load` with `weights_only` set to `False` will likely succeed, but it can result in arbitrary code execution. Do it only if you got the file from a trusted source.\n\t(2) Alternatively, to load with `weights_only=True` please check the recommended steps in the following error message.\n\tWeightsUnpickler error: Unsupported global: GLOBAL numpy._core.multiarray._reconstruct was not an allowed global by default. Please use `torch.serialization.add_safe_globals([numpy._core.multiarray._reconstruct])` or the `torch.serialization.safe_globals([numpy._core.multiarray._reconstruct])` context manager to allowlist this global if you trust this class/function.\n\nCheck the documentation of torch.load to learn more about types accepted by default with weights_only https://pytorch.org/docs/stable/generated/torch.load.html.",
+  "use_live_rfdetr": false,
+  "rfdetr_subprocess": {
+    "ok": false,
+    "source": "live_rfdetr_subprocess",
+    "error": "Could not load checkpoint /workspace/shared/infragraph-ai/model_artifacts/qwen_lora/infragraph_sop_grounded/checkpoint-33/rng_state.pth with any strategy: Weights only load failed. This file can still be loaded, to do so you have two options, \u001b[1mdo those steps only if you trust the source of the checkpoint\u001b[0m. \n\t(1) In PyTorch 2.6, we changed the default value of the `weights_only` argument in `torch.load` from `False` to `True`. Re-running `torch.load` with `weights_only` set to `False` will likely succeed, but it can result in arbitrary code execution. Do it only if you got the file from a trusted source.\n\t(2) Alternatively, to load with `weights_only=True` please check the recommended steps in the following error message.\n\tWeightsUnpickler error: Unsupported global: GLOBAL numpy._core.multiarray._reconstruct was not an allowed global by default. Please use `torch.serialization.add_safe_globals([numpy._core.multiarray._reconstruct])` or the `torch.serialization.safe_globals([numpy._core.multiarray._reconstruct])` context manager to allowlist this global if you trust this class/function.\n\nCheck the documentation of torch.load to learn more about types accepted by default with weights_only https://pytorch.org/docs/stable/generated/torch.load.html.",
+    "python_executable": "/usr/bin/python",
+    "checkpoint_path": "/workspace/shared/infragraph-ai/model_artifacts/qwen_lora/infragraph_sop_grounded/checkpoint-33/rng_state.pth",
+    "image_path": "/workspace/shared/infragraph-ai/assets/onboarding/ONB-001/original.png",
+    "detector_runtime_mode": "live_rfdetr_subprocess",
+    "python_resolution": {
+      "python_resolution_mode": "common_candidate",
+      "python_executable": "/usr/bin/python",
+      "requested_detector_python": "common detector candidates",
+      "resolved_detector_python": "/usr/bin/python",
+      "resolved_from_env": false,
+      "resolved_from_path": false,
+      "streamlit_python": "/workspace/shared/venvs/infragraph-app/bin/python",
+      "fallback_reason": "INFRAGRAPH_RFDETR_PYTHON unset and INFRAGRAPH_RFDETR_USE_PATH_PYTHON is not 1",
+      "runtime": {
+        "ok": true,
+        "import_ok": true,
+        "requested_python": "/usr/bin/python",
+        "python_executable": "/usr/bin/python",
+        "returncode": 0,
+        "stdout": "/usr/bin/python\nTrue\n",
+        "stderr_preview": "",
+        "error": ""
+      }
+    },
+    "returncode": 5,
+    "stdout_preview": "[2026-06-13 23:43:44] [INFO] rf-detr - File /root/.roboflow/models/rf-detr-base.pth already exists with correct MD5 hash.\n[2026-06-13 23:43:59] [INFO] rf-detr - File /root/.roboflow/models/rf-detr-base.pth already exists with correct MD5 hash.\n",
+    "stderr_preview": "/usr/local/lib/python3.12/dist-packages/deprecate/proxy.py:168: FutureWarning: The `RFDETRBase` was deprecated since v1.7.0. It will be removed in v2.0.0.\n  stream(msg)\n",
+    "fallback_reason": "HTTP RF-DETR service unavailable: HTTP 500: {\n  \"ok\": false,\n  \"source\": \"live_rfdetr_http_service\",\n  \"error\": \"Could not load checkpoint /workspace/shared/infragraph-ai/model_artifacts/qwen_lora/infragraph_sop_grounded/checkpoint-33/rng_state.pth with any strategy: Weights only load failed. This file can still be loaded, to do so you have two options, \\u001b[1mdo those steps only if you trust the source of the checkpoint\\u001b[0m. \\n\\t(1) In PyTorch 2.6, we changed the default value of the `weights_only` argument in `torch.load` from `False` to `True`. Re-running `torch.load` with `weights_only` set to `False` will likely succeed, but it can result in arbitrary code execution. Do it only if you got the file from a trusted source.\\n\\t(2) Alternatively, to load with `weights_only=True` please check the recommended steps in the following error message.\\n\\tWeightsUnpickler error: Unsupported global: GLOBAL numpy._core.multiarray._reconstruct was not an allowed global by default. Please use `torch.serialization.add_safe_globals([numpy._core.multiarray._reconstruct])` or the `torch.serialization.safe_globals([numpy._core.multiarray._reconstruct])` context manager to allowlist this global if you trust this class/function.\\n\\nChec; subprocess unavailable: Could not load checkpoint /workspace/shared/infragraph-ai/model_artifacts/qwen_lora/infragraph_sop_grounded/checkpoint-33/rng_state.pth with any strategy: Weights only load failed. This file can still be loaded, to do so you have two options, \u001b[1mdo those steps only if you trust the source of the checkpoint\u001b[0m. \n\t(1) In PyTorch 2.6, we changed the default value of the `weights_only` argument in `torch.load` from `False` to `True`. Re-running `torch.load` with `weights_only` set to `False` will likely succeed, but it can result in arbitrary code execution. Do it only if you got the file from a trusted source.\n\t(2) Alternatively, to load with `weights_only=True` please check the recommended steps in the following error message.\n\tWeightsUnpickler error: Unsupported global: GLOBAL numpy._core.multiarray._reconstruct was not an allowed global by default. Please use `torch.serialization.add_safe_globals([numpy._core.multiarray._reconstruct])` or the `torch.serialization.safe_globals([numpy._core.multiarray._reconstruct])` context manager to allowlist this global if you trust this class/function.\n\nCheck the documentation of torch.load to learn more about types accepted by default with weights_only https://pytorch.org/docs/stable/generated/torch.load.html.",
+    "http_attempt": {
+      "ok": false,
+      "source": "live_rfdetr_http_service",
+      "service_url": "http://127.0.0.1:8010",
+      "error": "HTTP 500: {\n  \"ok\": false,\n  \"source\": \"live_rfdetr_http_service\",\n  \"error\": \"Could not load checkpoint /workspace/shared/infragraph-ai/model_artifacts/qwen_lora/infragraph_sop_grounded/checkpoint-33/rng_state.pth with any strategy: Weights only load failed. This file can still be loaded, to do so you have two options, \\u001b[1mdo those steps only if you trust the source of the checkpoint\\u001b[0m. \\n\\t(1) In PyTorch 2.6, we changed the default value of the `weights_only` argument in `torch.load` from `False` to `True`. Re-running `torch.load` with `weights_only` set to `False` will likely succeed, but it can result in arbitrary code execution. Do it only if you got the file from a trusted source.\\n\\t(2) Alternatively, to load with `weights_only=True` please check the recommended steps in the following error message.\\n\\tWeightsUnpickler error: Unsupported global: GLOBAL numpy._core.multiarray._reconstruct was not an allowed global by default. Please use `torch.serialization.add_safe_globals([numpy._core.multiarray._reconstruct])` or the `torch.serialization.safe_globals([numpy._core.multiarray._reconstruct])` context manager to allowlist this global if you trust this class/function.\\n\\nChec",
+      "checkpoint_path": "/workspace/shared/infragraph-ai/model_artifacts/qwen_lora/infragraph_sop_grounded/checkpoint-33/rng_state.pth",
+      "image_path": "/workspace/shared/infragraph-ai/assets/onboarding/ONB-001/original.png"
+    }
+  }
+}

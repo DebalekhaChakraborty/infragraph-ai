@@ -1,0 +1,29 @@
+# ============================================================
+# InfraGraph AI — Streamlit app runtime dependencies
+# ============================================================
+# Purpose:
+#   Run app/streamlit_app.py and the demo cockpit UI.
+#
+# Notes:
+#   - Do NOT pin torch here.
+#   - Do NOT install vLLM here.
+#   - Qwen/LoRA is served separately through vLLM.
+#   - Streamlit only calls the vLLM HTTP endpoint.
+# ============================================================
+
+streamlit>=1.37.0
+pandas>=2.0.0
+numpy>=1.24.0
+matplotlib>=3.7.0
+networkx>=3.0
+pillow>=10.0.0
+requests>=2.31.0
+
+# RAG / SOP retrieval used by remediation flows
+chromadb>=0.5.0
+sentence-transformers>=3.0.0
+scikit-learn>=1.2.0
+
+# Useful for JSON/data handling and notebook-friendly app execution
+pyarrow>=14.0.0
+protobuf<7.0.0

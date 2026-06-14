@@ -1,0 +1,24 @@
+{
+  "diagram_id": "wan_topology",
+  "run_id": "ONB-006",
+  "detection_source": "Verified Annotation Overlay",
+  "node_count": 8,
+  "edge_count": 7,
+  "annotation_preview": {
+    "rendered": true,
+    "boxes_rendered": 8,
+    "boxes_skipped": 0,
+    "boxes_skipped_large": 0,
+    "connectors_rendered": 0,
+    "connectors_skipped": 7,
+    "connectors_skipped_long": 0,
+    "overlay_mode": "clean",
+    "draw_connectors": false,
+    "renderer_version": "v3_clean_overlay_v1",
+    "out_path": "/workspace/shared/infragraph-ai/runtime_state/live_ingestion/ONB-006/detected.png",
+    "meta_path": "/workspace/shared/infragraph-ai/runtime_state/live_ingestion/ONB-006/detected.meta.json"
+  },
+  "rfdetr_inference_time_s": 0.012,
+  "rfdetr_error": "rfdetr not installed: No module named 'rfdetr'",
+  "use_live_rfdetr": true
+}
