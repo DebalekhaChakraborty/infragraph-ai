@@ -4369,11 +4369,6 @@ def _tab_onboard_new_diagram() -> None:
                     '</div>',
                     unsafe_allow_html=True,
                 )
-                st.success(
-                    f"Ingestion complete — {pkt.get('node_count', 0)} nodes, "
-                    f"{pkt.get('edge_count', 0)} edges. "
-                    "Proceed to Tab 2 (Topology RCA) or Tab 3 (Enterprise Brain)."
-                )
             # Ingestion just completed — the selected sample is now active.
             # is_this_sample_active was computed before the button ran (stale),
             # so force it to True so _tab_diagram_outputs_section() renders below.
