@@ -4382,17 +4382,7 @@ def _tab_onboard_new_diagram() -> None:
                         "".join(_runtime_lines),
                         unsafe_allow_html=True,
                     )
-                    _det_rows = []
-                    for _det in _external_rfdetr_result.get("detections", []):
-                        _bbox = _det.get("bbox", {})
-                        _det_rows.append({
-                            "label": _det.get("label", ""),
-                            "device_type": _det.get("device_type", ""),
-                            "confidence": _det.get("confidence", ""),
-                            "bbox": str(_bbox),
-                        })
-                    if _det_rows:
-                        st.dataframe(_pd.DataFrame(_det_rows), use_container_width=True, hide_index=True)
+                    # Detection rows shown in Graph Memory Extracted → Devices tab below
                 elif _external_rfdetr_result:
                     st.warning("Live RF-DETR unavailable — using verified annotation fallback")
                     st.caption(f"RF-DETR error: {_external_rfdetr_result.get('error', 'unknown error')}")
