@@ -1,0 +1,233 @@
+{
+  "run_id": "run-a7ebaeca6180",
+  "scenario_id": "enterprise_v3_0000",
+  "selected_diagram_id": "enterprise_v3_0000",
+  "mode": "demo",
+  "started_at": "2026-06-14T18:07:40.619670+00:00",
+  "completed_at": "2026-06-14T18:07:40.989722+00:00",
+  "status": "success",
+  "alert_source": "simulated_topology_aware_alerts",
+  "topology_source": "scenario:enterprise_v3_0000",
+  "rca_source": "scenario_grounded_graph_fallback",
+  "remediation_source": "template",
+  "steps": [
+    {
+      "step_id": 1,
+      "agent_name": "Alert Intake Agent",
+      "objective": "Simulate topology-aware alert stream from selected infrastructure diagram",
+      "tool_name": "simulate_alert_intake",
+      "status": "success",
+      "started_at": "2026-06-14T18:07:40.619670+00:00",
+      "completed_at": "2026-06-14T18:07:40.985704+00:00",
+      "summary": "Generated 4 alert event(s). Source: simulated_topology_aware_alerts.",
+      "evidence": [
+        "Alert source: simulated_topology_aware_alerts",
+        "4 event(s)"
+      ],
+      "payload": {
+        "alert_count": 4,
+        "diagram_id": "enterprise_v3_0000"
+      }
+    },
+    {
+      "step_id": 2,
+      "agent_name": "Topology Context Agent",
+      "objective": "Load enterprise graph: nodes, edges, diagram domains",
+      "tool_name": "load_selected_context",
+      "status": "success",
+      "started_at": "2026-06-14T18:07:40.985704+00:00",
+      "completed_at": "2026-06-14T18:07:40.985704+00:00",
+      "summary": "36 nodes, 58 intra-diagram edges, 11 cross-diagram edges across 0 domain(s). Source: scenario:enterprise_v3_0000.",
+      "evidence": [
+        "Topology source: scenario:enterprise_v3_0000",
+        "Scenario: enterprise_v3_0000",
+        "Diagram: enterprise_v3_0000",
+        "36 nodes | 58 edges | 11 cross-diagram edges"
+      ],
+      "payload": {
+        "node_count": 36,
+        "edge_count": 58,
+        "cross_edge_count": 11,
+        "domain_count": 0
+      }
+    },
+    {
+      "step_id": 3,
+      "agent_name": "Correlation Agent",
+      "objective": "Map alerts to cross-diagram topology; build enterprise incident scope",
+      "tool_name": "simulate_enterprise_alert_intake",
+      "status": "success",
+      "started_at": "2026-06-14T18:07:40.985704+00:00",
+      "completed_at": "2026-06-14T18:07:40.985704+00:00",
+      "summary": "Enterprise incident built. 4 impacted diagram(s), 5 correlated alert(s).",
+      "evidence": [
+        "Cross-diagram scope: 4 diagram(s)",
+        "Correlated alerts: 5",
+        "Incident ID: ENT-41D3FB75"
+      ],
+      "payload": {
+        "impacted_diagram_count": 4
+      }
+    },
+    {
+      "step_id": 4,
+      "agent_name": "RCA Agent",
+      "objective": "Load Enterprise GNN RCA (fallback: scenario-grounded graph RCA)",
+      "tool_name": "load_or_run_enterprise_gnn_rca",
+      "status": "warning",
+      "started_at": "2026-06-14T18:07:40.985704+00:00",
+      "completed_at": "2026-06-14T18:07:40.986722+00:00",
+      "summary": "GNN RCA unavailable \u2014 using scenario-grounded fallback. Root cause: 'DC-FW-01'. No GNN RCA result for scenario 'enterprise_v3_0000'. Model exists \u2014 run inference first.",
+      "evidence": [
+        "RCA source: scenario-grounded graph fallback (GNN not available)",
+        "Root cause (fallback): DC-FW-01",
+        "No GNN RCA result for scenario 'enterprise_v3_0000'. Model exists \u2014 run inference first."
+      ],
+      "payload": {
+        "root_cause": "DC-FW-01",
+        "confidence": 0.5,
+        "rca_source": "scenario_grounded_graph_fallback"
+      }
+    },
+    {
+      "step_id": 5,
+      "agent_name": "Evidence Validation Agent",
+      "objective": "Deterministically validate RCA with graph and alert evidence \u2014 no LLM",
+      "tool_name": "validate_rca_evidence",
+      "status": "success",
+      "started_at": "2026-06-14T18:07:40.986722+00:00",
+      "completed_at": "2026-06-14T18:07:40.986722+00:00",
+      "summary": "Validated 8 evidence point(s). 5 alert(s), 4 impacted diagram(s).",
+      "evidence": [
+        "5 alert event(s) in simulated timeline",
+        "36 nodes, 58 intra-diagram edges in enterprise graph",
+        "11 cross-diagram edge(s) detected",
+        "4 diagram(s) impacted: branch_topology, app_db_topology, shared_services_topology, datacenter_topology",
+        "Propagation path: DC-FW-01 \u2192 DC-CORE-SW-01 \u2192 DC-AGG-SW-01 \u2192 APP-LB-01 \u2192 APP-01 \u2192 SERVICE-API-01",
+        "Candidate: ? (score 0.97)",
+        "Candidate: ? (score 0.68)",
+        "Candidate: ? (score 0.62)"
+      ],
+      "payload": {
+        "alert_count": 5,
+        "impacted_count": 4
+      }
+    },
+    {
+      "step_id": 6,
+      "agent_name": "Remediation Agent",
+      "objective": "Generate SOP-grounded remediation using Qwen/vLLM or template fallback",
+      "tool_name": "generate_ai_remediation",
+      "status": "success",
+      "started_at": "2026-06-14T18:07:40.986722+00:00",
+      "completed_at": "2026-06-14T18:07:40.986722+00:00",
+      "summary": "Remediation generated. Source: template. Qwen/vLLM: False.",
+      "evidence": [
+        "Remediation source: template",
+        "Qwen/vLLM: no \u2014 template fallback used"
+      ],
+      "payload": {
+        "source": "template",
+        "qwen_used": false
+      }
+    },
+    {
+      "step_id": 7,
+      "agent_name": "ITSM Draft Agent",
+      "objective": "Generate demo ITSM ticket draft \u2014 no external ITSM API called",
+      "tool_name": "draft_itsm_ticket",
+      "status": "success",
+      "started_at": "2026-06-14T18:07:40.986722+00:00",
+      "completed_at": "2026-06-14T18:07:40.987720+00:00",
+      "summary": "Demo ticket: DEMO-INC-AD68DF | P1 \u2014 Critical. No external system contacted.",
+      "evidence": [
+        "Ticket ID: DEMO-INC-AD68DF",
+        "Priority: P1 \u2014 Critical",
+        "Assignment: Network Operations \u2014 Tier 3",
+        "DEMO ONLY \u2014 no real ITSM ticket created"
+      ],
+      "payload": {
+        "ticket_id": "DEMO-INC-AD68DF",
+        "priority": "P1 \u2014 Critical"
+      }
+    },
+    {
+      "step_id": 8,
+      "agent_name": "Human Approval Agent",
+      "objective": "Require human review and approval before any remediation is executed",
+      "tool_name": "approval_gate",
+      "status": "success",
+      "started_at": "2026-06-14T18:07:40.987720+00:00",
+      "completed_at": "2026-06-14T18:07:40.989722+00:00",
+      "summary": "Approval gate set. Risk: high. Status: pending. Human action required.",
+      "evidence": [
+        "Risk level: high",
+        "Reason: 4 diagrams impacted with 50% confidence",
+        "No auto-execution \u2014 approval required"
+      ],
+      "payload": {
+        "required": true,
+        "status": "pending",
+        "risk_level": "high",
+        "reason": "4 diagrams impacted with 50% confidence",
+        "recommended_next_action": "Review the agent trace and validate root cause, then approve or reject the remediation before any execution."
+      }
+    },
+    {
+      "step_id": 9,
+      "agent_name": "Final Summary Agent",
+      "objective": "Produce executive summary of end-to-end agentic incident flow",
+      "tool_name": "final_summary",
+      "status": "success",
+      "started_at": "2026-06-14T18:07:40.989722+00:00",
+      "completed_at": "2026-06-14T18:07:40.989722+00:00",
+      "summary": "InfraGraph AI detected a cross-diagram infrastructure incident. Root cause: 'DC-FW-01' in 'datacenter_topology' (confidence 50%, source: scenario_grounded_graph_fallback). 4 diagram(s) impacted. Remediation: template. Ticket DEMO-INC-AD68DF drafted (P1 \u2014 Critical). Human approval: pending.",
+      "evidence": [
+        "Root cause: DC-FW-01",
+        "Confidence: 50%",
+        "RCA source: scenario_grounded_graph_fallback",
+        "Remediation source: template",
+        "Ticket: DEMO-INC-AD68DF (P1 \u2014 Critical)",
+        "Approval: pending"
+      ],
+      "payload": {
+        "run_id": "run-a7ebaeca6180"
+      }
+    }
+  ],
+  "final_summary": "InfraGraph AI detected a cross-diagram infrastructure incident. Root cause: 'DC-FW-01' in 'datacenter_topology' (confidence 50%, source: scenario_grounded_graph_fallback). 4 diagram(s) impacted. Remediation: template. Ticket DEMO-INC-AD68DF drafted (P1 \u2014 Critical). Human approval: pending.",
+  "root_cause": "DC-FW-01",
+  "root_cause_diagram": "datacenter_topology",
+  "confidence": 0.5,
+  "impacted_diagrams": [
+    "branch_topology",
+    "app_db_topology",
+    "shared_services_topology",
+    "datacenter_topology"
+  ],
+  "approval_gate": {
+    "required": true,
+    "status": "pending",
+    "risk_level": "high",
+    "reason": "4 diagrams impacted with 50% confidence",
+    "recommended_next_action": "Review the agent trace and validate root cause, then approve or reject the remediation before any execution."
+  },
+  "ticket_draft": {
+    "ticket_id": "DEMO-INC-AD68DF",
+    "short_description": "[InfraGraph AI] Cross-diagram fault \u2014 root cause: DC-FW-01",
+    "description": "InfraGraph AI detected a cross-diagram infrastructure incident affecting 4 topology domain(s). Root cause: 'DC-FW-01' via scenario_grounded_graph_fallback (confidence: 50%). Remediation: template.\n\nImpacted: branch_topology, app_db_topology, shared_services_topology, datacenter_topology.\n\nDEMO ONLY \u2014 no external ITSM system was contacted. Human approval required before execution.",
+    "priority": "P1 \u2014 Critical",
+    "category": "Infrastructure / Network",
+    "assignment_group": "Network Operations \u2014 Tier 3",
+    "affected_ci": "DC-FW-01",
+    "impacted_diagrams": [
+      "branch_topology",
+      "app_db_topology",
+      "shared_services_topology",
+      "datacenter_topology"
+    ],
+    "evidence_summary": "\u2022 5 alert event(s) in simulated timeline\n\u2022 36 nodes, 58 intra-diagram edges in enterprise graph\n\u2022 11 cross-diagram edge(s) detected\n\u2022 4 diagram(s) impacted: branch_topology, app_db_topology, shared_services_topology, datacenter_topology\n\u2022 Propagation path: DC-FW-01 \u2192 DC-CORE-SW-01 \u2192 DC-AGG-SW-01 \u2192 APP-LB-01 \u2192 APP-01 \u2192 SERVICE-API-01\n\u2022 Candidate: ? (score 0.97)\n\u2022 Candidate: ? (score 0.68)\n\u2022 Candidate: ? (score 0.62)",
+    "remediation_summary": "",
+    "approval_status": "pending"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "ticket_id": "DEMO-INC-AD68DF",
+  "short_description": "[InfraGraph AI] Cross-diagram fault \u2014 root cause: DC-FW-01",
+  "description": "InfraGraph AI detected a cross-diagram infrastructure incident affecting 4 topology domain(s). Root cause: 'DC-FW-01' via scenario_grounded_graph_fallback (confidence: 50%). Remediation: template.\n\nImpacted: branch_topology, app_db_topology, shared_services_topology, datacenter_topology.\n\nDEMO ONLY \u2014 no external ITSM system was contacted. Human approval required before execution.",
+  "priority": "P1 \u2014 Critical",
+  "category": "Infrastructure / Network",
+  "assignment_group": "Network Operations \u2014 Tier 3",
+  "affected_ci": "DC-FW-01",
+  "impacted_diagrams": [
+    "branch_topology",
+    "app_db_topology",
+    "shared_services_topology",
+    "datacenter_topology"
+  ],
+  "evidence_summary": "\u2022 5 alert event(s) in simulated timeline\n\u2022 36 nodes, 58 intra-diagram edges in enterprise graph\n\u2022 11 cross-diagram edge(s) detected\n\u2022 4 diagram(s) impacted: branch_topology, app_db_topology, shared_services_topology, datacenter_topology\n\u2022 Propagation path: DC-FW-01 \u2192 DC-CORE-SW-01 \u2192 DC-AGG-SW-01 \u2192 APP-LB-01 \u2192 APP-01 \u2192 SERVICE-API-01\n\u2022 Candidate: ? (score 0.97)\n\u2022 Candidate: ? (score 0.68)\n\u2022 Candidate: ? (score 0.62)",
+  "remediation_summary": "",
+  "approval_status": "pending"
+}
