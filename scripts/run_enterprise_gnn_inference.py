@@ -2,22 +2,21 @@
 """
 run_enterprise_gnn_inference.py
 
-Run Enterprise GNN RCA inference for a specific V3 scenario using a
-previously trained model checkpoint.  Does NOT retrain the model.
+Run Enterprise GNN RCA inference for a specific V3 scenario using the
+trained GraphSAGE EnterpriseRcaGNN checkpoint.
 
 Usage
 -----
 python scripts/run_enterprise_gnn_inference.py \\
-    --dataset-root ./datasets/infragraph_v3 \\
-    --scenario-id  enterprise_v3_0072 \\
-    --out          ./outputs/enterprise_gnn_rca
+    --scenario-id  enterprise_v3_0077 \\
+    --model-path   model_artifacts/enterprise_gnn_rca/enterprise_gnn_rca.pt \\
+    --out          outputs/enterprise_gnn_rca
 
-# --split is optional; if omitted the script searches train/val/test
+# Optional: restrict to a specific split
 python scripts/run_enterprise_gnn_inference.py \\
-    --dataset-root ./datasets/infragraph_v3 \\
     --scenario-id  enterprise_v3_0001 \\
     --split        train \\
-    --out          ./outputs/enterprise_gnn_rca
+    --out          outputs/enterprise_gnn_rca
 
 Output
 ------
@@ -26,20 +25,29 @@ outputs/enterprise_gnn_rca/<scenario_id>_enterprise_gnn_rca_result.json
 from __future__ import annotations
 
 import argparse
+import json
 import sys
+import traceback
+import warnings
 from pathlib import Path
 
-# ── Shared GNN utilities ──────────────────────────────────────────────────────
+# Suppress FutureWarning noise before any torch imports so it doesn't
+# obscure real errors in the UI / terminal output.
+warnings.filterwarnings("ignore", category=FutureWarning)
+
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 _src_dir   = str(_REPO_ROOT / "src")
 if _src_dir not in sys.path:
     sys.path.insert(0, _src_dir)
 
-from enterprise_gnn_rca import (   # type: ignore  # noqa: E402
-    EnterpriseGCN, IN_FEAT,
-    load_model, _load_scenario, find_scenario_dir,
-    run_inference_for_scenario,
-)
+try:
+    from rca_ml.enterprise_gnn_model import load_gnn, check_torch_geo_requirement
+    from rca_ml.enterprise_gnn_inference import predict_one
+    from rca_ml.enterprise_gnn_dataset import build_graph_dict
+except ImportError as exc:
+    print(f"[ERROR] Cannot import rca_ml: {exc}")
+    print("        Ensure src/ is on PYTHONPATH and the rca_ml package is present.")
+    sys.exit(1)
 
 try:
     import torch
@@ -54,119 +62,299 @@ def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description="Run Enterprise GNN RCA inference for a selected V3 scenario"
     )
-    p.add_argument("--dataset-root", default="./datasets/infragraph_v3",
-                   help="Root of the V3 dataset (must contain scenarios/)")
     p.add_argument("--scenario-id",  required=True,
-                   help="Scenario ID to run inference on, e.g. enterprise_v3_0072")
+                   help="Scenario ID, e.g. enterprise_v3_0077")
     p.add_argument("--split",        default=None,
                    choices=["train", "val", "test"],
-                   help="Dataset split (optional — auto-detected if omitted)")
+                   help="Dataset split (auto-detected from graph_index.json if omitted)")
     p.add_argument("--model-path",   default=None,
-                   help="Path to enterprise_gnn_model.pt "
-                        "(default: <out>/enterprise_gnn_model.pt)")
-    p.add_argument("--out",          default="./assets/preloaded/enterprise_gnn_rca",
+                   help="Path to enterprise_gnn_rca.pt  "
+                        "(default: model_artifacts/enterprise_gnn_rca/enterprise_gnn_rca.pt)")
+    p.add_argument("--graphs-path",  default=None,
+                   help="Path to prebuilt graphs.pt  "
+                        "(default: data/rca/enterprise_gnn/graphs.pt; "
+                        "falls back to on-the-fly build from V3 dataset if absent)")
+    p.add_argument("--index-path",   default=None,
+                   help="Path to graph_index.json  "
+                        "(default: data/rca/enterprise_gnn/graph_index.json)")
+    p.add_argument("--dataset-root", default=None,
+                   help="V3 dataset root for on-the-fly graph build  "
+                        "(default: datasets/infragraph_v3)")
+    p.add_argument("--out",          default="outputs/enterprise_gnn_rca",
                    help="Output directory for inference result JSON")
     return p.parse_args()
 
 
-def main() -> None:
-    args = _parse_args()
+# ── V3 scenario loader ────────────────────────────────────────────────────────
 
-    dataset_root = Path(args.dataset_root)
-    out_dir      = Path(args.out)
-    scenario_id  = args.scenario_id
+def _load_scenario_v3(
+    dataset_root: Path,
+    scenario_id: str,
+    split: str | None,
+    index_record: dict | None,
+) -> tuple[dict, list[dict], str | None, str]:
+    """
+    Load enterprise_graph and alert events from a V3 scenario directory.
 
-    # Resolve model path — priority order:
-    #   1. explicit --model-path CLI flag
-    #   2. INFRAGRAPH_ENTERPRISE_GNN_MODEL_PATH env var
-    #   3. model_artifacts/enterprise_gnn_rca/enterprise_gnn_rca.pt  (canonical trained artifact)
-    #   4. <out>/enterprise_gnn_model.pt                              (outputs compat)
-    #   5. assets/preloaded/enterprise_gnn_rca/enterprise_gnn_model.pt (preloaded compat)
-    import os as _os_inf
-    _candidates = []
-    if args.model_path:
-        _candidates = [Path(args.model_path)]
-    else:
-        _env_model = _os_inf.environ.get("INFRAGRAPH_ENTERPRISE_GNN_MODEL_PATH")
-        if _env_model:
-            _candidates.append(Path(_env_model))
-        _candidates += [
-            _REPO_ROOT / "model_artifacts" / "enterprise_gnn_rca" / "enterprise_gnn_rca.pt",
-            out_dir / "enterprise_gnn_model.pt",
-            _REPO_ROOT / "assets" / "preloaded" / "enterprise_gnn_rca" / "enterprise_gnn_model.pt",
-        ]
+    Returns (enterprise_graph, events, root_cause_node, split_found).
+    root_cause_node is taken from index_record when available, else None.
+    """
+    splits_to_try = [split] if split else ["train", "val", "test"]
+    for sp in splits_to_try:
+        sc_dir = dataset_root / "scenarios" / sp / scenario_id
+        if not sc_dir.exists():
+            continue
 
-    model_path: Path | None = None
-    for _c in _candidates:
-        if _c.exists():
-            model_path = _c
-            break
+        eg_path = sc_dir / "enterprise_graph.json"
+        al_path = sc_dir / "alerts.json"
 
-    if model_path is None:
-        print(
-            "\n[ERROR] No model checkpoint found. Searched:\n"
-            + "\n".join(f"  {c}" for c in _candidates)
-            + "\n\nTrain first with:\n"
-            "  python scripts/build_enterprise_gnn_dataset.py\n"
-            "  python scripts/train_enterprise_gnn_rca.py \\\n"
-            "      --graphs      data/rca/enterprise_gnn/graphs.pt \\\n"
-            "      --index       data/rca/enterprise_gnn/graph_index.json \\\n"
-            "      --out-dir     model_artifacts/enterprise_gnn_rca \\\n"
-            "      --report-dir  reports/enterprise_gnn_rca \\\n"
-            "      --epochs      80\n\n"
-            "  # Optional: create compat symlinks\n"
-            "  python scripts/link_enterprise_gnn_model_compat.py"
+        if not eg_path.exists():
+            raise FileNotFoundError(
+                f"enterprise_graph.json not found in {sc_dir}"
+            )
+        enterprise_graph = json.loads(eg_path.read_text(encoding="utf-8"))
+
+        events: list[dict] = []
+        if al_path.exists():
+            al_doc = json.loads(al_path.read_text(encoding="utf-8"))
+            # V3 stores events under "alerts" key; same field shape as build_graph_dict expects
+            events = al_doc.get("alerts", al_doc.get("events", []))
+
+        root_cause_node: str | None = (
+            index_record.get("root_cause_node") or None
+            if index_record else None
         )
-        sys.exit(1)
+        return enterprise_graph, events, root_cause_node, sp
+
+    searched = [
+        f"{dataset_root}/scenarios/{sp}/{scenario_id}"
+        for sp in splits_to_try
+    ]
+    raise FileNotFoundError(
+        f"Scenario '{scenario_id}' not found.  Searched:\n"
+        + "\n".join(f"  {p}" for p in searched)
+    )
+
+
+# ── Main ──────────────────────────────────────────────────────────────────────
+
+def main() -> None:
+    args    = _parse_args()
+    out_dir = Path(args.out)
+    sid     = args.scenario_id
+
+    # ── Resolve paths ──────────────────────────────────────────────────────────
+    model_path = (
+        Path(args.model_path) if args.model_path
+        else _REPO_ROOT / "model_artifacts" / "enterprise_gnn_rca" / "enterprise_gnn_rca.pt"
+    )
+    config_path = model_path.with_name("enterprise_gnn_config.json")
+    graphs_path = (
+        Path(args.graphs_path) if args.graphs_path
+        else _REPO_ROOT / "data" / "rca" / "enterprise_gnn" / "graphs.pt"
+    )
+    index_path = (
+        Path(args.index_path) if args.index_path
+        else _REPO_ROOT / "data" / "rca" / "enterprise_gnn" / "graph_index.json"
+    )
+    dataset_root = (
+        Path(args.dataset_root) if args.dataset_root
+        else _REPO_ROOT / "datasets" / "infragraph_v3"
+    )
 
     print("InfraGraph AI — Enterprise GNN Inference")
-    print(f"  Scenario    : {scenario_id}")
-    print(f"  Dataset root: {dataset_root}")
-    print(f"  Model       : {model_path}")
-    print(f"  Output dir  : {out_dir}")
+    print(f"  Scenario : {sid}")
+    print(f"  Model    : {model_path}")
+    print(f"  Out dir  : {out_dir}")
 
-    # ── Find scenario directory ───────────────────────────────────────────────
-    found = find_scenario_dir(dataset_root, scenario_id, split=args.split)
-    if found is None:
-        searched = [args.split] if args.split else ["train", "val", "test"]
-        print(
-            f"\n[ERROR] Scenario '{scenario_id}' not found in: "
-            + ", ".join(f"{dataset_root}/scenarios/{s}" for s in searched)
-        )
+    # ── Validate model files ───────────────────────────────────────────────────
+    if not model_path.exists():
+        print(f"\n[ERROR] Model checkpoint not found: {model_path}")
+        print("Train first with:")
+        print("  python scripts/build_enterprise_gnn_dataset.py")
+        print("  python scripts/train_enterprise_gnn_rca.py \\")
+        print("      --graphs  data/rca/enterprise_gnn/graphs.pt \\")
+        print("      --index   data/rca/enterprise_gnn/graph_index.json \\")
+        print("      --out-dir model_artifacts/enterprise_gnn_rca")
+        sys.exit(1)
+    if not config_path.exists():
+        print(f"\n[ERROR] Model config not found: {config_path}")
         sys.exit(1)
 
-    scenario_dir, split_found = found
-    print(f"  Split       : {split_found}")
-
-    # ── Load scenario ────────────────────────────────────────────────────────
-    print("\nLoading scenario...")
-    sc = _load_scenario(scenario_dir)
-    if sc is None:
-        print(f"[ERROR] Could not load scenario from {scenario_dir}")
-        sys.exit(1)
-    print(f"  Nodes: {len(sc['node_ids'])}  Edges: {len(sc['graph_data'].get('edges', []))}")
-
-    # ── Load model ───────────────────────────────────────────────────────────
-    print("\nLoading model checkpoint...")
-    device = torch.device("cpu")
+    # ── Load model ─────────────────────────────────────────────────────────────
+    check_torch_geo_requirement()
+    print("\nLoading model...")
     try:
-        model = load_model(model_path, device)
-    except Exception as exc:
-        print(f"[ERROR] Could not load model: {exc}")
+        model, config = load_gnn(model_path, config_path)
+    except Exception:
+        print("[ERROR] Failed to load model checkpoint:")
+        traceback.print_exc()
         sys.exit(1)
-    total_params = sum(p.numel() for p in model.parameters())
-    print(f"  Parameters: {total_params:,}")
+    print(f"  Architecture : {config.get('gnn_architecture', 'GraphSAGE')} "
+          f"({config.get('num_layers', 3)} layers, "
+          f"hidden={config.get('hidden_channels', 64)}, "
+          f"in_channels={config.get('in_channels', 54)})")
+    print(f"  Parameters   : {sum(p.numel() for p in model.parameters()):,}")
 
-    # ── Run inference ────────────────────────────────────────────────────────
-    print("\nRunning GNN inference...")
-    result = run_inference_for_scenario(model, sc, out_dir, device, model_path=model_path)
+    # ── Load graph index (provides labels_dict for evaluation) ─────────────────
+    index_record: dict | None = None
+    if index_path.exists():
+        try:
+            index = json.loads(index_path.read_text(encoding="utf-8"))
+            for rec in index:
+                if rec.get("scenario_id") == sid:
+                    if args.split is None or rec.get("split") == args.split:
+                        index_record = rec
+                        break
+        except Exception:
+            print("[WARNING] Could not load graph_index.json:")
+            traceback.print_exc()
 
-    print("\nDone.")
+        if index_record:
+            print(f"  Index record : {index_record['case_id']} "
+                  f"(split={index_record.get('split', '?')})")
+        else:
+            print(f"  [warning] '{sid}' not found in graph_index.json — "
+                  f"evaluation fields will be omitted.")
+
+    # ── Load / build graph_dict ────────────────────────────────────────────────
+    graph_dict: dict | None = None
+
+    # Attempt 1: prebuilt graphs.pt (fast path, may not exist)
+    if graphs_path.exists():
+        print(f"\nLoading prebuilt graphs from {graphs_path}...")
+        try:
+            graphs = torch.load(str(graphs_path), map_location="cpu")
+            for g in graphs:
+                if g.get("scenario_id") == sid:
+                    if args.split is None or g.get("split") == args.split:
+                        graph_dict = g
+                        print(f"  Found in graphs.pt  "
+                              f"(nodes={g.get('num_nodes')}, "
+                              f"events={g.get('event_count')})")
+                        break
+            if graph_dict is None:
+                print(f"  [warning] '{sid}' not in graphs.pt — "
+                      f"falling back to on-the-fly build.")
+        except Exception:
+            print("[WARNING] Could not load graphs.pt — "
+                  "falling back to on-the-fly build.")
+            traceback.print_exc()
+
+    # Attempt 2: on-the-fly build from V3 scenario directory
+    if graph_dict is None:
+        print(f"\nBuilding graph on-the-fly from {dataset_root}/scenarios/...")
+        try:
+            enterprise_graph, events, root_cause_node, split_found = (
+                _load_scenario_v3(dataset_root, sid, args.split, index_record)
+            )
+        except FileNotFoundError as exc:
+            print(f"\n[ERROR] {exc}")
+            sys.exit(1)
+        except Exception:
+            print("[ERROR] Failed to load scenario files:")
+            traceback.print_exc()
+            sys.exit(1)
+
+        print(f"  Split        : {split_found}")
+        print(f"  Events       : {len(events)}")
+        print(f"  Graph nodes  : {len(enterprise_graph.get('nodes', []))}")
+        print(f"  Graph edges  : {len(enterprise_graph.get('edges', []))}")
+
+        try:
+            graph_dict = build_graph_dict(
+                case_id=f"ent_{sid}",
+                scenario_id=sid,
+                split=split_found,
+                enterprise_graph=enterprise_graph,
+                events=events,
+                root_cause_node=root_cause_node,
+            )
+        except Exception:
+            print("[ERROR] build_graph_dict raised an exception:")
+            traceback.print_exc()
+            sys.exit(1)
+
+        # If root_cause_node wasn't found in the graph nodes, retry without it
+        if graph_dict is None and root_cause_node:
+            print(f"  [warning] root_cause_node '{root_cause_node}' not in graph nodes — "
+                  f"building without ground-truth label.")
+            index_record = None  # also suppress evaluation fields
+            try:
+                graph_dict = build_graph_dict(
+                    case_id=f"ent_{sid}",
+                    scenario_id=sid,
+                    split=split_found,
+                    enterprise_graph=enterprise_graph,
+                    events=events,
+                    root_cause_node=None,
+                )
+            except Exception:
+                print("[ERROR] build_graph_dict (unlabelled) raised an exception:")
+                traceback.print_exc()
+                sys.exit(1)
+
+        if graph_dict is None:
+            print(f"[ERROR] Could not build graph for scenario '{sid}'.")
+            sys.exit(1)
+
+    # ── Run inference ──────────────────────────────────────────────────────────
+    top_k = config.get("top_k", 3)
+    print(f"\nRunning GNN inference (top_k={top_k})...")
+
+    # labels_dict drives the "evaluation" block in predict_one (ground truth nested only)
+    labels_dict: dict | None = index_record
+
+    try:
+        result = predict_one(model, graph_dict, labels_dict=labels_dict, top_k=top_k)
+    except Exception:
+        print("[ERROR] GNN inference failed:")
+        traceback.print_exc()
+        sys.exit(1)
+
+    # ── Add Streamlit-compatibility fields ─────────────────────────────────────
+    result.update({
+        "model_type":           config.get("model_type", "EnterpriseRcaGNN"),
+        "backend":              "torch_geometric_graphsage",
+        "inference_source":     "trained_enterprise_gnn",
+        "gnn_result_available": True,
+        "model_path":           str(model_path),
+    })
+    result.setdefault("scenario_id",          sid)
+    result.setdefault("rca_source",           "Enterprise GNN RCA")
+    result.setdefault("predicted_root_cause", "")
+    result.setdefault("root_cause_diagram",   "")
+    result.setdefault("confidence",           0.0)
+    result.setdefault("top_candidates",       [])
+    result.setdefault("impacted_diagrams",    [])
+    result.setdefault("alert_count",          0)
+
+    # ── Save output ────────────────────────────────────────────────────────────
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_file = out_dir / f"{sid}_enterprise_gnn_rca_result.json"
+    out_file.write_text(
+        json.dumps(result, indent=2, ensure_ascii=False, default=str),
+        encoding="utf-8",
+    )
+
+    # ── Summary ────────────────────────────────────────────────────────────────
+    print()
+    print("Done.")
     print(f"  Predicted root cause : {result['predicted_root_cause']}")
-    print(f"  Ground truth         : {result['ground_truth_root_cause']}")
-    correct = "CORRECT" if result["is_correct"] else "WRONG"
-    print(f"  Result               : {correct}  (rank {result['ground_truth_rank']})")
-    out_file = out_dir / f"{scenario_id}_enterprise_gnn_rca_result.json"
+    print(f"  Root cause diagram   : {result['root_cause_diagram']}")
+    print(f"  Confidence           : {result['confidence'] * 100:.1f}%")
+    print(f"  GNN result available : {result['gnn_result_available']}")
+    print(f"  RCA source           : {result['rca_source']}")
+    if result.get("top_candidates"):
+        print("  Top candidates:")
+        for c in result["top_candidates"]:
+            print(f"    #{c['rank']}  {c['node_id']}  ({c['diagram_id']})  "
+                  f"score={c['score']:.4f}")
+    if "evaluation" in result:
+        ev     = result["evaluation"]
+        marker = "CORRECT" if ev.get("correct_top1") else "WRONG"
+        print(f"  Ground truth         : {ev.get('ground_truth_node', '-')}  "
+              f"->  {marker}  (rank {ev.get('rank', '?')})")
     print(f"  Output file          : {out_file}")
 
 
