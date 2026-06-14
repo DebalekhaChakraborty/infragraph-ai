@@ -2205,12 +2205,20 @@ def _render_remediation_plan(plan: dict) -> None:
 
     def _runbook_chain_section() -> None:
         _chain = resp.get("runbook_chain", []) or []
-        if not _chain:
+        _aplan = resp.get("automation_plan") or {}
+        if not _chain and not _aplan:
             return
-        with st.expander(
-            f"Retrieved Approved Runbooks ({len(_chain)})",
-            expanded=True,
-        ):
+
+        _ap_can    = _aplan.get("can_execute", False)
+        _ap_approv = _aplan.get("requires_approval", True)
+        _ap_conn   = _aplan.get("connector", "")
+        _ap_dry    = _aplan.get("dry_run_supported", False)
+        _ap_note   = _aplan.get("execution_note", "")
+        _ap_color  = "#10b981" if _ap_can else "#f59e0b"
+        _ap_label  = "Automation Ready" if _ap_can else "Manual Execution Required"
+
+        _expander_title = f"Runbooks & Automation Plan ({len(_chain)} runbook{'s' if len(_chain) != 1 else ''})"
+        with st.expander(_expander_title, expanded=True):
             for _rb in _chain:
                 _rb_id    = _rb.get("runbook_id", "?")
                 _rb_title = _rb.get("title", "—")
@@ -2227,7 +2235,7 @@ def _render_remediation_plan(plan: dict) -> None:
                 _dry_color    = "#38bdf8" if _rb_dry else "#94a3b8"
                 st.markdown(
                     f'<div style="background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.25);'
-                    f'border-left:3px solid #a78bfa;border-radius:8px;padding:10px 14px;margin:6px 0">'
+                    f'border-left:3px solid #a78bfa;border-radius:8px;padding:10px 14px;margin:4px 0">'
                     f'<div style="font-size:0.8rem;color:#a78bfa;font-weight:800;margin-bottom:4px">'
                     f'[{_esc(_rb_id)}] {_esc(_rb_title)}</div>'
                     f'<div style="font-size:0.7rem;color:#94a3b8;display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px">'
@@ -2245,19 +2253,10 @@ def _render_remediation_plan(plan: dict) -> None:
                     unsafe_allow_html=True,
                 )
 
-        # Automation Plan
-        _aplan = resp.get("automation_plan") or {}
-        if _aplan:
-            _ap_can     = _aplan.get("can_execute", False)
-            _ap_approv  = _aplan.get("requires_approval", True)
-            _ap_conn    = _aplan.get("connector", "")
-            _ap_dry     = _aplan.get("dry_run_supported", False)
-            _ap_note    = _aplan.get("execution_note", "")
-            _ap_color   = "#10b981" if _ap_can else "#f59e0b"
-            _ap_label   = "Automation Ready" if _ap_can else "Manual Execution Required"
-            with st.expander("Automation Plan", expanded=False):
+            if _aplan:
                 st.markdown(
-                    f'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">'
+                    f'<div style="border-top:1px solid rgba(148,163,184,0.15);margin:10px 0 6px"></div>'
+                    f'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px">'
                     f'<span style="display:inline-block;padding:3px 10px;border-radius:999px;'
                     f'border:1px solid {_ap_color};color:{_ap_color};font-size:0.72rem;font-weight:800">'
                     f'{_esc(_ap_label)}</span>'
