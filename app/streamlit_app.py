@@ -4943,16 +4943,21 @@ def _tab_local_rca() -> None:
             unsafe_allow_html=True,
         )
         local_model = _local_rca_model_available()
-        if local_model:
-            st.success("RCA source: trained local model output")
-        else:
-            st.info("RCA source: Scenario-guided graph RCA")
-            if _strict_mode() and not st.session_state.allow_local_simulation:
-                st.error("Strict mode: explicitly approve before using scenario-guided RCA.")
-                if st.button("Approve scenario-guided RCA", key="approve_local_sim"):
-                    st.session_state.allow_local_simulation = True
-                    st.rerun()
-                return
+        _rca_method = (
+            "Trained local GNN model" if local_model
+            else "Graph propagation traversal · scenario annotation (ground truth)"
+        )
+        st.markdown(
+            f'<div style="font-size:0.74rem;color:#64748b;margin:6px 0 2px">'
+            f'RCA engine: {_rca_method} · single-diagram topology scope</div>',
+            unsafe_allow_html=True,
+        )
+        if not local_model and _strict_mode() and not st.session_state.allow_local_simulation:
+            st.error("Strict mode: explicitly approve before using scenario-guided RCA.")
+            if st.button("Approve scenario-guided RCA", key="approve_local_sim"):
+                st.session_state.allow_local_simulation = True
+                st.rerun()
+            return
 
     st.markdown('<hr class="ws-rule" style="margin:12px 0">', unsafe_allow_html=True)
 
@@ -4964,41 +4969,23 @@ def _tab_local_rca() -> None:
         st.session_state.pop("local_incident", None)
         incident = {}
 
-    col_b1, col_b2 = st.columns([1, 1])
-    with col_b1:
-        if st.button(
-            "Generate Topology Alert Stream",
-            type="primary" if not incident else "secondary",
-            key="gen_local_alerts_btn",
-            help="Analyse the diagram topology and produce a realistic alert timeline",
-        ):
-            with st.spinner("Analysing topology and generating alert stream…"):
-                if _INCIDENT_SIM_OK and _build_local_incident_pkg:
-                    inc = _build_local_incident_pkg(local_graph, diagram_id)
-                else:
-                    # Package not importable — derive from existing story builder
-                    story = _build_local_incident_story(local_graph, diagram_id, None)
-                    inc   = story
-                    inc["alert_timeline"] = []
-                st.session_state.local_incident             = inc
-                st.session_state.local_rca_result           = {}
-                st.session_state.pop("local_ai_resolution_plan", None)
-            st.rerun()
-
-    if incident:
-        with col_b2:
-            if st.button(
-                "Find Topology Root Cause",
-                type="primary",
-                key="local_rca_btn",
-                help="Run graph-traversal RCA and reveal the root cause node",
-            ):
-                with st.spinner("Running Topology RCA…"):
-                    rca = _incident_to_local_rca(incident)
-                    st.session_state.local_rca_result = rca
-                    st.session_state.pop("local_ai_resolution_plan", None)
-                    _persist_incident(incident, "local")
-                st.rerun()
+    if st.button(
+        "Generate Topology Alert Stream",
+        type="primary" if not incident else "secondary",
+        key="gen_local_alerts_btn",
+        help="Analyse the diagram topology and produce a realistic alert timeline",
+    ):
+        with st.spinner("Analysing topology and generating alert stream…"):
+            if _INCIDENT_SIM_OK and _build_local_incident_pkg:
+                inc = _build_local_incident_pkg(local_graph, diagram_id)
+            else:
+                story = _build_local_incident_story(local_graph, diagram_id, None)
+                inc   = story
+                inc["alert_timeline"] = []
+            st.session_state.local_incident             = inc
+            st.session_state.local_rca_result           = {}
+            st.session_state.pop("local_ai_resolution_plan", None)
+        st.rerun()
 
     # ── Alert timeline display ────────────────────────────────────────────────
     if incident:
@@ -5036,13 +5023,25 @@ def _tab_local_rca() -> None:
         else:
             st.caption("Alert timeline will appear here once generated.")
 
+        if st.button(
+            "Find Topology Root Cause",
+            type="primary",
+            key="local_rca_btn",
+            use_container_width=True,
+            help="Run graph-traversal RCA and reveal the root cause node",
+        ):
+            with st.spinner("Running Topology RCA…"):
+                rca = _incident_to_local_rca(incident)
+                st.session_state.local_rca_result = rca
+                st.session_state.pop("local_ai_resolution_plan", None)
+                _persist_incident(incident, "local")
+            st.rerun()
+
     # ── Step 2 results: RCA output ─────────────────────────────────────────────
     result = st.session_state.get("local_rca_result")
     if not result:
         if not incident:
             st.info("Click **Generate Topology Alert Stream** to begin the incident simulation.")
-        else:
-            st.info("Click **Find Topology Root Cause** to run RCA on this alert stream.")
         return
 
     st.markdown('<hr class="ws-rule">', unsafe_allow_html=True)
