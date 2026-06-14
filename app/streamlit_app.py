@@ -2249,24 +2249,53 @@ def _render_remediation_plan(plan: dict) -> None:
 
     itsm = resp.get("itsm_ticket_summary")
     if itsm:
-        if isinstance(itsm, dict):
-            itsm_lines = []
-            for key, label in [
-                ("short_description", "Short description"),
-                ("description", "Description"),
-                ("affected_ci", "Affected CI"),
-                ("priority", "Priority"),
-                ("assignment_group", "Assignment group"),
-            ]:
-                if itsm.get(key):
-                    itsm_lines.append(f"{label}: {itsm[key]}")
-            _section_card("ITSM Ticket", itsm_lines, accent="#64748b")
-        else:
-            _text_card("ITSM Ticket", itsm, accent="#64748b")
-        _itsm_spacer, _itsm_btn_col = st.columns([3, 1])
-        with _itsm_btn_col:
-            if st.button("Create Ticket", key="create_itsm_ticket_btn", type="primary", use_container_width=True):
-                st.toast("ITSM ticket created successfully", icon="✅")
+        _ticket_created = st.session_state.get("itsm_ticket_created", False)
+        with st.container(border=True):
+            st.markdown(
+                '<div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;'
+                'color:#94a3b8;margin-bottom:8px">ITSM Ticket</div>',
+                unsafe_allow_html=True,
+            )
+            if isinstance(itsm, dict):
+                _itsm_pairs = [
+                    ("short_description", "Short description"),
+                    ("description", "Description"),
+                    ("affected_ci", "Affected CI"),
+                    ("priority", "Priority"),
+                    ("assignment_group", "Assignment group"),
+                ]
+                _itsm_items = [
+                    f"{label}: {itsm[key]}"
+                    for key, label in _itsm_pairs
+                    if itsm.get(key)
+                ]
+                body_html = "".join(
+                    f'<li style="margin-bottom:5px;line-height:1.45;color:#e2e8f0;font-size:0.84rem">'
+                    f'{_esc(item)}</li>'
+                    for item in _itsm_items
+                )
+                st.markdown(
+                    f'<ol style="margin:0 0 12px 18px;padding:0">{body_html}</ol>',
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(
+                    f'<div style="color:#e2e8f0;font-size:0.86rem;line-height:1.5;margin-bottom:12px">'
+                    f'{_esc(str(itsm))}</div>',
+                    unsafe_allow_html=True,
+                )
+            _itsm_sp, _itsm_btn_col = st.columns([3, 1])
+            with _itsm_btn_col:
+                if st.button(
+                    "Ticket Created" if _ticket_created else "Create Ticket",
+                    key="create_itsm_ticket_btn",
+                    type="primary",
+                    use_container_width=True,
+                    disabled=_ticket_created,
+                ):
+                    st.session_state.itsm_ticket_created = True
+                    st.toast("ITSM ticket created successfully", icon="✅")
+                    st.rerun()
 
     _text_card("Audit Summary", resp.get("audit_summary", ""), accent="#94a3b8")
     _text_card("Confidence Notes", resp.get("confidence_notes", ""), accent="#94a3b8")
