@@ -2621,6 +2621,287 @@ def _render_traversal_steps(impact_path: list[str], result: dict,
     )
 
 
+# ── Propagation visual context helpers ───────────────────────────────────────
+
+_STEP_ROLE_TITLES: dict[str, str] = {
+    "first_observed": "First observed symptom",
+    "alert":          "Alert propagation",
+    "bridge":         "Cross-diagram bridge",
+    "root_candidate": "Root cause ranked",
+    "impacted":       "Downstream enterprise impact",
+}
+
+
+def _build_node_aliases(
+    enterprise_graph: dict,
+) -> "tuple[dict[str, str], dict[str, dict]]":
+    """Build node alias map from enterprise_graph.
+
+    Returns (node_aliases, id_to_node) where node_aliases maps any ID variant
+    (canonical_id, node_id, display_label, global_node_id, last colon-segment,
+    short segment without prefix) to the canonical graph node ID.
+    """
+    id_to_node: dict[str, dict] = {}
+    aliases:    dict[str, str]  = {}
+
+    for n in enterprise_graph.get("nodes", []):
+        canonical = str(n.get("id") or n.get("node_id") or "")
+        if not canonical:
+            continue
+        id_to_node[canonical] = n
+        for key in ("id", "node_id", "canonical_id", "display_label", "global_node_id"):
+            val = str(n.get(key) or "")
+            if val and val not in aliases:
+                aliases[val] = canonical
+        for sep in (":", "/", "."):
+            if sep in canonical:
+                parts = canonical.split(sep)
+                last = parts[-1]
+                if last and last not in aliases:
+                    aliases[last] = canonical
+                if len(parts) > 2:
+                    semi = sep.join(parts[-2:])
+                    if semi not in aliases:
+                        aliases[semi] = canonical
+
+    return aliases, id_to_node
+
+
+def _build_propagation_visual_context(
+    enterprise_graph: dict,
+    ent_incident: "dict | None",
+    rca: "dict | None",
+) -> dict:
+    """Build unified propagation visual context with normalized node IDs.
+
+    Derives propagation steps from alert_timeline when propagation_steps is
+    empty, assigns roles (first_observed/alert/bridge/root_candidate/impacted),
+    and resolves all node IDs across namespace variants.
+
+    Reads ``st.session_state["ent_prop_slider"]`` to determine the current
+    step index (set by the slider widget on the previous Streamlit frame).
+    """
+    node_aliases, id_to_node = _build_node_aliases(enterprise_graph)
+
+    def _resolve(raw_id: str) -> str:
+        return node_aliases.get(raw_id, raw_id) if raw_id else raw_id
+
+    def _resolve_list(ids: "list") -> "list[str]":
+        return [_resolve(str(i)) for i in ids if i]
+
+    inc   = ent_incident or {}
+    rca_d = rca or {}
+
+    alert_timeline: list[dict] = list(inc.get("alert_timeline", []) or [])
+    prop_steps:     list[dict] = list(inc.get("propagation_steps", []) or [])
+
+    root_cause_raw  = str(rca_d.get("root_cause") or inc.get("root_cause", "") or "")
+    root_cause_norm = _resolve(root_cause_raw)
+
+    if not prop_steps and alert_timeline:
+        _sorted_tl = sorted(
+            alert_timeline,
+            key=lambda x: str(x.get("timestamp", x.get("time", ""))),
+        )
+        impact_path_norm = set(_resolve_list(rca_d.get("impact_path", [])))
+        bridge_nodes = {
+            _resolve(str(e.get("node", "")))
+            for e in alert_timeline
+            if e.get("correlation_role") == "bridge"
+        }
+        path_so_far: list[str] = []
+        for i, ev in enumerate(_sorted_tl):
+            raw_n  = str(ev.get("node", "") or "")
+            norm_n = _resolve(raw_n)
+            if not norm_n:
+                continue
+            if i == 0 or ev.get("is_first_observed"):
+                role = "first_observed"
+            elif norm_n in bridge_nodes or ev.get("correlation_role") == "bridge":
+                role = "bridge"
+            elif norm_n == root_cause_norm:
+                role = "root_candidate"
+            elif norm_n in impact_path_norm:
+                role = "impacted"
+            else:
+                role = "alert"
+            path_so_far = list(dict.fromkeys(path_so_far + [norm_n]))
+            prop_steps.append({
+                "node":        norm_n,
+                "raw_node":    raw_n,
+                "diagram_id":  ev.get("diagram_id", ""),
+                "timestamp":   ev.get("timestamp", ev.get("time", "")),
+                "title":       _STEP_ROLE_TITLES.get(role, role),
+                "description": ev.get("message", ev.get("description", "")),
+                "role":        role,
+                "path_so_far": list(path_so_far),
+                "evidence":    str(ev.get("alert_id", ev.get("rule", "")) or ""),
+            })
+        if root_cause_norm and rca_d and prop_steps:
+            if prop_steps[-1]["node"] != root_cause_norm:
+                full_path = list(dict.fromkeys(path_so_far + [root_cause_norm]))
+                prop_steps.append({
+                    "node":        root_cause_norm,
+                    "raw_node":    root_cause_raw,
+                    "diagram_id":  rca_d.get("root_cause_diagram", ""),
+                    "timestamp":   "",
+                    "title":       _STEP_ROLE_TITLES["root_candidate"],
+                    "description": "GNN-ranked root cause node",
+                    "role":        "root_candidate",
+                    "path_so_far": full_path,
+                    "evidence":    "GNN RCA",
+                })
+    else:
+        _normalized: list[dict] = []
+        _path_so_far: list[str] = []
+        for step in prop_steps:
+            raw_n  = str(step.get("node", "") or "")
+            norm_n = _resolve(raw_n) or raw_n
+            _path_so_far = list(dict.fromkeys(_path_so_far + ([norm_n] if norm_n else [])))
+            _normalized.append({
+                **step,
+                "node":        norm_n,
+                "raw_node":    raw_n,
+                "path_so_far": list(_path_so_far),
+            })
+        prop_steps = _normalized
+
+    n_steps   = len(prop_steps)
+    raw_idx   = st.session_state.get("ent_prop_slider", 1)
+    step_idx  = max(0, min(int(raw_idx) - 1, n_steps - 1)) if n_steps else 0
+    current   = prop_steps[step_idx] if prop_steps else {}
+
+    return {
+        "alert_timeline":      alert_timeline,
+        "propagation_steps":   prop_steps,
+        "current_step_index":  step_idx,
+        "current_step_node":   current.get("node") or None,
+        "current_path_so_far": current.get("path_so_far", []),
+        "root_cause":          root_cause_norm or None,
+        "first_observed_node": _resolve(str(
+            inc.get("first_observed_node") or
+            next((e.get("node", "") for e in alert_timeline if e.get("is_first_observed")), "")
+        )) or None,
+        "alert_nodes":         _resolve_list(
+            rca_d.get("alert_nodes") or [e.get("node", "") for e in alert_timeline]
+        ),
+        "impacted_nodes":      _resolve_list(
+            rca_d.get("impacted_nodes") or inc.get("impacted_nodes", [])
+        ),
+        "impact_path":         _resolve_list(
+            rca_d.get("impact_path") or inc.get("impact_path", [])
+        ),
+        "impacted_diagrams":   list(
+            rca_d.get("impacted_diagrams") or inc.get("impacted_diagrams", [])
+        ),
+        "cross_diagram_edges": enterprise_graph.get("cross_diagram_edges", []),
+        "node_aliases":        node_aliases,
+        "id_to_node":          id_to_node,
+    }
+
+
+def _render_propagation_journey_panel(
+    pvc: dict,
+    slider_key: str = "ent_prop_slider",
+) -> None:
+    """Render the explicit Propagation Journey step timeline panel above the graph."""
+    prop_steps = pvc.get("propagation_steps", [])
+    if not prop_steps:
+        return
+
+    n_steps = len(prop_steps)
+    st.markdown(
+        '<div class="section-label" style="margin-top:14px">Propagation Journey</div>',
+        unsafe_allow_html=True,
+    )
+
+    step_idx = st.slider(
+        "Propagation journey step",
+        min_value=1, max_value=n_steps, value=1, step=1,
+        key=slider_key,
+        help="Step through the cross-diagram incident propagation journey",
+    )
+    current = prop_steps[step_idx - 1]
+
+    _ROLE_COLORS_J: dict[str, str] = {
+        "first_observed": "#ef4444",
+        "alert":          "#f97316",
+        "bridge":         "#22d3ee",
+        "root_candidate": "#10b981",
+        "impacted":       "#a78bfa",
+    }
+
+    rows_html = []
+    for i, step in enumerate(prop_steps):
+        is_cur  = (i == step_idx - 1)
+        is_past = (i < step_idx - 1)
+        role    = step.get("role", "alert")
+        rc      = _ROLE_COLORS_J.get(role, "#67e8f9")
+        row_bg  = "rgba(255,255,255,0.08)" if is_cur else ("rgba(255,255,255,0.03)" if is_past else "transparent")
+        opacity = "1" if is_cur else ("0.7" if is_past else "0.35")
+        ind     = "▶" if is_cur else ("✓" if is_past else "·")
+        ind_c   = "#38bdf8" if is_cur else ("#4ade80" if is_past else "#334155")
+        ev_txt  = (step.get("evidence") or "")[:40]
+        rows_html.append(
+            f'<tr style="background:{row_bg};opacity:{opacity}">'
+            f'<td style="padding:4px 8px;color:{ind_c};font-weight:700;white-space:nowrap">{ind} {i+1}</td>'
+            f'<td style="padding:4px 8px"><code style="font-size:0.7rem;color:#a78bfa">'
+            f'{step.get("diagram_id", "—")}</code></td>'
+            f'<td style="padding:4px 8px"><code style="font-size:0.72rem;color:#67e8f9">'
+            f'{step.get("node", "—")}</code></td>'
+            f'<td style="padding:4px 8px"><span style="color:{rc};font-size:0.72rem">'
+            f'{step.get("title", role)}</span></td>'
+            f'<td style="padding:4px 8px;font-size:0.68rem;color:#64748b">{ev_txt}</td>'
+            f'</tr>'
+        )
+
+    st.markdown(
+        '<div style="overflow-x:auto;margin-bottom:6px">'
+        '<table style="width:100%;border-collapse:collapse;font-size:0.78rem">'
+        '<thead><tr style="border-bottom:1px solid #1e293b">'
+        '<th style="padding:4px 8px;text-align:left;color:#64748b">#</th>'
+        '<th style="padding:4px 8px;text-align:left;color:#64748b">Diagram</th>'
+        '<th style="padding:4px 8px;text-align:left;color:#64748b">Node</th>'
+        '<th style="padding:4px 8px;text-align:left;color:#64748b">Role</th>'
+        '<th style="padding:4px 8px;text-align:left;color:#64748b">Evidence</th>'
+        '</tr></thead>'
+        '<tbody>' + ''.join(rows_html) + '</tbody>'
+        '</table></div>',
+        unsafe_allow_html=True,
+    )
+
+    role      = current.get("role", "alert")
+    rc        = _ROLE_COLORS_J.get(role, "#67e8f9")
+    cur_title = current.get("title", _STEP_ROLE_TITLES.get(role, role))
+    cur_node  = current.get("node", "")
+    cur_diag  = current.get("diagram_id", "")
+    cur_desc  = current.get("description", "")
+
+    st.markdown(
+        f'<div class="traversal-card">'
+        f'<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">'
+        f'<div class="traversal-step-lbl" style="color:{rc}">Step {step_idx} — {cur_title}</div>'
+        f'<span class="diag-label">{cur_diag}</span>'
+        f'</div>'
+        f'<div class="traversal-node">{cur_node}</div>'
+        f'<div style="font-size:0.76rem;color:#94a3b8;margin-top:4px">{cur_desc}</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    chips = []
+    for i, step in enumerate(prop_steps):
+        nd  = step.get("node", "")
+        cls = "current" if i == step_idx - 1 else ("visited" if i < step_idx - 1 else "")
+        chips.append(f'<span class="node-chip {cls}">{nd}</span>')
+    st.markdown(
+        '<div style="padding:6px 0;line-height:2.4">'
+        + ' <span style="color:#334155;font-size:0.75rem">→</span> '.join(chips)
+        + '</div>',
+        unsafe_allow_html=True,
+    )
+
+
 def _render_propagation_steps_slider(
     prop_steps: list[dict],
     incident: dict | None = None,
@@ -5610,10 +5891,6 @@ def _tab_gnn_rca() -> None:
                     _persist_incident(ent_incident, "enterprise")
                 st.rerun()
 
-    # ── Propagation slider state — must be captured before graph render ────────
-    _prop_step_node: str       = ""
-    _prop_trav_path: list[str] = []
-
     # ── Cross-diagram incident card + timeline ────────────────────────────────
     if ent_incident:
         ent_timeline = ent_incident.get("alert_timeline", [])
@@ -5674,12 +5951,7 @@ def _tab_gnn_rca() -> None:
             )
             _render_alert_timeline(ent_timeline, show_diagram_col=True)
 
-            # ── Propagation slider (must be before graph) ────────────────────
-            _prop_steps = ent_incident.get("propagation_steps", [])
-            if _prop_steps:
-                _prop_step_node, _prop_trav_path = _render_propagation_steps_slider(
-                    _prop_steps, ent_incident, slider_key="ent_prop_slider",
-                )
+            # (propagation journey panel rendered below via _render_propagation_journey_panel)
         else:
             if _INCIDENT_SIM_OK:
                 st.info(
@@ -5703,24 +5975,11 @@ def _tab_gnn_rca() -> None:
     )
     absorbed_ids = {n.get("canonical_id", n.get("id")) for n in local_graph.get("nodes", [])}
 
-    # ── Build unified propagation context ────────────────────────────────────
-    _pvc_alert_tl    = (ent_incident or {}).get("alert_timeline", [])
-    _pvc_prop_steps  = (ent_incident or {}).get("propagation_steps", [])
-    # Derive propagation steps from sorted alert timeline when empty
-    if not _pvc_prop_steps and _pvc_alert_tl:
-        _sorted_tl      = sorted(_pvc_alert_tl, key=lambda x: str(x.get("timestamp", x.get("time", ""))))
-        _pvc_prop_steps = [{"node": ev.get("node", ""), "timestamp": ev.get("timestamp", "")}
-                           for ev in _sorted_tl if ev.get("node")]
-    _prop_visual_ctx = {
-        "alert_timeline":     _pvc_alert_tl,
-        "propagation_steps":  _pvc_prop_steps,
-        "current_step_node":  _prop_step_node or None,
-        "traversal_path":     _prop_trav_path,
-        "root_cause":         (rca or {}).get("root_cause"),
-        "impact_path":        (rca or {}).get("impact_path", []),
-        "impacted_nodes":     (rca or {}).get("impacted_nodes", []),
-        "impacted_diagrams":  (rca or {}).get("impacted_diagrams", []),
-    }
+    # ── Build unified propagation context (with node ID normalization) ────────
+    pvc = _build_propagation_visual_context(enterprise_graph, ent_incident, rca)
+
+    # ── Propagation Journey panel — explicit step timeline above graph ─────────
+    _render_propagation_journey_panel(pvc)
 
     # ── Render mode selector (default: Stable 2D PyVis) ──────────────────────
     _render_mode = st.radio(
@@ -5741,13 +6000,34 @@ def _tab_gnn_rca() -> None:
         st.caption(f"PyVis available: {'Yes' if _pyvis_available() else 'No'}")
         st.caption(f"Nodes passed: {len(enterprise_graph.get('nodes', []))}")
         st.caption(f"Edges passed: {len(enterprise_graph.get('edges', []))} intra + {len(enterprise_graph.get('cross_diagram_edges', []))} cross")
-        st.caption(f"Alert timeline length: {len(_pvc_alert_tl)}")
-        st.caption(f"Propagation steps length: {len(_pvc_prop_steps)}")
-        st.caption(f"Current step node: {_prop_step_node or '—'}")
-        st.caption(f"Traversal path length: {len(_prop_trav_path)}")
-        st.caption(f"Impact path length: {len((rca or {}).get('impact_path', []))}")
-        st.caption(f"Root cause: {(rca or {}).get('root_cause', '—')}")
-        st.caption(f"Impacted diagrams: {', '.join((rca or {}).get('impacted_diagrams', [])) or '—'}")
+        st.caption(f"Alert timeline length: {len(pvc['alert_timeline'])}")
+        st.caption(f"Propagation steps (derived): {len(pvc['propagation_steps'])}")
+        st.caption(f"Current step node (normalized): {pvc['current_step_node'] or '—'}")
+        st.caption(f"Current path so far: {len(pvc['current_path_so_far'])} nodes → {pvc['current_path_so_far'][:4]}")
+        st.caption(f"Impact path (normalized): {len(pvc['impact_path'])} nodes")
+        st.caption(f"Root cause (normalized): {pvc['root_cause'] or '—'}")
+        st.caption(f"Impacted diagrams: {', '.join(pvc['impacted_diagrams']) or '—'}")
+        st.caption(f"Node alias map: {len(pvc['node_aliases'])} aliases → {len(pvc['id_to_node'])} unique graph nodes")
+        _graph_ids   = set(pvc["id_to_node"].keys())
+        _alias_set   = set(pvc["node_aliases"].keys())
+        _tl_raw_ids  = {str(e.get("node", "")) for e in pvc["alert_timeline"] if e.get("node")}
+        _ip_raw_ids  = {
+            str(n) for n in (
+                (rca or {}).get("impact_path") or (ent_incident or {}).get("impact_path") or []
+            )
+        }
+        _unmatched = sorted((_tl_raw_ids | _ip_raw_ids) - _graph_ids - _alias_set)
+        if _unmatched:
+            st.caption(f"⚠ Unmatched node IDs (not in graph): {', '.join(_unmatched[:10])}")
+        else:
+            st.caption("✓ All alert/path node IDs resolve to graph nodes")
+        _tl_samples = [
+            (str(e.get("node", "")), pvc["node_aliases"].get(str(e.get("node", "")), "—"))
+            for e in pvc["alert_timeline"][:4] if e.get("node")
+        ]
+        if _tl_samples:
+            for _raw, _norm in _tl_samples:
+                st.caption(f"  ID norm: {_raw!r} → {_norm!r}")
 
     # ── Render the graph in the selected mode ─────────────────────────────────
     if "FalconVue" in _render_mode:
@@ -5758,9 +6038,9 @@ def _tab_gnn_rca() -> None:
                     incident=ent_incident or {},
                     height=800,
                     mode="scenario",
-                    current_step_node=_prop_visual_ctx["current_step_node"],
-                    traversal_path=_prop_visual_ctx["traversal_path"],
-                    alert_timeline=_prop_visual_ctx["alert_timeline"],
+                    current_step_node=pvc["current_step_node"],
+                    traversal_path=pvc["current_path_so_far"],
+                    alert_timeline=pvc["alert_timeline"],
                 )
             except Exception as _fv_exc:
                 st.error(f"FalconVue renderer error: {_fv_exc}")
@@ -5792,8 +6072,8 @@ def _tab_gnn_rca() -> None:
             st.caption(f"Drag nodes · zoom/pan · hover for details · {_legend}")
             _render_enterprise_pyvis(
                 enterprise_graph, absorbed_ids, rca, height=800,
-                current_step_node=_prop_visual_ctx["current_step_node"],
-                traversal_path=_prop_visual_ctx["traversal_path"],
+                current_step_node=pvc["current_step_node"],
+                traversal_path=pvc["current_path_so_far"],
             )
         else:
             st.warning("Install `pyvis>=0.3.2` for interactive graph, or switch to Experimental 3D FalconVue.")
