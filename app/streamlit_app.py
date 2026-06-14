@@ -4108,26 +4108,26 @@ def _tab_onboard_new_diagram() -> None:
     _rfdetr_http       = _cached_rfdetr_http_health()
     _rfdetr_ckpt       = _find_rfdetr_ckpt(REPO_ROOT) if _RFDETR_BRIDGE_OK and _find_rfdetr_ckpt else None
 
-    _rf_stat_col, _rf_cb_col = st.columns([3, 1])
+    _rf_stat_col, _rf_cb_col = st.columns([4, 1])
     with _rf_stat_col:
-        _badges = []
+        _ckpt_ok  = bool(_rfdetr_ckpt)
+        _http_ok  = bool(_rfdetr_http.get("ok"))
+        _imp_ok   = bool(_rfdetr_runtime.get("ok"))
+        _dot_clr  = "#10b981" if (_ckpt_ok and _imp_ok) else "#f59e0b"
+        _parts    = []
         if _rfdetr_ckpt:
-            _badges.append(f'<span class="badge badge-success">Checkpoint: {_rfdetr_ckpt.name}</span>')
-        else:
-            _badges.append('<span class="badge badge-warn">Checkpoint not found</span>')
-        if _rfdetr_http.get("ok"):
-            _badges.append(f'<span class="badge badge-success">HTTP service healthy · {_rfdetr_http.get("service_url","")}</span>')
-        elif _rfdetr_http.get("service_url"):
-            _badges.append('<span class="badge badge-warn">HTTP service unavailable</span>')
-        if _rfdetr_runtime.get("ok"):
-            _badges.append('<span class="badge badge-success">RF-DETR import OK</span>')
-        else:
-            _badges.append('<span class="badge badge-warn">RF-DETR import unavailable</span>')
+            _parts.append(_rfdetr_ckpt.name)
+        if _rfdetr_http.get("service_url"):
+            _svc = "HTTP live" if _http_ok else "HTTP unavailable"
+            _parts.append(f"{_svc} · {_rfdetr_http.get('service_url','')}")
         if _rfdetr_python:
-            _badges.append(f'<span class="badge badge-info">Python: {_rfdetr_python}</span>')
+            _parts.append(_rfdetr_python)
+        _summary = " · ".join(_parts) if _parts else "RF-DETR not configured"
         st.markdown(
-            '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px">' +
-            "".join(_badges) + '</div>',
+            f'<div style="font-size:0.74rem;color:#64748b;margin:6px 0 10px">'
+            f'<span style="display:inline-block;width:7px;height:7px;border-radius:50%;'
+            f'background:{_dot_clr};margin-right:6px;vertical-align:middle"></span>'
+            f'RF-DETR · {_summary}</div>',
             unsafe_allow_html=True,
         )
     with _rf_cb_col:
@@ -4138,9 +4138,6 @@ def _tab_onboard_new_diagram() -> None:
             disabled=not bool(_rfdetr_ckpt),
         )
         st.session_state.use_live_rfdetr = use_rfdetr and bool(_rfdetr_ckpt)
-
-    st.markdown("<hr style='border:none;border-top:1px solid rgba(255,255,255,0.06);margin:6px 0 12px'>",
-                unsafe_allow_html=True)
 
     # ── Load onboarding manifest ──────────────────────────────────────────────
     samples = _load_onboarding_manifest(str(REPO_ROOT))
