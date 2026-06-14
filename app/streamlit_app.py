@@ -6549,6 +6549,10 @@ def _tab_gnn_rca() -> None:
 
     rca = st.session_state.get("enterprise_rca_result")
 
+    # Everything below requires an alert stream to have been generated.
+    if not ent_incident:
+        return
+
     # ── Scenario Enterprise Graph — Alert Propagation ─────────────────────────
     st.markdown('<hr class="ws-rule" style="margin:14px 0">', unsafe_allow_html=True)
     st.markdown(
