@@ -4187,22 +4187,7 @@ def _tab_onboard_new_diagram() -> None:
             )
             is_this_sample_active = onboarded_sid == sample.get("sample_id", "")
 
-        if sel_idx is None:
-            st.markdown(
-                '<div class="info-card" style="margin:8px 0;color:#64748b">'
-                'Select a diagram from the pool above to begin.</div>',
-                unsafe_allow_html=True,
-            )
-        elif not is_this_sample_active:
-            st.markdown(
-                '<div class="warn-card" style="margin:8px 0">'
-                '<strong>Not yet onboarded.</strong><br>'
-                'This diagram is not part of the active runtime graph memory yet. '
-                'Run live diagram intelligence to onboard it.'
-                '</div>',
-                unsafe_allow_html=True,
-            )
-        else:
+        if is_this_sample_active:
             src_label = st.session_state.get("detection_source", "")
             badge_cls = (
                 "badge-success"
@@ -4407,12 +4392,12 @@ def _tab_onboard_new_diagram() -> None:
 
     with right:
         if sel_idx is None:
-            # Nothing selected — right column stays empty
             pass
         elif img_path.exists():
             det_img = st.session_state.get("detected_image_path", "")
             active_sid = _ss_dict("onboard_sample_record").get("sample_id", "")
             if det_img and Path(det_img).exists() and active_sid == sample.get("sample_id", ""):
+                # Detection has been run — show annotated output
                 det_src = st.session_state.get("detection_source", "")
                 badge_cls = "predicted" if det_src == "LIVE_RFDETR_INFERENCE" else "prepared"
                 st.markdown(
@@ -4421,22 +4406,18 @@ def _tab_onboard_new_diagram() -> None:
                 )
                 st.image(det_img, use_container_width=True)
             else:
-                # No detection run yet for this diagram — show placeholder, not the raw preset
+                # Not yet run — show original image with onboarding note
                 st.markdown(
-                    '<div class="info-card" style="text-align:center;padding:40px 20px;margin-top:8px">'
-                    '<div style="font-size:2rem;margin-bottom:12px">🔍</div>'
-                    '<div style="font-size:0.85rem;color:#94a3b8">Run <strong>Live Diagram Intelligence</strong>'
-                    ' to see the detection output here.</div>'
-                    '</div>',
+                    '<div class="compare-badge original">Original</div>',
                     unsafe_allow_html=True,
                 )
+                st.image(str(img_path), use_container_width=True)
+                st.caption(
+                    "This diagram is not yet in active graph memory. "
+                    "Run **Live Diagram Intelligence** to onboard it."
+                )
         else:
-            st.markdown(
-                '<div class="warn-card" style="text-align:center;padding:40px 20px">'
-                'Diagram image not found.'
-                '</div>',
-                unsafe_allow_html=True,
-            )
+            st.caption("Diagram image not found.")
 
     # Only show graph outputs if LDI was actually run for the currently selected sample.
     # Stale local_graph from a previous run or catalog load must not bleed through.
