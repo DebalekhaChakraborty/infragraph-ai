@@ -2157,20 +2157,19 @@ def _render_remediation_plan(plan: dict) -> None:
             ("Automation Eligibility", resp.get("automation_eligibility", "unknown")),
             ("Evidence IDs", ", ".join(_items(resp.get("evidence_ids_used"))) or "none"),
         ]
+        inner = "".join(
+            f'<div style="background:rgba(15,23,42,0.55);border:1px solid rgba(148,163,184,0.22);'
+            f'border-radius:8px;padding:10px 12px">'
+            f'<div style="font-size:0.6rem;text-transform:uppercase;color:#94a3b8;margin-bottom:5px">{_esc(label)}</div>'
+            f'<div style="font-size:0.84rem;color:#f8fafc;font-weight:800;word-break:break-word">{_esc(value)}</div>'
+            f'</div>'
+            for label, value in cards
+        )
         st.markdown(
-            '<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:8px 0 12px">',
+            f'<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:8px 0 12px">'
+            f'{inner}</div>',
             unsafe_allow_html=True,
         )
-        for label, value in cards:
-            st.markdown(
-                f'<div style="background:rgba(15,23,42,0.55);border:1px solid rgba(148,163,184,0.22);'
-                f'border-radius:8px;padding:10px 12px;min-height:68px">'
-                f'<div style="font-size:0.6rem;text-transform:uppercase;color:#94a3b8;margin-bottom:5px">{_esc(label)}</div>'
-                f'<div style="font-size:0.84rem;color:#f8fafc;font-weight:800;word-break:break-word">{_esc(value)}</div>'
-                f'</div>',
-                unsafe_allow_html=True,
-            )
-        st.markdown('</div>', unsafe_allow_html=True)
 
     def _section_card(label: str, value: "str | list | None", *, accent: str = "#10b981") -> None:
         items = _items(value)
@@ -2217,60 +2216,70 @@ def _render_remediation_plan(plan: dict) -> None:
         _ap_color  = "#10b981" if _ap_can else "#f59e0b"
         _ap_label  = "Automation Ready" if _ap_can else "Manual Execution Required"
 
-        _expander_title = f"Runbooks & Automation Plan ({len(_chain)} runbook{'s' if len(_chain) != 1 else ''})"
-        with st.expander(_expander_title, expanded=True):
-            for _rb in _chain:
-                _rb_id    = _rb.get("runbook_id", "?")
-                _rb_title = _rb.get("title", "—")
-                _rb_dom   = _rb.get("domain", "")
-                _rb_mode  = _rb.get("execution_mode", "manual")
-                _rb_approv = _rb.get("approval_required", True)
-                _rb_auto  = _rb.get("automation_eligible", False)
-                _rb_dry   = _rb.get("dry_run_supported", False)
-                _rb_tool  = _rb.get("tool_name", "") or _rb.get("connector", "")
-                _rb_eids  = ", ".join((_rb.get("evidence_ids") or [])[:6])
-                _rb_secs  = ", ".join((_rb.get("sections_retrieved") or [])[:4])
-                _approv_color = "#ef4444" if _rb_approv else "#10b981"
-                _auto_color   = "#10b981" if _rb_auto else "#94a3b8"
-                _dry_color    = "#38bdf8" if _rb_dry else "#94a3b8"
-                st.markdown(
-                    f'<div style="background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.25);'
-                    f'border-left:3px solid #a78bfa;border-radius:8px;padding:10px 14px;margin:4px 0">'
-                    f'<div style="font-size:0.8rem;color:#a78bfa;font-weight:800;margin-bottom:4px">'
-                    f'[{_esc(_rb_id)}] {_esc(_rb_title)}</div>'
-                    f'<div style="font-size:0.7rem;color:#94a3b8;display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px">'
-                    f'<span>domain: <b style="color:#e2e8f0">{_esc(_rb_dom)}</b></span>'
-                    f'<span>mode: <b style="color:#e2e8f0">{_esc(_rb_mode)}</b></span>'
-                    f'<span style="color:{_approv_color}">{"approval_required" if _rb_approv else "no_approval_required"}</span>'
-                    f'<span style="color:{_auto_color}">{"automation_eligible" if _rb_auto else "manual_only"}</span>'
-                    f'<span style="color:{_dry_color}">{"dry_run_ok" if _rb_dry else "no_dry_run"}</span>'
-                    + (f'<span>tool: <b style="color:#e2e8f0">{_esc(_rb_tool)}</b></span>' if _rb_tool else "")
-                    + f'</div>'
-                    f'<div style="font-size:0.68rem;color:#64748b">'
-                    f'evidence_ids: <span style="color:#c4b5fd">{_esc(_rb_eids) or "—"}</span>'
-                    + (f' &nbsp;|&nbsp; sections: {_esc(_rb_secs)}' if _rb_secs else "")
-                    + f'</div></div>',
-                    unsafe_allow_html=True,
-                )
+        _n = len(_chain)
+        _title = f"Runbooks & Automation Plan ({_n} runbook{'s' if _n != 1 else ''})"
 
-            if _aplan:
-                st.markdown(
-                    f'<div style="border-top:1px solid rgba(148,163,184,0.15);margin:10px 0 6px"></div>'
-                    f'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px">'
-                    f'<span style="display:inline-block;padding:3px 10px;border-radius:999px;'
-                    f'border:1px solid {_ap_color};color:{_ap_color};font-size:0.72rem;font-weight:800">'
-                    f'{_esc(_ap_label)}</span>'
-                    + (f'<span style="font-size:0.72rem;color:#ef4444">approval_required</span>' if _ap_approv else "")
-                    + (f'<span style="font-size:0.72rem;color:#38bdf8">dry_run_supported</span>' if _ap_dry else "")
-                    + (f'<span style="font-size:0.72rem;color:#94a3b8">connector: {_esc(_ap_conn)}</span>' if _ap_conn else "")
-                    + f'</div>'
-                    + (f'<div style="font-size:0.78rem;color:#cbd5e1">{_esc(_ap_note)}</div>' if _ap_note else ""),
-                    unsafe_allow_html=True,
-                )
+        runbooks_html = ""
+        for _rb in _chain:
+            _rb_id     = _rb.get("runbook_id", "?")
+            _rb_title  = _rb.get("title", "—")
+            _rb_dom    = _rb.get("domain", "")
+            _rb_mode   = _rb.get("execution_mode", "manual")
+            _rb_approv = _rb.get("approval_required", True)
+            _rb_auto   = _rb.get("automation_eligible", False)
+            _rb_dry    = _rb.get("dry_run_supported", False)
+            _rb_tool   = _rb.get("tool_name", "") or _rb.get("connector", "")
+            _rb_eids   = ", ".join((_rb.get("evidence_ids") or [])[:6])
+            _rb_secs   = ", ".join((_rb.get("sections_retrieved") or [])[:4])
+            _approv_color = "#ef4444" if _rb_approv else "#10b981"
+            _auto_color   = "#10b981" if _rb_auto else "#94a3b8"
+            _dry_color    = "#38bdf8" if _rb_dry else "#94a3b8"
+            runbooks_html += (
+                f'<div style="background:rgba(15,23,42,0.5);border:1px solid rgba(148,163,184,0.25);'
+                f'border-left:3px solid #a78bfa;border-radius:8px;padding:10px 14px;margin:6px 0">'
+                f'<div style="font-size:0.8rem;color:#a78bfa;font-weight:800;margin-bottom:4px">'
+                f'[{_esc(_rb_id)}] {_esc(_rb_title)}</div>'
+                f'<div style="font-size:0.7rem;color:#94a3b8;display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px">'
+                f'<span>domain: <b style="color:#e2e8f0">{_esc(_rb_dom)}</b></span>'
+                f'<span>mode: <b style="color:#e2e8f0">{_esc(_rb_mode)}</b></span>'
+                f'<span style="color:{_approv_color}">{"approval_required" if _rb_approv else "no_approval_required"}</span>'
+                f'<span style="color:{_auto_color}">{"automation_eligible" if _rb_auto else "manual_only"}</span>'
+                f'<span style="color:{_dry_color}">{"dry_run_ok" if _rb_dry else "no_dry_run"}</span>'
+                + (f'<span>tool: <b style="color:#e2e8f0">{_esc(_rb_tool)}</b></span>' if _rb_tool else "")
+                + f'</div>'
+                f'<div style="font-size:0.68rem;color:#64748b">'
+                f'evidence_ids: <span style="color:#c4b5fd">{_esc(_rb_eids) or "—"}</span>'
+                + (f' &nbsp;|&nbsp; sections: {_esc(_rb_secs)}' if _rb_secs else "")
+                + f'</div></div>'
+            )
+
+        aplan_html = ""
+        if _aplan:
+            aplan_html = (
+                f'<div style="border-top:1px solid rgba(148,163,184,0.15);margin:10px 0 6px"></div>'
+                f'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px">'
+                f'<span style="display:inline-block;padding:3px 10px;border-radius:999px;'
+                f'border:1px solid {_ap_color};color:{_ap_color};font-size:0.72rem;font-weight:800">'
+                f'{_esc(_ap_label)}</span>'
+                + (f'<span style="font-size:0.72rem;color:#ef4444">approval_required</span>' if _ap_approv else "")
+                + (f'<span style="font-size:0.72rem;color:#38bdf8">dry_run_supported</span>' if _ap_dry else "")
+                + (f'<span style="font-size:0.72rem;color:#94a3b8">connector: {_esc(_ap_conn)}</span>' if _ap_conn else "")
+                + f'</div>'
+                + (f'<div style="font-size:0.78rem;color:#cbd5e1">{_esc(_ap_note)}</div>' if _ap_note else "")
+            )
+
+        st.markdown(
+            f'<div style="background:rgba(15,23,42,0.45);border:1px solid rgba(148,163,184,0.18);'
+            f'border-left:3px solid #a78bfa;border-radius:8px;padding:12px 14px;margin:8px 0">'
+            f'<div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;'
+            f'color:#94a3b8;margin-bottom:10px">{_esc(_title)}</div>'
+            f'{runbooks_html}{aplan_html}'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
 
     _source_badge(plan)
     _metric_cards()
-    _runbook_chain_section()
 
     exec_sum = resp.get("executive_summary", "")
     if exec_sum:
@@ -2285,6 +2294,7 @@ def _render_remediation_plan(plan: dict) -> None:
     _section_card("Do Not Execute If", resp.get("do_not_execute_if", []), accent="#ef4444")
     _section_card("Rollback / Safety", resp.get("rollback_or_safety_notes", []), accent="#f97316")
     _text_card("Escalation Recommendation", resp.get("escalation_recommendation", ""), accent="#a78bfa")
+    _runbook_chain_section()
 
     itsm = resp.get("itsm_ticket_summary")
     if itsm:
@@ -2590,7 +2600,11 @@ def _render_gnn_rca_model_evidence(gnn_result: dict, metrics: dict) -> None:
 
 # ══════════════════════════════════════════════════════════════════════════════
 
-def _render_alert_timeline(timeline: list[dict], show_diagram_col: bool = False) -> None:
+def _render_alert_timeline(
+    timeline: list[dict],
+    show_diagram_col: bool = False,
+    rca_complete: bool = False,
+) -> None:
     """Render an alert timeline as styled event cards."""
     if not timeline:
         st.caption("No alert events in timeline.")
@@ -2623,7 +2637,12 @@ def _render_alert_timeline(timeline: list[dict], show_diagram_col: bool = False)
         if is_first:
             badges += '<span class="badge badge-warn" style="margin-left:6px">FIRST OBSERVED</span>'
         if is_root:
-            badges += '<span class="badge badge-critical" style="margin-left:6px">ROOT SIGNAL</span>'
+            if rca_complete:
+                # RCA has run — safe to reveal which node was the root signal
+                badges += '<span class="badge badge-critical" style="margin-left:6px">ROOT SIGNAL</span>'
+            else:
+                # Pre-RCA: show only raw telemetry label, no root-cause implication
+                badges += '<span class="badge badge-info" style="margin-left:6px">OBSERVED SIGNAL</span>'
 
         st.markdown(
             f'<div class="alert-item {sev_css}">'
@@ -5134,7 +5153,11 @@ def _tab_local_rca() -> None:
                 '<div class="section-label" style="margin-top:10px">Alert Stream</div>',
                 unsafe_allow_html=True,
             )
-            _render_alert_timeline(timeline, show_diagram_col=False)
+            _render_alert_timeline(
+                timeline,
+                show_diagram_col=False,
+                rca_complete=bool(st.session_state.get("local_rca_result")),
+            )
         else:
             st.caption("Alert timeline will appear here once generated.")
 
@@ -6505,7 +6528,11 @@ def _tab_gnn_rca() -> None:
                 'Cross-Diagram Alert Stream</div>',
                 unsafe_allow_html=True,
             )
-            _render_alert_timeline(ent_timeline, show_diagram_col=True)
+            _render_alert_timeline(
+                ent_timeline,
+                show_diagram_col=True,
+                rca_complete=bool(st.session_state.get("enterprise_rca_result")),
+            )
 
             # (propagation journey panel rendered below via _render_propagation_journey_panel)
         else:
@@ -7891,6 +7918,49 @@ def _tab_graph_copilot() -> None:
 # ══════════════════════════════════════════════════════════════════════════════
 # SIDEBAR
 # ══════════════════════════════════════════════════════════════════════════════
+_NAV_PAGES = [
+    "Diagram Intelligence",
+    "Topology RCA",
+    "Enterprise Graph Brain",
+    "Enterprise GNN RCA",
+    "Agentic Ops Orchestrator",
+    "Graph Copilot",
+]
+
+
+def _render_page_nav() -> None:
+    """Render Prev / Next navigation buttons at the bottom of each page."""
+    nav = st.session_state.get("main_nav", _NAV_PAGES[0])
+    try:
+        idx = _NAV_PAGES.index(nav)
+    except ValueError:
+        idx = 0
+
+    st.markdown(
+        "<hr style='border:none;border-top:1px solid rgba(255,255,255,0.06);margin:32px 0 14px'>",
+        unsafe_allow_html=True,
+    )
+    col_prev, _col_mid, col_next = st.columns([1, 3, 1])
+    with col_prev:
+        if idx > 0:
+            if st.button(
+                f"← {_NAV_PAGES[idx - 1]}",
+                key="nav_prev_btn",
+                use_container_width=True,
+            ):
+                st.session_state.main_nav = _NAV_PAGES[idx - 1]
+                st.rerun()
+    with col_next:
+        if idx < len(_NAV_PAGES) - 1:
+            if st.button(
+                f"{_NAV_PAGES[idx + 1]} →",
+                key="nav_next_btn",
+                use_container_width=True,
+            ):
+                st.session_state.main_nav = _NAV_PAGES[idx + 1]
+                st.rerun()
+
+
 def _sidebar_v3() -> None:
     with st.sidebar:
         title_color = _col("#f1f5f9", "#0f172a")
@@ -7907,14 +7977,7 @@ def _sidebar_v3() -> None:
         st.markdown('<div class="sb-label">Navigate</div>', unsafe_allow_html=True)
         st.radio(
             "Navigate",
-            [
-                "Diagram Intelligence",
-                "Topology RCA",
-                "Enterprise Graph Brain",
-                "Enterprise GNN RCA",
-                "Agentic Ops Orchestrator",
-                "Graph Copilot",
-            ],
+            _NAV_PAGES,
             key="main_nav",
             label_visibility="collapsed",
         )
@@ -8028,6 +8091,8 @@ def _main_cockpit() -> None:
         _tab_agentic_ops_orchestrator()
     else:
         _tab_graph_copilot()
+
+    _render_page_nav()
 
 
 def main() -> None:
