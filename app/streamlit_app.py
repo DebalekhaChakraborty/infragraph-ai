@@ -628,36 +628,44 @@ div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] p { color: #9
 [data-testid="stBaseButton-primary"]:disabled,
 [data-testid="stBaseButton-primary"][disabled] { background: #93c5fd !important; color: #ffffff !important; opacity: 0.6 !important; }
 
-/* ── Global: strip button wrappers — three-layer approach ── */
-/* Layer 1: element-container parent via :has() */
-[data-testid="stMain"] div:has(> div[data-testid="stButton"]),
-[data-testid="stMain"] div:has(> .stButton) {
+/* ── Global button wrapper nuclear reset ── */
+/* html+body prefix boosts specificity to beat emotion's multi-class selectors */
+html body div[data-testid="stButton"],
+html body div.stButton {
+    background: transparent !important; background-color: transparent !important;
+    background-image: none !important;
+    border: none !important; border-top: none !important; border-right: none !important;
+    border-bottom: none !important; border-left: none !important;
+    border-width: 0 !important; border-style: none !important; border-color: transparent !important;
+    box-shadow: none !important; outline: none !important; padding: 0 !important;
+}
+/* element-container parent when wrapping a button */
+html body [data-testid="element-container"]:has(div[data-testid="stButton"]),
+html body div:has(> div[data-testid="stButton"]),
+html body div:has(> div.stButton) {
     background: transparent !important; background-color: transparent !important;
     border: none !important; box-shadow: none !important; outline: none !important;
 }
-/* Layer 2: div.stButton wrapper — scoped to stMain for max specificity (0,0,3,1) */
-[data-testid="stMain"] div.stButton[data-testid="stButton"],
-[data-testid="stMain"] div.stButton,
-[data-testid="stMain"] [data-testid="stButton"],
-div.stButton[data-testid="stButton"],
-div.stButton {
-    border: none !important; box-shadow: none !important;
+/* All descendants inside the stButton wrapper that aren't the button or its children */
+html body div[data-testid="stButton"] *:not(button):not(button *),
+html body div.stButton *:not(button):not(button *) {
     background: transparent !important; background-color: transparent !important;
-    padding: 0 !important; outline: none !important;
-}
-/* Layer 3: intermediate tooltip/help child inside wrapper */
-[data-testid="stMain"] div.stButton > *:not(button),
-[data-testid="stMain"] [data-testid="stButton"] > *:not(button),
-div.stButton[data-testid="stButton"] > *:not(button) {
     border: none !important; box-shadow: none !important;
-    background: transparent !important; background-color: transparent !important;
     padding: 0 !important; outline: none !important;
 }
 /* ── Sidebar nav buttons — remove "button inside button" appearance ── */
-section[data-testid="stSidebar"] div.stButton,
-section[data-testid="stSidebar"] [data-testid="stButton"] {
-    border: none !important; box-shadow: none !important;
-    margin: 2px 0 !important; padding: 0 !important; background: transparent !important;
+html body section[data-testid="stSidebar"] div[data-testid="stButton"],
+html body section[data-testid="stSidebar"] div.stButton {
+    background: transparent !important; background-color: transparent !important;
+    background-image: none !important;
+    border: none !important; border-top: none !important; border-right: none !important;
+    border-bottom: none !important; border-left: none !important;
+    border-width: 0 !important; border-style: none !important; border-color: transparent !important;
+    box-shadow: none !important; outline: none !important;
+    margin: 2px 0 !important; padding: 0 !important;
+}
+html body section[data-testid="stSidebar"] [data-testid="element-container"]:has(div[data-testid="stButton"]) {
+    background: transparent !important; border: none !important; box-shadow: none !important;
 }
 section[data-testid="stSidebar"] [data-testid="stBaseButton-secondary"] {
     background: rgba(255,255,255,0.04) !important; color: #94a3b8 !important;
@@ -735,20 +743,8 @@ label, [data-testid="stWidgetLabel"] p, [data-testid="stWidgetLabel"] span { col
 [data-testid="stBaseButton-primary"]:active { background: #1e40af !important; color: #ffffff !important; }
 [data-testid="stBaseButton-primary"]:disabled,
 [data-testid="stBaseButton-primary"][disabled] { background: #93c5fd !important; color: #ffffff !important; opacity: 0.6 !important; }
-[data-testid="stMain"] div:has(> div[data-testid="stButton"]),
-[data-testid="stMain"] div:has(> .stButton) { background: transparent !important; background-color: transparent !important; border: none !important; box-shadow: none !important; outline: none !important; }
-[data-testid="stMain"] div.stButton[data-testid="stButton"],
-[data-testid="stMain"] div.stButton,
-[data-testid="stMain"] [data-testid="stButton"],
-div.stButton[data-testid="stButton"],
-div.stButton { border: none !important; box-shadow: none !important; background: transparent !important; background-color: transparent !important; padding: 0 !important; outline: none !important; }
-[data-testid="stMain"] div.stButton > *:not(button),
-[data-testid="stMain"] [data-testid="stButton"] > *:not(button),
-div.stButton[data-testid="stButton"] > *:not(button) { border: none !important; box-shadow: none !important; background: transparent !important; background-color: transparent !important; padding: 0 !important; outline: none !important; }
-div.stButton > button[data-testid*="stBaseButton-secondary"],
-[data-testid="stMain"] div.stButton > button { background: #ffffff !important; color: #334155 !important; border: 1px solid rgba(0,0,0,0.14) !important; border-radius: 8px !important; }
-[data-testid="stBaseButton-secondary"],
-.stButton button { background: #ffffff !important; color: #334155 !important; border: 1px solid rgba(0,0,0,0.14) !important; }
+[data-testid="stBaseButton-secondary"] { background: #ffffff !important; color: #334155 !important; border: 1px solid rgba(0,0,0,0.14) !important; border-radius: 8px !important; box-shadow: none !important; }
+[data-testid="stBaseButton-secondary"]:hover { background: #f1f5f9 !important; color: #1e293b !important; border-color: rgba(0,0,0,0.2) !important; }
 div[data-testid="stTabs"] div[role="tablist"] { background: rgba(0,0,0,0.05) !important; border-color: rgba(0,0,0,0.09) !important; }
 div[data-testid="stTabs"] button[role="tab"] { color: #64748b !important; background: transparent !important; }
 div[data-testid="stTabs"] button[role="tab"]:hover { background: rgba(37,99,235,0.06) !important; color: #2563eb !important; }
