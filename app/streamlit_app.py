@@ -4537,9 +4537,11 @@ def _tab_onboard_new_diagram() -> None:
                 "Creating local graph memory packet",
                 "Ready for absorption",
             ]
-            _res_c1, _res_c2, _res_c3 = st.columns(3)
-            prog       = _res_c1.progress(0)
-            steps_area = _res_c1.empty()
+            _ingestion_expander = st.expander("Ingestion details", expanded=True)
+            with _ingestion_expander:
+                _res_c1, _res_c2, _res_c3 = st.columns(3)
+                prog       = _res_c1.progress(0)
+                steps_area = _res_c1.empty()
 
             ann_p  = sample.get("annotation_path", "")
             lg_p   = sample.get("local_graph_path", "")
