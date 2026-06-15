@@ -4981,6 +4981,17 @@ def _tab_diagram_gallery() -> None:
         st.info("No diagrams match the current filter.")
         return
 
+    # Sync gallery selector to the currently active diagram (e.g. after onboarding)
+    _cur_active_did = st.session_state.get("selected_diagram_id", "")
+    if _cur_active_did:
+        _gal_match = next(
+            (i for i, r in enumerate(filtered[:limit])
+             if r.get("source_diagram_id") == _cur_active_did),
+            None,
+        )
+        if _gal_match is not None and st.session_state.get("gal_select", 0) != _gal_match:
+            st.session_state["gal_select"] = _gal_match
+
     _ctrl_l, _ctrl_r = st.columns(2)
     with _ctrl_l:
         sel_idx = st.selectbox(
