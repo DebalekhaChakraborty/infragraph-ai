@@ -8590,7 +8590,7 @@ def _sidebar_v3() -> None:
             f'<div style="padding:10px 0 6px">'
             f'<span style="font-size:1.08rem;font-weight:800;color:{title_color}">InfraGraph AI</span>'
             f'</div>'
-            f'<p style="font-size:0.72rem;color:{sub_color};margin:-2px 0 0">Enterprise Experience</p>',
+            f'<p style="font-size:0.72rem;color:{sub_color};margin:-2px 0 0">Diagram Intelligence V3</p>',
             unsafe_allow_html=True,
         )
 
@@ -8617,8 +8617,8 @@ def _sidebar_v3() -> None:
                 st.rerun()
         st.markdown(
             '<div style="border-top:1px solid rgba(168,85,247,0.35);margin:14px 2px 8px"></div>'
-            '<div class="sb-label" style="color:#a78bfa;font-size:0.58rem;letter-spacing:0.12em">'
-            '⚡ AGENTIC OPS</div>',
+            '<div class="sb-label" style="color:#a78bfa;font-size:0.58rem;letter-spacing:0.10em">'
+            '⚡ InfraGraph AI Enterprise Experience</div>',
             unsafe_allow_html=True,
         )
         if st.button(
