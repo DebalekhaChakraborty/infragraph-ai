@@ -628,18 +628,27 @@ div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] p { color: #9
 [data-testid="stBaseButton-primary"]:disabled,
 [data-testid="stBaseButton-primary"][disabled] { background: #93c5fd !important; color: #ffffff !important; opacity: 0.6 !important; }
 
-/* ── Global: strip stButton wrapper + any intermediate (tooltip) child ── */
+/* ── Global: strip stButton wrapper — high-specificity to beat emotion CSS ── */
+/* (0,0,2,1) beats emotion's typical (0,0,1,0) single-class rules */
+div.stButton[data-testid="stButton"],
 div.stButton,
 [data-testid="stButton"] {
     border: none !important; box-shadow: none !important;
     background: transparent !important; background-color: transparent !important;
-    padding: 0 !important;
+    padding: 0 !important; outline: none !important;
 }
+div.stButton[data-testid="stButton"] > *,
 div.stButton > *:not(button):not([data-testid*="stBaseButton"]),
 [data-testid="stButton"] > *:not(button):not([data-testid*="stBaseButton"]) {
     border: none !important; box-shadow: none !important;
     background: transparent !important; background-color: transparent !important;
-    padding: 0 !important;
+    padding: 0 !important; outline: none !important;
+}
+/* Restore primary button styling that the above may catch */
+div.stButton[data-testid="stButton"] > button[data-testid*="stBaseButton-primary"],
+div.stButton > button[data-testid*="stBaseButton-primary"] {
+    background: #2563eb !important; color: #ffffff !important;
+    border: none !important; border-radius: 8px !important;
 }
 /* ── Sidebar nav buttons — remove "button inside button" appearance ── */
 section[data-testid="stSidebar"] div.stButton,
@@ -723,10 +732,16 @@ label, [data-testid="stWidgetLabel"] p, [data-testid="stWidgetLabel"] span { col
 [data-testid="stBaseButton-primary"]:active { background: #1e40af !important; color: #ffffff !important; }
 [data-testid="stBaseButton-primary"]:disabled,
 [data-testid="stBaseButton-primary"][disabled] { background: #93c5fd !important; color: #ffffff !important; opacity: 0.6 !important; }
+div.stButton[data-testid="stButton"],
 div.stButton,
-[data-testid="stButton"] { border: none !important; box-shadow: none !important; background: transparent !important; background-color: transparent !important; padding: 0 !important; }
+[data-testid="stButton"] { border: none !important; box-shadow: none !important; background: transparent !important; background-color: transparent !important; padding: 0 !important; outline: none !important; }
+div.stButton[data-testid="stButton"] > *,
 div.stButton > *:not(button):not([data-testid*="stBaseButton"]),
 [data-testid="stButton"] > *:not(button):not([data-testid*="stBaseButton"]) { border: none !important; box-shadow: none !important; background: transparent !important; background-color: transparent !important; padding: 0 !important; }
+div.stButton[data-testid="stButton"] > button[data-testid*="stBaseButton-primary"],
+div.stButton > button[data-testid*="stBaseButton-primary"] { background: #2563eb !important; color: #ffffff !important; border: none !important; border-radius: 8px !important; }
+div.stButton[data-testid="stButton"] > button[data-testid*="stBaseButton-secondary"],
+div.stButton > button[data-testid*="stBaseButton-secondary"] { background: #ffffff !important; color: #334155 !important; border: 1px solid rgba(0,0,0,0.14) !important; border-radius: 8px !important; }
 [data-testid="stBaseButton-secondary"],
 .stButton button { background: #ffffff !important; color: #334155 !important; border: 1px solid rgba(0,0,0,0.14) !important; }
 div[data-testid="stTabs"] div[role="tablist"] { background: rgba(0,0,0,0.05) !important; border-color: rgba(0,0,0,0.09) !important; }
