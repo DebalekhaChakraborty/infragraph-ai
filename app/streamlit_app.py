@@ -6782,20 +6782,9 @@ def _tab_gnn_rca() -> None:
     if not ent_incident:
         return
 
-    # ── Scenario Enterprise Graph — Alert Propagation ─────────────────────────
-    st.markdown('<hr class="ws-rule" style="margin:14px 0">', unsafe_allow_html=True)
-    st.markdown(
-        '<div class="section-label" style="margin-top:4px">'
-        'Scenario Enterprise Graph &#8212; Alert Propagation</div>'
-        '<div style="font-size:0.75rem;color:#64748b;margin-bottom:8px">'
-        'Cross-diagram incident propagation across the selected scenario graph.</div>',
-        unsafe_allow_html=True,
-    )
     absorbed_ids = {n.get("canonical_id", n.get("id")) for n in local_graph.get("nodes", [])}
 
     # ── Build RCA journey context ─────────────────────────────────────────────
-    # Pre-RCA: strip root_cause/impact_path so graph doesn't pre-reveal the answer.
-    # Post-RCA: pass full rca + gnn_result so journey/graph show confirmed root cause.
     if rca:
         jctx = _build_rca_journey_context(enterprise_graph, ent_incident, rca, _gnn_result_pre)
     else:
@@ -6803,39 +6792,9 @@ def _tab_gnn_rca() -> None:
                         if k not in ("root_cause", "impact_path", "root_cause_diagram")}
         jctx = _build_rca_journey_context(enterprise_graph, _inc_pre_rca, None, None)
 
-    # ── Run Enterprise RCA button (before the journey stepper) ───────────────
-    if ent_incident:
-        _rca_btn_lbl = "Run Enterprise RCA" if not _gnn_result_pre else "Run Enterprise GNN RCA"
-        if st.button(
-            _rca_btn_lbl,
-            type="primary",
-            key="ent_rca_run_btn",
-            use_container_width=True,
-            help="Derive root cause from the alert stream",
-        ):
-            with st.spinner("Running enterprise RCA…"):
-                if (_INCIDENT_SIM_OK
-                        and isinstance(ent_incident, dict)
-                        and ent_incident.get("root_cause") is not None):
-                    rca_result = _incident_to_enterprise_rca(ent_incident)
-                else:
-                    rca_result = _simulate_enterprise_rca(alerts_data, enterprise_graph)
-                st.session_state.enterprise_rca_result = rca_result
-                _persist_incident(ent_incident, "enterprise")
-            st.rerun()
+    st.markdown('<hr class="ws-rule" style="margin:14px 0">', unsafe_allow_html=True)
 
-    # ── RCA Investigation Journey stepper panel — only after RCA is run ──────
-    if rca:
-        _render_rca_journey_stepper(jctx)
-    elif ent_incident:
-        st.markdown(
-            '<div style="font-size:0.78rem;color:#64748b;text-align:center;padding:12px 0">'
-            'Click <strong style="color:#a5b4fc">Run Enterprise GNN RCA</strong> above to trace '
-            'the root cause investigation journey.</div>',
-            unsafe_allow_html=True,
-        )
-
-    # ── Developer details ─────────────────────────────────────────────────────
+    # ── Developer details (before the RCA button) ─────────────────────────────
     with st.expander("Developer details", expanded=False):
         st.caption(f"PyVis: {'Yes' if _pyvis_available() else 'No'}")
         st.caption(f"Journey steps: {len(jctx['steps'])}")
@@ -6856,16 +6815,46 @@ def _tab_gnn_rca() -> None:
         for s in jctx["steps"][:4]:
             st.caption(f"  Step {s['step']}: {s['node_id']!r} → {s['normalized_node_id']!r} [{s['role']}]")
 
-    # ── Render the graph ──────────────────────────────────────────────────────
-    if _pyvis_available():
-        _legend_j = (
-            "⚡ First alert: orange | 🎯 Root cause: red/large | "
-            "⇒ Cross-diagram bridge: cyan | Step labels on nodes · Dim = background topology"
+    # ── Run Enterprise RCA button ─────────────────────────────────────────────
+    _rca_btn_lbl = "Run Enterprise RCA" if not _gnn_result_pre else "Run Enterprise GNN RCA"
+    if st.button(
+        _rca_btn_lbl,
+        type="primary",
+        key="ent_rca_run_btn",
+        use_container_width=True,
+        help="Derive root cause from the alert stream",
+    ):
+        with st.spinner("Running enterprise RCA…"):
+            if (_INCIDENT_SIM_OK
+                    and isinstance(ent_incident, dict)
+                    and ent_incident.get("root_cause") is not None):
+                rca_result = _incident_to_enterprise_rca(ent_incident)
+            else:
+                rca_result = _simulate_enterprise_rca(alerts_data, enterprise_graph)
+            st.session_state.enterprise_rca_result = rca_result
+            _persist_incident(ent_incident, "enterprise")
+        st.rerun()
+
+    # ── Scenario Enterprise Graph + RCA results — only after RCA is run ───────
+    if rca:
+        st.markdown('<hr class="ws-rule" style="margin:14px 0">', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="section-label" style="margin-top:4px">'
+            'Scenario Enterprise Graph &#8212; Alert Propagation</div>'
+            '<div style="font-size:0.75rem;color:#64748b;margin-bottom:8px">'
+            'Cross-diagram incident propagation across the selected scenario graph.</div>',
+            unsafe_allow_html=True,
         )
-        st.caption(f"Drag · zoom · hover for details · {_legend_j}")
-        _render_enterprise_pyvis_rca_journey(enterprise_graph, jctx, absorbed_ids, height=800)
-    else:
-        st.warning("Install `pyvis>=0.3.2` for the RCA journey graph.")
+        _render_rca_journey_stepper(jctx)
+        if _pyvis_available():
+            _legend_j = (
+                "⚡ First alert: orange | 🎯 Root cause: red/large | "
+                "⇒ Cross-diagram bridge: cyan | Step labels on nodes · Dim = background topology"
+            )
+            st.caption(f"Drag · zoom · hover for details · {_legend_j}")
+            _render_enterprise_pyvis_rca_journey(enterprise_graph, jctx, absorbed_ids, height=800)
+        else:
+            st.warning("Install `pyvis>=0.3.2` for the RCA journey graph.")
 
     # ── RCA Explanation card ──────────────────────────────────────────────────
     if rca:
