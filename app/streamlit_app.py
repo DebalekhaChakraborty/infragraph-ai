@@ -331,6 +331,8 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 [data-testid="stAppViewContainer"] > .main { background: #0b0f1c; }
 section[data-testid="stSidebar"] { background: #070b16 !important; border-right: 1px solid rgba(255,255,255,0.06); }
 [data-testid="stHeader"] { background: transparent !important; }
+/* ── Reduce default Streamlit top padding ── */
+.block-container, [data-testid="stMainBlockContainer"] { padding-top: 1.2rem !important; }
 h1,h2,h3,h4,h5,h6 { color: #f1f5f9 !important; }
 p,li,label { color: #cbd5e1; }
 
@@ -9143,7 +9145,7 @@ def _sidebar_v3() -> None:
             "💬 Open Chat",
             key="sidebar_copilot_btn",
             use_container_width=True,
-            type="primary",
+            type="secondary",
             help="Ask InfraGraph Copilot anything — graph memory, RCA, remediation.",
         ):
             st.session_state.ops_copilot_open = True
