@@ -814,37 +814,96 @@ def run_live_v3_ingestion(
                 "source":           detection_source,
             })
 
-    # ── detected_edges from connectors + local graph ──────────────────────────
+    # ── detected_edges: 1. Vision  2. Annotation  3. local_graph ────────────────
     detected_edges: list[dict] = []
-    seen_pairs: set[tuple[str, str]] = set()
-    for conn in annotation.get("connectors", []):
-        pair = (
-            conn.get("source", conn.get("from_node", "")),
-            conn.get("target", conn.get("to_node", "")),
+    # Use frozensets for dedup so (A,B) and (B,A) are treated as the same edge
+    _seen_pairs: set[frozenset] = set()
+
+    _vision_meta: dict = {
+        "edge_extraction_source":         "fallback",
+        "vision_connector_edge_count":    0,
+        "vision_connector_segment_count": 0,
+        "vision_connector_warning":       "",
+        "vision_connector_debug_overlay": "",
+    }
+
+    # 1. Vision connector extraction (requires cv2; degrades gracefully)
+    try:
+        from vision.edge_extraction.edge_builder import (
+            extract_edges_from_diagram as _extract_edges,
         )
-        seen_pairs.add(pair)
+        from vision.edge_extraction.debug_render import (
+            render_connector_debug_overlay as _render_debug,
+        )
+        _vis = _extract_edges(diagram_path, detected_nodes)
+        _vision_meta["vision_connector_segment_count"] = _vis.get("segment_count", 0)
+        _vision_meta["vision_connector_warning"]       = _vis.get("warning", "")
+        if _vis.get("ok") and _vis.get("edges"):
+            for _ve in _vis["edges"]:
+                _s, _t = _ve.get("source", ""), _ve.get("target", "")
+                _fp = frozenset({_s, _t})
+                if _s and _t and _fp not in _seen_pairs:
+                    _seen_pairs.add(_fp)
+                    detected_edges.append({
+                        "source":       _s,
+                        "target":       _t,
+                        "relationship": "connected_to",
+                        "label":        "",
+                        "confidence":   round(float(_ve.get("connector_confidence", 0.5)), 3),
+                        "connector_id": _ve.get("segment_id", ""),
+                        "source_type":  "vision_connector_extraction",
+                    })
+            _vision_meta["edge_extraction_source"]      = "vision_connector_extraction"
+            _vision_meta["vision_connector_edge_count"] = _vis["edge_count"]
+            # Write debug overlay to outputs/
+            _dbg_dir  = run_dir.parent.parent.parent / "outputs" / "connector_extraction_debug"
+            _dbg_path = _dbg_dir / f"{scenario_id}__{diagram_id}_connectors_debug.png"
+            _dbg_out  = _render_debug(diagram_path, _vis.get("segments", []), _vis["edges"], _dbg_path)
+            _vision_meta["vision_connector_debug_overlay"] = _dbg_out
+    except Exception:
+        pass  # cv2 missing or other error — fall through to annotation/local_graph
+
+    # 2. Annotation connectors (fallback / supplement when vision misses edges)
+    _ann_added = 0
+    for conn in annotation.get("connectors", []):
+        _s = conn.get("source", conn.get("from_node", ""))
+        _t = conn.get("target", conn.get("to_node", ""))
+        if not _s or not _t:
+            continue
+        _fp = frozenset({_s, _t})
+        _seen_pairs.add(_fp)
         detected_edges.append({
-            "source":       pair[0],
-            "target":       pair[1],
+            "source":       _s,
+            "target":       _t,
             "relationship": conn.get("label", "connected_to"),
             "label":        conn.get("label", ""),
             "confidence":   conn.get("confidence", 0.91 if is_rfdetr else 0.78),
             "connector_id": conn.get("connector_id", ""),
             "source_type":  "annotation_connector",
         })
+        _ann_added += 1
+    if _ann_added and _vision_meta["edge_extraction_source"] == "fallback":
+        _vision_meta["edge_extraction_source"] = "annotation_connector"
+
+    # 3. local_graph edges (final supplement — only new pairs)
+    _lg_added = 0
     for e in local_graph.get("edges", []):
-        pair = (e.get("source", ""), e.get("target", ""))
-        if pair not in seen_pairs and pair[0] and pair[1]:
-            seen_pairs.add(pair)
+        _s, _t = e.get("source", ""), e.get("target", "")
+        _fp = frozenset({_s, _t})
+        if _s and _t and _fp not in _seen_pairs:
+            _seen_pairs.add(_fp)
             detected_edges.append({
-                "source":       pair[0],
-                "target":       pair[1],
+                "source":       _s,
+                "target":       _t,
                 "relationship": e.get("relationship", "connected_to"),
                 "label":        e.get("label", ""),
                 "confidence":   0.82,
                 "connector_id": "",
                 "source_type":  "local_graph",
             })
+            _lg_added += 1
+    if _lg_added and _vision_meta["edge_extraction_source"] == "fallback":
+        _vision_meta["edge_extraction_source"] = "local_graph"
 
     # ── graph-memory table rows ───────────────────────────────────────────────
     device_rows    = build_device_rows(local_graph, annotation, detection_source)
@@ -924,6 +983,8 @@ def run_live_v3_ingestion(
         "runtime_mode":         runtime_mode,
         "absorption_mode":      "SESSION_MEMORY_ABSORPTION",
         "rfdetr_subprocess":    external_rfdetr_result or {},
+        # Vision connector extraction metadata
+        **_vision_meta,
     }
 
     # ── persist artifacts ─────────────────────────────────────────────────────
@@ -949,6 +1010,7 @@ def run_live_v3_ingestion(
         "rfdetr_error":        _rfdetr_error,
         "use_live_rfdetr":     use_live_rfdetr,
         "rfdetr_subprocess":    external_rfdetr_result or {},
+        **_vision_meta,
     })
 
     return {
@@ -972,6 +1034,7 @@ def run_live_v3_ingestion(
         "ocr_rows":              ocr_rows,
         "packet":                packet,
         "confidence_summary":    confidence_summary,
+        **_vision_meta,
     }
 
 
@@ -1177,36 +1240,94 @@ def run_ingestion(
                 "source":           detection_source,
             })
 
+    # ── detected_edges: 1. Vision  2. Annotation  3. local_graph ────────────────
     detected_edges: list[dict] = []
-    seen_pairs: set[tuple[str, str]] = set()
-    for conn in annotation.get("connectors", []):
-        pair = (
-            conn.get("source", conn.get("from_node", "")),
-            conn.get("target", conn.get("to_node", "")),
+    _seen_pairs2: set[frozenset] = set()
+
+    _vision_meta2: dict = {
+        "edge_extraction_source":         "fallback",
+        "vision_connector_edge_count":    0,
+        "vision_connector_segment_count": 0,
+        "vision_connector_warning":       "",
+        "vision_connector_debug_overlay": "",
+    }
+
+    # 1. Vision connector extraction
+    try:
+        from vision.edge_extraction.edge_builder import (
+            extract_edges_from_diagram as _extract_edges2,
         )
-        seen_pairs.add(pair)
+        from vision.edge_extraction.debug_render import (
+            render_connector_debug_overlay as _render_debug2,
+        )
+        _vis2 = _extract_edges2(image_path, detected_nodes)
+        _vision_meta2["vision_connector_segment_count"] = _vis2.get("segment_count", 0)
+        _vision_meta2["vision_connector_warning"]       = _vis2.get("warning", "")
+        if _vis2.get("ok") and _vis2.get("edges"):
+            for _ve in _vis2["edges"]:
+                _s, _t = _ve.get("source", ""), _ve.get("target", "")
+                _fp = frozenset({_s, _t})
+                if _s and _t and _fp not in _seen_pairs2:
+                    _seen_pairs2.add(_fp)
+                    detected_edges.append({
+                        "source":       _s,
+                        "target":       _t,
+                        "relationship": "connected_to",
+                        "label":        "",
+                        "confidence":   round(float(_ve.get("connector_confidence", 0.5)), 3),
+                        "connector_id": _ve.get("segment_id", ""),
+                        "source_type":  "vision_connector_extraction",
+                    })
+            _vision_meta2["edge_extraction_source"]      = "vision_connector_extraction"
+            _vision_meta2["vision_connector_edge_count"] = _vis2["edge_count"]
+            _dbg_dir2  = run_dir.parent.parent / "outputs" / "connector_extraction_debug"
+            _dbg_path2 = _dbg_dir2 / f"{run_id}_connectors_debug.png"
+            _dbg_out2  = _render_debug2(image_path, _vis2.get("segments", []), _vis2["edges"], _dbg_path2)
+            _vision_meta2["vision_connector_debug_overlay"] = _dbg_out2
+    except Exception:
+        pass
+
+    # 2. Annotation connectors
+    _ann_added2 = 0
+    for conn in annotation.get("connectors", []):
+        _s = conn.get("source", conn.get("from_node", ""))
+        _t = conn.get("target", conn.get("to_node", ""))
+        if not _s or not _t:
+            continue
+        _fp = frozenset({_s, _t})
+        _seen_pairs2.add(_fp)
         detected_edges.append({
-            "source":       pair[0],
-            "target":       pair[1],
+            "source":       _s,
+            "target":       _t,
             "relationship": conn.get("label", "connected_to"),
             "label":        conn.get("label", ""),
             "confidence":   conn.get("confidence", 0.91 if is_live else 0.78),
             "connector_id": conn.get("connector_id", ""),
             "source_type":  "annotation_connector",
         })
+        _ann_added2 += 1
+    if _ann_added2 and _vision_meta2["edge_extraction_source"] == "fallback":
+        _vision_meta2["edge_extraction_source"] = "annotation_connector"
+
+    # 3. local_graph edges
+    _lg_added2 = 0
     for e in local_graph.get("edges", []):
-        pair = (e.get("source", ""), e.get("target", ""))
-        if pair not in seen_pairs and pair[0] and pair[1]:
-            seen_pairs.add(pair)
+        _s, _t = e.get("source", ""), e.get("target", "")
+        _fp = frozenset({_s, _t})
+        if _s and _t and _fp not in _seen_pairs2:
+            _seen_pairs2.add(_fp)
             detected_edges.append({
-                "source":       pair[0],
-                "target":       pair[1],
+                "source":       _s,
+                "target":       _t,
                 "relationship": e.get("relationship", "connected_to"),
                 "label":        e.get("label", ""),
                 "confidence":   0.82,
                 "connector_id": "",
                 "source_type":  "local_graph",
             })
+            _lg_added2 += 1
+    if _lg_added2 and _vision_meta2["edge_extraction_source"] == "fallback":
+        _vision_meta2["edge_extraction_source"] = "local_graph"
 
     # ── graph-memory table rows ───────────────────────────────────────────────
     device_rows    = build_device_rows(local_graph, annotation, detection_source)
@@ -1283,6 +1404,8 @@ def run_ingestion(
         "runtime_mode":         runtime_mode,
         "absorption_mode":      "SESSION_MEMORY_ABSORPTION",
         "rfdetr_subprocess":    external_rfdetr_result or {},
+        # Vision connector extraction metadata
+        **_vision_meta2,
     }
 
     _save_json(run_dir / "detected_nodes.json",      detected_nodes)
@@ -1307,6 +1430,7 @@ def run_ingestion(
         "rfdetr_error":            _rfdetr_error,
         "use_live_rfdetr":         use_live_rfdetr,
         "rfdetr_subprocess":       external_rfdetr_result or {},
+        **_vision_meta2,
     })
 
     return {
@@ -1330,6 +1454,7 @@ def run_ingestion(
         "ocr_rows":                ocr_rows,
         "packet":                  packet,
         "confidence_summary":      confidence_summary,
+        **_vision_meta2,
     }
 
 

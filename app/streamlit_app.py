@@ -4720,6 +4720,32 @@ def _render_evidence_tables(record: dict) -> None:
         f"and Copilot.  Detection source: **{det_src}**"
     )
 
+    # ── Connector Extraction card ─────────────────────────────────────────────
+    _conn_src    = packet.get("edge_extraction_source", "")
+    _conn_edges  = packet.get("vision_connector_edge_count", 0)
+    _conn_segs   = packet.get("vision_connector_segment_count", 0)
+    _conn_warn   = packet.get("vision_connector_warning", "")
+    _conn_dbg    = packet.get("vision_connector_debug_overlay", "")
+    if _conn_src:
+        _src_icons = {
+            "vision_connector_extraction": "🔭",
+            "annotation_connector":        "📋",
+            "local_graph":                 "🗺️",
+            "fallback":                    "⚙️",
+        }
+        _src_icon = _src_icons.get(_conn_src, "⚙️")
+        with st.container(border=True):
+            _ce1, _ce2, _ce3 = st.columns([3, 2, 2])
+            _ce1.markdown(f"**{_src_icon} Connector Extraction** — `{_conn_src}`")
+            if _conn_src == "vision_connector_extraction":
+                _ce2.metric("Vision edges", _conn_edges)
+                _ce3.metric("Segments detected", _conn_segs)
+            if _conn_warn:
+                st.warning(_conn_warn, icon="⚠️")
+            if _conn_dbg and Path(_conn_dbg).exists():
+                with st.expander("Vision connector debug overlay", expanded=False):
+                    st.image(_conn_dbg, use_container_width=True)
+
     tab_dev, tab_conn, tab_iface, tab_ocr, tab_pkt = st.tabs(
         ["Devices", "Connectors", "Interfaces & IPs", "OCR / Text", "Graph Memory Packet"]
     )
