@@ -330,6 +330,8 @@ _CSS = """
 html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 [data-testid="stAppViewContainer"] > .main { background: #0b0f1c; }
 section[data-testid="stSidebar"] { background: #070b16 !important; border-right: 1px solid rgba(255,255,255,0.06); }
+section[data-testid="stSidebar"] > div:first-child,
+[data-testid="stSidebarContent"] { padding-top: 0.5rem !important; }
 [data-testid="stHeader"] { background: transparent !important; }
 /* ── Reduce default Streamlit top padding ── */
 .block-container, [data-testid="stMainBlockContainer"] { padding-top: 1.2rem !important; }
