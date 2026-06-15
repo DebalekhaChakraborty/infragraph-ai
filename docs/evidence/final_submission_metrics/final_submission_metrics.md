@@ -1,5 +1,5 @@
 # InfraGraph AI — Final Submission Metrics
-Generated: 2026-06-15T20:14:29.660999+00:00
+Generated: 2026-06-15T23:31:41.336406+00:00
 
 ## Slide-4 Summary Table
 | Category | Evidence |
@@ -10,14 +10,14 @@ Generated: 2026-06-15T20:14:29.660999+00:00
 | Split | 64 train / 8 val / 8 test |
 | GNN feature dim | 54 |
 | GNN V2 best epoch | 5 |
-| GNN V2 test top-1 | N/A (synthetic/generated enterprise benchmark) |
+| GNN V2 test top-1 | 1.0 (synthetic/generated enterprise benchmark) |
 | GNN V2 inference latency | not measured |
 | Qwen model | Qwen/Qwen3-4B |
 | Alignment | LoRA rank 16 + GRPO/vERL (32/32 steps) |
 | Qwen tokens | not measured live |
 | Qwen latency | unavailable |
 | AMD GPU evidence | MI300X / ROCm — GPU 100% utilization, VRAM ~42%, Power ~278W (training evidence) |
-| Detector metrics | precision=N/A, recall=0.0000, F1=N/A (prototype benchmark) |
+| Detector metrics | not claimed — eval report present but status='evaluation_failed', processed images=0 |
 
 ---
 
@@ -29,7 +29,7 @@ Generated: 2026-06-15T20:14:29.660999+00:00
 - Graphs: 80 (train=64 / val=8 / test=8)
 - Epochs: 80, best epoch: 5
 - Best val MRR: 1.0
-- Test metrics: {"mrr": 1.0}
+- Test metrics: {"top1": 1.0, "top3": 1.0, "mrr": 1.0}
 - uses_edge_type: True
 - uses_temporal_features: True
 
@@ -50,14 +50,19 @@ Generated: 2026-06-15T20:14:29.660999+00:00
 ## E. AMD GPU Telemetry
 - Available: False
 - Command used: None
-- Timestamp: 2026-06-15T20:14:57.464625+00:00
+- Timestamp: 2026-06-15T23:32:11.442196+00:00
 - Note: AMD telemetry command unavailable in this environment; see committed AMD evidence files.
 
 ## F. RF-DETR Evidence
 - Status: `eval_report_present`
 - Source: `D:\My Folders\Hackathons\infragraph-ai\reports\rfdetr_v3_eval\rfdetr_v3_eval_report.json`
+- Report status: `evaluation_failed`
 - Split: val
-- Precision: N/A
-- Recall: 0.0000
-- F1: N/A
-- mAP@0.5: 0.0000
+- Processed images: 0
+- **Detector accuracy is not claimed from this report** — inference unavailable or no images were successfully processed.
+- First inference errors:
+  - `enterprise_v3_0064__branch_topology.png`: Non-zero exit code 5: 
+  - `enterprise_v3_0064__datacenter_topology.png`: Non-zero exit code 5: 
+  - `enterprise_v3_0064__wan_topology.png`: Non-zero exit code 5: 
+  - `enterprise_v3_0065__app_db_topology.png`: Non-zero exit code 5: 
+  - `enterprise_v3_0065__branch_topology.png`: Non-zero exit code 5: 

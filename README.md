@@ -260,7 +260,7 @@ Only repository evidence is listed here.
 | Exported Qwen3 GRPO adapter | `model_artifacts/qwen3_grpo_lora_adapter/README.md` | Exported from vERL/FSDP actor checkpoint at `global_step_32`; LoRA rank 16, alpha 32 | Adapter files are present in the folder. |
 | RF-DETR detector artifacts | `model_artifacts/rfdetr_v3/` | Checkpoints committed locally: best total, regular, and EMA | Detector evaluation metric not committed in the inspected reports; regenerate with `python scripts/run_rfdetr_inference.py` as needed. |
 | Sample RCA outputs | `assets/preloaded/enterprise_gnn_rca/`, `outputs/enterprise_gnn_rca/` | Per-scenario RCA JSON files are present | Generated demo/inference artifacts. |
-| RF-DETR detector eval | [rfdetr_v3_eval_report.md](reports/rfdetr_v3_eval/rfdetr_v3_eval_report.md) | Precision/recall/F1 on V3 verified annotations (prototype benchmark; accuracy not claimed unless report is present) | Run `python scripts/evaluate_rfdetr_v3_detector.py` to generate. |
+| RF-DETR detector eval | [rfdetr_v3_eval_report.md](reports/rfdetr_v3_eval/rfdetr_v3_eval_report.md) | RF-DETR detector eval report. Use precision/recall/F1 only if report status is `completed` with processed images > 0. | Run `python scripts/evaluate_rfdetr_v3_detector.py` to generate. |
 | Final submission metrics | [final_submission_metrics.md](docs/evidence/final_submission_metrics/final_submission_metrics.md) | GNN V2 inference latency, Qwen token/latency evidence, AMD GPU telemetry, Slide-4 summary table | Run `python scripts/collect_final_submission_metrics.py` to generate. |
 
 ## 11. How To Run

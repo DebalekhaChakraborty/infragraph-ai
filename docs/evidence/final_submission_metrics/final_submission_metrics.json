@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-15T20:14:29.660999+00:00",
+  "generated_at": "2026-06-15T23:31:41.336406+00:00",
   "gnn_v2_training": {
     "status": "ok",
     "source_file": "D:\\My Folders\\Hackathons\\infragraph-ai\\model_artifacts\\enterprise_gnn_rca_v2\\training_report.json",
@@ -15,6 +15,8 @@
     "best_epoch": 5,
     "best_val_mrr": 1.0,
     "test_metrics": {
+      "top1": 1.0,
+      "top3": 1.0,
       "mrr": 1.0
     }
   },
@@ -51,107 +53,39 @@
       "docs/evidence/amd_mi300x_enterprise_gnn_v2_run/training_summary.md",
       "training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/completion_evidence.md"
     ],
-    "timestamp": "2026-06-15T20:14:57.464625+00:00"
+    "timestamp": "2026-06-15T23:32:11.442196+00:00"
   },
   "rfdetr_evidence": {
     "status": "eval_report_present",
+    "report_status": "evaluation_failed",
     "source_file": "D:\\My Folders\\Hackathons\\infragraph-ai\\reports\\rfdetr_v3_eval\\rfdetr_v3_eval_report.json",
-    "metrics": {
-      "precision": NaN,
-      "recall": 0.0,
-      "f1": NaN,
-      "mean_iou_matched": NaN,
-      "mean_ap_at_50": 0.0,
-      "avg_inference_runtime_ms": NaN,
-      "global_tp": 0,
-      "global_fp": 0,
-      "global_fn": 265
-    },
-    "summary_note": "RF-DETR detector evaluated against V3 verified annotations on 0 diagrams. Metrics are prototype benchmark metrics, not production accuracy.",
+    "metrics": {},
+    "summary_note": "RF-DETR evaluation did not complete because detector inference failed for all 30 sampled images. Detector accuracy is not claimed from this report.",
     "split": "val",
     "num_images_processed": 0,
-    "per_class_metrics": {
-      "cloud_or_wan": {
-        "tp": 0,
-        "fp": 0,
-        "fn": 23,
-        "gt_count": 23,
-        "precision": NaN,
-        "recall": 0.0,
-        "f1": NaN,
-        "ap_at_50": 0.0
+    "per_class_metrics": {},
+    "first_5_errors": [
+      {
+        "file_name": "enterprise_v3_0064__branch_topology.png",
+        "error": "Non-zero exit code 5: "
       },
-      "database": {
-        "tp": 0,
-        "fp": 0,
-        "fn": 12,
-        "gt_count": 12,
-        "precision": NaN,
-        "recall": 0.0,
-        "f1": NaN,
-        "ap_at_50": 0.0
+      {
+        "file_name": "enterprise_v3_0064__datacenter_topology.png",
+        "error": "Non-zero exit code 5: "
       },
-      "firewall": {
-        "tp": 0,
-        "fp": 0,
-        "fn": 26,
-        "gt_count": 26,
-        "precision": NaN,
-        "recall": 0.0,
-        "f1": NaN,
-        "ap_at_50": 0.0
+      {
+        "file_name": "enterprise_v3_0064__wan_topology.png",
+        "error": "Non-zero exit code 5: "
       },
-      "load_balancer": {
-        "tp": 0,
-        "fp": 0,
-        "fn": 6,
-        "gt_count": 6,
-        "precision": NaN,
-        "recall": 0.0,
-        "f1": NaN,
-        "ap_at_50": 0.0
+      {
+        "file_name": "enterprise_v3_0065__app_db_topology.png",
+        "error": "Non-zero exit code 5: "
       },
-      "router": {
-        "tp": 0,
-        "fp": 0,
-        "fn": 36,
-        "gt_count": 36,
-        "precision": NaN,
-        "recall": 0.0,
-        "f1": NaN,
-        "ap_at_50": 0.0
-      },
-      "server": {
-        "tp": 0,
-        "fp": 0,
-        "fn": 84,
-        "gt_count": 84,
-        "precision": NaN,
-        "recall": 0.0,
-        "f1": NaN,
-        "ap_at_50": 0.0
-      },
-      "service": {
-        "tp": 0,
-        "fp": 0,
-        "fn": 39,
-        "gt_count": 39,
-        "precision": NaN,
-        "recall": 0.0,
-        "f1": NaN,
-        "ap_at_50": 0.0
-      },
-      "switch": {
-        "tp": 0,
-        "fp": 0,
-        "fn": 39,
-        "gt_count": 39,
-        "precision": NaN,
-        "recall": 0.0,
-        "f1": NaN,
-        "ap_at_50": 0.0
+      {
+        "file_name": "enterprise_v3_0065__branch_topology.png",
+        "error": "Non-zero exit code 5: "
       }
-    }
+    ]
   },
-  "slide4_markdown_table": "| Category | Evidence |\n|----------|----------|\n| Diagram model | RF-DETR-supported detector + verified fallback + vision connector extraction |\n| RCA model | EnterpriseRcaTemporalRelGNN / Temporal Relation-Aware GraphSAGE |\n| RCA dataset | 80 generated enterprise RCA scenarios |\n| Split | 64 train / 8 val / 8 test |\n| GNN feature dim | 54 |\n| GNN V2 best epoch | 5 |\n| GNN V2 test top-1 | N/A (synthetic/generated enterprise benchmark) |\n| GNN V2 inference latency | not measured |\n| Qwen model | Qwen/Qwen3-4B |\n| Alignment | LoRA rank 16 + GRPO/vERL (32/32 steps) |\n| Qwen tokens | not measured live |\n| Qwen latency | unavailable |\n| AMD GPU evidence | MI300X / ROCm \u2014 GPU 100% utilization, VRAM ~42%, Power ~278W (training evidence) |\n| Detector metrics | precision=N/A, recall=0.0000, F1=N/A (prototype benchmark) |\n"
+  "slide4_markdown_table": "| Category | Evidence |\n|----------|----------|\n| Diagram model | RF-DETR-supported detector + verified fallback + vision connector extraction |\n| RCA model | EnterpriseRcaTemporalRelGNN / Temporal Relation-Aware GraphSAGE |\n| RCA dataset | 80 generated enterprise RCA scenarios |\n| Split | 64 train / 8 val / 8 test |\n| GNN feature dim | 54 |\n| GNN V2 best epoch | 5 |\n| GNN V2 test top-1 | 1.0 (synthetic/generated enterprise benchmark) |\n| GNN V2 inference latency | not measured |\n| Qwen model | Qwen/Qwen3-4B |\n| Alignment | LoRA rank 16 + GRPO/vERL (32/32 steps) |\n| Qwen tokens | not measured live |\n| Qwen latency | unavailable |\n| AMD GPU evidence | MI300X / ROCm \u2014 GPU 100% utilization, VRAM ~42%, Power ~278W (training evidence) |\n| Detector metrics | not claimed \u2014 eval report present but status='evaluation_failed', processed images=0 |\n"
 }

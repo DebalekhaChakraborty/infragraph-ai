@@ -92,21 +92,31 @@ def collect_gnn_v2_training_evidence() -> dict:
         if key in data:
             result[key] = data[key]
 
-    # Extract test metrics
+    # Extract test metrics — map all known key variants to canonical short names
+    _KEY_CANON: dict[str, str] = {
+        "top1": "top1",
+        "top_1": "top1",
+        "top1_accuracy": "top1",
+        "top3": "top3",
+        "top_3": "top3",
+        "top3_accuracy": "top3",
+        "mrr": "mrr",
+    }
     test_metrics: dict = {}
     for possible_key in ("test_metrics", "test_results", "eval_results"):
         if possible_key in data and isinstance(data[possible_key], dict):
             raw = data[possible_key]
-            for m_key in ("top1", "top3", "mrr", "top_1", "top_3"):
-                if m_key in raw:
-                    test_metrics[m_key.replace("_", "")] = raw[m_key]
+            for m_key, canon in _KEY_CANON.items():
+                if m_key in raw and canon not in test_metrics:
+                    test_metrics[canon] = raw[m_key]
             break
 
     # Also try flat keys
     for flat_key in ("test_top1", "test_top3", "test_mrr"):
         if flat_key in data:
-            short = flat_key.replace("test_", "")
-            test_metrics[short] = data[flat_key]
+            canon = _KEY_CANON.get(flat_key.replace("test_", ""), flat_key.replace("test_", ""))
+            if canon not in test_metrics:
+                test_metrics[canon] = data[flat_key]
 
     result["test_metrics"] = test_metrics
     return result
@@ -285,7 +295,12 @@ def collect_qwen_latency() -> dict:
     model = os.environ.get("INFRAGRAPH_QWEN_MODEL", "Qwen/Qwen3-4B").strip()
 
     if base_url:
-        endpoint = base_url.rstrip("/") + "/v1/chat/completions"
+        stripped = base_url.rstrip("/")
+        # Avoid double /v1 if the user already included it in the base URL
+        if stripped.endswith("/v1"):
+            endpoint = stripped + "/chat/completions"
+        else:
+            endpoint = stripped + "/v1/chat/completions"
         payload = json.dumps(
             {
                 "model": model,
@@ -457,12 +472,14 @@ def collect_rfdetr_evidence() -> dict:
             data = json.loads(RFDETR_EVAL_REPORT.read_text(encoding="utf-8"))
             return {
                 "status": "eval_report_present",
+                "report_status": data.get("status", ""),   # e.g. "completed" / "evaluation_failed"
                 "source_file": str(RFDETR_EVAL_REPORT),
                 "metrics": data.get("metrics", {}),
                 "summary_note": data.get("summary_note", ""),
                 "split": data.get("split", ""),
-                "num_images_processed": data.get("num_images_processed"),
+                "num_images_processed": data.get("num_images_processed") or 0,
                 "per_class_metrics": data.get("per_class_metrics", {}),
+                "first_5_errors": data.get("first_5_errors", []),
             }
         except Exception as exc:
             return {
@@ -548,13 +565,21 @@ def build_slide4_table(
     else:
         amd_evidence_str = "MI300X / ROCm — GPU 100% utilization, VRAM ~42%, Power ~278W (training evidence)"
 
-    # RF-DETR detector
+    # RF-DETR detector — only claim metrics when eval completed with processed images
     if rfdetr.get("status") == "eval_report_present":
-        metrics = rfdetr.get("metrics", {})
-        p = _safe_fmt_float(metrics.get("precision"), ".4f")
-        r = _safe_fmt_float(metrics.get("recall"), ".4f")
-        f1 = _safe_fmt_float(metrics.get("f1"), ".4f")
-        detector_str = f"precision={p}, recall={r}, F1={f1} (prototype benchmark)"
+        report_status = rfdetr.get("report_status", "")
+        num_processed = rfdetr.get("num_images_processed") or 0
+        if report_status == "completed" and num_processed > 0:
+            metrics = rfdetr.get("metrics", {})
+            p = _safe_fmt_float(metrics.get("precision"), ".4f")
+            r = _safe_fmt_float(metrics.get("recall"), ".4f")
+            f1 = _safe_fmt_float(metrics.get("f1"), ".4f")
+            detector_str = f"precision={p}, recall={r}, F1={f1} (prototype benchmark)"
+        else:
+            detector_str = (
+                f"not claimed — eval report present but status={report_status!r}, "
+                f"processed images={num_processed}"
+            )
     else:
         detector_str = "not claimed — eval report absent"
 
@@ -683,15 +708,34 @@ def write_markdown_report(
         f"- Status: `{rfdetr.get('status', 'N/A')}`\n",
     ]
     if rfdetr.get("status") == "eval_report_present":
+        report_status = rfdetr.get("report_status", "")
+        num_processed = rfdetr.get("num_images_processed") or 0
         m = rfdetr.get("metrics", {})
         lines += [
             f"- Source: `{rfdetr.get('source_file', 'N/A')}`\n",
+            f"- Report status: `{report_status}`\n",
             f"- Split: {rfdetr.get('split', 'N/A')}\n",
-            f"- Precision: {_safe_fmt_float(m.get('precision'), '.4f')}\n",
-            f"- Recall: {_safe_fmt_float(m.get('recall'), '.4f')}\n",
-            f"- F1: {_safe_fmt_float(m.get('f1'), '.4f')}\n",
-            f"- mAP@0.5: {_safe_fmt_float(m.get('mean_ap_at_50'), '.4f')}\n",
+            f"- Processed images: {num_processed}\n",
         ]
+        if report_status == "completed" and num_processed > 0:
+            lines += [
+                f"- Precision: {_safe_fmt_float(m.get('precision'), '.4f')}\n",
+                f"- Recall: {_safe_fmt_float(m.get('recall'), '.4f')}\n",
+                f"- F1: {_safe_fmt_float(m.get('f1'), '.4f')}\n",
+                f"- mAP@0.5: {_safe_fmt_float(m.get('mean_ap_at_50'), '.4f')}\n",
+            ]
+        else:
+            errors = rfdetr.get("first_5_errors", [])
+            lines.append(
+                "- **Detector accuracy is not claimed from this report** — "
+                "inference unavailable or no images were successfully processed.\n"
+            )
+            if errors:
+                lines.append("- First inference errors:\n")
+                for e in errors:
+                    fn = e.get("file_name", "") or e.get("error", str(e))
+                    err = e.get("error", "")
+                    lines.append(f"  - `{fn}`: {err}\n")
     else:
         lines.append(f"- Note: {rfdetr.get('note', '')}\n")
 

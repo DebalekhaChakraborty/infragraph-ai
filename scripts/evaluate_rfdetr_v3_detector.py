@@ -155,9 +155,12 @@ def _write_full_report(
 
     json_path.write_text(json.dumps(results, indent=2), encoding="utf-8")
 
+    status = results.get("status", "completed")
     metrics = results.get("metrics", {})
     per_class = results.get("per_class_metrics", {})
     summary_note = results.get("summary_note", "")
+    num_processed = results.get("num_images_processed", 0) or 0
+    first_5_errors = results.get("first_5_errors", [])
 
     def fmt(v: object) -> str:
         if isinstance(v, float):
@@ -168,29 +171,46 @@ def _write_full_report(
 
     lines = [
         "# RF-DETR V3 Detector Evaluation\n",
-        f"**Status:** completed\n",
+        f"**Status:** {status}\n",
         f"\n{summary_note}\n",
-        "\n## Overall Metrics\n",
-        "| Metric | Value |",
-        "|--------|-------|",
     ]
-    for k, v in metrics.items():
-        lines.append(f"| {k} | {fmt(v)} |")
 
-    lines.append("\n## Per-Class Metrics\n")
-    lines.append("| Class | TP | FP | FN | Precision | Recall | F1 | AP@0.5 |")
-    lines.append("|-------|----|----|-----|-----------|--------|----|--------|")
-    for cls, cm in per_class.items():
-        lines.append(
-            f"| {cls} "
-            f"| {cm.get('tp', 0)} "
-            f"| {cm.get('fp', 0)} "
-            f"| {cm.get('fn', 0)} "
-            f"| {fmt(cm.get('precision', float('nan')))} "
-            f"| {fmt(cm.get('recall', float('nan')))} "
-            f"| {fmt(cm.get('f1', float('nan')))} "
-            f"| {fmt(cm.get('ap_at_50', float('nan')))} |"
-        )
+    if status != "completed" or num_processed == 0:
+        # No usable detector metrics — make this explicit
+        lines += [
+            "\n**RF-DETR evaluation did not complete because detector inference failed "
+            "for all sampled images. Detector accuracy is not claimed from this report.**\n",
+        ]
+        if first_5_errors:
+            lines.append("\n### First inference errors\n")
+            lines.append("| Image | Error |\n|-------|-------|\n")
+            for e in first_5_errors:
+                fn = e.get("file_name", "")
+                err = (e.get("error", "") or "")[:200]
+                lines.append(f"| {fn} | {err} |\n")
+    else:
+        lines += [
+            "\n## Overall Metrics\n",
+            "| Metric | Value |",
+            "|--------|-------|",
+        ]
+        for k, v in metrics.items():
+            lines.append(f"| {k} | {fmt(v)} |")
+
+        lines.append("\n## Per-Class Metrics\n")
+        lines.append("| Class | TP | FP | FN | Precision | Recall | F1 | AP@0.5 |")
+        lines.append("|-------|----|----|-----|-----------|--------|----|--------|")
+        for cls, cm in per_class.items():
+            lines.append(
+                f"| {cls} "
+                f"| {cm.get('tp', 0)} "
+                f"| {cm.get('fp', 0)} "
+                f"| {cm.get('fn', 0)} "
+                f"| {fmt(cm.get('precision', float('nan')))} "
+                f"| {fmt(cm.get('recall', float('nan')))} "
+                f"| {fmt(cm.get('f1', float('nan')))} "
+                f"| {fmt(cm.get('ap_at_50', float('nan')))} |"
+            )
 
     md_content = "\n".join(lines) + "\n"
     md_path.write_text(md_content, encoding="utf-8")
@@ -463,6 +483,39 @@ def evaluate(
                 sample_dir.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(vp_path, sample_dir / vp_path.name)
                 sample_count += 1
+
+    # Early exit when every image failed inference — no usable detector metrics
+    if processed_images == 0:
+        _n_eval = len(image_ids_to_eval)
+        first_5 = [
+            {"file_name": e.get("file_name", ""), "error": (e.get("error", "") or "")[:300]}
+            for e in inference_errors[:5]
+        ]
+        fail_results = {
+            "status": "evaluation_failed",
+            "split": split,
+            "num_images_in_split": len(all_image_ids),
+            "num_images_evaluated": _n_eval,
+            "num_images_processed": 0,
+            "num_images_skipped": skipped_images,
+            "num_inference_errors": len(inference_errors),
+            "iou_threshold": iou_threshold,
+            "confidence_threshold": confidence,
+            "summary_note": (
+                "RF-DETR evaluation did not complete because detector inference failed "
+                f"for all {_n_eval} sampled images. "
+                "Detector accuracy is not claimed from this report."
+            ),
+            "first_5_errors": first_5,
+            "metrics": {},
+            "per_class_metrics": {},
+        }
+        _write_full_report(out_dir, fail_results)
+        print(
+            f"\nSummary: processed=0/{_n_eval}, evaluation_failed — "
+            "detector inference unavailable for all images"
+        )
+        return 0
 
     # Aggregate metrics
     all_classes = sorted(
