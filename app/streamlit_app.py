@@ -8548,7 +8548,6 @@ _NAV_PAGES = [
     "Topology RCA",
     "Enterprise Graph Brain",
     "Enterprise GNN RCA",
-    "Graph Copilot",
     "Agentic Ops Orchestrator",
 ]
 
@@ -8610,7 +8609,6 @@ def _sidebar_v3() -> None:
             "Topology RCA":           bool(st.session_state.local_rca_result),
             "Enterprise Graph Brain": bool(st.session_state.enterprise_ingestion_summary),
             "Enterprise GNN RCA":     bool(st.session_state.enterprise_rca_result),
-            "Graph Copilot":          bool(st.session_state.enterprise_graph_after),
         }
         _PIPELINE_NAV = [p for p in _NAV_PAGES if p != "Agentic Ops Orchestrator"]
         for _pg in _PIPELINE_NAV:
@@ -8640,8 +8638,6 @@ def _sidebar_v3() -> None:
 
         # ── InfraGraph Copilot widget (Ops page only) ────────────────────────
         if _cur_nav == "Agentic Ops Orchestrator":
-            _cop_runs = st.session_state.get("ops_cluster_runs", {})
-            _cop_avail = bool(_cop_runs)
             st.markdown(
                 '<div style="border-top:1px solid rgba(139,92,246,0.35);margin:18px 2px 10px"></div>'
                 '<div style="font-size:0.58rem;color:#a78bfa;font-weight:700;'
@@ -8650,12 +8646,11 @@ def _sidebar_v3() -> None:
                 unsafe_allow_html=True,
             )
             if st.button(
-                "💬 Open Chat" if _cop_avail else "💬 Chat (run AI Findings first)",
+                "💬 Open Chat",
                 key="sidebar_copilot_btn",
                 use_container_width=True,
-                type="primary" if _cop_avail else "secondary",
-                disabled=not _cop_avail,
-                help="Ask about root cause, blast radius, evidence, and remediation for the active cluster.",
+                type="primary",
+                help="Ask InfraGraph Copilot anything — graph memory, RCA, remediation.",
             ):
                 st.session_state.ops_copilot_open = True
                 st.rerun()
