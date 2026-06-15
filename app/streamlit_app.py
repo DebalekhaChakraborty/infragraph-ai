@@ -8590,16 +8590,25 @@ def _sidebar_v3() -> None:
             f'<div style="padding:10px 0 6px">'
             f'<span style="font-size:1.08rem;font-weight:800;color:{title_color}">InfraGraph AI</span>'
             f'</div>'
-            f'<p style="font-size:0.72rem;color:{sub_color};margin:-2px 0 0">Diagram Intelligence V3</p>',
+            f'<p style="font-size:0.72rem;color:{sub_color};margin:-2px 0 0">Enterprise Experience</p>',
             unsafe_allow_html=True,
         )
 
-        st.markdown('<div class="sb-label">Navigate</div>', unsafe_allow_html=True)
+        st.markdown('<div class="sb-label">Navigate Pipeline Progress</div>', unsafe_allow_html=True)
         _cur_nav = st.session_state.get("main_nav", _NAV_PAGES[0])
+        # completion state per pipeline page
+        _PAGE_DONE = {
+            "Diagram Intelligence":   bool(st.session_state.local_graph),
+            "Topology RCA":           bool(st.session_state.local_rca_result),
+            "Enterprise Graph Brain": bool(st.session_state.enterprise_ingestion_summary),
+            "Enterprise GNN RCA":     bool(st.session_state.enterprise_rca_result),
+            "Graph Copilot":          bool(st.session_state.enterprise_graph_after),
+        }
         _PIPELINE_NAV = [p for p in _NAV_PAGES if p != "Agentic Ops Orchestrator"]
         for _pg in _PIPELINE_NAV:
+            _tick = " ✅" if _PAGE_DONE.get(_pg) else ""
             if st.button(
-                _pg,
+                f"{_pg}{_tick}",
                 key=f"sb_nav_{_pg.replace(' ', '_')}",
                 use_container_width=True,
                 type="primary" if _cur_nav == _pg else "secondary",
@@ -8620,30 +8629,6 @@ def _sidebar_v3() -> None:
         ):
             st.session_state["main_nav"] = "Agentic Ops Orchestrator"
             st.rerun()
-
-        st.markdown('<div class="sb-label">Pipeline Progress</div>', unsafe_allow_html=True)
-        steps = [
-            ("Diagram ingested",          bool(st.session_state.local_graph)),
-            ("Topology graph created",     bool(st.session_state.local_graph)),
-            ("Topology RCA complete",      bool(st.session_state.local_rca_result)),
-            ("Absorbed into enterprise",  bool(st.session_state.enterprise_ingestion_summary)),
-            ("Enterprise RCA complete",   bool(st.session_state.enterprise_rca_result)),
-            ("Agentic orchestration done", bool(
-                st.session_state.get("agent_run_result") and
-                (st.session_state.get("agent_run_result") or {}).get("status") != "partial"
-            )),
-            ("Copilot ready",             bool(st.session_state.enterprise_graph_after)),
-        ]
-        for label, done in steps:
-            cls  = "sb-step" if done else "sb-step sb-pending"
-            icon = "✓" if done else "○"
-            st.markdown(
-                f'<div class="{cls}">'
-                f'<span class="sb-check">{icon}</span>'
-                f'<span>{label}</span>'
-                f'</div>',
-                unsafe_allow_html=True,
-            )
 
         # ── InfraGraph Copilot widget (Ops page only) ────────────────────────
         if _cur_nav == "Agentic Ops Orchestrator":
