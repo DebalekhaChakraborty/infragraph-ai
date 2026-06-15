@@ -7850,38 +7850,43 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                 (a for a in _alert_stream if a["alert_id"] == _sel_alert_id), None
             )
             if _sel_al_obj:
-                _sv2 = _SV_COLOR.get(_sel_al_obj["severity"], "#6b7280")
+                _sv2  = _SV_COLOR.get(_sel_al_obj["severity"], "#6b7280")
+                _nbrs = " &nbsp;·&nbsp; ".join(
+                    f'<code style="font-size:0.68rem;color:#38bdf8">{html.escape(n)}</code>'
+                    for n in _sel_al_obj.get("neighbors", [])[:5]
+                )
                 st.markdown(
-                    '<div style="' + _card("border-left:4px solid " + _sv2) + '">',
+                    f'<div style="{_card("border-left:4px solid " + _sv2)}">'
+                    f'<div style="font-size:0.61rem;font-weight:700;color:#64748b;'
+                    f'text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">Alert Detail</div>'
+                    f'<div style="display:flex;gap:16px;align-items:flex-start">'
+                    # left: metadata
+                    f'<div style="flex:1;min-width:0">'
+                    + _badge(_sel_al_obj["severity"].upper(), _sv2)
+                    + _badge(_sel_al_obj.get("node_type", "node"), "#475569") +
+                    f'<div style="margin-top:8px;font-size:0.74rem;line-height:1.8;color:#cbd5e1">'
+                    f'<b>Node:</b> <code style="color:#38bdf8">{html.escape(_sel_al_obj["node_id"])}</code><br>'
+                    f'<b>Diagram:</b> <code style="color:#34d399">{html.escape(_sel_al_obj.get("diagram","—"))}</code><br>'
+                    f'<b>Timestamp:</b> t+{_sel_al_obj["timestamp_offset"]}m<br>'
+                    f'<b>Service:</b> {html.escape(_sel_al_obj.get("service","—"))}'
+                    f'</div></div>'
+                    # right: description + neighbors
+                    f'<div style="flex:1;min-width:0;border-left:1px solid rgba(255,255,255,0.07);padding-left:14px">'
+                    + (
+                        f'<div style="font-size:0.85rem;color:#e2e8f0;font-weight:600;'
+                        f'line-height:1.45;margin-bottom:10px">'
+                        f'{html.escape(_sel_al_obj["description"])}</div>'
+                        if _sel_al_obj.get("description") else ""
+                    ) +
+                    (
+                        f'<div style="font-size:0.68rem;color:#64748b;font-weight:700;'
+                        f'text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Connected nodes</div>'
+                        f'<div style="font-size:0.72rem">{_nbrs}</div>'
+                        if _nbrs else ""
+                    ) +
+                    f'</div></div></div>',
                     unsafe_allow_html=True,
                 )
-                st.markdown(
-                    '<div style="font-size:0.61rem;font-weight:700;color:#64748b;'
-                    'text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">'
-                    'Alert Detail</div>',
-                    unsafe_allow_html=True,
-                )
-                st.markdown(_badge(_sel_al_obj["severity"].upper(), _sv2)
-                            + _badge(_sel_al_obj.get("node_type", "node"), "#475569"),
-                            unsafe_allow_html=True)
-                st.markdown(
-                    f'**Node:** `{_sel_al_obj["node_id"]}`  \n'
-                    f'**Diagram:** `{_sel_al_obj.get("diagram", "—")}`  \n'
-                    f'**Timestamp:** t+{_sel_al_obj["timestamp_offset"]}m  \n'
-                    f'**Service:** {_sel_al_obj.get("service", "—")}'
-                )
-                if _sel_al_obj.get("description"):
-                    st.markdown(
-                        f'<div style="font-size:0.88rem;color:#e2e8f0;font-weight:600;'
-                        f'margin:8px 0 6px;line-height:1.4">{html.escape(_sel_al_obj["description"])}</div>',
-                        unsafe_allow_html=True,
-                    )
-                if _sel_al_obj.get("neighbors"):
-                    st.markdown("**Connected nodes:**")
-                    st.markdown(
-                        " · ".join(f"`{n}`" for n in _sel_al_obj["neighbors"][:5])
-                    )
-                st.markdown("</div>", unsafe_allow_html=True)
             else:
                 st.markdown(
                     '<div style="text-align:center;padding:40px 20px;color:#475569;font-size:0.75rem">'
@@ -7934,43 +7939,46 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                 (a for a in _alert_stream if a["alert_id"] == _sel_alert_id), None
             )
             if _sel_al_obj:
-                _sv2 = _SV_COLOR.get(_sel_al_obj["severity"], "#6b7280")
+                _sv2       = _SV_COLOR.get(_sel_al_obj["severity"], "#6b7280")
                 _grp_color = _sel_al_obj.get("color") or _sv2
-                st.markdown(
-                    '<div style="' + _card("border-left:4px solid " + _grp_color) + '">',
-                    unsafe_allow_html=True,
+                _nbrs2     = " &nbsp;·&nbsp; ".join(
+                    f'<code style="font-size:0.68rem;color:#38bdf8">{html.escape(n)}</code>'
+                    for n in _sel_al_obj.get("neighbors", [])[:5]
                 )
                 st.markdown(
-                    '<div style="font-size:0.61rem;font-weight:700;color:#64748b;'
-                    'text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">'
-                    'Alert Detail</div>',
-                    unsafe_allow_html=True,
-                )
-                st.markdown(
-                    _badge(_sel_al_obj["severity"].upper(), _sv2)
+                    f'<div style="{_card("border-left:4px solid " + _grp_color)}">'
+                    f'<div style="font-size:0.61rem;font-weight:700;color:#64748b;'
+                    f'text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">Alert Detail</div>'
+                    f'<div style="display:flex;gap:16px;align-items:flex-start">'
+                    # left: metadata
+                    f'<div style="flex:1;min-width:0">'
+                    + _badge(_sel_al_obj["severity"].upper(), _sv2)
                     + _badge(_sel_al_obj.get("node_type", "node"), "#475569")
                     + (_badge(_sel_al_obj["correlation_group"], _grp_color)
-                       if _sel_al_obj.get("correlation_group") else ""),
+                       if _sel_al_obj.get("correlation_group") else "") +
+                    f'<div style="margin-top:8px;font-size:0.74rem;line-height:1.8;color:#cbd5e1">'
+                    f'<b>Node:</b> <code style="color:#38bdf8">{html.escape(_sel_al_obj["node_id"])}</code><br>'
+                    f'<b>Diagram:</b> <code style="color:#34d399">{html.escape(_sel_al_obj.get("diagram","—"))}</code><br>'
+                    f'<b>Timestamp:</b> t+{_sel_al_obj["timestamp_offset"]}m<br>'
+                    f'<b>Group:</b> {html.escape(_sel_al_obj.get("correlation_group","—"))}'
+                    f'</div></div>'
+                    # right: description + neighbors
+                    f'<div style="flex:1;min-width:0;border-left:1px solid rgba(255,255,255,0.07);padding-left:14px">'
+                    + (
+                        f'<div style="font-size:0.85rem;color:#e2e8f0;font-weight:600;'
+                        f'line-height:1.45;margin-bottom:10px">'
+                        f'{html.escape(_sel_al_obj["description"])}</div>'
+                        if _sel_al_obj.get("description") else ""
+                    ) +
+                    (
+                        f'<div style="font-size:0.68rem;color:#64748b;font-weight:700;'
+                        f'text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Connected nodes</div>'
+                        f'<div style="font-size:0.72rem">{_nbrs2}</div>'
+                        if _nbrs2 else ""
+                    ) +
+                    f'</div></div></div>',
                     unsafe_allow_html=True,
                 )
-                st.markdown(
-                    f'**Node:** `{_sel_al_obj["node_id"]}`  \n'
-                    f'**Diagram:** `{_sel_al_obj.get("diagram", "—")}`  \n'
-                    f'**Timestamp:** t+{_sel_al_obj["timestamp_offset"]}m  \n'
-                    f'**Correlation group:** {_sel_al_obj.get("correlation_group", "—")}'
-                )
-                if _sel_al_obj.get("description"):
-                    st.markdown(
-                        f'<div style="font-size:0.88rem;color:#e2e8f0;font-weight:600;'
-                        f'margin:8px 0 6px;line-height:1.4">{html.escape(_sel_al_obj["description"])}</div>',
-                        unsafe_allow_html=True,
-                    )
-                if _sel_al_obj.get("neighbors"):
-                    st.markdown("**Connected nodes (potential propagation path):**")
-                    st.markdown(
-                        " · ".join(f"`{n}`" for n in _sel_al_obj["neighbors"][:5])
-                    )
-                st.markdown("</div>", unsafe_allow_html=True)
 
             # Correlation summary (always shown in correlated phase)
             _grp_counts: dict = {}
