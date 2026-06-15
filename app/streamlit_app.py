@@ -7295,6 +7295,7 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
         ("ops_selected_cluster_id",  None),
         ("ops_selected_alert_id",    None),
         ("ops_cluster_runs",         {}),
+        ("ops_rem_plans",            {}),
         ("ops_graph_show_cluster",   None),
         ("agent_approval_status",    "pending"),
         ("agent_copilot_answer",     ""),
@@ -7518,8 +7519,8 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
             for _rk in ("ops_phase", "ops_alert_stream", "ops_scenario_colors",
                         "ops_clusters", "ops_selected_cluster_id",
                         "ops_selected_alert_id",
-                        "ops_cluster_runs", "ops_graph_show_cluster",
-                        "agent_approval_status"):
+                        "ops_cluster_runs", "ops_rem_plans",
+                        "ops_graph_show_cluster", "agent_approval_status"):
                 if _rk in st.session_state:
                     del st.session_state[_rk]
             st.rerun()
@@ -8087,28 +8088,54 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                         unsafe_allow_html=True)
             st.caption(_ag_rgt.get("reason", ""))
 
-            # Remediation steps
-            _rem_steps = [
-                l.strip()
-                for l in (_ticket.get("remediation_summary") or "").splitlines()
-                if l.strip()
-            ]
-            if not _rem_steps:
-                _rc_n = _run_rgt.get("root_cause", "?")
-                _rem_steps = [
-                    f"1. SSH to `{_rc_n}`",
-                    "2. Check interface counters and syslog",
-                    "3. Validate upstream dependency path",
-                    "4. Apply vendor-recommended patch / restart",
-                    "5. Confirm alert suppression across impacted diagrams",
-                ]
-            for _rs in _rem_steps[:6]:
-                st.markdown(
-                    f'<div style="font-size:0.71rem;color:#cbd5e1;padding:2px 0;'
-                    f'border-bottom:1px solid rgba(255,255,255,0.04)">{html.escape(str(_rs))}</div>',
-                    unsafe_allow_html=True,
-                )
             st.markdown("</div>", unsafe_allow_html=True)
+
+            # ── Full Remediation Plan (real pipeline) ─────────────────────────
+            _ops_rem_plans = st.session_state.get("ops_rem_plans", {})
+            _rem_plan_cached = _ops_rem_plans.get(_sel_cid)
+
+            if _rem_plan_cached is None:
+                if _AI_REM_OK and _generate_resolution_plan is not None:
+                    if st.button("⚡ Generate Remediation Plan", use_container_width=True,
+                                 key="ops_gen_rem_btn", type="primary"):
+                        with st.spinner("Calling Qwen remediation agent…"):
+                            _eg_rem  = _load_enterprise_graph_for(_sel_cl["scenario_id"])
+                            _als_rem = _load_alerts_for_scenario(_sel_cl["scenario_id"]) or []
+                            _rca_rem = {
+                                "root_cause":         _run_rgt.get("root_cause", ""),
+                                "root_cause_diagram": _run_rgt.get("root_cause_diagram", ""),
+                                "confidence":         _run_rgt.get("confidence", 0.5),
+                                "impacted_diagrams":  _run_rgt.get("impacted_diagrams", []),
+                                "impacted_nodes":     _run_rgt.get("impacted_nodes", []),
+                                "rca_source":         _run_rgt.get("rca_source", ""),
+                            }
+                            _inc_rem = {
+                                "incident_id":  f"OPS-{_sel_cid}",
+                                "scenario_id":  _sel_cl["scenario_id"],
+                                "description":  f"Multi-cluster ops incident: {_sel_cl['title']}",
+                                "severity":     _sel_cl.get("severity", "high"),
+                            }
+                            _diag_rem = _run_rgt.get("root_cause_diagram", "")
+                            _rem_ctx = _build_remediation_context(
+                                _rca_rem, _inc_rem, _eg_rem,
+                                _als_rem, _diag_rem, None,
+                            )
+                            if _rem_ctx:
+                                _root_q = _run_rgt.get("root_cause", "")
+                                _q_str  = (f"root cause {_root_q} "
+                                           f"remediation validation enterprise network")
+                                _vec_ev, _ = _retrieve_vector_evidence(_q_str, k=6)
+                                if _vec_ev:
+                                    _rem_ctx["vector_evidence"] = _vec_ev
+                                _new_plan = _generate_resolution_plan(_rem_ctx)
+                                _ops_rem_plans[_sel_cid] = _new_plan
+                                st.session_state.ops_rem_plans = _ops_rem_plans
+                        st.rerun()
+                else:
+                    st.info("AI remediation package unavailable — check src/ai_remediation/.")
+            else:
+                _render_remediation_plan(_rem_plan_cached)
+                _render_qwen_runtime_proof(_rem_plan_cached)
 
             # Confidence gate
             _cc_r = "#22c55e" if _conf_r >= 0.8 else "#f59e0b" if _conf_r >= 0.5 else "#ef4444"
