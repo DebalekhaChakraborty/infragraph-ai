@@ -4703,7 +4703,7 @@ def _tab_onboard_new_diagram() -> None:
                     f'runtime mode: <code>{pkt.get("runtime_mode", "")}</code><br>'
                     f'nodes detected: {pkt.get("node_count", 0)}<br>'
                     f'edges inferred: {pkt.get("edge_count", 0)}<br>'
-                    + (f'🔭 connector extraction: <code>{pkt.get("edge_extraction_source", "")}</code><br>' if pkt.get("edge_extraction_source") else '')
+                    + (f'connector extraction: <code>{pkt.get("edge_extraction_source", "")}</code><br>' if pkt.get("edge_extraction_source") else '')
                     + f'graph packet ID: <code>{sample["sample_id"]}</code><br>'
                     f'absorption mode: <code>{pkt.get("absorption_mode", "SESSION_MEMORY_ABSORPTION")}</code><br>'
                     'refresh behavior: refresh resets onboarded graph'
