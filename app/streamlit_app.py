@@ -7310,6 +7310,32 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
     # ── helpers ───────────────────────────────────────────────────────────────
     _SV_COLOR = {"critical": "#ef4444", "high": "#f59e0b", "medium": "#eab308", "low": "#22c55e"}
     _GROUP_COLORS = ["#8b5cf6", "#0ea5e9", "#10b981", "#f59e0b", "#f43f5e"]
+    _COLOR_EMOJI  = {"#8b5cf6": "🟣", "#0ea5e9": "🔵", "#10b981": "🟢",
+                     "#f59e0b": "🟡", "#f43f5e": "🔴"}
+    _NODE_TYPE_TITLES = {
+        "firewall":      "Firewall Policy Violation",
+        "router":        "BGP Route Instability",
+        "switch":        "STP Topology Disruption",
+        "compute":       "Compute Resource Failure",
+        "load_balancer": "Load Balancer Degradation",
+        "database":      "Database Replication Alert",
+        "server":        "Server I/O Saturation",
+        "gateway":       "Gateway Connectivity Failure",
+        "storage":       "Storage Mount Failure",
+        "wan":           "WAN Link Degradation",
+    }
+    _NODE_TYPE_SERVICES = {
+        "firewall":      "Security / Firewall",
+        "router":        "Network / Routing",
+        "switch":        "Network / Switching",
+        "compute":       "Compute / VM",
+        "load_balancer": "Network / LB",
+        "database":      "Database / RDBMS",
+        "server":        "Compute / Server",
+        "gateway":       "Network / Gateway",
+        "storage":       "Storage / NFS",
+        "wan":           "Network / WAN",
+    }
     _SEVERITY_CYCLE  = ["critical", "high", "high", "medium", "critical", "high"]
     _TITLE_TEMPLATES = [
         "NFS Mount Hung on ECS Cluster",
@@ -7604,7 +7630,8 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                 _al_bd = f"border-left:3px solid {_dot_c}" if _is_sel_al else "border-left:3px solid transparent"
                 _grp_tag = ""
                 if _phase == "correlated" and _al.get("correlation_group"):
-                    _grp_tag = f' ■ {_al["correlation_group"]}'
+                    _gem = _COLOR_EMOJI.get(_dot_c, "⚪")
+                    _grp_tag = f'  {_gem} {_al["correlation_group"]}'
 
                 # Render as clickable button with minimal label; show hint as help
                 _btn_label = f"⚡ {_al['node_id']}  {_al['severity'].upper()}  {_t_str}{_grp_tag}"
@@ -7754,6 +7781,7 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
             if st.button("⬡ Combine Alerts", use_container_width=True,
                          key="ops_cluster_btn", type="primary"):
                 _cl_map: dict = {}
+                _grp_ntypes: dict = {}   # gid -> list[node_type]
                 for _al in _alert_stream:
                     _gid = _al["correlation_group"]
                     if _gid not in _cl_map:
@@ -7762,15 +7790,22 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                         _cl_map[_gid] = {
                             "cluster_id":  _gid,
                             "scenario_id": _al["scenario_id"],
-                            "title":       _im.get("title", "Unknown"),
-                            "service":     _im.get("service", "—"),
-                            "severity":    _im.get("severity", "high"),
+                            "title":       "Cluster",          # filled below
+                            "service":     "—",                # filled below
+                            "severity":    _im.get("severity", _al.get("severity", "high")),
                             "has_gnn":     _im.get("has_gnn", False),
                             "alerts":      [],
                             "color":       _al["color"],
                         }
+                        _grp_ntypes[_gid] = []
+                    _grp_ntypes[_gid].append(_al.get("node_type", "network"))
                     _cl_map[_gid]["alerts"].append(_al["alert_id"])
                     _al["cluster_id"] = _gid
+                # derive meaningful titles from dominant node type per group
+                for _gid, _ntypes in _grp_ntypes.items():
+                    _dom = max(set(_ntypes), key=_ntypes.count) if _ntypes else "network"
+                    _cl_map[_gid]["title"]   = _NODE_TYPE_TITLES.get(_dom, f"{_dom.title()} Incident")
+                    _cl_map[_gid]["service"] = _NODE_TYPE_SERVICES.get(_dom, "Network / Other")
                 _new_clusters = list(_cl_map.values())
                 st.session_state.ops_clusters      = _new_clusters
                 st.session_state.ops_alert_stream  = _alert_stream
@@ -7891,7 +7926,7 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                     # render findings
                     _rca_src    = _run.get("rca_source", "")
                     _is_gnn     = "GNN" in _rca_src
-                    _is_fallback = "fallback" in _rca_src or _run.get("status") == "partial"
+                    _is_fallback = _run.get("status") == "error"
                     _conf_val   = float(_run.get("confidence", 0))
                     _conf_pct   = f"{_conf_val:.0%}"
                     _imp_diag   = _run.get("impacted_diagrams", [])
