@@ -36,6 +36,7 @@ if str(REPO_ROOT / "src") not in sys.path:
 
 from rca_ml.enterprise_gnn_v2_model import (
     EnterpriseRcaTemporalRelGNN,
+    _select_device,
     build_gnn_v2_config,
     check_torch_geo_v2_requirement,
     evaluate_dataset_v2,
@@ -75,12 +76,19 @@ def main() -> None:
     parser.add_argument("--top-k",       type=int,   default=3)
     parser.add_argument("--seed",        type=int,   default=42)
     parser.add_argument("--eval-every",  type=int,   default=10)
+    parser.add_argument("--device",      default="auto", choices=["auto", "cpu", "cuda"],
+                        help="Compute device: auto (cuda if available), cpu, cuda")
     args = parser.parse_args()
 
     check_torch_geo_v2_requirement()
 
     import torch
     import torch.nn.functional as F
+
+    device = _select_device(args.device)
+    print(f"Device            : {device}")
+    if device.type == "cuda":
+        print(f"GPU name          : {torch.cuda.get_device_name(0)}")
 
     torch.manual_seed(args.seed)
 
@@ -136,6 +144,7 @@ def main() -> None:
         k: v for k, v in config.items()
         if k in ("in_channels", "hidden_channels", "num_layers", "dropout")
     })
+    model = model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
     print(f"\nModel             : EnterpriseRcaTemporalRelGNN (RelationAwareTemporalGraphSAGE)")
@@ -154,7 +163,7 @@ def main() -> None:
         for g in train_graphs:
             if g["y"].item() < 0:
                 continue
-            data      = graph_dict_to_pyg_v2(g)
+            data      = graph_dict_to_pyg_v2(g).to(device)
             edge_type = getattr(data, "edge_type", None)
             optimizer.zero_grad()
             logits = model(data.x, data.edge_index, edge_type)
@@ -169,7 +178,7 @@ def main() -> None:
         if epoch % args.eval_every == 0 or epoch == args.epochs:
             model.eval()
             if val_graphs:
-                vm = evaluate_dataset_v2(model, val_graphs, val_index, top_k=args.top_k)
+                vm = evaluate_dataset_v2(model, val_graphs, val_index, top_k=args.top_k, device=device)
                 entry["val_top1"] = vm["top1_accuracy"]
                 entry["val_mrr"]  = vm["mrr"]
                 if vm["mrr"] > best_val_mrr:
@@ -193,19 +202,19 @@ def main() -> None:
     model.eval()
 
     print("\n--- Train-set metrics ---")
-    train_metrics = evaluate_dataset_v2(model, train_graphs, train_index, top_k=args.top_k)
+    train_metrics = evaluate_dataset_v2(model, train_graphs, train_index, top_k=args.top_k, device=device)
     _print_split_metrics(train_metrics)
 
     eval_metrics: dict = {}
     if val_graphs:
         print("\n--- Val-set metrics ---")
-        eval_metrics = evaluate_dataset_v2(model, val_graphs, val_index, top_k=args.top_k)
+        eval_metrics = evaluate_dataset_v2(model, val_graphs, val_index, top_k=args.top_k, device=device)
         _print_split_metrics(eval_metrics)
 
     test_metrics: dict = {}
     if test_graphs:
         print("\n--- Test-set metrics ---")
-        test_metrics = evaluate_dataset_v2(model, test_graphs, test_index, top_k=args.top_k)
+        test_metrics = evaluate_dataset_v2(model, test_graphs, test_index, top_k=args.top_k, device=device)
         _print_split_metrics(test_metrics)
 
     primary_metrics = (

@@ -33,6 +33,7 @@ if _src_dir not in sys.path:
 
 try:
     from rca_ml.enterprise_gnn_v2_model import (
+        _select_device,
         load_gnn_v2,
         check_torch_geo_v2_requirement,
         predict_one_v2,
@@ -67,6 +68,8 @@ def _parse_args() -> argparse.Namespace:
                    help="V3 dataset root (default: datasets/infragraph_v3)")
     p.add_argument("--out",          default="outputs/enterprise_gnn_rca_v2",
                    help="Output directory")
+    p.add_argument("--device",       default="auto", choices=["auto", "cpu", "cuda"],
+                   help="Compute device: auto (cuda if available), cpu, cuda")
     return p.parse_args()
 
 
@@ -128,10 +131,15 @@ def main() -> None:
         else _REPO_ROOT / "datasets" / "infragraph_v3"
     )
 
+    device = _select_device(args.device)
+
     print("InfraGraph AI — Enterprise GNN RCA V2 (Temporal Relation-Aware)")
     print(f"  Scenario : {sid}")
     print(f"  Model    : {model_path}")
     print(f"  Out dir  : {out_dir}")
+    print(f"  Device   : {device}")
+    if device.type == "cuda":
+        print(f"  GPU name : {torch.cuda.get_device_name(0)}")
 
     if not model_path.exists():
         print(f"\n[ERROR] V2 model checkpoint not found: {model_path}")
@@ -146,7 +154,7 @@ def main() -> None:
     check_torch_geo_v2_requirement()
     print("\nLoading V2 model...")
     try:
-        model, config = load_gnn_v2(model_path, config_path)
+        model, config = load_gnn_v2(model_path, config_path, device=device)
     except Exception:
         print("[ERROR] Failed to load V2 model checkpoint:")
         traceback.print_exc()
@@ -246,7 +254,7 @@ def main() -> None:
     top_k = config.get("top_k", 3)
     print(f"\nRunning V2 GNN inference (top_k={top_k})...")
     try:
-        result = predict_one_v2(model, graph_dict, labels_dict=index_record, top_k=top_k)
+        result = predict_one_v2(model, graph_dict, labels_dict=index_record, top_k=top_k, device=device)
     except Exception:
         print("[ERROR] V2 GNN inference failed:")
         traceback.print_exc()

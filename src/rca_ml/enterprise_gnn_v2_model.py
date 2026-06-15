@@ -45,6 +45,26 @@ except ImportError:
     pass
 
 
+# ── Device selection ──────────────────────────────────────────────────────────────
+
+def _select_device(choice: str = "auto") -> "torch.device":
+    """Return the best available compute device.
+
+    ROCm builds expose AMD GPUs via torch.cuda — no separate HIP path needed.
+    choice: 'auto' | 'cpu' | 'cuda'
+    """
+    import torch as _t
+    if choice == "cpu":
+        return _t.device("cpu")
+    if choice == "cuda":
+        if not _t.cuda.is_available():
+            raise RuntimeError(
+                "--device cuda requested but CUDA/ROCm is not available on this system."
+            )
+        return _t.device("cuda")
+    return _t.device("cuda" if _t.cuda.is_available() else "cpu")
+
+
 # ── Dependency check ─────────────────────────────────────────────────────────────
 
 def check_torch_geo_v2_requirement() -> None:
@@ -219,7 +239,11 @@ def save_gnn_v2(
     )
 
 
-def load_gnn_v2(model_path: Path, config_path: Path) -> "tuple[EnterpriseRcaTemporalRelGNN, dict]":
+def load_gnn_v2(
+    model_path:  Path,
+    config_path: Path,
+    device:      "torch.device | None" = None,
+) -> "tuple[EnterpriseRcaTemporalRelGNN, dict]":
     import torch as _t
     config = json.loads(config_path.read_text(encoding="utf-8"))
     model  = EnterpriseRcaTemporalRelGNN(
@@ -228,7 +252,10 @@ def load_gnn_v2(model_path: Path, config_path: Path) -> "tuple[EnterpriseRcaTemp
         num_layers=config.get("num_layers", 2),
         dropout=config.get("dropout", 0.2),
     )
-    model.load_state_dict(_t.load(str(model_path), map_location="cpu"))
+    map_loc = str(device) if device is not None else "cpu"
+    model.load_state_dict(_t.load(str(model_path), map_location=map_loc))
+    if device is not None:
+        model = model.to(device)
     model.eval()
     return model, config
 
@@ -251,24 +278,31 @@ def graph_dict_to_pyg_v2(g: dict):
 
 # ── Scoring ────────────────────────────────────────────────────────────────────────
 
-def score_nodes_v2(model: "EnterpriseRcaTemporalRelGNN", data) -> np.ndarray:
+def score_nodes_v2(
+    model:  "EnterpriseRcaTemporalRelGNN",
+    data,
+    device: "torch.device | None" = None,
+) -> np.ndarray:
     """Run V2 model, return softmax-normalised per-node probabilities."""
     import torch as _t
     model.eval()
+    if device is not None:
+        data = data.to(device)
     with _t.no_grad():
         edge_type = getattr(data, "edge_type", None)
         logits    = model(data.x, data.edge_index, edge_type)
-        probs     = _t.softmax(logits, dim=0).cpu().numpy()
+        probs     = _t.softmax(logits, dim=0).detach().cpu().numpy()
     return probs
 
 
 # ── Single-case prediction ────────────────────────────────────────────────────────
 
 def predict_one_v2(
-    model: "EnterpriseRcaTemporalRelGNN",
-    graph_dict: dict,
+    model:       "EnterpriseRcaTemporalRelGNN",
+    graph_dict:  dict,
     labels_dict: dict | None = None,
-    top_k: int = 3,
+    top_k:       int = 3,
+    device:      "torch.device | None" = None,
 ) -> dict:
     """
     Run V2 GNN inference on one graph_dict.
@@ -277,7 +311,7 @@ def predict_one_v2(
     and includes model_notes. Contains no remediation content.
     """
     data   = graph_dict_to_pyg_v2(graph_dict)
-    scores = score_nodes_v2(model, data)
+    scores = score_nodes_v2(model, data, device=device)
 
     node_ids    = graph_dict["node_ids"]
     node_types  = graph_dict["node_type_list"]
@@ -384,10 +418,11 @@ def predict_one_v2(
 # ── Dataset evaluation ─────────────────────────────────────────────────────────────
 
 def evaluate_dataset_v2(
-    model: "EnterpriseRcaTemporalRelGNN",
+    model:       "EnterpriseRcaTemporalRelGNN",
     graph_dicts: list[dict],
-    index: list[dict],
-    top_k: int = 3,
+    index:       list[dict],
+    top_k:       int = 3,
+    device:      "torch.device | None" = None,
 ) -> dict:
     """Case-level top-1 / top-k / MRR evaluation using V2 model. No remediation output."""
     top1 = top_k_hits = 0
@@ -402,7 +437,7 @@ def evaluate_dataset_v2(
         if not root_cause or root_cause not in g["node_ids"]:
             continue
 
-        scores   = score_nodes_v2(model, graph_dict_to_pyg_v2(g))
+        scores   = score_nodes_v2(model, graph_dict_to_pyg_v2(g), device=device)
         node_ids = g["node_ids"]
         ranked   = np.argsort(-scores)
 
