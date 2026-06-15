@@ -55,6 +55,17 @@ ALERT_TYPE_DIM    = 11   # multi-hot: 8 shared buckets + route_flap + dependency
 TEMPORAL_PROP_DIM = 9    # temporal + propagation + compat
 IN_DIM = NUM_NODE_TYPES + NUM_DIAGRAM_TYPES + NUMERIC_DIM + ALERT_TYPE_DIM + TEMPORAL_PROP_DIM  # 54
 
+# ── Edge type vocabulary (V2 relation-aware GNN) ────────────────────────────────
+# Backward-compatible: V1 ignores edge_type entirely.
+EDGE_TYPE_TO_ID: dict[str, int] = {
+    "local":                        0,
+    "cross_diagram":                1,
+    "vision_connector_extraction":  2,
+    "annotation_connector":         3,
+    "local_graph":                  4,
+    "unknown":                      5,
+}
+
 # Enterprise-specific alert type order (must match _ent_alert_type_vec)
 ENT_ALERT_TYPES: list[str] = [
     "cpu", "latency", "packet_drop", "link_errors", "connection_timeout",
@@ -165,8 +176,14 @@ def _build_enterprise_nx_graph(enterprise_graph: dict) -> nx.DiGraph:
         s, t = edge.get("source", ""), edge.get("target", "")
         if not (s and t and s != t):
             continue
-        scope = edge.get("edge_scope", "") or edge.get("edge_type", "")
-        etype = "cross_diagram" if "cross_diagram" in scope else "local"
+        scope    = edge.get("edge_scope", "") or edge.get("edge_type", "")
+        src_type = edge.get("source_type", "")
+        if "cross_diagram" in scope:
+            etype = "cross_diagram"
+        elif src_type in EDGE_TYPE_TO_ID and src_type not in ("local", "cross_diagram", "unknown"):
+            etype = src_type
+        else:
+            etype = "local"
         key = (s, t)
         if key not in seen_edges:
             seen_edges.add(key)
@@ -569,16 +586,29 @@ def build_graph_dict(
 
     x = torch.FloatTensor(x_rows)  # [N, IN_DIM]
 
-    # Edge index — bidirectional
-    fwd_edges: list[tuple[int, int]] = []
-    for src, tgt in G.edges():
+    # Edge index — bidirectional, with aligned edge_type for V2
+    _edge_map: dict[tuple[int, int], int] = {}  # (s,t) -> type_id, ordered insertion
+    for src, tgt, edata in G.edges(data=True):
         if src in nid_to_idx and tgt in nid_to_idx:
-            fwd_edges.append((nid_to_idx[src], nid_to_idx[tgt]))
-    all_edges = list(set(fwd_edges + [(t, s) for s, t in fwd_edges]))
+            s_idx = nid_to_idx[src]
+            t_idx = nid_to_idx[tgt]
+            raw_et  = edata.get("edge_type", "local")
+            type_id = EDGE_TYPE_TO_ID.get(raw_et, EDGE_TYPE_TO_ID["unknown"])
+            if (s_idx, t_idx) not in _edge_map:
+                _edge_map[(s_idx, t_idx)] = type_id
+            # Reverse direction — same relation type
+            if (t_idx, s_idx) not in _edge_map:
+                _edge_map[(t_idx, s_idx)] = type_id
+
+    all_edges      = list(_edge_map.keys())
+    all_edge_types = [_edge_map[e] for e in all_edges]
+
     if all_edges:
         edge_index = torch.LongTensor(all_edges).t().contiguous()  # [2, E]
+        edge_type  = torch.LongTensor(all_edge_types)              # [E] — aligned
     else:
         edge_index = torch.zeros((2, 0), dtype=torch.long)
+        edge_type  = torch.zeros(0,      dtype=torch.long)
 
     y = (torch.tensor(nid_to_idx[root_cause_node], dtype=torch.long)
          if root_cause_node else torch.tensor(-1, dtype=torch.long))
@@ -586,6 +616,7 @@ def build_graph_dict(
     return {
         "x":                      x,
         "edge_index":             edge_index,
+        "edge_type":              edge_type,
         "y":                      y,
         "num_nodes":              num_nodes,
         "case_id":                case_id,

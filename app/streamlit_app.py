@@ -6752,12 +6752,41 @@ def _tab_gnn_rca() -> None:
         )
 
         rca_mode = rca.get("mode", "")
-        mode_badge_cls = "badge-success" if rca_mode == "Enterprise GNN RCA" else "badge-warn"
+        _rca_src_ent = rca.get("rca_source", "") or rca.get("mode", "")
+        _is_v2_ent   = "V2" in _rca_src_ent or "Relation-Aware" in _rca_src_ent or "v2" in rca_mode
+        _is_gnn_ent  = rca_mode == "Enterprise GNN RCA" or "Enterprise GNN" in _rca_src_ent
+
+        if _is_v2_ent:
+            mode_badge_cls = "badge-success"
+            _badge_label   = "Temporal Relation-Aware GNN"
+        elif _is_gnn_ent:
+            mode_badge_cls = "badge-success"
+            _badge_label   = rca_mode or "Enterprise GNN RCA"
+        else:
+            mode_badge_cls = "badge-warn"
+            _badge_label   = rca_mode
+
         st.markdown(
-            f'<span class="badge {mode_badge_cls}">{rca_mode}</span>',
+            f'<span class="badge {mode_badge_cls}">{_badge_label}</span>',
             unsafe_allow_html=True,
         )
-        if rca_mode == "Enterprise GNN RCA":
+
+        if _is_v2_ent:
+            _mn_ent = rca.get("model_notes") or {}
+            _caption_parts = [
+                "V2 Temporal Relation-Aware GNN",
+                f"uses_edge_type={_mn_ent.get('uses_edge_type', '—')}",
+                f"uses_temporal_features={_mn_ent.get('uses_temporal_features', '—')}",
+            ]
+            _rels = _mn_ent.get("relations", [])
+            if _rels:
+                _caption_parts.append(f"relations: {', '.join(_rels)}")
+            st.caption(" · ".join(_caption_parts))
+            # Developer/audit model_notes detail
+            if _mn_ent:
+                with st.expander("V2 Model Notes", expanded=False):
+                    st.json(_mn_ent)
+        elif _is_gnn_ent:
             _inf_mode_lbl = "precomputed_gnn_inference_artifact"
             src_file = rca.get("gnn_source_file", "")
             _caption_parts = [
@@ -8344,8 +8373,10 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                         f'<div style="{_card(f"border-left:4px solid {_rca_bdr}")}">',
                         unsafe_allow_html=True,
                     )
+                    _is_v2_ops = "V2" in _rca_src or "Relation-Aware" in _rca_src
                     st.markdown(
-                        _badge("Enterprise GNN RCA", "#8b5cf6") if _is_gnn
+                        _badge("Temporal Relation-Aware GNN", "#6d28d9") if _is_v2_ops
+                        else _badge("Enterprise GNN RCA", "#8b5cf6") if _is_gnn
                         else _badge("Graph-grounded RCA", "#f59e0b"),
                         unsafe_allow_html=True,
                     )

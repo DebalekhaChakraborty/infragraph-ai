@@ -283,7 +283,8 @@ def _parse_gnn_result(data: dict, path: str) -> dict:
         "confidence":         confidence,
         "top_candidates":     top_candidates,
         "impacted_diagrams":  impacted_diagrams,
-        "rca_source":         "Enterprise GNN RCA",
+        "rca_source":         data.get("rca_source") or "Enterprise GNN RCA",
+        "model_notes":        data.get("model_notes", {}),
         "ok":                 True,
         "path":               path,
     }
@@ -297,6 +298,23 @@ def load_or_run_enterprise_gnn_rca(repo_root: Path, scenario_id: str) -> dict:
     """
     sid = scenario_id or ""
 
+    # Priority 1: V2 result (Temporal Relation-Aware GNN)
+    if sid:
+        _v2_path = (
+            repo_root / "outputs" / "enterprise_gnn_rca_v2"
+            / f"{sid}_enterprise_gnn_v2_rca_result.json"
+        )
+        if _v2_path.exists():
+            try:
+                _v2_data = json.loads(_v2_path.read_text(encoding="utf-8"))
+                if isinstance(_v2_data, dict) and (
+                    _v2_data.get("predicted_root_cause") or _v2_data.get("root_cause")
+                ):
+                    return _parse_gnn_result(_v2_data, str(_v2_path))
+            except Exception:
+                pass  # corrupt file — fall through to V1
+
+    # Priority 2–5: V1 result locations (unchanged)
     # All directories to search, in priority order
     search_dirs = [
         repo_root / "outputs"  / "enterprise_gnn_rca",

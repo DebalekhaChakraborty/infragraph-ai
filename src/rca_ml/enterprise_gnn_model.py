@@ -158,12 +158,16 @@ def load_gnn(model_path: Path, config_path: Path) -> tuple["EnterpriseRcaGNN", d
 def graph_dict_to_pyg(g: dict):
     """Convert a build-script graph_dict to a PyG Data object."""
     from torch_geometric.data import Data
-    return Data(
+    data = Data(
         x=g["x"],
         edge_index=g["edge_index"],
         y=g["y"],
         num_nodes=g["num_nodes"],
     )
+    # Pass edge_type when present (V2 relation-aware GNN uses it; V1 ignores it)
+    if g.get("edge_type") is not None:
+        data.edge_type = g["edge_type"]
+    return data
 
 
 # ── Scoring ────────────────────────────────────────────────────────────────────
