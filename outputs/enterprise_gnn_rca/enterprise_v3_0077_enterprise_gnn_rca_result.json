@@ -1,0 +1,76 @@
+{
+  "scenario_id": "enterprise_v3_0077",
+  "case_id": "ent_enterprise_v3_0077",
+  "mode": "enterprise_gnn_rca",
+  "rca_source": "Enterprise GNN RCA",
+  "predicted_root_cause": "WAN-PE-01",
+  "root_cause_diagram": "wan_topology",
+  "confidence": 0.9998,
+  "top_candidates": [
+    {
+      "rank": 1,
+      "node_id": "WAN-PE-01",
+      "diagram_id": "wan_topology",
+      "node_observed_in_diagrams": [
+        "wan_topology"
+      ],
+      "node_type": "router",
+      "score": 0.9998,
+      "evidence": [
+        "alert_count=1.0",
+        "cross_diagram_degree=0.0",
+        "distance_to_alert=0.0",
+        "shared_entity=False"
+      ]
+    },
+    {
+      "rank": 2,
+      "node_id": "WAN-PE-02",
+      "diagram_id": "wan_topology",
+      "node_observed_in_diagrams": [
+        "wan_topology"
+      ],
+      "node_type": "router",
+      "score": 0.0002,
+      "evidence": [
+        "alert_count=1.0",
+        "cross_diagram_degree=0.04",
+        "distance_to_alert=0.0",
+        "shared_entity=False"
+      ]
+    },
+    {
+      "rank": 3,
+      "node_id": "WAN-MPLS-CORE",
+      "diagram_id": "wan_topology",
+      "node_observed_in_diagrams": [
+        "wan_topology"
+      ],
+      "node_type": "cloud_or_wan",
+      "score": 0.0,
+      "evidence": [
+        "alert_count=0.0",
+        "cross_diagram_degree=0.0",
+        "distance_to_alert=0.04",
+        "shared_entity=False"
+      ]
+    }
+  ],
+  "impacted_diagrams": [
+    "wan_topology",
+    "app_db_topology"
+  ],
+  "alert_count": 3,
+  "evaluation": {
+    "ground_truth_node": "WAN-PE-01",
+    "correct_top1": true,
+    "correct_top_k": true,
+    "reciprocal_rank": 1.0,
+    "rank": 1
+  },
+  "model_type": "EnterpriseRcaGNN",
+  "backend": "torch_geometric_graphsage",
+  "inference_source": "trained_enterprise_gnn",
+  "gnn_result_available": true,
+  "model_path": "model_artifacts\\enterprise_gnn_rca\\enterprise_gnn_rca.pt"
+}

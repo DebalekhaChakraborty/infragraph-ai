@@ -4271,12 +4271,19 @@ def _tab_diagram_outputs_section() -> None:
     packet  = st.session_state.get("validation_packet") or {}
     summary = packet.get("confidence_summary", {})
 
-    m1, m2, m3, m4 = st.columns(4)
+    _avg_c    = summary.get("device_detection_avg", 0)
+    _ve       = packet.get("vision_connector_edge_count", 0)
+    _vs       = packet.get("vision_connector_segment_count", 0)
+    _vis_src  = packet.get("edge_extraction_source", "")
+    _conn_dbg = packet.get("vision_connector_debug_overlay", "")
+    m1, m2, m3, m4, m5, m6 = st.columns(6)
     m1.metric("Nodes detected",    n_nodes)
     m2.metric("Edges extracted",   n_edges)
-    _avg_c = summary.get("device_detection_avg", 0)
     m3.metric("Avg confidence", f"{_avg_c:.0%}" if isinstance(_avg_c, (int, float)) else "—")
     m4.metric("OCR text blocks",   summary.get("ocr_text_blocks", 0))
+    if _vis_src == "vision_connector_extraction":
+        m5.metric("Vision edges",      _ve)
+        m6.metric("Segments detected", _vs)
 
     source = packet.get("source_label", "")
     if source:
@@ -4299,7 +4306,9 @@ def _tab_diagram_outputs_section() -> None:
             or "RFDETR" in det_source.upper()
         )
 
-        c1, c2 = st.columns(2)
+        _has_overlay = bool(_conn_dbg and Path(_conn_dbg).exists())
+        _cols = st.columns(3) if _has_overlay else st.columns(2)
+        c1, c2 = _cols[0], _cols[1]
         with c1:
             st.markdown(
                 '<div class="compare-badge original">Original</div>'
@@ -4336,6 +4345,14 @@ def _tab_diagram_outputs_section() -> None:
                     '</div>',
                     unsafe_allow_html=True,
                 )
+        if _has_overlay:
+            with _cols[2]:
+                st.markdown(
+                    '<div class="compare-badge predicted">Vision Connector</div>'
+                    '<div class="compare-label">Connector Extraction Overlay</div>',
+                    unsafe_allow_html=True,
+                )
+                st.image(_conn_dbg, use_container_width=True)
 
     elif view_mode == "Local Graph (Interactive)":
         st.markdown('<div class="section-label">Local Graph</div>', unsafe_allow_html=True)
@@ -4653,7 +4670,8 @@ def _tab_onboard_new_diagram() -> None:
                     f'runtime mode: <code>{pkt.get("runtime_mode", "")}</code><br>'
                     f'nodes detected: {pkt.get("node_count", 0)}<br>'
                     f'edges inferred: {pkt.get("edge_count", 0)}<br>'
-                    f'graph packet ID: <code>{sample["sample_id"]}</code><br>'
+                    + (f'🔭 connector extraction: <code>{pkt.get("edge_extraction_source", "")}</code><br>' if pkt.get("edge_extraction_source") else '')
+                    + f'graph packet ID: <code>{sample["sample_id"]}</code><br>'
                     f'absorption mode: <code>{pkt.get("absorption_mode", "SESSION_MEMORY_ABSORPTION")}</code><br>'
                     'refresh behavior: refresh resets onboarded graph'
                     '</div>',
@@ -4833,25 +4851,8 @@ def _render_evidence_tables(record: dict) -> None:
     _conn_segs   = packet.get("vision_connector_segment_count", 0)
     _conn_warn   = packet.get("vision_connector_warning", "")
     _conn_dbg    = packet.get("vision_connector_debug_overlay", "")
-    if _conn_src:
-        _src_icons = {
-            "vision_connector_extraction": "🔭",
-            "annotation_connector":        "📋",
-            "local_graph":                 "🗺️",
-            "fallback":                    "⚙️",
-        }
-        _src_icon = _src_icons.get(_conn_src, "⚙️")
-        with st.container(border=True):
-            _ce1, _ce2, _ce3 = st.columns([3, 2, 2])
-            _ce1.markdown(f"**{_src_icon} Connector Extraction** — `{_conn_src}`")
-            if _conn_src == "vision_connector_extraction":
-                _ce2.metric("Vision edges", _conn_edges)
-                _ce3.metric("Segments detected", _conn_segs)
-            if _conn_warn:
-                st.warning(_conn_warn, icon="⚠️")
-            if _conn_dbg and Path(_conn_dbg).exists():
-                with st.expander("Vision connector debug overlay", expanded=False):
-                    st.image(_conn_dbg, use_container_width=True)
+    if _conn_src and _conn_warn:
+        st.warning(_conn_warn, icon="⚠️")
 
     tab_dev, tab_conn, tab_iface, tab_ocr, tab_pkt = st.tabs(
         ["Devices", "Connectors", "Interfaces & IPs", "OCR / Text", "Graph Memory Packet"]
