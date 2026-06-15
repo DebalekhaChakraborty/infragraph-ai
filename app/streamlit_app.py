@@ -2623,6 +2623,26 @@ def _render_gnn_rca_model_evidence(gnn_result: dict, metrics: dict) -> None:
                 })
             st.dataframe(pd.DataFrame(_cand_rows), use_container_width=True, hide_index=True)
 
+        # GNN model notes (V2 relation-aware features — shown only when present)
+        _model_notes = gnn_result.get("model_notes", {})
+        if _model_notes:
+            st.markdown(
+                '<div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;'
+                'color:#94a3b8;margin:10px 0 6px">GNN Model Notes</div>',
+                unsafe_allow_html=True,
+            )
+            _notes_rows = []
+            for _k, _v in [
+                ("uses_temporal_features", _model_notes.get("uses_temporal_features", "—")),
+                ("uses_edge_type",         _model_notes.get("uses_edge_type", "—")),
+                ("local_edges",            _model_notes.get("local_edges", "—")),
+                ("cross_diagram_edges",    _model_notes.get("cross_diagram_edges", "—")),
+                ("vision_edges",           _model_notes.get("vision_edges", "—")),
+                ("relations",              ", ".join(_model_notes.get("relations", [])) or "—"),
+            ]:
+                _notes_rows.append({"Field": _k, "Value": str(_v)})
+            st.dataframe(pd.DataFrame(_notes_rows), use_container_width=True, hide_index=True)
+
         # Artifact paths
         _model_exists   = _gnn_model_r is not None
         _metrics_exists = Path(_gnn_metrics_p).exists()
@@ -3387,6 +3407,13 @@ def _load_gnn_rca_result(scenario_id: str) -> dict | None:
     """
     if not scenario_id or scenario_id == "—":
         return None
+    # V2 outputs take precedence when present (richer model_notes)
+    v2_path = REPO_ROOT / "outputs" / "enterprise_gnn_rca_v2" / f"{scenario_id}_enterprise_gnn_v2_rca_result.json"
+    if v2_path.exists():
+        try:
+            return json.loads(v2_path.read_text(encoding="utf-8"))
+        except Exception:
+            pass
     candidate = _demo_asset_path("enterprise_gnn_rca") / f"{scenario_id}_enterprise_gnn_rca_result.json"
     if candidate.exists():
         try:
@@ -3428,6 +3455,8 @@ def _simulate_enterprise_rca(alerts: dict, enterprise_graph: dict) -> dict:
             "impact_path":        (alerts.get("impact_paths") or [[]])[0],
             "ranking":            ranking,
             "enterprise_node_count": gnn.get("node_count", len(enterprise_graph.get("nodes", []))),
+            "rca_source":         gnn.get("rca_source", "Enterprise GNN RCA"),
+            "model_notes":        gnn.get("model_notes", {}),
             "gnn_source_file":    str(
                 _demo_asset_path("enterprise_gnn_rca") /
                 f"{scenario_id}_enterprise_gnn_rca_result.json"
@@ -6784,10 +6813,7 @@ def _tab_gnn_rca() -> None:
             if _rels:
                 _caption_parts.append(f"relations: {', '.join(_rels)}")
             st.caption(" · ".join(_caption_parts))
-            # Developer/audit model_notes detail
-            if _mn_ent:
-                with st.expander("V2 Model Notes", expanded=False):
-                    st.json(_mn_ent)
+
         elif _is_gnn_ent:
             _inf_mode_lbl = "precomputed_gnn_inference_artifact"
             src_file = rca.get("gnn_source_file", "")
