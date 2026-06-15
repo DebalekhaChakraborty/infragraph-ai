@@ -1,734 +1,349 @@
 # InfraGraph AI
 
-Synthetic network-diagram dataset generator and AI pipeline for **automated topology extraction**, **root-cause analysis (RCA)**, and **AI-driven remediation** of network incidents.
+**Multimodal Infrastructure Diagram Intelligence + Enterprise Graph RCA + Agentic Remediation on AMD ROCm**
 
----
+InfraGraph AI converts static infrastructure diagrams into graph memory that operations teams can query, correlate, and act on.
+It detects and understands topology components, builds local topology graphs, and stitches them into an enterprise graph brain.
+It correlates alert events, performs topology-aware RCA, and ranks cross-diagram root causes with an Enterprise GNN RCA model.
+It uses local open-source Qwen served through vLLM for grounded remediation planning after RCA evidence is available.
+It includes a controlled agentic operations flow with ITSM draft generation and a human approval gate.
+It was built for the TCS & AMD AI Hackathon using open-source models and AMD ROCm-ready inference and alignment workflows.
 
-## Installation
+## 1. Why This Matters
 
-Install only what you need.
+NOC, SRE, platform, and infrastructure teams usually receive alerts, tickets, diagrams, runbooks, and tribal knowledge in separate systems. Static architecture diagrams are visually useful but not machine-readable, so every major incident still requires humans to map alerts back to topology dependencies by hand.
 
-| Tier | Command | Use case |
-|------|---------|----------|
-| **App / demo** | `pip install -r requirements.txt` | Streamlit cockpit, graph RCA, topology — no GPU required |
-| **Vision / detector** | + `pip install -r requirements-vision.txt` | YOLO / RF-DETR diagram detector, OCR |
-| **Vector memory** | + `pip install -r requirements-rag.txt` | ChromaDB + sentence-transformers for Graph Copilot |
-| **Dataset / reward prep** | + `pip install -r requirements-training.txt` | JSONL→parquet, reward evaluation, LoRA utilities |
-| **AMD GRPO training** | `bash scripts/amd_rocm/bootstrap_grpo_env.sh` | ROCm torch + vLLM + vERL (AMD GPU only) |
+InfraGraph AI turns diagrams into an operational graph brain. Instead of asking an LLM to guess a root cause, the system extracts topology, builds graph memory, correlates alert evidence, and uses graph intelligence to produce explainable RCA candidates. The LLM is used downstream for remediation planning, not for inventing the diagnosis.
 
-> `pip install -r requirements.txt` alone **cannot** reproduce the AMD ROCm GRPO
-> training run. It does not install vERL, vLLM, ROCm torch, or the training stack.
+## 2. Hackathon Track Alignment
 
-### AMD ROCm GRPO training setup
+| Track | Fit |
+|-------|-----|
+| Primary: Agents / Agentic AI | A 9-step incident operations orchestrator moves from alert intake through RCA, remediation planning, ITSM draft, and human approval. |
+| Secondary: Multimodal AI | Diagram intelligence ingests infrastructure images, detector output, verified annotations, OCR/connector evidence, and graph memory. |
+| Additional: Fine-tuning / alignment | Qwen3 LoRA + GRPO/vERL alignment pipeline trains remediation behavior with graph-grounded reward functions. |
+
+Relevant use-case alignment:
+
+- Autonomous Incident Diagnosis & Resolution Agent
+- Unified Observability & RCA Agent
+- Intelligent Image & Signal Processing
+- Telecom/NOC Copilot style operations assistant
+
+## 3. What We Built
+
+- **Diagram Intelligence:** infrastructure diagram ingestion, component detection, verified annotation overlays, node extraction, connector extraction, and graph-memory packet generation.
+- **Graph Memory:** local topology graph creation, graph-memory packets, enterprise graph absorption, and scenario graph stitching.
+- **Event Correlation:** deterministic correlation across temporal, topology, alert-sequence, source/peer, and cross-diagram dimensions.
+- **RCA:** local topology RCA plus Enterprise GNN RCA with GraphSAGE node ranking over stitched enterprise graphs.
+- **Graph Copilot:** evidence-grounded Q&A over topology, RCA, impact paths, blast radius, and graph-memory facts.
+- **AI Remediation:** Qwen/vLLM remediation planner that produces structured JSON from RCA, graph evidence, alert timelines, retrieved KB evidence, and guardrails.
+- **Agentic Ops Orchestrator:** 9-step flow from alert intake to approval-gated action.
+- **ITSM Draft:** local demo incident ticket generation; no external ITSM call is made by default.
+- **Human Approval:** remediation is not auto-executed without operator approval.
+
+## 4. End-to-End Architecture
+
+```mermaid
+flowchart LR
+    A[Infra Diagram / Scenario Dataset] --> B[Diagram Intelligence<br/>RF-DETR or Verified Annotation]
+    B --> C[Local Graph Memory]
+    C --> D[Enterprise Graph Brain / Stitching]
+    D --> E[Event Correlation Layer]
+    E --> F[Enterprise GNN RCA]
+    F --> G[Qwen/vLLM Remediation Agent]
+    G --> H[ITSM Draft + Human Approval]
+    H --> I[Streamlit Cockpit / Graph Copilot]
+    D --> I
+    F --> I
+```
+
+## 5. Demo Flow
+
+1. Launch the Streamlit cockpit.
+2. Open **Diagram Intelligence**.
+3. Select or onboard a diagram.
+4. Generate the graph memory packet.
+5. Move to **Topology RCA**.
+6. Absorb the diagram into the **Enterprise Graph Brain**.
+7. Run **Enterprise GNN RCA**.
+8. Ask Graph Copilot RCA, impact, and blast-radius questions.
+9. Run the **Agentic Ops Orchestrator**.
+10. Review the remediation plan, ITSM draft, and human approval gate.
+
+## 6. AI/ML Components
+
+| Layer | Model / Method | Purpose | Output |
+|-------|----------------|---------|--------|
+| Diagram understanding | RF-DETR detector-supported flow with verified annotation fallback | Locate infrastructure components and produce graph-ready evidence when live detector inference is unavailable | Detected nodes, overlays, clean annotations, graph memory packet |
+| Topology graph generation | Graph construction from nodes and connectors | Convert diagram evidence into local topology | Local graph JSON, nodes, edges |
+| Event correlation | Deterministic scoring across temporal, topology, alert-sequence, source/peer, and cross-diagram dimensions | Group observable alerts before RCA without leaking labels | Correlated event clusters and causal evidence IDs |
+| Local RCA | Engineered graph features and topology-aware node ranking | Rank likely root-cause nodes inside one diagram | Root-cause candidate list and reasoning path |
+| Enterprise RCA | GraphSAGE Enterprise GNN | Rank root causes across stitched multi-diagram enterprise graphs | Cross-diagram root-cause ranking |
+| Remediation generation | Qwen3 served through vLLM | Produce grounded validation, remediation, rollback, escalation, and ITSM-ready JSON after RCA | Structured remediation plan |
+| Alignment | Qwen3 LoRA + GRPO/vERL pipeline on AMD ROCm | Align remediation responses to graph grounding, safety, rollback, and ITSM structure | LoRA adapter artifacts and training evidence |
+| Vector memory | Chroma local vector memory | Retrieve SOP, graph, RCA, and incident evidence for Graph Copilot and remediation context | Evidence chunks and retrieval IDs |
+
+## 7. AMD / ROCm Relevance
+
+InfraGraph AI is designed for AMD GPU cloud and ROCm-compatible workflows:
+
+- Qwen remediation runs through a local vLLM OpenAI-compatible endpoint.
+- The GRPO/vERL alignment pipeline lives under `training/verl_grpo/`.
+- ROCm setup and run helpers are under `scripts/amd_rocm/`.
+- Evidence under `docs/evidence/amd_qwen3_grpo_run/` records a completed real vERL training run for Qwen/Qwen3-4B with LoRA rank 16, GRPO, vLLM rollout backend, FSDP actor strategy, and HIP version `7.0.51831-a3e329ad8`.
+- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/completion_evidence.md` records completed training at 32/32 steps on an AMD ROCm GPU, with observed GPU utilization, VRAM, and power telemetry.
+- `assets/preloaded/enterprise_gnn_rca/enterprise_gnn_metrics.json` records a preloaded enterprise RCA model run with `torch_version` `2.6.0+rocm6.1`, `torch_hip_version` `6.1.40091-a8dbc0c19`, and AMD GPU device metadata.
+
+The project should be described as **ROCm-ready with committed evidence of AMD ROCm training runs**. It should not be described as a production incident automation system.
+
+## 8. Model Artifacts and Adapter Status
+
+LoRA/GRPO adapter artifacts are available under `model_artifacts/`. The primary exported GRPO adapter folder is:
+
+```text
+model_artifacts/qwen3_grpo_lora_adapter/
+```
+
+The adapter is considered available only when both files exist in the same target folder:
+
+- `adapter_model.safetensors`
+- `adapter_config.json`
+
+Verify adapter artifacts:
 
 ```bash
-# 1. Install ROCm torch, vLLM, vERL (checks existing install before touching anything)
-bash scripts/amd_rocm/bootstrap_grpo_env.sh
-
-# 2. Verify all ROCm runtime patches are in place
-bash scripts/amd_rocm/patch_verl_runtime_for_rocm.sh
-
-# 3. Dry-run (no GPU needed — prints the full training command)
-bash training/verl_grpo/train_qwen3_grpo.sh
-
-# 4. Real training run
-INFRAGRAPH_RUN_REAL_VERL=1 bash training/verl_grpo/train_qwen3_grpo.sh
+find model_artifacts -name "adapter_model.safetensors" -o -name "adapter_config.json"
+export INFRAGRAPH_LORA_ADAPTER_PATH=model_artifacts/qwen3_grpo_lora_adapter
 ```
 
-See [training/verl_grpo/README.md](training/verl_grpo/README.md) for the full
-GRPO pipeline, reward functions, and honest status levels.
+PowerShell equivalent:
 
----
+```powershell
+Get-ChildItem -Recurse model_artifacts -Include adapter_model.safetensors,adapter_config.json
+$env:INFRAGRAPH_LORA_ADAPTER_PATH = "model_artifacts/qwen3_grpo_lora_adapter"
+```
 
-## AI Remediation Agent: Qwen3 + vLLM + vERL/GRPO
+The app can read `INFRAGRAPH_LORA_ADAPTER_PATH` for adapter-aware status and configuration. For live fine-tuned inference, the vLLM server must also be launched with LoRA support for the adapter being served.
 
-InfraGraph AI uses a four-stage intelligence pipeline:
+Other committed model artifacts include:
 
-1. **Diagram Intelligence** — RF-DETR extracts topology graph memory from network diagrams.
-2. **Event Correlation** — pre-RCA layer that groups observable alert events into temporal clusters with causal evidence trails (deterministic, no root-cause labels).
-3. **Topology RCA + Enterprise GNN RCA** — single-diagram graph reasoning first, then cross-diagram GNN ranking across scenario graphs.  RCA output can be enriched with event correlation cluster context.
-4. **Qwen3 Remediation Agent** — served via vLLM and designed for LoRA/GRPO fine-tuning with vERL, generates grounded resolution plans from graph memory, alert timeline, event correlation evidence, RCA path, and GNN ranking.
+- `model_artifacts/rfdetr_v3/checkpoint_best_total.pth`
+- `model_artifacts/rfdetr_v3/checkpoint_best_regular.pth`
+- `model_artifacts/rfdetr_v3/checkpoint_best_ema.pth`
+- `model_artifacts/enterprise_gnn_rca/enterprise_gnn_rca.pt`
+- `model_artifacts/topology_rca/topology_rca_model.joblib`
+- `model_artifacts/qwen_lora/infragraph_sop_grounded/`
 
-The GRPO reward functions align Qwen3 outputs to be:
-- **Graph-grounded** — only referencing nodes and IPs present in the enterprise graph.
-- **Safe** — validation steps precede remediation, rollback notes always included.
-- **Operator-ready** — specific, actionable steps with escalation guidance.
+## 9. Results and Evidence
 
-### Start the vLLM server (local AMD/CUDA GPU)
+Only committed repo evidence is listed here.
+
+| Component | Evidence file | Metric / result | Notes |
+|-----------|---------------|-----------------|-------|
+| V3 annotation QA | `reports/v3_annotation_qa/annotation_quality_report.json` | 329 diagrams, 2,996 objects, 2,992 connectors, recommendation `DISPLAY_ONLY_FIX` | Supports verified annotation fallback and detector training readiness. |
+| Topology RCA | `reports/topology_rca/eval_metrics.json` | 16 cases, 150 node rows, top-1 `1.0`, top-3 `1.0`, MRR `1.0` | Synthetic benchmark. |
+| Enterprise GNN RCA, GraphSAGE path | `reports/enterprise_gnn_rca/evaluation.json` | Train/val/test cases `64/8/8`; test top-1 `1.0`, top-3 `1.0`, MRR `1.0`; best val MRR `1.0` | Model artifact in `model_artifacts/enterprise_gnn_rca/`. Synthetic enterprise benchmark. |
+| Enterprise RCA preloaded demo model | `assets/preloaded/enterprise_gnn_rca/enterprise_gnn_metrics.json` | 80 epochs; test top-1 `1.0`, top-3 `1.0`, MRR `1.0`; ROCm torch metadata present | Preloaded cockpit artifact, recorded as Enterprise GCN RCA. |
+| V2 learned RCA baselines | `assets/preloaded/mlp_rca/mlp_rca_metrics.json`, `assets/preloaded/gnn_rca/gnn_rca_metrics.json` | MLP test top-1/top-3/MRR `1.0/1.0/1.0`; GNN test top-1/top-3/MRR `1.0/1.0/1.0` | Synthetic V2 benchmark. |
+| KB / vector memory index | `reports/kb_index/build_summary.json` | 8 documents loaded, 73 chunks indexed, collection `infragraph_sop_kb` | Local Chroma/SOP retrieval evidence. |
+| GRPO reward evaluation | `training/verl_grpo/reward_eval_report.json` | 16 eval records; average chosen score `0.8931`; average rejected score `0.2075`; positive margin `16/16` | Reward checks JSON structure, root-cause match, grounding, rollback safety, escalation, and ITSM fields. |
+| GRPO/vERL training run | `docs/evidence/amd_qwen3_grpo_run/training_summary.md` | Real vERL training run completed; Qwen/Qwen3-4B, LoRA rank 16, GRPO, global step 32 evidence | AMD ROCm training evidence. |
+| Exported Qwen3 GRPO adapter | `model_artifacts/qwen3_grpo_lora_adapter/README.md` | Exported from vERL/FSDP actor checkpoint at `global_step_32`; LoRA rank 16, alpha 32 | Adapter files are present in the folder. |
+| RF-DETR detector artifacts | `model_artifacts/rfdetr_v3/` | Checkpoints committed locally: best total, regular, and EMA | Detector evaluation metric not committed in the inspected reports; regenerate with `python scripts/run_rfdetr_inference.py` as needed. |
+| Sample RCA outputs | `assets/preloaded/enterprise_gnn_rca/`, `outputs/enterprise_gnn_rca/` | Per-scenario RCA JSON files are present | Generated demo/inference artifacts. |
+
+## 10. How To Run
+
+### App Demo
+
+Windows PowerShell:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements/requirements-streamlit.txt
+python -m streamlit run app/streamlit_app.py
+```
+
+Bash:
 
 ```bash
-python -m vllm.entrypoints.openai.api_server \
-    --model Qwen/Qwen3-4B \
-    --host 0.0.0.0 \
-    --port 8000
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements/requirements-streamlit.txt
+python -m streamlit run app/streamlit_app.py
 ```
 
-### Build the RL training dataset
+Optional detector/runtime packages:
 
 ```bash
-python training/verl_grpo/build_rca_rl_dataset.py \
-    --dataset-root ./datasets/infragraph_v3 \
-    --gnn-results  ./assets/preloaded/enterprise_gnn_rca \
-    --out          ./training/verl_grpo/data
+python -m pip install -r requirements/requirements-vision.txt
+python -m pip install -r requirements/requirements-rfdetr-runtime.txt
 ```
 
-### Run GRPO fine-tuning with vERL
+Build local vector memory:
 
 ```bash
-bash training/verl_grpo/train_qwen3_grpo.sh
-```
-
-### Point the app at the base model (current status)
-
-A real GRPO/vERL training run completed on AMD ROCm — see
-[training/verl_grpo/README.md](training/verl_grpo/README.md) for the honest
-status. The live demo uses base Qwen/Qwen3-4B unless a PEFT adapter is
-exported and served with `--enable-lora`.
-
-```bash
-export INFRAGRAPH_QWEN_BASE_URL=http://localhost:8000/v1
-export INFRAGRAPH_QWEN_MODEL=Qwen/Qwen3-4B
-streamlit run app/streamlit_app.py
-```
-
-If a PEFT adapter is available (see `training/verl_grpo/export_lora_adapter.py`):
-
-```bash
-export INFRAGRAPH_LORA_ADAPTER_PATH=training/verl_grpo/exported_adapter
-export INFRAGRAPH_QWEN_BASE_URL=http://localhost:8000/v1
-export INFRAGRAPH_QWEN_MODEL=Qwen/Qwen3-4B
-streamlit run app/streamlit_app.py
-```
-
----
-
----
-
-## AI Remediation + Qwen Alignment Pipeline
-
-InfraGraph AI now presents a full training + inference story:
-
-- **Event Correlation** groups observable alert events into temporal clusters with deterministic causal evidence trails.  See [docs/event_correlation_and_causal_evidence.md](docs/event_correlation_and_causal_evidence.md).
-- **Topology RCA** handles single-diagram dependency reasoning and local remediation.
-- **Enterprise GNN RCA** handles cross-diagram graph reasoning and root-cause ranking when a matching GNN result exists.
-- **Qwen3/vLLM remediation** generates graph-grounded resolution plans from RCA context, alert timelines, event correlation evidence, GNN ranking, and retrieved vector evidence.
-- **Vector memory** uses ChromaDB to retrieve evidence IDs for Graph Copilot and remediation prompts.
-- **LoRA + GRPO/vERL scaffold** under `training/verl_grpo/` turns RCA/remediation records into sample alignment data with deterministic reward functions for AMD GPU fine-tuning.
-
-See [docs/ai_training_and_remediation_story.md](docs/ai_training_and_remediation_story.md) and [training/verl_grpo/README.md](training/verl_grpo/README.md).
-
----
-
-## Presentation Flow
-
-The Streamlit cockpit walks through a real-time ingestion journey:
-
-| Step | Tab | What happens |
-|------|-----|-------------|
-| 1. **Run Diagram Intelligence** | Diagram Intelligence | Loads the selected sample, resolves the detection source, writes `runtime_state/live_ingestion/` evidence |
-| 2a. **Generate Topology Alert Stream** | Topology RCA | Builds a realistic alert timeline for the selected diagram topology (T+00m → T+20m) |
-| 2b. **Find Topology Root Cause** | Topology RCA | Runs BFS graph-traversal RCA; shows root cause, reasoning, traversal slider, and graph overlay |
-| 3. **Absorb into Enterprise Brain** | Enterprise Graph Brain | Absorbs the local graph into the enterprise scenario graph; shows before → after PyVis comparison and Global InfraGraph Galaxy |
-| 4a. **Generate Cross-Diagram Alert Stream** | Enterprise GNN RCA | Builds a cross-diagram alert timeline across all scenario diagrams, ordered by dependency |
-| 4b. **Run Enterprise RCA** | Enterprise GNN RCA | Uses Enterprise GNN result if available; otherwise uses scenario-grounded evidence. Never fakes GNN output. |
-| 5. **Ask Graph Copilot** | Graph Copilot | Answers are grounded in the loaded graph evidence (live Qwen/vLLM when `INFRAGRAPH_QWEN_BASE_URL` or `QWEN_BASE_URL` is set) |
-
-### Detection source labels
-
-| Label | When shown |
-|-------|-----------|
-| `Live RF-DETR Detector` | RF-DETR checkpoint found and inference succeeds |
-| `RF-DETR Trained Prediction` | Static prediction image found in `outputs/rfdetr_v3_predictions/` |
-| `Verified Annotation Overlay` | No trained prediction — renders bounding boxes from ground-truth annotation |
-
----
-
-## Asset Structure
-
-The `assets/` layer provides a clean product-facing identity for datasets, decoupling the UI from raw dataset folder structure.
-
-```
-assets/
-├── gallery/
-│   └── manifest.json        # DG-0001 … DG-0250 — known diagrams in graph memory
-├── onboarding/
-│   ├── manifest.json        # ONB-001 … ONB-020 — curated samples for live ingestion
-│   ├── ONB-001/
-│   │   ├── original.png
-│   │   ├── annotation.json
-│   │   ├── local_graph.json
-│   │   ├── enterprise_graph.json
-│   │   ├── stitch_map.json
-│   │   └── alerts.json
-│   └── ONB-002/ …
-└── preloaded/               # Curated ML artifacts used by the Streamlit cockpit
-    ├── enterprise_gnn_rca/  # GNN metrics + per-scenario RCA result JSON
-    ├── gnn_rca/             # V2 GNN model + metrics
-    ├── mlp_rca/             # V2 MLP model + metrics
-    ├── demo_hero/           # Hero scenario selection JSON
-    ├── onboarded_diagrams/  # Onboarded diagram output packages
-    └── qwen_explanation/    # Qwen explanation reports
-```
-
-Build the asset layer from the raw datasets:
-
-```bash
-python scripts/build_presentation_assets.py \
-    --max-onboarding-samples 20 \
-    --max-gallery-items 250
-```
-
-The gallery manifest lists up to 250 records (V3 > V2 > V1 priority). Each record carries a `gallery_id` (e.g. `DG-0001`), display name, source metadata, and resolved paths. The onboarding manifest lists 20 curated samples (4 per diagram type, test > val > train) with files copied into `assets/onboarding/ONB-XXX/`.
-
-### Directory structure
-
-| Directory | Purpose | Notes |
-|-----------|---------|-------|
-| `runtime_state/` | Live/generated runtime state | Not committed. Contains ingestion runs, absorption runs, incident JSON, vector memory, global graph memory. |
-| `assets/preloaded/` | Curated demo artifacts used by the Streamlit app | Committed where small. GNN results, hero scenario selection, Qwen explanations, RCA model outputs. |
-| `model_artifacts/` | Detector and model checkpoints | Ignored in git (large binaries). RF-DETR V3 weights, trained GNN models. |
-| `reports/` | Evaluation reports and annotation QA | `val_eval/`, `v3_annotation_qa/`, `hydra_runs/` (ignored). |
-| `outputs/` | **Legacy only** — do not use for new writes | Kept for backward compatibility. The app falls back to `outputs/<subpath>` if the new canonical path does not exist. Run `python scripts/migrate_outputs_structure.py --apply` to move existing files. |
-
-#### Runtime output folders
-
-| Folder | Contents |
-|--------|---------|
-| `runtime_state/live_ingestion/<scenario>__<diagram>/` | `original.png`, `detected_nodes.json`, `detected_edges.json`, `node_table.csv`, `edge_table.csv`, `graph_memory_packet.json` |
-| `runtime_state/live_absorption/<scenario>__<diagram>/` | `enterprise_before.json`, `enterprise_after.json`, `absorption_summary.json`, `alerts.json` |
-| `runtime_state/incident_runs/<hash>/` | `local_incident.json`, `enterprise_incident.json` — persisted incident simulation runs |
-
-#### Migrate legacy outputs/ to new structure
-
-```bash
-# Preview (no changes made):
-python scripts/migrate_outputs_structure.py --dry-run
-
-# Apply:
-python scripts/migrate_outputs_structure.py --apply
-```
-
----
-
-## Incident Simulation Layer
-
-`src/incident_simulation/` provides deterministic, topology-aware incident builders for both the Topology RCA and Enterprise GNN RCA workspaces.
-
-### Topology RCA simulation (`local_incidents.py`)
-
-- Simulates alerts **within a single diagram**.
-- Detects topology type from the diagram ID (branch, WAN, datacenter, app/DB, shared services).
-- Uses node type priority to select the first-observed endpoint and the root-cause node.
-- Builds a BFS path from first-observed node to root cause.
-- Generates 3–5 `AlertTimelineEvent` records along the path (T+00m → T+20m).
-- Deterministic: the same graph always produces the same alert stream and root cause.
-- RCA source label: **"Scenario-guided graph RCA"** (never claimed as a trained model output).
-
-### Enterprise / GNN RCA simulation (`enterprise_incidents.py`)
-
-- Simulates **cross-diagram alert propagation** within a V3 scenario enterprise graph.
-- Priority chain:
-  1. `alerts.json` ground truth (real alert records per node and diagram).
-  2. Enterprise GNN RCA result (`predicted_root_cause`, `top_candidates`) if available.
-  3. Diagram-level template messages otherwise.
-- Diagram ordering: symptom diagrams first (branch, WAN), root-cause diagrams last (shared services, datacenter).
-- RCA source label: **"Enterprise GNN RCA"** only when a trained inference result exists for the selected scenario. Otherwise **"Scenario-grounded RCA simulation"**.
-- Never fakes GNN output.
-
-### Graph Memory vs. RCA inference
-
-| Concept | Where shown | Purpose |
-|---------|-------------|---------|
-| Local Graph | Diagram Intelligence, Topology RCA | Single-diagram topology — one diagram's nodes and edges |
-| Scenario Enterprise Graph | Enterprise GNN RCA — Interactive graph | Multi-diagram scenario stitched together — RCA inference target |
-| Global InfraGraph Galaxy | Enterprise Graph Brain | All scenarios combined — graph-memory exploration only, not RCA inference |
-
----
-
-## Current milestone
-
-| # | Milestone | Status |
-|---|-----------|--------|
-| 1 | V1 synthetic dataset generated under `datasets/infragraph_v1` | Done |
-| 2 | YOLO V1 detector trained | Done |
-| 3 | Trained weights under `training_runs/infragraph_yolo_v1/weights` | Done |
-| 4 | V2 dataset (400 diagrams) with graph + alert scenarios | Done |
-| 5 | Heuristic RCA (`build_topology_rca_pipeline.py`) | Done |
-| 6 | MLP node-ranker RCA (`train_mlp_rca.py`) — learned non-graph baseline | Done |
-| 7 | GNN root-cause ranking (`train_gnn_rca.py`) — 100% test top-1 | Done |
-| 8 | Qwen/vLLM explanation layer (`generate_qwen_rca_explanation.py`) | Done |
-| 9 | Run detector prediction on full test set | Next |
-
----
-
-## What it does
-
-| Stage | Description |
-|-------|-------------|
-| **Generate** | Synthesise enterprise network diagrams (PNG) with paired YOLO labels, topology graphs (JSON), and alert/RCA scenarios |
-| **Detect** | Fine-tune YOLOv8 to locate network devices (router, switch, firewall, server, database, load_balancer, cloud_or_wan) |
-| **Extract** | Detect inter-device connections via line detection + OCR to rebuild the topology graph |
-| **Analyse** | Heuristic graph scoring → learned MLP node-ranker → topology-aware GNN RCA — three-stage root-cause pipeline |
-| **Explain** | Qwen / open LLM generates a plain-language incident explanation from the RCA output |
-
----
-
-## Quick start
-
-```bash
-# 1. Install base dependencies (app / non-GPU)
-pip install -r requirements.txt
-# For training data prep: pip install -r requirements-training.txt
-# For AMD ROCm GRPO training: bash scripts/amd_rocm/bootstrap_grpo_env.sh
-
-# 2. Generate a 300-image dataset
-python data_generator/generate_infragraph_dataset.py \
-    --num 300 --out ./datasets/infragraph_v1 \
-    --seed 42 --annotated-preview --clean
-
-# 3. Run inference with the trained model
-#    device=cpu: AMD ROCm TorchVision NMS workaround
-yolo detect predict \
-    model=./training_runs/infragraph_yolo_v1/weights/best.pt \
-    source=./datasets/infragraph_v1/images/test \
-    imgsz=960 conf=0.25 device=cpu save=True \
-    project=./outputs name=v1_test_predictions_cpu
-
-# 4. Heuristic RCA (Stage 2)
-python scripts/build_topology_rca_pipeline.py --diagram-id diagram_0373
-
-# 5. MLP node-ranker RCA (learned non-graph baseline)
-python scripts/train_mlp_rca.py
-
-# 6. GNN root cause ranking (topology-aware learned model)
-python scripts/train_gnn_rca.py
-
-# 7. Qwen explanation layer — mock mode (no LLM)
-python scripts/generate_qwen_rca_explanation.py --diagram-id diagram_0373 --mode mock
-
-# 6b. Qwen explanation layer — vLLM mode (AMD Jupyter)
-python scripts/generate_qwen_rca_explanation.py \
-    --diagram-id diagram_0373 --mode vllm \
-    --model Qwen/Qwen3-4B --base-url http://localhost:8000/v1
-
-# 8. Launch the Streamlit cockpit
-streamlit run app/streamlit_app.py
-```
-
-### Running the Streamlit Cockpit in AMD Jupyter
-
-See: [docs/run_streamlit_in_jupyter.md](docs/run_streamlit_in_jupyter.md)
-
-### Running with live Qwen/vLLM on AMD
-
-| Service | Port | Role |
-|---------|------|------|
-| vLLM (Qwen) | 8000 | OpenAI-compatible inference endpoint |
-| Streamlit | 8501 | InfraGraph AI cockpit UI |
-
-`INFRAGRAPH_QWEN_BASE_URL` and `INFRAGRAPH_QWEN_MODEL` are preferred for live inference. Legacy `QWEN_BASE_URL` and `QWEN_MODEL` are still supported:
-
-```bash
-# Start vLLM on AMD
-python -m vllm.entrypoints.openai.api_server \
-  --model Qwen/Qwen2-7B-Instruct --port 8000 --host 0.0.0.0
-
-# Start Streamlit pointing at local vLLM
-QWEN_BASE_URL=http://localhost:8000/v1 \
-QWEN_MODEL=Qwen/Qwen2-7B-Instruct \
-python -m streamlit run app/streamlit_app.py \
-  --server.port 8501 --server.address 0.0.0.0 \
-  --server.headless true --server.enableCORS false \
-  --server.enableXsrfProtection false
-```
-
-When `QWEN_BASE_URL` is a localtunnel URL the cockpit automatically sends the `Bypass-Tunnel-Reminder: true` header.
-
-See: [docs/run_qwen_vllm_amd.md](docs/run_qwen_vllm_amd.md)
-
-### Vector Memory Layer
-
-ChromaDB indexes graph-memory evidence for semantic retrieval. It complements
-the topology graph and GNN; it does not replace them.
-
-| Layer | Role |
-|-------|------|
-| Graph JSON / graph memory packet | Structured topology truth |
-| Vector DB | Semantic retrieval over graph evidence, timelines, RCA, and resolution plans |
-| GNN | Root-cause ranking over graph structure |
-| Qwen/vLLM | Remediation and reasoning generation |
-
-Graph Copilot retrieves Chroma chunks before answering. AI Resolution plans can
-include retrieved graph evidence in the Qwen context.
-
-```bash
-pip install chromadb sentence-transformers
-
 python scripts/build_vector_memory.py \
-    --repo-root . \
-    --persist-dir ./runtime_state/vector_memory/chroma \
-    --collection infragraph_memory
+  --repo-root . \
+  --persist-dir ./runtime_state/vector_memory/chroma \
+  --collection infragraph_memory
 ```
 
-Vector memory files are local runtime artifacts under `runtime_state/vector_memory/`
-and are intentionally ignored by git.
-
-### RCA model architecture
-
-| Model | Uses graph? | Learned? | Script |
-|-------|-------------|----------|--------|
-| Heuristic scorer | Yes (rules) | No | `build_topology_rca_pipeline.py` |
-| **MLP node-ranker** | No | Yes | `train_mlp_rca.py` |
-| **GNN** | Yes (message passing) | Yes | `train_gnn_rca.py` |
-
-The MLP RCA model is a learned non-graph baseline. It scores each node
-independently from engineered features without any graph message passing.
-The GNN RCA model is the topology-aware learned model that additionally
-aggregates neighbour information across the network graph.
-
-Results on infragraph_v2 test set (28 graphs):
-
-| Model | Top-1 | Top-3 | MRR | Convergence |
-|-------|------:|------:|----:|-------------|
-| Heuristic | ~60% | ~90% | ~0.75 | N/A |
-| MLP (no graph) | **100%** | **100%** | **1.000** | epoch 56 |
-| GNN (graph MP) | **100%** | **100%** | **1.000** | epoch 6 |
-
-The GNN converges ~9x faster than the MLP because graph message-passing
-propagates the root-cause signal through topology neighbours.
+Build SOP KB index used by remediation retrieval:
 
 ```bash
-# MLP node-ranker (learned non-graph baseline)
-python scripts/train_mlp_rca.py \
-    --dataset-root datasets/infragraph_v2 \
-    --out assets/preloaded/mlp_rca \
-    --presentation-diagram diagram_0373
-
-# GNN (topology-aware learned model)
-python scripts/train_gnn_rca.py \
-    --dataset-root datasets/infragraph_v2 \
-    --out assets/preloaded/gnn_rca \
-    --presentation-diagram diagram_0373
+python scripts/build_kb_index.py
 ```
-
-See `docs/mlp_rca.md` and `docs/gnn_rca.md` for full details.
-
----
 
 ### Enterprise GNN RCA
 
-Trains a 3-layer GCN on stitched multi-diagram enterprise topology graphs.
-Each scenario graph (branch + WAN + datacenter + app/db + shared services stitched together)
-is one training sample.  The model ranks all nodes across the scenario to identify
-the root-cause node that triggered cross-diagram alert propagation.
-
-**How it works:**
-- The GNN trains across many V3 scenario enterprise graphs (one graph = one scenario).
-- Each scenario graph is a separate training sample with its own label (root-cause node).
-- At inference time the model ranks nodes inside the **selected scenario graph** to identify the root cause.
-- The Global InfraGraph Galaxy is a separate graph-memory index used for exploration and storytelling — it is not the GNN inference graph.
+Build the graph dataset, train the GraphSAGE Enterprise GNN, and run inference:
 
 ```bash
-# Preferred: V3 multi-diagram enterprise scenarios
+python scripts/build_enterprise_gnn_dataset.py \
+  --scenario-library scenario_library \
+  --out-dir data/rca/enterprise_gnn
+
 python scripts/train_enterprise_gnn_rca.py \
-    --dataset-root ./datasets/infragraph_v3 \
-    --out ./assets/preloaded/enterprise_gnn_rca \
-    --epochs 80 \
-    --presentation-scenario enterprise_v3_0000 \
-    --presentation-split test
+  --graphs data/rca/enterprise_gnn/graphs.pt \
+  --index data/rca/enterprise_gnn/graph_index.json \
+  --out-dir model_artifacts/enterprise_gnn_rca \
+  --report-dir reports/enterprise_gnn_rca \
+  --epochs 80
+
+python scripts/run_enterprise_gnn_inference.py \
+  --scenario-id enterprise_v3_0077 \
+  --model-path model_artifacts/enterprise_gnn_rca/enterprise_gnn_rca.pt \
+  --out outputs/enterprise_gnn_rca
 ```
 
-> **Note:** The script also accepts `--dataset-root ./datasets/infragraph_v1/enterprise_graph`
-> for backward compatibility with V1 single-graph datasets.
-
-| Output | Description |
-|--------|-------------|
-| `assets/preloaded/enterprise_gnn_rca/enterprise_gnn_model.pt` | Trained GCN checkpoint |
-| `assets/preloaded/enterprise_gnn_rca/enterprise_gnn_metrics.json` | Top-1, Top-3, MRR across splits |
-| `assets/preloaded/enterprise_gnn_rca/enterprise_gnn_training_curve.png` | Loss and ranking curves |
-| `assets/preloaded/enterprise_gnn_rca/<scenario_id>_enterprise_gnn_rca_result.json` | Per-scenario inference result |
-| `assets/preloaded/enterprise_gnn_rca/<scenario_id>_enterprise_gnn_prediction.png` | Graph visualisation |
-
-The app UI shows **"Enterprise GNN RCA"** only when a result JSON exists for the
-**exact selected scenario**.  If no matching result is found, the UI shows
-**"Scenario-grounded RCA simulation"** using the scenario's `alerts.json` ground truth.
-
-### Global InfraGraph Galaxy
-
-Builds a combined graph-memory index across all V3 scenarios for exploration and storytelling.
+If `torch_geometric` is missing on an AMD ROCm node, use the repo helper:
 
 ```bash
-python scripts/build_global_infragraph_galaxy.py \
-    --dataset-root ./datasets/infragraph_v3 \
-    --out ./runtime_state/global_graph_memory
+bash scripts/amd_rocm/bootstrap_rca_gnn_env.sh
 ```
 
-| Output | Description |
-|--------|-------------|
-| `runtime_state/global_graph_memory/infragraph_global_graph.json` | Full global node/edge list |
-| `runtime_state/global_graph_memory/nodes.csv` | One row per node (global_node_id = scenario::node_id) |
-| `runtime_state/global_graph_memory/edges.csv` | One row per edge |
-| `runtime_state/global_graph_memory/scenario_index.json` | Per-scenario metadata |
-| `runtime_state/global_graph_memory/summary.json` | Aggregate counts |
+### Qwen/vLLM Remediation
 
-See: [docs/enterprise_gnn_rca.md](docs/enterprise_gnn_rca.md)
-
----
-
-### Enterprise Graph Dataset
-
-This dataset shows multi-diagram graph stitching, where each architecture diagram
-becomes a local graph and multiple local graphs are stitched into **enterprise graph memory**
-for cross-diagram RCA.
-
-| Component | Description |
-|-----------|-------------|
-| Local graph | One infrastructure diagram → one NetworkX sub-graph |
-| Stitch map | Declares cross-diagram edges and shared entities |
-| Enterprise graph | All local graphs merged into one unified topology |
-| Alert scenario | Root cause in one diagram, symptoms in another |
-
-Each enterprise scenario contains 3–5 local diagrams stitched into one galaxy-scale graph.
-The GNN learns to trace root causes across diagram boundaries using `cross_diagram_edges`.
+Start a local vLLM server for Qwen3:
 
 ```bash
-python scripts/generate_enterprise_scenarios.py \
-    --num 120 --out ./datasets/infragraph_v1/enterprise_graph \
-    --seed 2026 --clean
+python -m vllm.entrypoints.openai.api_server \
+  --model Qwen/Qwen3-4B \
+  --host 0.0.0.0 \
+  --port 8000
 ```
 
-See: [docs/enterprise_graph_dataset.md](docs/enterprise_graph_dataset.md)
-
----
-
-### Diagram Intelligence V3 + RF-DETR
-
-V3 starts the scenario-native diagram intelligence track. Each scenario is one
-enterprise environment with 3-5 related topology diagrams. The individual diagram
-images are used for detector training, OCR/connector validation, local graph
-creation, and the stitched enterprise "galaxy" graph used later by enterprise GNN
-RCA.
+Point InfraGraph AI at the server:
 
 ```bash
-python scripts/generate_infragraph_v3_dataset.py \
-    --num-scenarios 100 \
-    --out ./datasets/infragraph_v3 \
-    --seed 2026 \
-    --clean
-
-python scripts/prepare_rfdetr_dataset.py \
-    --dataset-root ./datasets/infragraph_v3 \
-    --out ./datasets/infragraph_v3/rfdetr
-
-python scripts/train_rfdetr_diagram_detector.py \
-    --dataset-root ./datasets/infragraph_v3/rfdetr \
-    --out ./model_artifacts/rfdetr_v3 \
-    --epochs 25
+export INFRAGRAPH_QWEN_BASE_URL=http://localhost:8000/v1
+export INFRAGRAPH_QWEN_MODEL=Qwen/Qwen3-4B
+export INFRAGRAPH_LORA_ADAPTER_PATH=model_artifacts/qwen3_grpo_lora_adapter
+python -m streamlit run app/streamlit_app.py
 ```
 
-| Output | Description |
-|--------|-------------|
-| `datasets/infragraph_v3/scenarios/` | Scenario-native source diagrams, annotations, local graphs, stitch maps, enterprise graphs, alerts, and previews |
-| `datasets/infragraph_v3/rfdetr/` | COCO-style RF-DETR export with metadata linking each image back to its scenario graphs |
-| `datasets/infragraph_v3/yolo/dataset.yaml` | YOLO-compatible export from the same annotations |
-| `model_artifacts/rfdetr_v3/` | RF-DETR model outputs when the external RF-DETR package is installed |
+PowerShell:
 
-RF-DETR is the advanced V3 detector path. YOLO remains the stable baseline for
-comparison. The stitched enterprise graph is generated from the same local graphs
-derived from the scenario diagrams, so future enterprise GNN RCA can analyze
-alerts across diagram boundaries.
+```powershell
+$env:INFRAGRAPH_QWEN_BASE_URL = "http://localhost:8000/v1"
+$env:INFRAGRAPH_QWEN_MODEL = "Qwen/Qwen3-4B"
+$env:INFRAGRAPH_LORA_ADAPTER_PATH = "model_artifacts/qwen3_grpo_lora_adapter"
+python -m streamlit run app/streamlit_app.py
+```
 
-#### V3 annotation quality check
+Template fallback mode is available when no Qwen endpoint is configured, but live Qwen/vLLM is the intended demo path.
 
-Run annotation QA before detector training:
+### GRPO/vERL Alignment Pipeline
+
+Prepare the AMD ROCm GRPO environment:
 
 ```bash
-python scripts/qa_infragraph_v3_annotations.py \
-    --dataset-root ./datasets/infragraph_v3 \
-    --out ./reports/v3_annotation_qa
+bash scripts/amd_rocm/bootstrap_grpo_env.sh
+bash scripts/amd_rocm/patch_verl_runtime_for_rocm.sh
 ```
 
-If QA reports `DISPLAY_ONLY_FIX`, the clean Verified Annotation Overlay is enough.
-If QA reports `ANNOTATION_REGENERATION_RECOMMENDED`, fix the generator and
-regenerate V3 before retraining. Do not retrain the detector until annotation QA passes.
-
-Current V3 QA returned `DISPLAY_ONLY_FIX`, so the source annotations are
-acceptable and the production overlay uses clean mode by default. Technical
-connector overlays are available only for developer diagnostics.
-
-Verified Annotation Overlay is a graph-ready ground-truth metadata view: it
-shows node identity and device type without confidence scores. Detector Output
-is the model inference view: live RF-DETR, trained RF-DETR, and YOLO prediction
-images may show predicted class and confidence.
-
-See: [docs/diagram_intelligence_v3_dataset.md](docs/diagram_intelligence_v3_dataset.md)
-and [docs/rfdetr_v3_detector.md](docs/rfdetr_v3_detector.md)
-
----
-
-### Diagram Onboarding
-
-Onboard any topology diagram into graph memory with a single command:
+Build and evaluate the alignment dataset:
 
 ```bash
-python scripts/onboard_diagram.py \
-    --image <path-to-diagram-image> \
-    --diagram-id sample_onboard_0373 \
-    --out assets/preloaded/onboarded_diagrams
+python training/verl_grpo/build_rca_rl_dataset.py \
+  --dataset-root ./datasets/infragraph_v3 \
+  --gnn-results ./assets/preloaded/enterprise_gnn_rca \
+  --out ./training/verl_grpo/data
+
+python training/verl_grpo/prepare_verl_dataset.py
+python training/verl_grpo/reward_functions.py
 ```
 
-Outputs: `original.png`, `detected.png`, `detected_nodes.json`, `local_graph.json`,
-`graph_preview.png`, `onboarding_summary.json`, and an updated `graph_memory/index.json`.
+Run the GRPO training script:
 
-The **Diagram Intelligence** workspace in the Streamlit cockpit exposes the same flow
-via the **Onboard New Diagram** tab using manifest-selected samples.
+```bash
+# Dry-run / command inspection
+bash training/verl_grpo/train_qwen3_grpo.sh
 
-See: [docs/diagram_onboarding.md](docs/diagram_onboarding.md)
-
----
-
-## Folder structure
-
+# Real vERL run
+INFRAGRAPH_RUN_REAL_VERL=1 bash training/verl_grpo/train_qwen3_grpo.sh
 ```
+
+Export/check adapter artifacts:
+
+```bash
+python training/verl_grpo/find_lora_adapter_artifacts.py \
+  --run-dir training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved
+
+python training/verl_grpo/export_lora_adapter.py \
+  --run-dir training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved \
+  --base-model Qwen/Qwen3-4B \
+  --output-dir model_artifacts/qwen3_grpo_lora_adapter
+
+find model_artifacts -name "adapter_model.safetensors" -o -name "adapter_config.json"
+```
+
+## 11. Repository Structure
+
+```text
 infragraph-ai/
-├── app/                          # Streamlit cockpit
-├── assets/                       # Product-facing manifests and curated artifacts
-│   ├── gallery/                  # Gallery manifest (DG-0001 … DG-0250)
-│   ├── onboarding/               # Onboarding manifest + ONB-XXX sample packages
-│   └── preloaded/                # Curated artifacts used by the Streamlit cockpit
-│       ├── enterprise_gnn_rca/   # Trained GNN metrics + per-scenario RCA results
-│       ├── gnn_rca/              # V2 GNN model + metrics
-│       ├── mlp_rca/              # V2 MLP model + metrics
-│       ├── demo_hero/            # Hero scenario selection
-│       ├── onboarded_diagrams/   # Onboarded diagram output packages
-│       └── qwen_explanation/     # Qwen explanation reports
-├── datasets/
-│   ├── infragraph_v1/            # V1 baseline topology dataset + enterprise_graph/
-│   ├── infragraph_v2/            # V2 improved topology dataset
-│   └── infragraph_v3/            # V3 scenario-native dataset (committed)
-├── docs/                         # Architecture and pipeline docs
-├── notebooks/
-├── requirements/                 # requirements-*.txt per environment tier
-├── scripts/                      # All CLI pipeline scripts
-├── src/                          # Core library (topology, rca, ai_remediation, …)
-├── training/
-│   └── verl_grpo/                # GRPO/vERL fine-tuning pipeline
-│
-├── runtime_state/                # Live runtime outputs — NOT committed
-│   ├── live_ingestion/           # Per-diagram ingestion evidence
-│   ├── live_absorption/          # Enterprise graph absorption runs
-│   ├── incident_runs/            # Persisted incident simulation JSON
-│   ├── vector_memory/            # ChromaDB (gitignored)
-│   └── global_graph_memory/      # Global InfraGraph Galaxy index
-│
-├── model_artifacts/              # Detector and model checkpoints — gitignored
-│   ├── rfdetr_v3/                # RF-DETR V3 checkpoint + outputs
-│   └── rfdetr_v3_smoke/          # Smoke-test run checkpoint
-│
-├── reports/                      # Evaluation reports and annotation QA
-│   ├── val_eval/                 # Validation curves and confusion matrix
-│   ├── v3_annotation_qa/         # V3 annotation QA results
-│   └── hydra_runs/               # Hydra/dated run dirs — gitignored
-│
-└── outputs/                      # Legacy only — kept for backward compatibility
-    └── .gitkeep
++-- app/                       Streamlit cockpit for diagram intelligence, graph brain, RCA, copilot, and orchestration.
++-- src/runtime_ingestion.py   Runtime ingestion and absorption APIs used by the cockpit.
++-- src/incident_simulation/   Deterministic local and enterprise incident builders.
++-- src/event_correlation/     Alert clustering and causal evidence without RCA/remediation label leakage.
++-- src/rca_ml/                Feature engineering, topology RCA, Enterprise GNN dataset/model/inference.
++-- src/ai_remediation/        Qwen/vLLM client, prompt builder, context builder, schemas, and template fallback.
++-- src/agents/                Agentic Ops Orchestrator, tools, and structured schemas.
++-- src/graph_copilot/         Evidence-grounded graph query engine.
++-- scripts/                   CLI pipeline scripts for datasets, detectors, RCA, vector memory, and ROCm setup.
++-- training/verl_grpo/        Qwen3 LoRA + GRPO/vERL alignment pipeline and reward functions.
++-- model_artifacts/           Local detector, RCA, and Qwen LoRA artifacts.
++-- datasets/                  Synthetic V1/V2/V3 diagram and enterprise topology datasets.
++-- reports/                   Evaluation reports, annotation QA, KB index summaries, and training evidence.
++-- outputs/                   Generated inference/demo outputs and legacy compatibility artifacts.
++-- assets/                    Product-facing manifests, preloaded demo artifacts, overlays, and sample outputs.
++-- requirements/              Dependency tiers for app, RAG, vision, training, ROCm, and orchestrator workflows.
 ```
 
-### Dataset evolution
+## 12. Honest Claims / Guardrails
 
-```
-datasets/
-├── infragraph_v1/         baseline topology image dataset
-│   └── enterprise_graph/  legacy enterprise RCA baseline owned by V1
-├── infragraph_v2/         improved topology image dataset and RCA experiments
-└── infragraph_v3/         scenario-native diagram intelligence + enterprise RCA dataset
-```
+- RCA is graph/GNN-driven; the LLM is not used to invent root cause.
+- Qwen is used after RCA for remediation planning, validation steps, rollback notes, escalation, and ITSM-ready summaries.
+- Remediation is approval-gated and not auto-executed.
+- Demo ITSM tickets are generated locally; no external ITSM API call is made unless integrated later.
+- Verified annotation fallback is clearly labelled when live detector inference is unavailable.
+- Synthetic datasets are used for controlled enterprise topology/RCA experiments.
+- Metrics above are based on synthetic benchmarks unless otherwise stated.
+- RF-DETR checkpoints are present, but detector evaluation metrics should only be claimed after running and committing the relevant evaluation report.
 
-InfraGraph V1 contains the baseline topology dataset and the original enterprise
-graph RCA baseline under `infragraph_v1/enterprise_graph`. InfraGraph V3 is
-scenario-native and keeps diagrams, annotations, local graphs, stitch maps,
-enterprise graphs, and RCA ground truth together inside each scenario.
+## 13. Future Roadmap
 
-### Presentation Flow
-
-1. Diagram Gallery shows known diagrams available in graph memory.
-2. Onboard New Diagram selects curated samples and runs live diagram intelligence.
-3. A graph memory packet is created.
-4. The diagram is absorbed into Enterprise Graph Brain.
-5. Enterprise RCA runs on the updated graph.
-6. Graph Copilot answers using graph evidence.
-
----
-
-## Artifact layout policy
-
-| Write here | For |
-|------------|-----|
-| `runtime_state/` | Any file generated at runtime (ingestion, absorption, incidents, vector DB, global graph) |
-| `assets/preloaded/` | Curated, repeatable artifacts committed to the repo (GNN results, hero scenarios, Qwen explanations) |
-| `model_artifacts/` | Detector and model checkpoints (gitignored; large binaries) |
-| `reports/` | Evaluation reports and annotation QA — commit summary files, gitignore large artefacts |
-| `outputs/` | **Do not write here.** Legacy only. Existing files are accessible via `src/paths.py` fallback. |
-
-The `src/paths.py` helpers (`runtime_path()`, `demo_asset_path()`, `model_artifact_path()`,
-`report_path()`) return the canonical new path for writes and fall back to `outputs/<subpath>`
-for reads if the new path does not yet exist — so the cockpit runs on either layout.
-
----
-
-## Qwen3-4B GRPO/vERL training status
-
-The project ships a full GRPO/vERL training pipeline under `training/verl_grpo/` for
-fine-tuning Qwen/Qwen3-4B on the InfraGraph RCA/remediation alignment dataset with
-deterministic reward functions on AMD ROCm.
-
-### Current honest status
-
-The project includes evidence of a completed real GRPO/vERL training run on AMD ROCm
-with Qwen/Qwen3-4B and LoRA configuration. The run reached `global_step_32` and
-persisted a vERL/FSDP actor checkpoint. However, the current public evidence does not
-include a standalone PEFT LoRA adapter folder containing `adapter_model.safetensors`
-and `adapter_config.json`.
-
-For this reason, the live demo should be presented as:
-- base Qwen3-4B served through vLLM for explanation generation;
-- plus completed GRPO/vERL training evidence for the InfraGraph RCA/remediation alignment workflow.
-
-Do not claim the fine-tuned LoRA is actively loaded in the live vLLM demo until a PEFT
-adapter is exported and served with `--enable-lora`.
-
-See [training/verl_grpo/README.md](training/verl_grpo/README.md) for the full training
-pipeline, checkpoint structure, and adapter export instructions.
-
----
-
-## Dataset generator CLI
-
-```
-python data_generator/generate_infragraph_dataset.py \
-    [--num N]                   # diagrams to generate (default 20)
-    [--out PATH]                # output directory (default ./infragraph_dataset)
-    [--seed INT]                # random seed (default 42)
-    [--difficulty easy|medium|hard|mixed]   # curriculum difficulty (default mixed)
-    [--augment-document-noise]  # apply scan/print noise to hard diagrams
-    [--yolo-path-mode relative|absolute]
-    [--annotated-preview]       # save previews/bbox_contact_sheet.png
-    [--clean]                   # wipe output subfolders before generating
-```
-
-## Device classes
-
-| ID | Class | Description |
-|----|-------|-------------|
-| 0 | `router` | WAN/edge/core routers |
-| 1 | `switch` | Access/distribution/core switches |
-| 2 | `firewall` | Perimeter and internal firewalls |
-| 3 | `server` | App, web, API, management servers |
-| 4 | `database` | SQL/NoSQL database nodes |
-| 5 | `load_balancer` | Hardware/software load balancers |
-| 6 | `cloud_or_wan` | Cloud VPCs, WAN circuits, ISP nodes |
-
----
+- Live observability integration with alert streams from real monitoring systems.
+- Real CMDB and ITSM integrations with authenticated create/update flows.
+- Stronger diagram OCR and connector extraction across diverse architecture drawing styles.
+- Larger enterprise graph scenarios with more noisy and incomplete topology evidence.
+- Full adapter export and vLLM LoRA deployment automation.
+- Production-grade policy controls for remediation approval, change windows, and rollback enforcement.
 
 ## License
 
