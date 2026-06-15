@@ -3,7 +3,7 @@
 **Multimodal Infrastructure Diagram Intelligence + Enterprise Graph RCA + Agentic Remediation on AMD ROCm**
 
 InfraGraph AI is a multimodal Agentic AIOps system built for the TCS & AMD AI Hackathon using open-source models and AMD ROCm-ready workflows.
-It performs multimodal diagram-to-graph intelligence with RF-DETR-style object detection, verified annotation fallback, vision connector extraction, and enterprise graph memory stitching.
+It performs multimodal diagram-to-graph intelligence with RF-DETR-based / RF-DETR-supported diagram detection, verified annotation fallback, vision connector extraction, and enterprise graph memory stitching.
 It correlates alert storms with graph-aware event features, builds engineered RCA features, and ranks root cause with Enterprise GNN RCA V1 GraphSAGE plus Enterprise GNN RCA V2 - Temporal Relation-Aware GraphSAGE.
 It uses a calibrated confidence gate, retrieves root-cause-aware runbook/SOP evidence, and uses Qwen/vLLM only after RCA for grounded remediation drafting.
 It validates plans with a governance critic, creates local demo ITSM drafts, and keeps all remediation behind a human approval gate.
@@ -107,7 +107,7 @@ InfraGraph AI combines multimodal computer vision, graph algorithms, traditional
 
 | Layer | Method / Algorithm | Custom features | Output | Evidence path |
 |-------|--------------------|-----------------|--------|---------------|
-| Diagram Understanding | RF-DETR-style object detection, verified annotation fallback, bbox normalization, IoU matching | Device class, bbox, canonical ID, zone, IP, shared entity, confidence | Detected nodes and overlay | `src/runtime_ingestion.py`, `model_artifacts/rfdetr_v3/` |
+| Diagram Understanding | RF-DETR-based / RF-DETR-supported diagram detection, verified annotation fallback, bbox normalization, IoU matching | Device class, bbox, canonical ID, zone, IP, shared entity, confidence | Detected nodes and overlay | `src/runtime_ingestion.py`, `model_artifacts/rfdetr_v3/` |
 | Vision Connector Extraction | OpenCV/Hough line detection + geometric endpoint-to-node matching | Segment length, angle, endpoint distance, connector confidence | Vision-extracted topology edges | `src/vision/edge_extraction/` |
 | Graph Memory Construction | Local graph extraction + enterprise graph stitching | Node/edge provenance, shared entity mapping, diagram IDs, cross-diagram edges | Graph memory packet and enterprise graph brain | `src/runtime_ingestion.py`, `assets/preloaded/`, `runtime_state/` |
 | Graph-Aware Event Correlation | Feature-driven alert similarity and clustering | Temporal offset, severity, node type, service/domain, topology context, GNN proximity | Correlation groups and incident clusters | `src/event_correlation/` |
@@ -192,6 +192,25 @@ Other committed model artifacts include:
 - `model_artifacts/topology_rca/topology_rca_model.joblib`
 - `model_artifacts/qwen_lora/infragraph_sop_grounded/`
 - `outputs/enterprise_gnn_rca_v2/enterprise_v3_0079_enterprise_gnn_v2_rca_result.json`
+
+### Large Model Artifacts / Git LFS
+
+Some model artifacts are stored using Git LFS, including `.safetensors`, `.pt`, `.pth`, and detector checkpoints.
+
+After cloning, run:
+
+```bash
+git lfs install
+git lfs pull
+```
+
+Then verify:
+
+```bash
+find model_artifacts -name "adapter_model.safetensors" -o -name "adapter_config.json"
+```
+
+This matters because without `git lfs pull`, evaluators may only see pointer files instead of the actual model artifacts.
 
 ## 10. Results and Evidence
 
@@ -307,7 +326,7 @@ Curated pitch pack: multi-cluster enterprise incident
 
 ### Qwen/vLLM Remediation
 
-Start a local vLLM server for Qwen3:
+**Base Qwen mode** starts the model without loading the LoRA adapter:
 
 ```bash
 python -m vllm.entrypoints.openai.api_server \
@@ -321,7 +340,6 @@ Point InfraGraph AI at the server:
 ```bash
 export INFRAGRAPH_QWEN_BASE_URL=http://localhost:8000/v1
 export INFRAGRAPH_QWEN_MODEL=Qwen/Qwen3-4B
-export INFRAGRAPH_LORA_ADAPTER_PATH=model_artifacts/qwen3_grpo_lora_adapter
 python -m streamlit run app/streamlit_app.py
 ```
 
@@ -330,7 +348,22 @@ PowerShell:
 ```powershell
 $env:INFRAGRAPH_QWEN_BASE_URL = "http://localhost:8000/v1"
 $env:INFRAGRAPH_QWEN_MODEL = "Qwen/Qwen3-4B"
-$env:INFRAGRAPH_LORA_ADAPTER_PATH = "model_artifacts/qwen3_grpo_lora_adapter"
+python -m streamlit run app/streamlit_app.py
+```
+
+**Adapter-aware mode** requires launching vLLM with LoRA support and pointing the app at the same adapter metadata:
+
+```bash
+python -m vllm.entrypoints.openai.api_server \
+  --model Qwen/Qwen3-4B \
+  --enable-lora \
+  --lora-modules infragraph-grpo=model_artifacts/qwen3_grpo_lora_adapter \
+  --host 0.0.0.0 \
+  --port 8000
+
+export INFRAGRAPH_QWEN_BASE_URL=http://localhost:8000/v1
+export INFRAGRAPH_QWEN_MODEL=Qwen/Qwen3-4B
+export INFRAGRAPH_LORA_ADAPTER_PATH=model_artifacts/qwen3_grpo_lora_adapter
 python -m streamlit run app/streamlit_app.py
 ```
 
