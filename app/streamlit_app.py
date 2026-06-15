@@ -5023,6 +5023,11 @@ def _tab_diagram_gallery() -> None:
                 st.session_state.live_ingestion_run_dir = str(Path(_auto_lg_path).parent)
         except Exception:
             pass
+    # Propagate enterprise scenario path so all pipeline tabs (Enterprise Graph Brain,
+    # Enterprise GNN RCA, Copilot) pick up the correct scenario for the selected diagram.
+    _auto_sp = _resolve_manifest_path(record.get("source_scenario_path", ""), REPO_ROOT)
+    if _auto_sp and Path(_auto_sp).exists():
+        st.session_state.enterprise_scenario_path = _auto_sp
 
     # ── Images: original + detection/annotation ───────────────────────────────
     img_p  = record.get("image_path", "")
@@ -6504,6 +6509,7 @@ def _tab_gnn_rca() -> None:
         _ent_summary_pre.get("scenario_id")
         or alerts_data.get("scenario_id")
         or _sel_rec_pre.get("source_scenario_id")
+        or (_sel_scen_p_gnn.name if _sel_scen_p_gnn else "")
         or "—"
     )
     _gnn_result_pre      = _load_gnn_rca_result(_rca_scenario_id) if _rca_scenario_id != "—" else None
@@ -7847,6 +7853,39 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
         '<div class="ws-title" style="margin-bottom:4px">Agentic Ops Orchestrator</div>',
         unsafe_allow_html=True,
     )
+    # ── Demo Story Mode selector ──────────────────────────────────────────────
+    _dm_col1, _dm_col2 = st.columns([3, 1])
+    with _dm_col1:
+        _demo_sel_key = st.selectbox(
+            "Demo Story Mode",
+            options=list(_OPS_DEMO_PRESETS.keys()),
+            format_func=lambda k: _OPS_DEMO_PRESETS[k]["label"],
+            index=list(_OPS_DEMO_PRESETS.keys()).index(
+                st.session_state.get("ops_demo_story_mode", "random")
+            ),
+            key="ops_demo_story_mode",
+            help="Change mode then click 'Reset Demo' to rebuild the alert stream.",
+        )
+        _preset = _OPS_DEMO_PRESETS[_demo_sel_key]
+        st.caption(_preset["description"])
+    with _dm_col2:
+        if st.button("Reset Demo", use_container_width=True, key="ops_reset_demo_btn"):
+            for _rk2 in (
+                "ops_phase", "ops_alert_stream", "ops_scenario_colors",
+                "ops_clusters", "ops_selected_cluster_id", "ops_selected_alert_id",
+                "ops_cluster_runs", "ops_rem_plans", "ops_graph_show_cluster",
+                "ops_copilot_open", "agent_copilot_answer", "agent_copilot_question",
+                "agent_approval_status", "ops_correlation_result", "ops_corr_warnings",
+            ):
+                if _rk2 in st.session_state:
+                    del st.session_state[_rk2]
+            st.rerun()
+
+    st.markdown(
+        '<hr style="border:none;border-top:1px solid rgba(255,255,255,0.06);margin:8px 0 10px">',
+        unsafe_allow_html=True,
+    )
+
     _phase = st.session_state.ops_phase
     _ph1, _ph2, _ph3, _ph4 = st.columns([3, 0.8, 0.8, 0.8])
     with _ph1:
@@ -7879,39 +7918,6 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
             ):
                 if _rk in st.session_state:
                     del st.session_state[_rk]
-            st.rerun()
-
-    st.markdown(
-        '<hr style="border:none;border-top:1px solid rgba(255,255,255,0.06);margin:8px 0 10px">',
-        unsafe_allow_html=True,
-    )
-
-    # ── Demo Story Mode selector ──────────────────────────────────────────────
-    _dm_col1, _dm_col2 = st.columns([3, 1])
-    with _dm_col1:
-        _demo_sel_key = st.selectbox(
-            "Demo Story Mode",
-            options=list(_OPS_DEMO_PRESETS.keys()),
-            format_func=lambda k: _OPS_DEMO_PRESETS[k]["label"],
-            index=list(_OPS_DEMO_PRESETS.keys()).index(
-                st.session_state.get("ops_demo_story_mode", "random")
-            ),
-            key="ops_demo_story_mode",
-            help="Change mode then click 'Reset Demo' to rebuild the alert stream.",
-        )
-        _preset = _OPS_DEMO_PRESETS[_demo_sel_key]
-        st.caption(_preset["description"])
-    with _dm_col2:
-        if st.button("Reset Demo", use_container_width=True, key="ops_reset_demo_btn"):
-            for _rk2 in (
-                "ops_phase", "ops_alert_stream", "ops_scenario_colors",
-                "ops_clusters", "ops_selected_cluster_id", "ops_selected_alert_id",
-                "ops_cluster_runs", "ops_rem_plans", "ops_graph_show_cluster",
-                "ops_copilot_open", "agent_copilot_answer", "agent_copilot_question",
-                "agent_approval_status", "ops_correlation_result", "ops_corr_warnings",
-            ):
-                if _rk2 in st.session_state:
-                    del st.session_state[_rk2]
             st.rerun()
 
     # ── Demo evidence panel (non-random modes only) ───────────────────────────
