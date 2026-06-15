@@ -14,6 +14,20 @@ from pathlib import Path
 from agents.schemas import AgentRun, AgentStep
 from agents import tools as _tools
 
+try:
+    from rca_ml.calibration import calibrate_confidence as _calibrate_confidence
+    _CALIB_OK = True
+except Exception:
+    _calibrate_confidence = None  # type: ignore
+    _CALIB_OK = False
+
+try:
+    from governance.evidence_critic import validate_rca_and_remediation as _validate_governance
+    _GOVERNANCE_OK = True
+except Exception:
+    _validate_governance = None  # type: ignore
+    _GOVERNANCE_OK = False
+
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -52,18 +66,19 @@ def run_agentic_incident_flow(
     mode: str = "demo",
 ) -> dict:
     """
-    Execute the 9-step agentic incident flow and return a JSON-serializable AgentRun dict.
+    Execute the 10-step agentic incident flow and return a JSON-serializable AgentRun dict.
 
     Steps:
-      1. Alert Intake Agent
-      2. Topology Context Agent
-      3. Correlation Agent
-      4. RCA Agent
-      5. Evidence Validation Agent
-      6. Remediation Agent
-      7. ITSM Draft Agent
-      8. Human Approval Agent
-      9. Final Summary Agent
+      1.  Alert Intake Agent
+      2.  Topology Context Agent
+      3.  Correlation Agent
+      4.  RCA Agent
+      5.  Evidence Validation Agent  (includes confidence calibration in payload)
+      6.  Remediation Agent
+      7.  ITSM Draft Agent
+      8.  Human Approval Agent       (uses calibrated confidence for risk gate)
+      9.  Governance Critic Agent
+      10. Final Summary Agent
     """
     run_id     = f"run-{uuid.uuid4().hex[:12]}"
     started_at = _now_iso()
@@ -78,13 +93,16 @@ def run_agentic_incident_flow(
     remediation_result: dict = {}
     ticket_draft:      dict = {}
 
-    alert_source       = "unknown"
-    topology_source    = "unknown"
-    rca_source         = "unknown"
-    remediation_source = "unknown"
-    root_cause         = ""
-    root_cause_diagram = ""
-    confidence         = 0.0
+    alert_source            = "unknown"
+    topology_source         = "unknown"
+    rca_source              = "unknown"
+    remediation_source      = "unknown"
+    root_cause              = ""
+    root_cause_diagram      = ""
+    confidence              = 0.0
+    calibrated_confidence   = 0.0
+    confidence_calibration: dict = {}
+    governance_review:      dict = {}
     impacted_diagrams: list = []
 
     # ══════════════════════════════════════════════════════════════════
@@ -277,7 +295,41 @@ def run_agentic_incident_flow(
         if not impacted_diagrams:
             impacted_diagrams = evidence_result.get("impacted_diagrams", [])
 
-        ev_bullets = evidence_result.get("evidence_summary", [])
+        ev_bullets = list(evidence_result.get("evidence_summary", []))
+
+        # ── Confidence calibration (embedded in Step 5) ───────────────────────
+        top_candidates = (
+            (gnn_result or {}).get("top_candidates")
+            or (gnn_result or {}).get("ranking")
+            or []
+        )
+        if _CALIB_OK and _calibrate_confidence:
+            try:
+                confidence_calibration = _calibrate_confidence(
+                    raw_confidence=confidence,
+                    rca_source=rca_source,
+                    impacted_diagrams=list(impacted_diagrams),
+                    top_candidates=top_candidates,
+                    evidence_summary=ev_bullets,
+                )
+                calibrated_confidence = confidence_calibration["calibrated_confidence"]
+            except Exception:
+                confidence_calibration = {}
+                calibrated_confidence = confidence
+        else:
+            confidence_calibration = {}
+            calibrated_confidence = confidence
+
+        _gate_label = (
+            "passed" if confidence_calibration.get("threshold_passed")
+            else "needs validation"
+        )
+        ev_bullets = ev_bullets + [
+            f"Raw confidence: {confidence:.0%}",
+            f"Calibrated confidence: {calibrated_confidence:.0%}",
+            f"Confidence gate: {_gate_label}",
+        ]
+
         steps.append(_step(
             5, "Evidence Validation Agent",
             "Deterministically validate RCA with graph and alert evidence — no LLM",
@@ -286,15 +338,18 @@ def run_agentic_incident_flow(
             (
                 f"Validated {len(ev_bullets)} evidence point(s). "
                 f"{evidence_result.get('alert_count', 0)} alert(s), "
-                f"{len(impacted_diagrams)} impacted diagram(s)."
+                f"{len(impacted_diagrams)} impacted diagram(s). "
+                f"Calibrated confidence: {calibrated_confidence:.0%}."
             ),
             evidence=ev_bullets,
             payload={
-                "alert_count":    evidence_result.get("alert_count", 0),
-                "impacted_count": len(impacted_diagrams),
+                "alert_count":            evidence_result.get("alert_count", 0),
+                "impacted_count":         len(impacted_diagrams),
+                "confidence_calibration": confidence_calibration,
             },
         ))
     except Exception as exc:
+        calibrated_confidence = confidence
         steps.append(_step(
             5, "Evidence Validation Agent", "Validate RCA evidence", "validate_rca_evidence",
             "error", t0, f"Evidence validation error: {exc}",
@@ -382,20 +437,25 @@ def run_agentic_incident_flow(
     # Step 8 — Human Approval Agent
     # ══════════════════════════════════════════════════════════════════
     t0 = _now_iso()
-    n_impacted = len(impacted_diagrams)
-    rem_text   = str(remediation_result.get("response", "")).lower()
-    high_risk  = any(
+    n_impacted          = len(impacted_diagrams)
+    rem_text            = str(remediation_result.get("response", "")).lower()
+    high_risk           = any(
         k in rem_text
         for k in ("shutdown", "restart", "failover", "disable", "terminate", "reboot", "isolate")
     )
+    effective_confidence = calibrated_confidence if calibrated_confidence else confidence
 
-    if high_risk or n_impacted >= 3 or confidence >= 0.85:
+    if high_risk or n_impacted >= 3 or effective_confidence >= 0.85:
         risk_level  = "high"
         risk_reason = (
             "High-risk remediation actions detected in plan"
-            if high_risk else f"{n_impacted} diagrams impacted with {confidence:.0%} confidence"
+            if high_risk
+            else (
+                f"{n_impacted} diagrams impacted with calibrated confidence "
+                f"{effective_confidence:.0%}"
+            )
         )
-    elif n_impacted >= 2 or confidence >= 0.6:
+    elif n_impacted >= 2 or effective_confidence >= 0.6:
         risk_level  = "medium"
         risk_reason = f"{n_impacted} diagram(s) impacted — moderate blast radius"
     else:
@@ -412,6 +472,11 @@ def run_agentic_incident_flow(
             "then approve or reject the remediation before any execution."
         ),
     }
+    _calib_note = (
+        f"Calibrated confidence: {effective_confidence:.0%}"
+        if effective_confidence != confidence
+        else f"Confidence: {effective_confidence:.0%} (no calibration applied)"
+    )
     steps.append(_step(
         8, "Human Approval Agent",
         "Require human review and approval before any remediation is executed",
@@ -421,35 +486,103 @@ def run_agentic_incident_flow(
         evidence=[
             f"Risk level: {risk_level}",
             f"Reason: {risk_reason}",
+            f"Raw confidence: {confidence:.0%}",
+            _calib_note,
             "No auto-execution — approval required",
         ],
         payload=approval_gate,
     ))
 
     # ══════════════════════════════════════════════════════════════════
-    # Step 9 — Final Summary Agent
+    # Step 9 — Governance Critic Agent
     # ══════════════════════════════════════════════════════════════════
     t0 = _now_iso()
+    if _GOVERNANCE_OK and _validate_governance:
+        try:
+            _agent_snapshot = {
+                "root_cause":           root_cause,
+                "root_cause_diagram":   root_cause_diagram,
+                "rca_source":           rca_source,
+                "confidence":           confidence,
+                "calibrated_confidence": calibrated_confidence,
+                "impacted_diagrams":    impacted_diagrams,
+                "steps":                steps,
+                "approval_gate":        approval_gate,
+            }
+            governance_review = _validate_governance(
+                _agent_snapshot,
+                remediation_plan=remediation_result,
+                graph_context=ctx.get("enterprise_graph", {}),
+            )
+        except Exception as _gov_exc:
+            governance_review = {
+                "status": "skipped",
+                "score": 0,
+                "findings": [f"Governance validator error: {_gov_exc}"],
+                "blocking_issues": [],
+                "approval_recommendation": "needs_human_review",
+            }
+    else:
+        governance_review = {
+            "status": "skipped",
+            "score": 0,
+            "findings": ["Governance validator unavailable."],
+            "blocking_issues": [],
+            "approval_recommendation": "needs_human_review",
+        }
+
+    _gov_status      = governance_review.get("status", "skipped")
+    _gov_score       = governance_review.get("score", 0)
+    _gov_step_status = (
+        "success" if _gov_status == "passed"
+        else "warning" if _gov_status == "warning"
+        else "error" if _gov_status == "failed"
+        else "skipped"
+    )
+    _gov_findings  = governance_review.get("findings", [])[:5]
+    _gov_blocking  = [f"⛔ {bi}" for bi in governance_review.get("blocking_issues", [])]
+    steps.append(_step(
+        9, "Governance Critic Agent",
+        "Evidence-based governance and compliance validation of RCA and remediation plan",
+        "validate_rca_and_remediation",
+        _gov_step_status, t0,
+        f"Governance review {_gov_status} with score {_gov_score}/100.",
+        evidence=_gov_findings + _gov_blocking,
+        payload=governance_review,
+    ))
+
+    # ══════════════════════════════════════════════════════════════════
+    # Step 10 — Final Summary Agent
+    # ══════════════════════════════════════════════════════════════════
+    t0 = _now_iso()
+    _calib_summary = (
+        f"Calibrated confidence: {calibrated_confidence:.0%}. "
+        if calibrated_confidence and calibrated_confidence != confidence else ""
+    )
     final_summary = (
         f"InfraGraph AI detected a cross-diagram infrastructure incident. "
         f"Root cause: '{root_cause}' in '{root_cause_diagram}' "
         f"(confidence {confidence:.0%}, source: {rca_source}). "
+        f"{_calib_summary}"
         f"{n_impacted} diagram(s) impacted. "
         f"Remediation: {remediation_source}. "
+        f"Governance: {_gov_status} ({_gov_score}/100). "
         f"Ticket {ticket_draft.get('ticket_id', '—')} drafted ({ticket_draft.get('priority', '—')}). "
         f"Human approval: pending."
     )
     steps.append(_step(
-        9, "Final Summary Agent",
+        10, "Final Summary Agent",
         "Produce executive summary of end-to-end agentic incident flow",
         "final_summary",
         "success", t0,
         final_summary,
         evidence=[
             f"Root cause: {root_cause}",
-            f"Confidence: {confidence:.0%}",
+            f"Raw confidence: {confidence:.0%}",
+            f"Calibrated confidence: {calibrated_confidence:.0%}",
             f"RCA source: {rca_source}",
             f"Remediation source: {remediation_source}",
+            f"Governance: {_gov_status} ({_gov_score}/100)",
             f"Ticket: {ticket_draft.get('ticket_id', '—')} ({ticket_draft.get('priority', '—')})",
             "Approval: pending",
         ],
@@ -479,9 +612,13 @@ def run_agentic_incident_flow(
         root_cause=root_cause,
         root_cause_diagram=root_cause_diagram,
         confidence=confidence,
+        calibrated_confidence=calibrated_confidence if calibrated_confidence else None,
+        confidence_calibration=confidence_calibration,
         impacted_diagrams=list(impacted_diagrams),
         approval_gate=approval_gate,
         ticket_draft=ticket_draft,
+        governance_review=governance_review,
+        runbook_chain=rem_ctx.get("runbook_chain", []),
     ).to_dict()
 
     try:

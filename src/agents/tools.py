@@ -454,36 +454,63 @@ def build_remediation_context(
     if n_domains == 0 and nodes:
         n_domains = len(set(n.get("diagram_id", "") for n in nodes if n.get("diagram_id")))
 
-    # Retrieve and rank runbook chain
-    runbook_chain: list[dict] = []
-    if _RUNBOOK_OK and _retrieve_runbooks and _rerank_runbooks and _apply_runbook_policy:
-        try:
-            # Infer dominant node type from enterprise graph nodes
+    # Resolve root-cause node type — prefer the actual root-cause node first
+    _root_node_type = ""
+    _root_lower = root_cause.lower()
+    for _n in nodes:
+        _nid = str(_n.get("id") or _n.get("node_id") or _n.get("canonical_id") or "")
+        if _nid == root_cause:
+            _root_node_type = str(_n.get("type") or _n.get("node_type") or "")
+            break
+    if not _root_node_type:
+        if any(k in _root_lower for k in ("fw", "firewall")):
+            _root_node_type = "firewall"
+        elif any(k in _root_lower for k in ("rtr", "router", "wan")):
+            _root_node_type = "router"
+        elif any(k in _root_lower for k in ("lb", "load_balancer", "load balancer")):
+            _root_node_type = "load_balancer"
+        elif any(k in _root_lower for k in ("db", "database")):
+            _root_node_type = "database"
+        elif "dns" in _root_lower:
+            _root_node_type = "dns"
+        elif any(k in _root_lower for k in ("srv", "server", "app")):
+            _root_node_type = "server"
+        else:
+            # Final fallback: dominant type across all graph nodes
             _node_type_counts: dict[str, int] = {}
             for _n in nodes:
                 _nt = _n.get("type", _n.get("node_type", ""))
                 if _nt:
                     _node_type_counts[_nt] = _node_type_counts.get(_nt, 0) + 1
-            _dom_node_type = (
+            _root_node_type = (
                 max(_node_type_counts, key=_node_type_counts.get)  # type: ignore[arg-type]
                 if _node_type_counts else ""
             )
+
+    # Retrieve and rank runbook chain
+    runbook_chain: list[dict] = []
+    if _RUNBOOK_OK and _retrieve_runbooks and _rerank_runbooks and _apply_runbook_policy:
+        try:
+            _conf_for_policy = float((gnn_result or {}).get("confidence") or 0.5)
             _candidates = _retrieve_runbooks(
                 root_cause=root_cause,
                 root_cause_diagram=root_cause_diagram,
-                node_type=_dom_node_type,
+                node_type=_root_node_type,
                 alert_timeline=ent_incident.get("alert_timeline", []),
                 impacted_diagrams=list(impacted_diagrams),
                 evidence_summary=[],
             )
             _rca_ctx = {
                 "rca_source":        rca_source,
-                "confidence":        (gnn_result or {}).get("confidence", 0.5),
+                "confidence":        _conf_for_policy,
                 "impacted_diagrams": list(impacted_diagrams),
-                "node_type":         _dom_node_type,
+                "node_type":         _root_node_type,
             }
             _ranked = _rerank_runbooks(_candidates, _rca_ctx)
-            runbook_chain = _apply_runbook_policy(_ranked, _rca_ctx.get("confidence", 0.5))
+            runbook_chain = _apply_runbook_policy(
+                _ranked,
+                calibrated_confidence=_conf_for_policy,
+            )
         except Exception:
             runbook_chain = []
 
@@ -526,9 +553,9 @@ def build_remediation_context(
         cluster_score=(gnn_result or {}).get("cluster_score"),
         correlation_reasons=(gnn_result or {}).get("correlation_reasons", []),
         causal_evidence=(gnn_result or {}).get("causal_evidence", []),
+        runbook_chain=runbook_chain or None,
     )
-    if runbook_chain:
-        ctx["runbook_chain"] = runbook_chain
+    ctx["root_node_type"] = _root_node_type
     return ctx
 
 

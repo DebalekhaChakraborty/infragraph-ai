@@ -8392,6 +8392,122 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
 
             st.markdown("</div>", unsafe_allow_html=True)
 
+            # ── Runbook chain (from backend AgentRun or session state) ─────────
+            _rb_chain_disp = _run_rgt.get("runbook_chain", [])
+            if _rb_chain_disp:
+                st.markdown(f'<div style="{_card("border-left:4px solid #6366f1")}">', unsafe_allow_html=True)
+                st.markdown(
+                    '<div style="font-size:0.60rem;font-weight:700;color:#818cf8;'
+                    'text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px">'
+                    '📋 Approved Runbook Chain</div>',
+                    unsafe_allow_html=True,
+                )
+                for _rb in _rb_chain_disp[:4]:
+                    _rb_id   = _rb.get("runbook_id", "?")
+                    _rb_ttl  = _rb.get("title", "")
+                    _rb_auto = "✓" if _rb.get("automation_eligible") else "✗"
+                    _rb_appr = "required" if _rb.get("approval_required") else "optional"
+                    _rb_dry  = "✓" if _rb.get("dry_run_supported") else "✗"
+                    st.markdown(
+                        f'<div style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'
+                        f'<span style="color:#818cf8;font-weight:700;font-size:0.68rem">{_rb_id}</span>'
+                        f' <span style="font-size:0.62rem;color:#e2e8f0">{html.escape(_rb_ttl)}</span>'
+                        f'<br><span style="font-size:0.57rem;color:#64748b">'
+                        f'approval: {_rb_appr} · auto: {_rb_auto} · dry-run: {_rb_dry}'
+                        f'</span></div>',
+                        unsafe_allow_html=True,
+                    )
+                st.markdown("</div>", unsafe_allow_html=True)
+            else:
+                st.markdown(
+                    f'<div style="{_card()}">'
+                    f'<div style="font-size:0.60rem;color:#475569;font-style:italic">'
+                    f'No approved runbook matched — validation recommendation only</div>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
+
+            # ── Calibrated Confidence Gate (computed BEFORE governance) ────────
+            _step5_ui = next(
+                (s for s in _run_rgt.get("steps", []) if s.get("step_id") == 5), {}
+            )
+            _step5_payload_ui = _step5_ui.get("payload") or {}
+            _calib_result = (
+                _run_rgt.get("confidence_calibration")
+                or _step5_payload_ui.get("confidence_calibration")
+            )
+            _calib_source_label = "persisted" if _calib_result else None
+            if not _calib_result and _CALIB_OK and _calibrate_confidence:
+                try:
+                    _top_cands_ui = (
+                        _run_rgt.get("top_candidates")
+                        or _run_rgt.get("ranking")
+                        or (_run_rgt.get("gnn_result") or {}).get("top_candidates")
+                        or (_run_rgt.get("gnn_result") or {}).get("ranking")
+                        or []
+                    )
+                    _ev_sum_ui = (
+                        _step5_ui.get("evidence")
+                        or _run_rgt.get("evidence_summary")
+                        or []
+                    )
+                    _calib_result = _calibrate_confidence(
+                        raw_confidence=_conf_r,
+                        rca_source=_run_rgt.get("rca_source", ""),
+                        impacted_diagrams=_run_rgt.get("impacted_diagrams", []),
+                        top_candidates=_top_cands_ui,
+                        evidence_summary=_ev_sum_ui,
+                    )
+                    _calib_source_label = "UI computed"
+                    # Persist into session so governance reads it immediately
+                    _cl_runs_calib = st.session_state.get("ops_cluster_runs", {})
+                    _run_rgt["confidence_calibration"]  = _calib_result
+                    _run_rgt["calibrated_confidence"]   = _calib_result["calibrated_confidence"]
+                    _cl_runs_calib[_sel_cid]            = _run_rgt
+                    st.session_state.ops_cluster_runs   = _cl_runs_calib
+                except Exception:
+                    _calib_result = None
+
+            if _calib_result:
+                _cal_c    = _calib_result["calibrated_confidence"]
+                _cal_pct  = f"{_cal_c:.0%}"
+                _cal_band = _calib_result.get("confidence_band", "")
+                _cal_pass = _calib_result.get("threshold_passed", False)
+                _cal_expl = _calib_result.get("explanation", [])
+                _cc_r     = "#22c55e" if _cal_pass else "#f59e0b" if _cal_c >= 0.5 else "#ef4444"
+                _gate_label = "RCA confidence gate passed" if _cal_pass else "Human validation required"
+                _src_note   = f" · {_calib_source_label}" if _calib_source_label else ""
+                st.markdown(f'<div style="{_card(f"border-left:4px solid {_cc_r}")}">', unsafe_allow_html=True)
+                st.markdown(
+                    f'<div style="font-size:0.60rem;font-weight:700;color:{_cc_r};'
+                    f'text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">'
+                    f'Calibrated Confidence Gate{_src_note}</div>'
+                    f'<div style="font-size:1.3rem;font-weight:800;color:{_cc_r}">{_cal_pct}</div>'
+                    f'<div style="font-size:0.61rem;color:#64748b;margin-bottom:2px">'
+                    f'raw {_conf_rp} → calibrated · {_cal_band}</div>'
+                    f'<div style="font-size:0.65rem;font-weight:600;color:{_cc_r};margin-bottom:5px">'
+                    f'{_gate_label}</div>',
+                    unsafe_allow_html=True,
+                )
+                for _ce in (_cal_expl or [])[:3]:
+                    st.markdown(
+                        f'<div style="font-size:0.60rem;color:#94a3b8;padding:1px 0">'
+                        f'· {html.escape(str(_ce))}</div>',
+                        unsafe_allow_html=True,
+                    )
+                st.markdown("</div>", unsafe_allow_html=True)
+            else:
+                _cc_r = "#22c55e" if _conf_r >= 0.8 else "#f59e0b" if _conf_r >= 0.5 else "#ef4444"
+                st.markdown(f'<div style="{_card()}">', unsafe_allow_html=True)
+                st.markdown(
+                    f'<div style="font-size:0.65rem;color:#64748b;margin-bottom:4px">Confidence Gate</div>'
+                    f'<div style="font-size:1.4rem;font-weight:800;color:{_cc_r}">{_conf_rp}</div>'
+                    f'<div style="font-size:0.63rem;color:#64748b;margin-top:2px">'
+                    f'{"GNN inference" if _is_gnn_r else "Graph-grounded estimate"}</div>',
+                    unsafe_allow_html=True,
+                )
+                st.markdown("</div>", unsafe_allow_html=True)
+
             # ── Full Remediation Plan (real pipeline) ─────────────────────────
             _ops_rem_plans = st.session_state.get("ops_rem_plans", {})
             _rem_plan_cached = _ops_rem_plans.get(_sel_cid)
@@ -8492,121 +8608,92 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                 _render_qwen_runtime_proof(_rem_plan_cached)
 
                 # ── Evidence Critic / Governance review ──────────────────────
-                if _GOVERNANCE_OK and _validate_governance:
-                    _gov_reviews = st.session_state.get("ops_governance_reviews", {})
-                    if _sel_cid not in _gov_reviews:
-                        try:
-                            _gov_rev = _validate_governance(
-                                agent_run={
-                                    "root_cause":         _run_rgt.get("root_cause", ""),
-                                    "rca_source":         _run_rgt.get("rca_source", ""),
-                                    "confidence":         _conf_r,
-                                    "calibrated_confidence": _run_rgt.get("calibrated_confidence"),
-                                    "impacted_diagrams":  _run_rgt.get("impacted_diagrams", []),
-                                    "steps":              _run_rgt.get("steps", []),
-                                    "approval_gate":      _run_rgt.get("approval_gate", {}),
-                                },
-                                remediation_plan=_rem_plan_cached,
-                                graph_context=_load_enterprise_graph_for(
-                                    _sel_cl.get("scenario_id", "")
-                                ),
-                            )
-                            _gov_reviews[_sel_cid] = _gov_rev
-                            st.session_state.ops_governance_reviews = _gov_reviews
-                        except Exception:
-                            _gov_rev = None
-                    else:
-                        _gov_rev = _gov_reviews[_sel_cid]
-
+                # Use backend-persisted review first; recompute if cache key changed
+                _gov_reviews = st.session_state.get("ops_governance_reviews", {})
+                _gov_rev_backend = _run_rgt.get("governance_review") or {}
+                _gov_is_persisted = bool(_gov_rev_backend.get("status") and
+                                         _gov_rev_backend.get("status") != "skipped")
+                _gov_cache_key = "|".join([
+                    _run_rgt.get("root_cause", ""),
+                    _run_rgt.get("rca_source", ""),
+                    f"{_run_rgt.get('calibrated_confidence') or _conf_r:.4f}",
+                    (_rem_plan_cached or {}).get("source", ""),
+                ])
+                _stored_entry = _gov_reviews.get(_sel_cid, {})
+                if isinstance(_stored_entry, dict) and _stored_entry.get("cache_key") == _gov_cache_key:
+                    _gov_rev = _stored_entry.get("review")
+                    _gov_disp_label = _stored_entry.get("source_label", "UI computed")
+                elif _gov_is_persisted:
+                    _gov_rev        = _gov_rev_backend
+                    _gov_disp_label = "persisted"
+                    _gov_reviews[_sel_cid] = {"cache_key": _gov_cache_key,
+                                               "review": _gov_rev,
+                                               "source_label": "persisted"}
+                    st.session_state.ops_governance_reviews = _gov_reviews
+                elif _GOVERNANCE_OK and _validate_governance:
+                    try:
+                        _gov_rev = _validate_governance(
+                            agent_run={
+                                "root_cause":            _run_rgt.get("root_cause", ""),
+                                "rca_source":            _run_rgt.get("rca_source", ""),
+                                "confidence":            _conf_r,
+                                "calibrated_confidence": _run_rgt.get("calibrated_confidence"),
+                                "impacted_diagrams":     _run_rgt.get("impacted_diagrams", []),
+                                "steps":                 _run_rgt.get("steps", []),
+                                "approval_gate":         _run_rgt.get("approval_gate", {}),
+                            },
+                            remediation_plan=_rem_plan_cached,
+                            graph_context=_load_enterprise_graph_for(
+                                _sel_cl.get("scenario_id", "")
+                            ),
+                        )
+                        _gov_disp_label = "UI computed"
+                    except Exception:
+                        _gov_rev        = None
+                        _gov_disp_label = ""
                     if _gov_rev:
-                        _gscore  = _gov_rev.get("score", 0)
-                        _gstatus = _gov_rev.get("status", "")
-                        _gsc     = {"passed": "#22c55e", "warning": "#f59e0b",
-                                    "failed": "#ef4444"}.get(_gstatus, "#6b7280")
-                        _grec    = _gov_rev.get("approval_recommendation", "")
-                        st.markdown(
-                            f'<div style="{_card(f"border-left:4px solid {_gsc}")}">',
-                            unsafe_allow_html=True,
-                        )
-                        st.markdown(
-                            f'<div style="font-size:0.60rem;font-weight:700;color:{_gsc};'
-                            f'text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px">'
-                            f'⚖ Governance Review</div>'
-                            f'<div style="font-size:1.25rem;font-weight:800;color:{_gsc}">'
-                            f'{_gscore}/100</div>'
-                            f'<div style="font-size:0.62rem;color:#64748b;margin-bottom:5px">'
-                            f'{_gstatus.upper()} · {_grec.replace("_", " ")}</div>',
-                            unsafe_allow_html=True,
-                        )
-                        for _gf in _gov_rev.get("findings", [])[:5]:
-                            st.markdown(
-                                f'<div style="font-size:0.63rem;color:#94a3b8;padding:1px 0">'
-                                f'· {html.escape(str(_gf))}</div>',
-                                unsafe_allow_html=True,
-                            )
-                        for _bi in _gov_rev.get("blocking_issues", []):
-                            st.markdown(
-                                f'<div style="font-size:0.63rem;color:#ef4444;margin-top:4px;'
-                                f'font-weight:600">⛔ {html.escape(str(_bi))}</div>',
-                                unsafe_allow_html=True,
-                            )
-                        st.markdown("</div>", unsafe_allow_html=True)
+                        _gov_reviews[_sel_cid] = {"cache_key": _gov_cache_key,
+                                                   "review": _gov_rev,
+                                                   "source_label": "UI computed"}
+                        st.session_state.ops_governance_reviews = _gov_reviews
+                else:
+                    _gov_rev        = None
+                    _gov_disp_label = ""
 
-            # Calibrated Confidence Gate
-            if _CALIB_OK and _calibrate_confidence:
-                try:
-                    _calib_result = _calibrate_confidence(
-                        raw_confidence=_conf_r,
-                        rca_source=_run_rgt.get("rca_source", ""),
-                        impacted_diagrams=_run_rgt.get("impacted_diagrams", []),
-                        top_candidates=_run_rgt.get("ranking", []),
-                        evidence_summary=_run_rgt.get("evidence_summary", []),
-                    )
-                    _run_rgt["calibrated_confidence"] = _calib_result["calibrated_confidence"]
-                except Exception:
-                    _calib_result = None
-            else:
-                _calib_result = None
-
-            if _calib_result:
-                _cal_c   = _calib_result["calibrated_confidence"]
-                _cal_pct = f"{_cal_c:.0%}"
-                _cal_band = _calib_result.get("confidence_band", "")
-                _cal_pass = _calib_result.get("threshold_passed", False)
-                _cal_expl = _calib_result.get("explanation", [])
-                _cc_r    = "#22c55e" if _cal_pass else "#f59e0b" if _cal_c >= 0.5 else "#ef4444"
-                _gate_label = ("RCA confidence gate passed" if _cal_pass
-                               else "Human validation required")
-                st.markdown(f'<div style="{_card(f"border-left:4px solid {_cc_r}")}">', unsafe_allow_html=True)
-                st.markdown(
-                    f'<div style="font-size:0.60rem;font-weight:700;color:{_cc_r};'
-                    f'text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">'
-                    f'Calibrated Confidence Gate</div>'
-                    f'<div style="font-size:1.3rem;font-weight:800;color:{_cc_r}">{_cal_pct}</div>'
-                    f'<div style="font-size:0.61rem;color:#64748b;margin-bottom:2px">'
-                    f'raw {_conf_rp} → calibrated · {_cal_band}</div>'
-                    f'<div style="font-size:0.65rem;font-weight:600;color:{_cc_r};margin-bottom:5px">'
-                    f'{_gate_label}</div>',
-                    unsafe_allow_html=True,
-                )
-                for _ce in (_cal_expl or [])[:3]:
+                if _gov_rev:
+                    _gscore  = _gov_rev.get("score", 0)
+                    _gstatus = _gov_rev.get("status", "")
+                    _gsc     = {"passed": "#22c55e", "warning": "#f59e0b",
+                                "failed": "#ef4444"}.get(_gstatus, "#6b7280")
+                    _grec    = _gov_rev.get("approval_recommendation", "")
+                    _glabel  = f"⚖ Governance Review — {_gov_disp_label}" if _gov_disp_label else "⚖ Governance Review"
                     st.markdown(
-                        f'<div style="font-size:0.60rem;color:#94a3b8;padding:1px 0">'
-                        f'· {html.escape(str(_ce))}</div>',
+                        f'<div style="{_card(f"border-left:4px solid {_gsc}")}">',
                         unsafe_allow_html=True,
                     )
-                st.markdown("</div>", unsafe_allow_html=True)
-            else:
-                _cc_r = "#22c55e" if _conf_r >= 0.8 else "#f59e0b" if _conf_r >= 0.5 else "#ef4444"
-                st.markdown(f'<div style="{_card()}">', unsafe_allow_html=True)
-                st.markdown(
-                    f'<div style="font-size:0.65rem;color:#64748b;margin-bottom:4px">Confidence Gate</div>'
-                    f'<div style="font-size:1.4rem;font-weight:800;color:{_cc_r}">{_conf_rp}</div>'
-                    f'<div style="font-size:0.63rem;color:#64748b;margin-top:2px">'
-                    f'{"GNN inference" if _is_gnn_r else "Graph-grounded estimate"}</div>',
-                    unsafe_allow_html=True,
-                )
-                st.markdown("</div>", unsafe_allow_html=True)
+                    st.markdown(
+                        f'<div style="font-size:0.60rem;font-weight:700;color:{_gsc};'
+                        f'text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px">'
+                        f'{_glabel}</div>'
+                        f'<div style="font-size:1.25rem;font-weight:800;color:{_gsc}">'
+                        f'{_gscore}/100</div>'
+                        f'<div style="font-size:0.62rem;color:#64748b;margin-bottom:5px">'
+                        f'{_gstatus.upper()} · {_grec.replace("_", " ")}</div>',
+                        unsafe_allow_html=True,
+                    )
+                    for _gf in _gov_rev.get("findings", [])[:5]:
+                        st.markdown(
+                            f'<div style="font-size:0.63rem;color:#94a3b8;padding:1px 0">'
+                            f'· {html.escape(str(_gf))}</div>',
+                            unsafe_allow_html=True,
+                        )
+                    for _bi in _gov_rev.get("blocking_issues", []):
+                        st.markdown(
+                            f'<div style="font-size:0.63rem;color:#ef4444;margin-top:4px;'
+                            f'font-weight:600">⛔ {html.escape(str(_bi))}</div>',
+                            unsafe_allow_html=True,
+                        )
+                    st.markdown("</div>", unsafe_allow_html=True)
 
             # Human Approval Gate
             _ap_bdr = {"approved": "#22c55e", "rejected": "#ef4444", "pending": "#f59e0b"}.get(
@@ -8618,8 +8705,10 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
             )
             st.markdown("**Human Approval**")
             # Governance warning before approve
-            _gov_reviews_ap = st.session_state.get("ops_governance_reviews", {})
-            _gov_rev_ap     = _gov_reviews_ap.get(_sel_cid)
+            _gov_reviews_ap  = st.session_state.get("ops_governance_reviews", {})
+            _gov_entry_ap    = _gov_reviews_ap.get(_sel_cid, {})
+            _gov_rev_ap      = (_gov_entry_ap.get("review") if isinstance(_gov_entry_ap, dict)
+                                else _gov_entry_ap)
             if _gov_rev_ap and _gov_rev_ap.get("score", 100) < 70:
                 st.warning(
                     f"Governance score {_gov_rev_ap['score']}/100 "

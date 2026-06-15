@@ -86,9 +86,13 @@ class AgentRun(BaseModel):
     root_cause: str = ""
     root_cause_diagram: str = ""
     confidence: float = 0.0
+    calibrated_confidence: float | None = None
+    confidence_calibration: dict[str, Any] = Field(default_factory=dict)
     impacted_diagrams: list[str] = Field(default_factory=list)
     approval_gate: dict[str, Any] = Field(default_factory=dict)
     ticket_draft: dict[str, Any] = Field(default_factory=dict)
+    governance_review: dict[str, Any] = Field(default_factory=dict)
+    runbook_chain: list[Any] = Field(default_factory=list)
 
     def to_dict(self) -> dict:
         return self.model_dump()

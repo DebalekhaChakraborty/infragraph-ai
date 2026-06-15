@@ -80,6 +80,7 @@ def make_remediation_input(
     cluster_score: float | None = None,
     correlation_reasons: list[str] | None = None,
     causal_evidence: list[dict] | None = None,
+    runbook_chain: list[dict] | None = None,
 ) -> dict:
     """Return a normalised remediation input dict for either scope."""
     return {
@@ -106,6 +107,7 @@ def make_remediation_input(
         "cluster_score":         cluster_score,
         "correlation_reasons":   correlation_reasons or [],
         "causal_evidence":       causal_evidence or [],
+        "runbook_chain":         runbook_chain or [],
     }
 
 
