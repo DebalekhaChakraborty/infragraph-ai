@@ -400,6 +400,7 @@ p,li,label { color: #cbd5e1; }
 .stat-pill.status   { background: rgba(96,165,250,0.1); color: #60a5fa; border-color: rgba(96,165,250,0.25); }
 .pill-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pdot 1.4s infinite; }
 @keyframes pdot { 0%,100%{opacity:1} 50%{opacity:.3} }
+@keyframes spin  { to { transform: rotate(360deg); } }
 
 /* ── Workspace header ── */
 .ws-title { font-size: 1.1rem; font-weight: 800; color: #f1f5f9; margin: 4px 0 2px; }
