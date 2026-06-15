@@ -7278,6 +7278,31 @@ def _qwen_or_deterministic(question: str, context: dict) -> str:
                 + _deterministic_graph_copilot(question, context))
 
 
+@st.dialog("📊 Enterprise Graph — Cluster Visualization", width="large")
+def _ops_graph_popup(title: str, g_sid: str, popup_rca: "dict | None", eg_data: dict) -> None:
+    st.markdown(
+        f'<div style="font-size:0.72rem;color:#64748b;margin-bottom:10px">'
+        f'<b style="color:#a78bfa">{title}</b> &nbsp;·&nbsp; {g_sid} &nbsp;·&nbsp; '
+        f'{len(eg_data.get("nodes", []))} nodes &nbsp;·&nbsp; '
+        f'{len(eg_data.get("edges", []))} edges</div>',
+        unsafe_allow_html=True,
+    )
+    if _pyvis_available():
+        _render_enterprise_pyvis(
+            enterprise_graph=eg_data,
+            absorbed_ids=set(),
+            rca=popup_rca,
+            height=580,
+        )
+    else:
+        st.warning("Install `pyvis>=0.3.2` for graph visualization.")
+        st.json({
+            "nodes":      len(eg_data.get("nodes", [])),
+            "edges":      len(eg_data.get("edges", [])),
+            "root_cause": (popup_rca or {}).get("root_cause", "—"),
+        })
+
+
 def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
     """
     Agentic Ops Orchestrator — multi-phase alert-stream console.
@@ -7676,23 +7701,26 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                     + '</div></div>',
                     unsafe_allow_html=True,
                 )
-                if st.button(
-                    "⚡ AI Findings",
-                    key=f"ops_findings_{_cl['cluster_id']}",
-                    use_container_width=True,
-                    type="primary" if _is_sel else "secondary",
-                ):
-                    st.session_state.ops_selected_cluster_id = _cl["cluster_id"]
-                    st.session_state.ops_graph_show_cluster  = None
-                    st.rerun()
-                if st.button(
-                    "📊 See Graph",
-                    key=f"ops_graph_{_cl['cluster_id']}",
-                    use_container_width=True,
-                ):
-                    st.session_state.ops_selected_cluster_id = _cl["cluster_id"]
-                    st.session_state.ops_graph_show_cluster  = _cl["cluster_id"]
-                    st.rerun()
+                _cb1, _cb2 = st.columns(2)
+                with _cb1:
+                    if st.button(
+                        "⚡ AI Findings",
+                        key=f"ops_findings_{_cl['cluster_id']}",
+                        use_container_width=True,
+                        type="primary" if _is_sel else "secondary",
+                    ):
+                        st.session_state.ops_selected_cluster_id = _cl["cluster_id"]
+                        st.session_state.ops_graph_show_cluster  = None
+                        st.rerun()
+                with _cb2:
+                    if st.button(
+                        "📊 See Graph",
+                        key=f"ops_graph_{_cl['cluster_id']}",
+                        use_container_width=True,
+                    ):
+                        st.session_state.ops_selected_cluster_id = _cl["cluster_id"]
+                        st.session_state.ops_graph_show_cluster  = _cl["cluster_id"]
+                        st.rerun()
                 st.markdown(
                     '<div style="height:4px"></div>',
                     unsafe_allow_html=True,
@@ -8213,61 +8241,35 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                 )
             st.markdown("</div>", unsafe_allow_html=True)
 
-    # ── Graph visualization popup ──────────────────────────────────────────────
+    # ── Graph visualization — modal dialog ────────────────────────────────────
     _graph_cid = st.session_state.get("ops_graph_show_cluster")
     if _graph_cid and _phase == "clustered":
         _graph_cl = next((c for c in _clusters if c["cluster_id"] == _graph_cid), None)
         if _graph_cl:
-            with st.expander(
-                f"📊 Graph Visualization — {_graph_cl['title']}",
-                expanded=True,
-            ):
-                _cx, _ = st.columns([0.12, 0.88])
-                with _cx:
-                    if st.button("✕ Close", key="ops_close_graph"):
-                        st.session_state.ops_graph_show_cluster = None
-                        st.rerun()
-                _g_sid = _graph_cl["scenario_id"]
-                _eg_data: dict | None = None
-                for _sp in ("train", "val", "test"):
-                    _eg_path = V3_DATASET_ROOT / "scenarios" / _sp / _g_sid / "enterprise_graph.json"
-                    if _eg_path.exists():
-                        try:
-                            _eg_data = json.loads(_eg_path.read_text(encoding="utf-8"))
-                        except Exception:
-                            pass
-                        break
-                if _eg_data:
-                    _popup_run = _cl_runs.get(_graph_cid)
-                    _popup_rca: dict | None = None
-                    if _popup_run:
-                        _popup_rca = {
-                            "root_cause":    _popup_run.get("root_cause", ""),
-                            "alert_nodes":   [],
-                            "impacted_nodes": _popup_run.get("impacted_diagrams", []),
-                            "impact_path":   [],
-                        }
-                    st.caption(
-                        f"Scenario: {_g_sid} · "
-                        f"{len(_eg_data.get('nodes', []))} nodes · "
-                        f"{len(_eg_data.get('edges', []))} edges"
-                    )
-                    if _pyvis_available():
-                        _render_enterprise_pyvis(
-                            enterprise_graph=_eg_data,
-                            absorbed_ids=set(),
-                            rca=_popup_rca,
-                            height=520,
-                        )
-                    else:
-                        st.warning("Install `pyvis>=0.3.2` for graph visualization.")
-                        st.json({
-                            "nodes": len(_eg_data.get("nodes", [])),
-                            "edges": len(_eg_data.get("edges", [])),
-                            "root_cause": (_popup_run.get("root_cause", "—") if _popup_run else "—"),
-                        })
-                else:
-                    st.warning(f"Enterprise graph data not found for scenario `{_g_sid}`.")
+            _g_sid = _graph_cl["scenario_id"]
+            _eg_data: dict | None = None
+            for _sp in ("train", "val", "test"):
+                _eg_path = V3_DATASET_ROOT / "scenarios" / _sp / _g_sid / "enterprise_graph.json"
+                if _eg_path.exists():
+                    try:
+                        _eg_data = json.loads(_eg_path.read_text(encoding="utf-8"))
+                    except Exception:
+                        pass
+                    break
+            _popup_run = _cl_runs.get(_graph_cid)
+            _popup_rca: dict | None = None
+            if _popup_run:
+                _popup_rca = {
+                    "root_cause":     _popup_run.get("root_cause", ""),
+                    "alert_nodes":    [],
+                    "impacted_nodes": _popup_run.get("impacted_diagrams", []),
+                    "impact_path":    [],
+                }
+            st.session_state.ops_graph_show_cluster = None  # clear before dialog so X-close doesn't reopen
+            if _eg_data:
+                _ops_graph_popup(_graph_cl["title"], _g_sid, _popup_rca, _eg_data)
+            else:
+                st.warning(f"Enterprise graph data not found for scenario `{_g_sid}`.")
 
     # ── Incident Copilot (available once a cluster has been analyzed) ──────────
     if _phase == "clustered" and _sel_cid and _cl_runs.get(_sel_cid):
