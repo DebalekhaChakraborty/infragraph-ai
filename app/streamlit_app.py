@@ -238,6 +238,46 @@ except Exception:
     _run_agent_flow = None  # type: ignore
     _AGENT_OK = False
 
+# ── AI/Graph-Aware Event Correlation Engine (optional) ────────────────────────
+try:
+    from event_correlation.inference import correlate_alerts as _correlate_alerts  # type: ignore
+    _CORR_ENGINE_OK = True
+except Exception:
+    _correlate_alerts   = None  # type: ignore
+    _CORR_ENGINE_OK     = False
+
+# ── Confidence Calibration (optional) ─────────────────────────────────────────
+try:
+    from rca_ml.calibration import calibrate_confidence as _calibrate_confidence  # type: ignore
+    _CALIB_OK = True
+except Exception:
+    _calibrate_confidence = None  # type: ignore
+    _CALIB_OK             = False
+
+# ── Runbook Retrieval (optional) ──────────────────────────────────────────────
+try:
+    from runbook_retrieval import (                                               # type: ignore
+        retrieve_candidate_runbooks as _retrieve_runbooks,
+        rerank_runbooks             as _rerank_runbooks,
+        apply_runbook_policy        as _apply_runbook_policy,
+    )
+    _RUNBOOK_OK = True
+except Exception:
+    _retrieve_runbooks    = None  # type: ignore
+    _rerank_runbooks      = None  # type: ignore
+    _apply_runbook_policy = None  # type: ignore
+    _RUNBOOK_OK           = False
+
+# ── Evidence Critic / Governance (optional) ───────────────────────────────────
+try:
+    from governance.evidence_critic import (                                     # type: ignore
+        validate_rca_and_remediation as _validate_governance,
+    )
+    _GOVERNANCE_OK = True
+except Exception:
+    _validate_governance = None  # type: ignore
+    _GOVERNANCE_OK       = False
+
 # ── FalconVue 3D WebGL renderer (optional; PyVis remains available) ──
 _app_dir = str(Path(__file__).parent)
 if _app_dir not in _sys.path:
@@ -7406,6 +7446,9 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
         ("ops_rem_plans",            {}),
         ("ops_graph_show_cluster",   None),
         ("ops_copilot_open",         False),
+        ("ops_correlation_result",   None),
+        ("ops_corr_warnings",        []),
+        ("ops_governance_reviews",   {}),
         ("agent_approval_status",    "pending"),
         ("agent_copilot_answer",     ""),
         ("agent_copilot_question",   ""),
@@ -7784,6 +7827,10 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                     f' · {len(_cl["alerts"])} alerts · {_cl["service"]}'
                     + ('&nbsp;<span style="color:#22c55e">✓</span>' if _has_run else '')
                     + ('&nbsp;<span style="color:#8b5cf6">GNN</span>' if _cl["has_gnn"] else '')
+                    + (f'&nbsp;<span style="color:#a78bfa;font-weight:700">⬡ {_cl["correlation_score"]:.2f}</span>'
+                       if _cl.get("correlation_score") else '')
+                    + ('&nbsp;<span style="color:#38bdf8;font-size:0.58rem">graph-aware</span>'
+                       if st.session_state.get("ops_correlation_result") else '')
                     + '</div></div>',
                     unsafe_allow_html=True,
                 )
@@ -7826,21 +7873,66 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
             # Action button lives here
             if st.button("▶ Run Correlation", use_container_width=True,
                          key="ops_correlate_btn", type="primary"):
-                _sidx = 0
-                _sid_grp: dict = {}
-                for _al in _alert_stream:
-                    _s = _al["scenario_id"]
-                    if _s not in _sid_grp:
-                        _sid_grp[_s] = {
-                            "group_id": f"GRP-{_s[-4:]}",
-                            "color":    _GROUP_COLORS[_sidx % len(_GROUP_COLORS)],
-                        }
-                        _sidx += 1
-                    _al["correlation_group"] = _sid_grp[_s]["group_id"]
-                    _al["color"]             = _sid_grp[_s]["color"]
-                st.session_state.ops_alert_stream    = _alert_stream
-                st.session_state.ops_scenario_colors = {
-                    s: g["color"] for s, g in _sid_grp.items()
+                _corr_result   = None
+                _corr_warnings: list[str] = []
+                _enrich_alerts = _alert_stream
+
+                if _CORR_ENGINE_OK and _correlate_alerts is not None:
+                    try:
+                        # Build per-scenario enterprise graph + GNN context
+                        _eg_by_sid:  dict = {}
+                        _gnn_by_sid: dict = {}
+                        for _al_c in _alert_stream:
+                            _sid_c = _al_c.get("scenario_id", "")
+                            if _sid_c and _sid_c not in _eg_by_sid:
+                                _eg_by_sid[_sid_c] = _load_enterprise_graph_for(_sid_c) or {}
+                                _gnn_c = _load_gnn_rca_result(_sid_c)
+                                if _gnn_c is None and _eg_by_sid.get(_sid_c):
+                                    _als_c = _load_alerts_for_scenario(_sid_c) or []
+                                    _gnn_c = _simulate_enterprise_rca(
+                                        {"alerts": _als_c, "scenario_id": _sid_c},
+                                        _eg_by_sid[_sid_c],
+                                    )
+                                if _gnn_c:
+                                    _gnn_by_sid[_sid_c] = _gnn_c
+                        _corr_result = _correlate_alerts(
+                            _alert_stream,
+                            enterprise_graph_by_scenario=_eg_by_sid,
+                            gnn_result_by_scenario=_gnn_by_sid,
+                        )
+                        _corr_warnings = _corr_result.get("warnings", [])
+                        _enrich_alerts = _corr_result.get("correlated_alerts", _alert_stream)
+                    except Exception as _ce:
+                        _corr_warnings = [f"Correlation engine error: {_ce}"]
+                        _corr_result   = None
+
+                if _corr_result is None:
+                    # Fallback: simple scenario-grouping
+                    _sidx = 0
+                    _sid_grp: dict = {}
+                    for _al in _alert_stream:
+                        _s = _al["scenario_id"]
+                        if _s not in _sid_grp:
+                            _sid_grp[_s] = {
+                                "group_id": f"GRP-{_s[-4:]}",
+                                "color":    _GROUP_COLORS[_sidx % len(_GROUP_COLORS)],
+                            }
+                            _sidx += 1
+                        _al["correlation_group"] = _sid_grp[_s]["group_id"]
+                        _al["color"]             = _sid_grp[_s]["color"]
+                    _enrich_alerts = _alert_stream
+                    if not _corr_warnings:
+                        _corr_warnings = [
+                            "Graph-aware correlation unavailable — "
+                            "using scenario grouping fallback."
+                        ]
+
+                st.session_state.ops_alert_stream       = _enrich_alerts
+                st.session_state.ops_correlation_result = _corr_result
+                st.session_state.ops_corr_warnings      = _corr_warnings
+                st.session_state.ops_scenario_colors    = {
+                    _al_c["scenario_id"]: _al_c.get("color", "#6b7280")
+                    for _al_c in _enrich_alerts if "scenario_id" in _al_c
                 }
                 st.session_state.ops_phase = "correlated"
                 st.rerun()
@@ -7926,6 +8018,29 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                     _dom = max(set(_ntypes), key=_ntypes.count) if _ntypes else "network"
                     _cl_map[_gid]["title"]   = _NODE_TYPE_TITLES.get(_dom, f"{_dom.title()} Incident")
                     _cl_map[_gid]["service"] = _NODE_TYPE_SERVICES.get(_dom, "Network / Other")
+
+                # Enrich clusters with correlation engine data (score, explanations, signals)
+                _corr_res_cb = st.session_state.get("ops_correlation_result")
+                if _corr_res_cb:
+                    _eng_clusters = {
+                        c["cluster_id"]: c
+                        for c in _corr_res_cb.get("clusters", [])
+                    }
+                    for _gid2, _cl_data in _cl_map.items():
+                        _eng_cl = _eng_clusters.get(_gid2, {})
+                        _cl_data["correlation_score"]        = _eng_cl.get("correlation_score", 0)
+                        _cl_data["root_signal_nodes"]        = _eng_cl.get("root_signal_nodes", [])
+                        _cl_data["correlation_explanations"] = _eng_cl.get("explanations", [])
+                else:
+                    for _gid2, _cl_data in _cl_map.items():
+                        _first_al = next(
+                            (a for a in _alert_stream
+                             if a.get("correlation_group") == _gid2), {}
+                        )
+                        _cl_data["correlation_score"]        = _first_al.get("correlation_score", 0)
+                        _cl_data["root_signal_nodes"]        = []
+                        _cl_data["correlation_explanations"] = []
+
                 _new_clusters = list(_cl_map.values())
                 st.session_state.ops_clusters      = _new_clusters
                 st.session_state.ops_alert_stream  = _alert_stream
@@ -7981,10 +8096,47 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                 )
 
             # Correlation summary (always shown in correlated phase)
+            _corr_res_mid = st.session_state.get("ops_correlation_result")
             _grp_counts: dict = {}
             for _al in _alert_stream:
                 _g = _al.get("correlation_group", "")
                 _grp_counts[_g] = _grp_counts.get(_g, 0) + 1
+
+            # AI Engine banner (shown when graph-aware correlation ran)
+            if _corr_res_mid:
+                _cr_avg    = _corr_res_mid.get("correlation_score_avg", 0)
+                _cr_n      = _corr_res_mid.get("n_clusters", len(_grp_counts))
+                _cr_meth   = _corr_res_mid.get("clustering_method", "")
+                _cr_label  = ("AgglomerativeClustering" if "sklearn" in _cr_meth
+                               else "Graph-connected-components")
+                _cr_top    = _corr_res_mid.get("top_reasons", [])
+                st.markdown(
+                    f'<div style="{_card("border-left:4px solid #8b5cf6")}">'
+                    f'<div style="font-size:0.60rem;font-weight:700;color:#a78bfa;'
+                    f'text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px">'
+                    f'⬡ AI/Graph Correlation Engine</div>'
+                    f'<div style="font-size:0.72rem;color:#e2e8f0;font-weight:600">'
+                    f'{_cr_n} group(s) detected &nbsp;·&nbsp; '
+                    f'avg score <span style="color:#a78bfa">{_cr_avg:.2f}</span></div>'
+                    f'<div style="font-size:0.59rem;color:#64748b;margin:3px 0 6px">'
+                    f'{_cr_label}</div>',
+                    unsafe_allow_html=True,
+                )
+                for _cr in _cr_top[:3]:
+                    st.markdown(
+                        f'<div style="font-size:0.63rem;color:#94a3b8;padding:1px 0">'
+                        f'· {html.escape(str(_cr))}</div>',
+                        unsafe_allow_html=True,
+                    )
+                _cw_list = st.session_state.get("ops_corr_warnings", [])
+                for _cw in _cw_list[:2]:
+                    st.markdown(
+                        f'<div style="font-size:0.59rem;color:#f59e0b;margin-top:4px">'
+                        f'⚠ {html.escape(str(_cw))}</div>',
+                        unsafe_allow_html=True,
+                    )
+                st.markdown("</div>", unsafe_allow_html=True)
+
             st.markdown(
                 '<div style="' + _card() + '">'
                 '<div style="font-size:0.61rem;font-weight:700;color:#64748b;'
@@ -7995,15 +8147,22 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
             for _gid, _cnt in list(_grp_counts.items())[:5]:
                 _gc = next((a["color"] for a in _alert_stream
                             if a.get("correlation_group") == _gid), "#6b7280")
+                _cl_score_mid = next(
+                    (a.get("correlation_score", 0) for a in _alert_stream
+                     if a.get("correlation_group") == _gid), 0
+                )
                 _inc_for_grp = next(
                     (x for x in _incidents
                      if f"GRP-{x['scenario_id'][-4:]}" == _gid), {}
                 )
+                _score_tag = (f' · <span style="color:#a78bfa">⬡ {_cl_score_mid:.2f}</span>'
+                              if _cl_score_mid else "")
                 st.markdown(
                     f'<div style="padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'
                     f'<span style="color:{_gc};font-weight:700;font-size:1.1em">■</span> '
                     f'<span style="font-size:0.70rem;color:#f1f5f9;font-weight:600">{_gid}</span>'
                     f' <span style="font-size:0.62rem;color:#64748b">· {_cnt} alerts'
+                    + _score_tag
                     + (f' · {_inc_for_grp.get("service", "")}' if _inc_for_grp else '')
                     + '</span></div>',
                     unsafe_allow_html=True,
@@ -8283,6 +8442,45 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                                 _vec_ev, _ = _retrieve_vector_evidence(_q_str, k=6)
                                 if _vec_ev:
                                     _rem_ctx["vector_evidence"] = _vec_ev
+
+                                # ── Runbook chain retrieval ──────────────────
+                                if _RUNBOOK_OK and _retrieve_runbooks and _rerank_runbooks and _apply_runbook_policy:
+                                    try:
+                                        _cal_conf_rem = float(
+                                            _run_rgt.get("calibrated_confidence")
+                                            or _rca_rem.get("confidence", 0)
+                                        )
+                                        _rb_cands = _retrieve_runbooks(
+                                            root_cause=_rca_rem.get("root_cause", ""),
+                                            root_cause_diagram=_rca_rem.get("root_cause_diagram", ""),
+                                            node_type=next(
+                                                (n.get("type", "") for n in _eg_rem.get("nodes", [])
+                                                 if n.get("id") == _rca_rem.get("root_cause")), ""
+                                            ),
+                                            alert_timeline=[
+                                                {"alert_type": a.get("alert_type", a.get("type", "")),
+                                                 "severity": a.get("severity", "")}
+                                                for a in _als_rem[:8]
+                                            ],
+                                            impacted_diagrams=_rca_rem.get("impacted_diagrams", []),
+                                        )
+                                        _rb_ranked  = _rerank_runbooks(_rb_cands, {
+                                            "rca_source":       _rca_rem.get("rca_source", ""),
+                                            "confidence":       _rca_rem.get("confidence", 0),
+                                            "node_type":        "",
+                                            "impacted_diagrams": _rca_rem.get("impacted_diagrams", []),
+                                            "severity":         _sel_cl.get("severity", "high"),
+                                        })
+                                        _rb_chain   = _apply_runbook_policy(
+                                            _rb_ranked,
+                                            calibrated_confidence=_cal_conf_rem,
+                                            risk_level=_rl_r or "medium",
+                                        )
+                                        if _rb_chain:
+                                            _rem_ctx["runbook_chain"] = _rb_chain
+                                    except Exception:
+                                        pass
+
                                 _new_plan = _generate_resolution_plan(_rem_ctx)
                                 _ops_rem_plans[_sel_cid] = _new_plan
                                 st.session_state.ops_rem_plans = _ops_rem_plans
@@ -8293,17 +8491,122 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                 _render_remediation_plan(_rem_plan_cached)
                 _render_qwen_runtime_proof(_rem_plan_cached)
 
-            # Confidence gate
-            _cc_r = "#22c55e" if _conf_r >= 0.8 else "#f59e0b" if _conf_r >= 0.5 else "#ef4444"
-            st.markdown(f'<div style="{_card()}">', unsafe_allow_html=True)
-            st.markdown(
-                f'<div style="font-size:0.65rem;color:#64748b;margin-bottom:4px">Confidence Gate</div>'
-                f'<div style="font-size:1.4rem;font-weight:800;color:{_cc_r}">{_conf_rp}</div>'
-                f'<div style="font-size:0.63rem;color:#64748b;margin-top:2px">'
-                f'{"GNN inference" if _is_gnn_r else "Graph-grounded estimate"}</div>',
-                unsafe_allow_html=True,
-            )
-            st.markdown("</div>", unsafe_allow_html=True)
+                # ── Evidence Critic / Governance review ──────────────────────
+                if _GOVERNANCE_OK and _validate_governance:
+                    _gov_reviews = st.session_state.get("ops_governance_reviews", {})
+                    if _sel_cid not in _gov_reviews:
+                        try:
+                            _gov_rev = _validate_governance(
+                                agent_run={
+                                    "root_cause":         _run_rgt.get("root_cause", ""),
+                                    "rca_source":         _run_rgt.get("rca_source", ""),
+                                    "confidence":         _conf_r,
+                                    "calibrated_confidence": _run_rgt.get("calibrated_confidence"),
+                                    "impacted_diagrams":  _run_rgt.get("impacted_diagrams", []),
+                                    "steps":              _run_rgt.get("steps", []),
+                                    "approval_gate":      _run_rgt.get("approval_gate", {}),
+                                },
+                                remediation_plan=_rem_plan_cached,
+                                graph_context=_load_enterprise_graph_for(
+                                    _sel_cl.get("scenario_id", "")
+                                ),
+                            )
+                            _gov_reviews[_sel_cid] = _gov_rev
+                            st.session_state.ops_governance_reviews = _gov_reviews
+                        except Exception:
+                            _gov_rev = None
+                    else:
+                        _gov_rev = _gov_reviews[_sel_cid]
+
+                    if _gov_rev:
+                        _gscore  = _gov_rev.get("score", 0)
+                        _gstatus = _gov_rev.get("status", "")
+                        _gsc     = {"passed": "#22c55e", "warning": "#f59e0b",
+                                    "failed": "#ef4444"}.get(_gstatus, "#6b7280")
+                        _grec    = _gov_rev.get("approval_recommendation", "")
+                        st.markdown(
+                            f'<div style="{_card(f"border-left:4px solid {_gsc}")}">',
+                            unsafe_allow_html=True,
+                        )
+                        st.markdown(
+                            f'<div style="font-size:0.60rem;font-weight:700;color:{_gsc};'
+                            f'text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px">'
+                            f'⚖ Governance Review</div>'
+                            f'<div style="font-size:1.25rem;font-weight:800;color:{_gsc}">'
+                            f'{_gscore}/100</div>'
+                            f'<div style="font-size:0.62rem;color:#64748b;margin-bottom:5px">'
+                            f'{_gstatus.upper()} · {_grec.replace("_", " ")}</div>',
+                            unsafe_allow_html=True,
+                        )
+                        for _gf in _gov_rev.get("findings", [])[:5]:
+                            st.markdown(
+                                f'<div style="font-size:0.63rem;color:#94a3b8;padding:1px 0">'
+                                f'· {html.escape(str(_gf))}</div>',
+                                unsafe_allow_html=True,
+                            )
+                        for _bi in _gov_rev.get("blocking_issues", []):
+                            st.markdown(
+                                f'<div style="font-size:0.63rem;color:#ef4444;margin-top:4px;'
+                                f'font-weight:600">⛔ {html.escape(str(_bi))}</div>',
+                                unsafe_allow_html=True,
+                            )
+                        st.markdown("</div>", unsafe_allow_html=True)
+
+            # Calibrated Confidence Gate
+            if _CALIB_OK and _calibrate_confidence:
+                try:
+                    _calib_result = _calibrate_confidence(
+                        raw_confidence=_conf_r,
+                        rca_source=_run_rgt.get("rca_source", ""),
+                        impacted_diagrams=_run_rgt.get("impacted_diagrams", []),
+                        top_candidates=_run_rgt.get("ranking", []),
+                        evidence_summary=_run_rgt.get("evidence_summary", []),
+                    )
+                    _run_rgt["calibrated_confidence"] = _calib_result["calibrated_confidence"]
+                except Exception:
+                    _calib_result = None
+            else:
+                _calib_result = None
+
+            if _calib_result:
+                _cal_c   = _calib_result["calibrated_confidence"]
+                _cal_pct = f"{_cal_c:.0%}"
+                _cal_band = _calib_result.get("confidence_band", "")
+                _cal_pass = _calib_result.get("threshold_passed", False)
+                _cal_expl = _calib_result.get("explanation", [])
+                _cc_r    = "#22c55e" if _cal_pass else "#f59e0b" if _cal_c >= 0.5 else "#ef4444"
+                _gate_label = ("RCA confidence gate passed" if _cal_pass
+                               else "Human validation required")
+                st.markdown(f'<div style="{_card(f"border-left:4px solid {_cc_r}")}">', unsafe_allow_html=True)
+                st.markdown(
+                    f'<div style="font-size:0.60rem;font-weight:700;color:{_cc_r};'
+                    f'text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">'
+                    f'Calibrated Confidence Gate</div>'
+                    f'<div style="font-size:1.3rem;font-weight:800;color:{_cc_r}">{_cal_pct}</div>'
+                    f'<div style="font-size:0.61rem;color:#64748b;margin-bottom:2px">'
+                    f'raw {_conf_rp} → calibrated · {_cal_band}</div>'
+                    f'<div style="font-size:0.65rem;font-weight:600;color:{_cc_r};margin-bottom:5px">'
+                    f'{_gate_label}</div>',
+                    unsafe_allow_html=True,
+                )
+                for _ce in (_cal_expl or [])[:3]:
+                    st.markdown(
+                        f'<div style="font-size:0.60rem;color:#94a3b8;padding:1px 0">'
+                        f'· {html.escape(str(_ce))}</div>',
+                        unsafe_allow_html=True,
+                    )
+                st.markdown("</div>", unsafe_allow_html=True)
+            else:
+                _cc_r = "#22c55e" if _conf_r >= 0.8 else "#f59e0b" if _conf_r >= 0.5 else "#ef4444"
+                st.markdown(f'<div style="{_card()}">', unsafe_allow_html=True)
+                st.markdown(
+                    f'<div style="font-size:0.65rem;color:#64748b;margin-bottom:4px">Confidence Gate</div>'
+                    f'<div style="font-size:1.4rem;font-weight:800;color:{_cc_r}">{_conf_rp}</div>'
+                    f'<div style="font-size:0.63rem;color:#64748b;margin-top:2px">'
+                    f'{"GNN inference" if _is_gnn_r else "Graph-grounded estimate"}</div>',
+                    unsafe_allow_html=True,
+                )
+                st.markdown("</div>", unsafe_allow_html=True)
 
             # Human Approval Gate
             _ap_bdr = {"approved": "#22c55e", "rejected": "#ef4444", "pending": "#f59e0b"}.get(
@@ -8314,6 +8617,15 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                 unsafe_allow_html=True,
             )
             st.markdown("**Human Approval**")
+            # Governance warning before approve
+            _gov_reviews_ap = st.session_state.get("ops_governance_reviews", {})
+            _gov_rev_ap     = _gov_reviews_ap.get(_sel_cid)
+            if _gov_rev_ap and _gov_rev_ap.get("score", 100) < 70:
+                st.warning(
+                    f"Governance score {_gov_rev_ap['score']}/100 "
+                    f"({_gov_rev_ap.get('status','').upper()}) — approve with caution.",
+                    icon="⚠️",
+                )
             if _ap_st == "pending":
                 _ap1, _ap2 = st.columns(2)
                 with _ap1:

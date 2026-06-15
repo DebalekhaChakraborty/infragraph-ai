@@ -9,7 +9,7 @@ It uses local open-source Qwen served through vLLM for grounded remediation plan
 It includes a controlled agentic operations flow with ITSM draft generation and a human approval gate.
 It was built for the TCS & AMD AI Hackathon using open-source models and AMD ROCm-ready inference and alignment workflows.
 
-## 1. Why This Matters
+## 1. Objective
 
 NOC, SRE, platform, and infrastructure teams usually receive alerts, tickets, diagrams, runbooks, and tribal knowledge in separate systems. Static architecture diagrams are visually useful but not machine-readable, so every major incident still requires humans to map alerts back to topology dependencies by hand.
 

@@ -42,6 +42,19 @@ except ImportError:
     _get_qwen_runtime_config  = None  # type: ignore
     _REM_OK = False
 
+try:
+    from runbook_retrieval import (  # type: ignore
+        retrieve_candidate_runbooks as _retrieve_runbooks,
+        rerank_runbooks             as _rerank_runbooks,
+        apply_runbook_policy        as _apply_runbook_policy,
+    )
+    _RUNBOOK_OK = True
+except ImportError:
+    _retrieve_runbooks    = None  # type: ignore
+    _rerank_runbooks      = None  # type: ignore
+    _apply_runbook_policy = None  # type: ignore
+    _RUNBOOK_OK = False
+
 
 # ── Internal helpers ──────────────────────────────────────────────────────────
 
@@ -441,7 +454,40 @@ def build_remediation_context(
     if n_domains == 0 and nodes:
         n_domains = len(set(n.get("diagram_id", "") for n in nodes if n.get("diagram_id")))
 
-    return _make_remediation_input(
+    # Retrieve and rank runbook chain
+    runbook_chain: list[dict] = []
+    if _RUNBOOK_OK and _retrieve_runbooks and _rerank_runbooks and _apply_runbook_policy:
+        try:
+            # Infer dominant node type from enterprise graph nodes
+            _node_type_counts: dict[str, int] = {}
+            for _n in nodes:
+                _nt = _n.get("type", _n.get("node_type", ""))
+                if _nt:
+                    _node_type_counts[_nt] = _node_type_counts.get(_nt, 0) + 1
+            _dom_node_type = (
+                max(_node_type_counts, key=_node_type_counts.get)  # type: ignore[arg-type]
+                if _node_type_counts else ""
+            )
+            _candidates = _retrieve_runbooks(
+                root_cause=root_cause,
+                root_cause_diagram=root_cause_diagram,
+                node_type=_dom_node_type,
+                alert_timeline=ent_incident.get("alert_timeline", []),
+                impacted_diagrams=list(impacted_diagrams),
+                evidence_summary=[],
+            )
+            _rca_ctx = {
+                "rca_source":        rca_source,
+                "confidence":        (gnn_result or {}).get("confidence", 0.5),
+                "impacted_diagrams": list(impacted_diagrams),
+                "node_type":         _dom_node_type,
+            }
+            _ranked = _rerank_runbooks(_candidates, _rca_ctx)
+            runbook_chain = _apply_runbook_policy(_ranked, _rca_ctx.get("confidence", 0.5))
+        except Exception:
+            runbook_chain = []
+
+    ctx = _make_remediation_input(
         incident_id=ent_incident.get("incident_id", f"AGT-{run_id[:6]}"),
         scope="enterprise",
         selected_diagram_id=selected_diagram_id,
@@ -481,6 +527,9 @@ def build_remediation_context(
         correlation_reasons=(gnn_result or {}).get("correlation_reasons", []),
         causal_evidence=(gnn_result or {}).get("causal_evidence", []),
     )
+    if runbook_chain:
+        ctx["runbook_chain"] = runbook_chain
+    return ctx
 
 
 def generate_ai_remediation(
