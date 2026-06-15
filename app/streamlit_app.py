@@ -4545,7 +4545,10 @@ def _tab_onboard_new_diagram() -> None:
             _external_rfdetr_result = {}
             if st.session_state.use_live_rfdetr and _rfdetr_ckpt and _run_rfdetr_detection is not None:
                 _conf = float(os.environ.get("INFRAGRAPH_RFDETR_CONFIDENCE", "0.25"))
-                _timeout = int(os.environ.get("INFRAGRAPH_RFDETR_TIMEOUT", "180"))
+                try:
+                    _timeout = max(1, int(os.environ.get("INFRAGRAPH_RFDETR_TIMEOUT", "30")))
+                except ValueError:
+                    _timeout = 30
                 if img_path.exists():
                     _rfdetr_status_placeholder.markdown(
                         '<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;'
@@ -4555,15 +4558,26 @@ def _tab_onboard_new_diagram() -> None:
                         'border-top-color:transparent;border-radius:50%;'
                         'animation:spin 0.8s linear infinite"></div>'
                         '<span style="font-size:0.85rem;color:#a5b4fc;font-weight:500">'
-                        'Running InfraGraph RF-DETR…</span></div>',
+                        f'Running InfraGraph RF-DETR (timeout {_timeout}s)...</span></div>',
                         unsafe_allow_html=True,
                     )
-                _external_rfdetr_result = _run_rfdetr_detection(
+                try:
+                    _external_rfdetr_result = _run_rfdetr_detection(
                         img_path,
                         Path(_rfdetr_ckpt),
                         confidence=_conf,
                         timeout=_timeout,
                     )
+                except Exception as _rfdetr_exc:
+                    _external_rfdetr_result = {
+                        "ok": False,
+                        "source": "verified_annotation_fallback",
+                        "detector_runtime_mode": "verified_annotation_fallback",
+                        "error": f"RF-DETR bridge error: {_rfdetr_exc}",
+                        "fallback_reason": "Live RF-DETR unavailable; using verified annotation fallback for demo continuity.",
+                        "checkpoint_path": str(_rfdetr_ckpt),
+                        "image_path": str(img_path),
+                    }
             elif st.session_state.use_live_rfdetr:
                 _fallback_err = _RFDETR_BRIDGE_ERR or "RF-DETR bridge unavailable"
                 if not _rfdetr_ckpt:
@@ -4700,7 +4714,10 @@ def _tab_onboard_new_diagram() -> None:
                     )
                     # Detection rows shown in Graph Memory Extracted → Devices tab below
                 elif _external_rfdetr_result:
-                    st.warning("Live RF-DETR unavailable — using verified annotation fallback")
+                    if _external_rfdetr_result.get("timed_out"):
+                        st.warning("Live RF-DETR timed out; using verified annotation fallback for demo continuity.")
+                    else:
+                        st.warning("Live RF-DETR unavailable; using verified annotation fallback for demo continuity.")
                     st.caption(f"RF-DETR error: {_external_rfdetr_result.get('error', 'unknown error')}")
                     if _external_rfdetr_result.get("fallback_reason"):
                         st.caption(f"Fallback reason: {_external_rfdetr_result.get('fallback_reason')}")

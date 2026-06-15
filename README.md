@@ -2,12 +2,12 @@
 
 **Multimodal Infrastructure Diagram Intelligence + Enterprise Graph RCA + Agentic Remediation on AMD ROCm**
 
-InfraGraph AI converts static infrastructure diagrams into graph memory that operations teams can query, correlate, and act on.
-It detects and understands topology components, builds local topology graphs, and stitches them into an enterprise graph brain.
-It correlates alert events, performs topology-aware RCA, and ranks cross-diagram root causes with an Enterprise GNN RCA model.
-It uses local open-source Qwen served through vLLM for grounded remediation planning after RCA evidence is available.
-It includes a controlled agentic operations flow with ITSM draft generation and a human approval gate.
-It was built for the TCS & AMD AI Hackathon using open-source models and AMD ROCm-ready inference and alignment workflows.
+InfraGraph AI is a multimodal Agentic AIOps system built for the TCS & AMD AI Hackathon using open-source models and AMD ROCm-ready workflows.
+It performs multimodal diagram-to-graph intelligence with RF-DETR-style object detection, verified annotation fallback, vision connector extraction, and enterprise graph memory stitching.
+It correlates alert storms with graph-aware event features, builds engineered RCA features, and ranks root cause with Enterprise GNN RCA V1 GraphSAGE plus Enterprise GNN RCA V2 - Temporal Relation-Aware GraphSAGE.
+It uses a calibrated confidence gate, retrieves root-cause-aware runbook/SOP evidence, and uses Qwen/vLLM only after RCA for grounded remediation drafting.
+It validates plans with a governance critic, creates local demo ITSM drafts, and keeps all remediation behind a human approval gate.
+Guardrail: the LLM is not used to decide root cause.
 
 ## 1. Objective
 
@@ -32,12 +32,15 @@ Relevant use-case alignment:
 
 ## 3. What We Built
 
-- **Diagram Intelligence:** infrastructure diagram ingestion, component detection, verified annotation overlays, node extraction, connector extraction, and graph-memory packet generation.
+- **Diagram Intelligence:** infrastructure diagram ingestion, RF-DETR component detection, verified annotation fallback, vision connector extraction, and graph-memory packet generation.
 - **Graph Memory:** local topology graph creation, graph-memory packets, enterprise graph absorption, and scenario graph stitching.
-- **Event Correlation:** deterministic correlation across temporal, topology, alert-sequence, source/peer, and cross-diagram dimensions.
-- **RCA:** local topology RCA plus Enterprise GNN RCA with GraphSAGE node ranking over stitched enterprise graphs.
-- **Graph Copilot:** evidence-grounded Q&A over topology, RCA, impact paths, blast radius, and graph-memory facts.
-- **AI Remediation:** Qwen/vLLM remediation planner that produces structured JSON from RCA, graph evidence, alert timelines, retrieved KB evidence, and guardrails.
+- **Event Correlation:** graph-aware alert correlation across temporal, topology, GNN proximity, alert-sequence, source/peer, and cross-diagram dimensions.
+- **RCA:** local topology RCA, Enterprise GNN RCA V1 GraphSAGE fallback, and Enterprise GNN RCA V2 Temporal Relation-Aware GraphSAGE.
+- **Confidence Calibration:** heuristic confidence gate using RCA source, top-candidate margin, impacted diagrams, and evidence density.
+- **Runbook Retrieval:** root-cause-node-aware runbook/SOP retrieval, reranking, and policy filtering.
+- **Graph Copilot:** deterministic graph query engine with vector memory and Qwen answer fallback.
+- **AI Remediation:** Qwen/vLLM remediation planner that produces structured JSON from RCA, graph evidence, alert timelines, runbook/SOP evidence, and guardrails.
+- **Governance Critic:** rule-based validation of RCA evidence, confidence gate, rollback, runbook chain, and approval readiness.
 - **Agentic Ops Orchestrator:** 9-step flow from alert intake to approval-gated action.
 - **ITSM Draft:** local demo incident ticket generation; no external ITSM call is made by default.
 - **Human Approval:** remediation is not auto-executed without operator approval.
@@ -46,16 +49,19 @@ Relevant use-case alignment:
 
 ```mermaid
 flowchart LR
-    A[Infra Diagram / Scenario Dataset] --> B[Diagram Intelligence<br/>RF-DETR or Verified Annotation]
+    A[Infra Diagram / Scenario Dataset] --> B[Diagram Intelligence<br/>RF-DETR + Verified Annotation + Connector Extraction]
     B --> C[Local Graph Memory]
     C --> D[Enterprise Graph Brain / Stitching]
-    D --> E[Event Correlation Layer]
-    E --> F[Enterprise GNN RCA]
-    F --> G[Qwen/vLLM Remediation Agent]
-    G --> H[ITSM Draft + Human Approval]
-    H --> I[Streamlit Cockpit / Graph Copilot]
-    D --> I
-    F --> I
+    D --> E[Graph-Aware Event Correlation]
+    E --> F[Enterprise GNN RCA V2<br/>Temporal Relation-Aware GraphSAGE]
+    F --> G[Confidence Calibration]
+    G --> H[Runbook / SOP Retrieval]
+    H --> I[Qwen/vLLM Remediation Draft]
+    I --> J[Governance Critic]
+    J --> K[ITSM Draft + Human Approval]
+    K --> L[Streamlit Cockpit / Graph Copilot]
+    D --> L
+    F --> L
 ```
 
 ## 5. Demo Flow
@@ -71,33 +77,81 @@ flowchart LR
 9. Run the **Agentic Ops Orchestrator**.
 10. Review the remediation plan, ITSM draft, and human approval gate.
 
-## 6. AI/ML Components
+## Recommended Judged Demo Flow
 
-| Layer | Model / Method | Purpose | Output |
-|-------|----------------|---------|--------|
-| Diagram understanding | RF-DETR detector-supported flow with verified annotation fallback | Locate infrastructure components and produce graph-ready evidence when live detector inference is unavailable | Detected nodes, overlays, clean annotations, graph memory packet |
-| Topology graph generation | Graph construction from nodes and connectors | Convert diagram evidence into local topology | Local graph JSON, nodes, edges |
-| Event correlation | Deterministic scoring across temporal, topology, alert-sequence, source/peer, and cross-diagram dimensions | Group observable alerts before RCA without leaking labels | Correlated event clusters and causal evidence IDs |
-| Local RCA | Engineered graph features and topology-aware node ranking | Rank likely root-cause nodes inside one diagram | Root-cause candidate list and reasoning path |
-| Enterprise RCA | GraphSAGE Enterprise GNN | Rank root causes across stitched multi-diagram enterprise graphs | Cross-diagram root-cause ranking |
-| Remediation generation | Qwen3 served through vLLM | Produce grounded validation, remediation, rollback, escalation, and ITSM-ready JSON after RCA | Structured remediation plan |
-| Alignment | Qwen3 LoRA + GRPO/vERL pipeline on AMD ROCm | Align remediation responses to graph grounding, safety, rollback, and ITSM structure | LoRA adapter artifacts and training evidence |
-| Vector memory | Chroma local vector memory | Retrieve SOP, graph, RCA, and incident evidence for Graph Copilot and remediation context | Evidence chunks and retrieval IDs |
+1. Open the Streamlit cockpit.
+2. Go to **Live Diagram Intelligence**.
+3. Select a sample diagram.
+4. Run diagram intelligence.
+5. Show detected nodes, connector extraction source, and graph memory packet.
+6. Absorb the diagram into **Enterprise Graph Brain**.
+7. Go to **Agentic Ops / Enterprise Experience**.
+8. Select `Curated pitch pack: multi-cluster enterprise incident`.
+9. Run graph-aware correlation.
+10. Combine alerts into incident clusters.
+11. Solve the `enterprise_v3_0079` anchor cluster.
+12. Generate AI Findings.
+13. Show the `Temporal Relation-Aware GNN` badge.
+14. Show root cause `DC-FW-01` and source diagram `datacenter_topology`.
+15. Show model details: `uses_edge_type=true`, `uses_temporal_features=true`, `cross_diagram_edges=8`.
+16. Show calibrated confidence.
+17. Show the runbook chain.
+18. Show the Qwen/vLLM remediation plan.
+19. Show governance review.
+20. Show human approval and local demo ITSM draft.
+21. Ask Graph Copilot: "Why was DC-FW-01 selected as root cause?"
 
-## 7. AMD / ROCm Relevance
+## 6. AI/ML Techniques Used
+
+InfraGraph AI combines multimodal computer vision, graph algorithms, traditional ML-style feature engineering, GraphSAGE GNNs, relation-aware temporal graph learning, local vector retrieval, open-source GenAI, reward alignment, confidence calibration, and governed agentic orchestration.
+
+| Layer | Method / Algorithm | Custom features | Output | Evidence path |
+|-------|--------------------|-----------------|--------|---------------|
+| Diagram Understanding | RF-DETR-style object detection, verified annotation fallback, bbox normalization, IoU matching | Device class, bbox, canonical ID, zone, IP, shared entity, confidence | Detected nodes and overlay | `src/runtime_ingestion.py`, `model_artifacts/rfdetr_v3/` |
+| Vision Connector Extraction | OpenCV/Hough line detection + geometric endpoint-to-node matching | Segment length, angle, endpoint distance, connector confidence | Vision-extracted topology edges | `src/vision/edge_extraction/` |
+| Graph Memory Construction | Local graph extraction + enterprise graph stitching | Node/edge provenance, shared entity mapping, diagram IDs, cross-diagram edges | Graph memory packet and enterprise graph brain | `src/runtime_ingestion.py`, `assets/preloaded/`, `runtime_state/` |
+| Graph-Aware Event Correlation | Feature-driven alert similarity and clustering | Temporal offset, severity, node type, service/domain, topology context, GNN proximity | Correlation groups and incident clusters | `src/event_correlation/` |
+| Engineered RCA Features | Traditional graph/ML feature engineering | 54-dimensional node feature vector: node type one-hot, diagram type one-hot, alert count/severity/timing, PageRank, betweenness, closeness, in/out/total degree, cross-diagram degree, distance-to-alert, reverse reachability, source/sink role, alert-type multi-hot vector, first/last alerted node, alert sequence position, upstream/downstream alert counts, upstream critical count, downstream warning count, propagation consistency, node-alert compatibility | Node feature tensor for RCA | `src/rca_ml/enterprise_gnn_dataset.py` |
+| Enterprise GNN RCA V1 | GraphSAGE node ranking | Stitched enterprise graph + 54-dimensional feature tensor | Root-cause candidates across enterprise topology | `model_artifacts/enterprise_gnn_rca/`, `reports/enterprise_gnn_rca/` |
+| Enterprise GNN RCA V2 | Temporal-aware relation-aware GraphSAGE | Separate SAGEConv stacks for all edges, local edges, cross-diagram edges, and vision connector edges; relation embeddings are concatenated and passed through an MLP to produce root-cause logits | Relation-aware root-cause ranking | `src/rca_ml/enterprise_gnn_v2_model.py`, `model_artifacts/enterprise_gnn_rca_v2/training_report.json`, `outputs/enterprise_gnn_rca_v2/enterprise_v3_0079_enterprise_gnn_v2_rca_result.json` |
+| Confidence Calibration | Heuristic calibration / confidence gate | RCA source quality, candidate margin, evidence density, impacted diagram count | Calibrated confidence, risk band, threshold pass/fail | `src/rca_ml/calibration.py` |
+| Runbook/SOP Retrieval | Root-cause-aware runbook retrieval and reranking | Node type, alert type, root-cause diagram, impacted diagrams, cross-diagram boost | Approved runbook chain for remediation | `src/runbook_retrieval/` |
+| Qwen/vLLM Remediation | Local open-source Qwen model served through vLLM | Structured JSON response, validation steps, remediation steps, rollback notes, escalation, ITSM-ready summary | Grounded remediation plan | `src/ai_remediation/`, `training/verl_grpo/` |
+| GRPO/vERL Alignment | Qwen3 LoRA + GRPO/vERL reward optimization | Reward functions for graph grounding, root-cause match, rollback, escalation, ITSM schema | Aligned adapter and reward evaluation | `training/verl_grpo/`, `docs/evidence/amd_qwen3_grpo_run/` |
+| Governance Critic | Rule/evidence critic | Root-cause graph existence, RCA source, calibrated confidence, Step 5 evidence, validation-before-remediation, rollback, runbook chain, approval gate | Governance score, findings, blocking issues, approval recommendation | `src/governance/evidence_critic.py` |
+| Graph Copilot / RAG | Deterministic graph query + local Chroma vector retrieval + Qwen fallback answer | Topology facts, RCA outputs, paths, impact radius, incident context | Evidence-grounded natural language answers | `src/graph_copilot/`, `src/vector_memory/`, `reports/kb_index/` |
+
+## 7. RCA Methodology
+
+InfraGraph AI uses a multi-layer RCA stack:
+
+1. **Topology-aware deterministic RCA:** graph paths, centrality, dependency direction, distance-to-alert, source/sink role, and reverse reachability.
+2. **Engineered RCA feature representation:** 54-dimensional node features combining topology, alert, temporal, propagation, and compatibility signals.
+3. **Enterprise GNN RCA V1:** GraphSAGE learns root-cause ranking over stitched enterprise graphs.
+4. **Enterprise GNN RCA V2:** Temporal Relation-Aware GraphSAGE separates local, cross-diagram, and vision-extracted connector edges during message passing.
+5. **Confidence calibration:** RCA confidence is calibrated before approval.
+6. **Governance validation:** RCA/remediation is validated before ITSM draft and approval.
+
+Qwen/vLLM does not decide root cause. It is downstream of graph/GNN RCA and is used only for grounded remediation drafting, rollback planning, escalation guidance, and ITSM-ready summaries.
+
+## 8. AMD / ROCm Relevance
 
 InfraGraph AI is designed for AMD GPU cloud and ROCm-compatible workflows:
 
 - Qwen remediation runs through a local vLLM OpenAI-compatible endpoint.
 - The GRPO/vERL alignment pipeline lives under `training/verl_grpo/`.
 - ROCm setup and run helpers are under `scripts/amd_rocm/`.
+- Enterprise GNN RCA V2 training and inference were run on AMD Instinct MI300X in the hackathon Jupyter / ROCm environment; see `docs/evidence/amd_mi300x_enterprise_gnn_v2_run/training_summary.md`.
+- The V2 GNN run uses AMD-compatible PyTorch workflows for synthetic/generated enterprise benchmark training and inference.
+- AMD MI300X is useful for both Enterprise GNN training/inference and open LLM serving through ROCm-compatible PyTorch/vLLM workflows.
 - Evidence under `docs/evidence/amd_qwen3_grpo_run/` records a completed real vERL training run for Qwen/Qwen3-4B with LoRA rank 16, GRPO, vLLM rollout backend, FSDP actor strategy, and HIP version `7.0.51831-a3e329ad8`.
 - `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/completion_evidence.md` records completed training at 32/32 steps on an AMD ROCm GPU, with observed GPU utilization, VRAM, and power telemetry.
 - `assets/preloaded/enterprise_gnn_rca/enterprise_gnn_metrics.json` records a preloaded enterprise RCA model run with `torch_version` `2.6.0+rocm6.1`, `torch_hip_version` `6.1.40091-a8dbc0c19`, and AMD GPU device metadata.
+- Qwen/vLLM and GRPO/vERL evidence are committed separately from the Enterprise GNN RCA V2 evidence.
 
-The project should be described as **ROCm-ready with committed evidence of AMD ROCm training runs**. It should not be described as a production incident automation system.
+The project should be described as **ROCm-ready with committed evidence of AMD ROCm training runs**. It should not be described as a production deployment or production incident automation system.
 
-## 8. Model Artifacts and Adapter Status
+## 9. Model Artifacts and Adapter Status
 
 LoRA/GRPO adapter artifacts are available under `model_artifacts/`. The primary exported GRPO adapter folder is:
 
@@ -132,19 +186,29 @@ Other committed model artifacts include:
 - `model_artifacts/rfdetr_v3/checkpoint_best_regular.pth`
 - `model_artifacts/rfdetr_v3/checkpoint_best_ema.pth`
 - `model_artifacts/enterprise_gnn_rca/enterprise_gnn_rca.pt`
+- `model_artifacts/enterprise_gnn_rca_v2/enterprise_gnn_v2_rca.pt`
+- `model_artifacts/enterprise_gnn_rca_v2/enterprise_gnn_v2_config.json`
+- `model_artifacts/enterprise_gnn_rca_v2/training_report.json`
 - `model_artifacts/topology_rca/topology_rca_model.joblib`
 - `model_artifacts/qwen_lora/infragraph_sop_grounded/`
+- `outputs/enterprise_gnn_rca_v2/enterprise_v3_0079_enterprise_gnn_v2_rca_result.json`
 
-## 9. Results and Evidence
+## 10. Results and Evidence
 
-Only committed repo evidence is listed here.
+Only repository evidence is listed here.
 
 | Component | Evidence file | Metric / result | Notes |
 |-----------|---------------|-----------------|-------|
 | V3 annotation QA | `reports/v3_annotation_qa/annotation_quality_report.json` | 329 diagrams, 2,996 objects, 2,992 connectors, recommendation `DISPLAY_ONLY_FIX` | Supports verified annotation fallback and detector training readiness. |
 | Topology RCA | `reports/topology_rca/eval_metrics.json` | 16 cases, 150 node rows, top-1 `1.0`, top-3 `1.0`, MRR `1.0` | Synthetic benchmark. |
 | Enterprise GNN RCA, GraphSAGE path | `reports/enterprise_gnn_rca/evaluation.json` | Train/val/test cases `64/8/8`; test top-1 `1.0`, top-3 `1.0`, MRR `1.0`; best val MRR `1.0` | Model artifact in `model_artifacts/enterprise_gnn_rca/`. Synthetic enterprise benchmark. |
+| Enterprise GNN RCA V2 training | `model_artifacts/enterprise_gnn_rca_v2/training_report.json` | 80 graphs, train/val/test `64/8/8`, epochs `80`, uses_edge_type `true`, uses_temporal_features `true`, synthetic test top-1/top-3/MRR `1.0` | Controlled synthetic/generated enterprise benchmark; not production accuracy. |
+| Curated V2 RCA output | `outputs/enterprise_gnn_rca_v2/enterprise_v3_0079_enterprise_gnn_v2_rca_result.json` | Predicted root `DC-FW-01`, correct top-1, cross_diagram_edges `8`, impacted diagrams `datacenter_topology` + `app_db_topology` | Recommended final demo anchor cluster. |
 | Enterprise RCA preloaded demo model | `assets/preloaded/enterprise_gnn_rca/enterprise_gnn_metrics.json` | 80 epochs; test top-1 `1.0`, top-3 `1.0`, MRR `1.0`; ROCm torch metadata present | Preloaded cockpit artifact, recorded as Enterprise GCN RCA. |
+| Graph-aware correlation | `src/event_correlation/` | Alerts enriched with `correlation_group`, `correlation_score`, and `correlation_explanation` | Pre-RCA clustering. |
+| Confidence calibration | `src/rca_ml/calibration.py` | Calibrated confidence and `0.75` threshold gate | Uses RCA source, candidate margin, evidence density, impacted diagrams. |
+| Governance critic | `src/governance/evidence_critic.py` | Validates RCA/remediation chain | Prevents unguided LLM remediation. |
+| Vision connector extraction | `src/vision/edge_extraction/` | Hough segments + endpoint matching + confidence fallback | Hybrid CV topology extraction. |
 | V2 learned RCA baselines | `assets/preloaded/mlp_rca/mlp_rca_metrics.json`, `assets/preloaded/gnn_rca/gnn_rca_metrics.json` | MLP test top-1/top-3/MRR `1.0/1.0/1.0`; GNN test top-1/top-3/MRR `1.0/1.0/1.0` | Synthetic V2 benchmark. |
 | KB / vector memory index | `reports/kb_index/build_summary.json` | 8 documents loaded, 73 chunks indexed, collection `infragraph_sop_kb` | Local Chroma/SOP retrieval evidence. |
 | GRPO reward evaluation | `training/verl_grpo/reward_eval_report.json` | 16 eval records; average chosen score `0.8931`; average rejected score `0.2075`; positive margin `16/16` | Reward checks JSON structure, root-cause match, grounding, rollback safety, escalation, and ITSM fields. |
@@ -153,7 +217,7 @@ Only committed repo evidence is listed here.
 | RF-DETR detector artifacts | `model_artifacts/rfdetr_v3/` | Checkpoints committed locally: best total, regular, and EMA | Detector evaluation metric not committed in the inspected reports; regenerate with `python scripts/run_rfdetr_inference.py` as needed. |
 | Sample RCA outputs | `assets/preloaded/enterprise_gnn_rca/`, `outputs/enterprise_gnn_rca/` | Per-scenario RCA JSON files are present | Generated demo/inference artifacts. |
 
-## 10. How To Run
+## 11. How To Run
 
 ### App Demo
 
@@ -201,7 +265,7 @@ python scripts/build_kb_index.py
 
 ### Enterprise GNN RCA
 
-Build the graph dataset, train the GraphSAGE Enterprise GNN, and run inference:
+Build the graph dataset, train the V1 GraphSAGE Enterprise GNN, and run inference:
 
 ```bash
 python scripts/build_enterprise_gnn_dataset.py \
@@ -221,10 +285,24 @@ python scripts/run_enterprise_gnn_inference.py \
   --out outputs/enterprise_gnn_rca
 ```
 
+Train and run Enterprise GNN RCA V2:
+
+```bash
+python scripts/build_enterprise_gnn_dataset.py
+python scripts/train_enterprise_gnn_v2_rca.py --epochs 80 --eval-every 5 --hidden-dim 64 --num-layers 2
+python scripts/run_enterprise_gnn_v2_inference.py --scenario-id enterprise_v3_0079 --split test
+```
+
 If `torch_geometric` is missing on an AMD ROCm node, use the repo helper:
 
 ```bash
 bash scripts/amd_rocm/bootstrap_rca_gnn_env.sh
+```
+
+For the judged Streamlit demo, select:
+
+```text
+Curated pitch pack: multi-cluster enterprise incident
 ```
 
 ### Qwen/vLLM Remediation
@@ -303,7 +381,7 @@ python training/verl_grpo/export_lora_adapter.py \
 find model_artifacts -name "adapter_model.safetensors" -o -name "adapter_config.json"
 ```
 
-## 11. Repository Structure
+## 12. Repository Structure
 
 ```text
 infragraph-ai/
@@ -315,6 +393,9 @@ infragraph-ai/
 +-- src/ai_remediation/        Qwen/vLLM client, prompt builder, context builder, schemas, and template fallback.
 +-- src/agents/                Agentic Ops Orchestrator, tools, and structured schemas.
 +-- src/graph_copilot/         Evidence-grounded graph query engine.
++-- src/runbook_retrieval/     In-code runbook/SOP retrieval, reranking, and policy filtering.
++-- src/governance/            Evidence critic and approval-readiness validator.
++-- src/vision/edge_extraction/ OpenCV/Hough connector extraction and endpoint matching.
 +-- scripts/                   CLI pipeline scripts for datasets, detectors, RCA, vector memory, and ROCm setup.
 +-- training/verl_grpo/        Qwen3 LoRA + GRPO/vERL alignment pipeline and reward functions.
 +-- model_artifacts/           Local detector, RCA, and Qwen LoRA artifacts.
@@ -325,7 +406,7 @@ infragraph-ai/
 +-- requirements/              Dependency tiers for app, RAG, vision, training, ROCm, and orchestrator workflows.
 ```
 
-## 12. Honest Claims / Guardrails
+## 13. Honest Claims / Guardrails
 
 - RCA is graph/GNN-driven; the LLM is not used to invent root cause.
 - Qwen is used after RCA for remediation planning, validation steps, rollback notes, escalation, and ITSM-ready summaries.
@@ -334,9 +415,16 @@ infragraph-ai/
 - Verified annotation fallback is clearly labelled when live detector inference is unavailable.
 - Synthetic datasets are used for controlled enterprise topology/RCA experiments.
 - Metrics above are based on synthetic benchmarks unless otherwise stated.
+- Enterprise GNN RCA V2 is temporal-aware and relation-aware, but not a fully dynamic temporal graph transformer.
+- Enterprise GNN RCA V2 metrics come from a synthetic/generated enterprise benchmark for controlled validation.
+- Synthetic benchmarks are used because real enterprise incidents and topologies are sensitive and not shareable.
+- V2 benchmark results should be interpreted as controlled prototype validation, not production accuracy.
+- Vision connector extraction has metadata fallback.
+- Live remediation is not executed; ITSM is generated as a local demo draft.
+- RF-DETR live inference is optional; verified annotation fallback is part of the reliability design.
 - RF-DETR checkpoints are present, but detector evaluation metrics should only be claimed after running and committing the relevant evaluation report.
 
-## 13. Future Roadmap
+## 14. Future Roadmap
 
 - Live observability integration with alert streams from real monitoring systems.
 - Real CMDB and ITSM integrations with authenticated create/update flows.

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+import socket
 import subprocess
 import sys
 import tempfile
@@ -330,6 +331,18 @@ def run_rfdetr_http_service(
         result.setdefault("image_path", str(image_path))
         result.setdefault("detector_runtime_mode", "live_rfdetr_http_service")
         return result
+    except (TimeoutError, socket.timeout) as exc:
+        return {
+            "ok": False,
+            "source": "live_rfdetr_http_service",
+            "service_url": url,
+            "detector_runtime_mode": "verified_annotation_fallback",
+            "timed_out": True,
+            "error": f"RF-DETR HTTP timeout after {timeout}s: {exc}",
+            "fallback_reason": "Live RF-DETR timed out; using verified annotation fallback for demo continuity.",
+            "checkpoint_path": str(checkpoint_path),
+            "image_path": str(image_path),
+        }
     except urllib.error.HTTPError as exc:
         body = exc.read().decode("utf-8", errors="replace")[:1200]
         return {
@@ -341,11 +354,18 @@ def run_rfdetr_http_service(
             "image_path": str(image_path),
         }
     except Exception as exc:
+        timed_out = "timed out" in str(exc).lower() or "timeout" in str(exc).lower()
         return {
             "ok": False,
             "source": "live_rfdetr_http_service",
             "service_url": url,
-            "error": str(exc),
+            "detector_runtime_mode": "verified_annotation_fallback" if timed_out else "live_rfdetr_http_service",
+            "timed_out": timed_out,
+            "error": f"RF-DETR HTTP timeout after {timeout}s: {exc}" if timed_out else str(exc),
+            "fallback_reason": (
+                "Live RF-DETR timed out; using verified annotation fallback for demo continuity."
+                if timed_out else str(exc)
+            ),
             "checkpoint_path": str(checkpoint_path),
             "image_path": str(image_path),
         }
@@ -448,6 +468,8 @@ def run_rfdetr_detection(
         http_result = run_rfdetr_http_service(image_path, checkpoint_path, confidence, timeout, base_url=base_url)
         if http_result.get("ok"):
             return http_result
+        if http_result.get("timed_out"):
+            return http_result
         subprocess_result = run_rfdetr_subprocess(image_path, checkpoint_path, confidence, timeout)
         if subprocess_result.get("ok"):
             subprocess_result["fallback_reason"] = f"HTTP RF-DETR service unavailable: {http_result.get('error', 'unknown error')}"
@@ -460,4 +482,3 @@ def run_rfdetr_detection(
         subprocess_result["http_attempt"] = http_result
         return subprocess_result
     return run_rfdetr_subprocess(image_path, checkpoint_path, confidence, timeout)
-

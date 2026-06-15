@@ -579,41 +579,34 @@ def _assemble_html(
         "</script>"
     )
 
-    return (
-        "<!DOCTYPE html><html><head><meta charset='utf-8'>"
-        "<style>" + css + "</style>"
-        "</head><body>"
-        "<canvas id='sf'></canvas>"
-        "<div id='gc'>"
-
-        "<div id='to'>"
-        f"<div class='mt'>{main_title}</div>"
-        f"<div class='st'>{sub_title}</div>"
-        "</div>"
-
-        "<div id='lo'>"
-        "<div class='ll'>Node Legend</div>"
-        + legend_rows + rca_block
-        + "</div>"
-
-        "<div id='mo'>"
-        "<div class='mt2'>Graph Metrics</div>"
-        + f"<div class='mr'><span class='mlb'>Nodes</span><span class='mv'>{n_nodes}</span></div>"
-        + f"<div class='mr'><span class='mlb'>Links</span><span class='mv'>{n_links}</span></div>"
-        + f"<div class='mr'><span class='mlb'>Cross-diag</span>"
-          f"<span class='mv cyan'>{n_cross}</span></div>"
-        + metrics_extra
-        + "</div>"
-
-        "<div id='tt'></div>"
-        + f"<div id='gm' style='width:100%;height:{height}px'></div>"
-        + "</div>"
-        + error_overlay
-
-        "<script src='https://cdn.jsdelivr.net/npm/three-spritetext@1.9.0"
-        "/dist/three-spritetext.min.js'></script>"
-        "<script src='https://cdn.jsdelivr.net/npm/3d-force-graph@1.73.0"
-        "/dist/3d-force-graph.min.js'></script>"
-        "<script>" + js + "</script>"
-        "</body></html>"
-    )
+    return "".join([
+        "<!DOCTYPE html><html><head><meta charset='utf-8'>",
+        "<style>", css, "</style>",
+        "</head><body>",
+        "<canvas id='sf'></canvas>",
+        "<div id='gc'>",
+        "<div id='to'>",
+        f"<div class='mt'>{main_title}</div>",
+        f"<div class='st'>{sub_title}</div>",
+        "</div>",
+        "<div id='lo'>",
+        "<div class='ll'>Node Legend</div>",
+        legend_rows,
+        rca_block,
+        "</div>",
+        "<div id='mo'>",
+        "<div class='mt2'>Graph Metrics</div>",
+        f"<div class='mr'><span class='mlb'>Nodes</span><span class='mv'>{n_nodes}</span></div>",
+        f"<div class='mr'><span class='mlb'>Links</span><span class='mv'>{n_links}</span></div>",
+        f"<div class='mr'><span class='mlb'>Cross-diag</span><span class='mv cyan'>{n_cross}</span></div>",
+        metrics_extra,
+        "</div>",
+        "<div id='tt'></div>",
+        f"<div id='gm' style='width:100%;height:{height}px'></div>",
+        "</div>",
+        error_overlay,
+        "<script src='https://cdn.jsdelivr.net/npm/three-spritetext@1.9.0/dist/three-spritetext.min.js'></script>",
+        "<script src='https://cdn.jsdelivr.net/npm/3d-force-graph@1.73.0/dist/3d-force-graph.min.js'></script>",
+        "<script>", js, "</script>",
+        "</body></html>",
+    ])
