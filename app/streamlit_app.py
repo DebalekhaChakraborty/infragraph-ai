@@ -618,7 +618,7 @@ div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] p { color: #9
 .compare-badge.prepared  { background: rgba(245,158,11,0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.2); }
 .compare-badge.missing   { background: rgba(100,116,139,0.1); color: #94a3b8; border: 1px solid rgba(100,116,139,0.2); }
 
-/* ── Primary buttons ── */
+/* ── Primary buttons (global) ── */
 [data-testid="stBaseButton-primary"],
 [data-testid="stBaseButton-primary"] p,
 [data-testid="stBaseButton-primary"] * { background: #2563eb !important; color: #ffffff !important; border: none !important; font-weight: 600 !important; }
@@ -626,6 +626,33 @@ div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] p { color: #9
 [data-testid="stBaseButton-primary"]:active { background: #1e40af !important; color: #ffffff !important; }
 [data-testid="stBaseButton-primary"]:disabled,
 [data-testid="stBaseButton-primary"][disabled] { background: #93c5fd !important; color: #ffffff !important; opacity: 0.6 !important; }
+
+/* ── Sidebar nav buttons — remove "button inside button" appearance ── */
+section[data-testid="stSidebar"] div.stButton,
+section[data-testid="stSidebar"] [data-testid="stButton"] {
+    border: none !important; box-shadow: none !important;
+    margin: 2px 0 !important; padding: 0 !important; background: transparent !important;
+}
+section[data-testid="stSidebar"] [data-testid="stBaseButton-secondary"] {
+    background: rgba(255,255,255,0.04) !important; color: #94a3b8 !important;
+    border: 1px solid rgba(255,255,255,0.08) !important; border-radius: 8px !important;
+    font-size: 0.82rem !important; font-weight: 500 !important; box-shadow: none !important;
+    width: 100% !important;
+}
+section[data-testid="stSidebar"] [data-testid="stBaseButton-secondary"]:hover {
+    background: rgba(255,255,255,0.08) !important; color: #e2e8f0 !important;
+    border-color: rgba(255,255,255,0.18) !important;
+}
+section[data-testid="stSidebar"] [data-testid="stBaseButton-primary"] {
+    background: #2563eb !important; color: #ffffff !important;
+    border: none !important; border-radius: 8px !important;
+    font-size: 0.82rem !important; font-weight: 700 !important;
+    box-shadow: none !important; width: 100% !important;
+}
+section[data-testid="stSidebar"] [data-testid="stBaseButton-primary"]:focus-visible,
+section[data-testid="stSidebar"] [data-testid="stBaseButton-secondary"]:focus-visible {
+    box-shadow: none !important; outline: none !important;
+}
 </style>
 """
 
@@ -9344,7 +9371,7 @@ def _sidebar_v3() -> None:
         sub_color   = _col("#64748b", "#64748b")
 
         st.markdown(
-            f'<div style="padding:10px 0 2px">'
+            f'<div style="padding:0 0 2px">'
             f'<span style="font-size:1.08rem;font-weight:800;color:{title_color}">InfraGraph AI</span>'
             f'</div>'
             f'<div style="font-size:0.68rem;color:{sub_color};line-height:1.4;padding-bottom:8px">'
