@@ -9,6 +9,29 @@ It uses a calibrated confidence gate, retrieves root-cause-aware runbook/SOP evi
 It validates plans with a governance critic, creates local demo ITSM drafts, and keeps all remediation behind a human approval gate.
 Guardrail: the LLM is not used to decide root cause.
 
+InfraGraph AI is a graph-native Agentic AIOps pipeline that transforms static infrastructure diagrams into enterprise graph memory, correlates alert storms into incident clusters, ranks root cause with engineered graph features and Temporal Relation-Aware GraphSAGE, and uses Qwen/vLLM only for governed, runbook-grounded remediation.
+
+## Submission Snapshot
+
+| Item | Details |
+|------|---------|
+| Project | InfraGraph AI |
+| Hackathon alignment | Agents / Agentic AI, Multimodal AI, Fine-tuning & Alignment |
+| Primary use-case mapping | Autonomous Incident Diagnosis & Resolution Agent; Unified Observability & RCA Agent; Telecom/NOC Copilot style operations assistant |
+| Core demo story | Diagram -> graph memory -> enterprise graph -> alert correlation -> V2 GNN RCA -> calibrated confidence -> runbook-grounded Qwen remediation -> governance -> human approval -> ITSM draft |
+| Demo anchor scenario | `enterprise_v3_0079` |
+| Demo root cause | `DC-FW-01` in `datacenter_topology` |
+| Core RCA model | `EnterpriseRcaTemporalRelGNN` - Temporal Relation-Aware GraphSAGE |
+| AMD evidence | Enterprise GNN RCA V2 run on AMD Instinct MI300X / ROCm + Qwen3 GRPO/vERL evidence |
+| LLM role | Qwen/vLLM is used only after RCA for grounded remediation drafting |
+| Safety controls | Calibrated confidence gate, governance critic, runbook chain, human approval |
+
+## Submission Links
+
+- Demo video: `<to be added>`
+- Final presentation: `<to be added>`
+- Code repository: `https://github.com/DebalekhaChakraborty/infragraph-ai`
+
 ## 1. Objective
 
 NOC, SRE, platform, and infrastructure teams usually receive alerts, tickets, diagrams, runbooks, and tribal knowledge in separate systems. Static architecture diagrams are visually useful but not machine-readable, so every major incident still requires humans to map alerts back to topology dependencies by hand.
@@ -19,7 +42,7 @@ InfraGraph AI turns diagrams into an operational graph brain. Instead of asking 
 
 | Track | Fit |
 |-------|-----|
-| Primary: Agents / Agentic AI | A 9-step incident operations orchestrator moves from alert intake through RCA, remediation planning, ITSM draft, and human approval. |
+| Primary: Agents / Agentic AI | A schema-validated multi-step incident operations orchestrator moves from alert intake through graph-aware correlation, RCA, confidence calibration, runbook-grounded remediation, governance review, ITSM draft, and human approval. |
 | Secondary: Multimodal AI | Diagram intelligence ingests infrastructure images, detector output, verified annotations, OCR/connector evidence, and graph memory. |
 | Additional: Fine-tuning / alignment | Qwen3 LoRA + GRPO/vERL alignment pipeline trains remediation behavior with graph-grounded reward functions. |
 
@@ -41,7 +64,7 @@ Relevant use-case alignment:
 - **Graph Copilot:** deterministic graph query engine with vector memory and Qwen answer fallback.
 - **AI Remediation:** Qwen/vLLM remediation planner that produces structured JSON from RCA, graph evidence, alert timelines, runbook/SOP evidence, and guardrails.
 - **Governance Critic:** rule-based validation of RCA evidence, confidence gate, rollback, runbook chain, and approval readiness.
-- **Agentic Ops Orchestrator:** 9-step flow from alert intake to approval-gated action.
+- **Agentic Ops Orchestrator:** schema-validated multi-step flow from alert intake to approval-gated action, including correlation, RCA, confidence calibration, runbook-grounded remediation, governance review, and ITSM draft generation.
 - **ITSM Draft:** local demo incident ticket generation; no external ITSM call is made by default.
 - **Human Approval:** remediation is not auto-executed without operator approval.
 
