@@ -6529,11 +6529,14 @@ def _tab_gnn_rca() -> None:
     # ── RCA Engine panel ──────────────────────────────────────────────────────
     _ent_summary_pre = st.session_state.get("enterprise_ingestion_summary") or {}
     _sel_rec_pre     = _selected_enterprise_record()
+    # Selected scenario path takes highest priority: it reflects the diagram the
+    # user picked in Diagram Intelligence (or gallery). The ingestion summary
+    # scenario is a fallback for when no diagram has been selected yet.
     _rca_scenario_id = (
-        _ent_summary_pre.get("scenario_id")
+        (_sel_scen_p_gnn.name if _sel_scen_p_gnn else "")
+        or _ent_summary_pre.get("scenario_id")
         or alerts_data.get("scenario_id")
         or _sel_rec_pre.get("source_scenario_id")
-        or (_sel_scen_p_gnn.name if _sel_scen_p_gnn else "")
         or "—"
     )
     _gnn_result_pre      = _load_gnn_rca_result(_rca_scenario_id) if _rca_scenario_id != "—" else None
