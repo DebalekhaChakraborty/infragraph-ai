@@ -6637,7 +6637,7 @@ def _tab_gnn_rca() -> None:
 
     # ── Case C: result exists ─────────────────────────────────────────────────
     elif _gnn_result_pre:
-        st.caption(f"GNN RCA loaded · {_rca_scenario_id}")
+        pass
 
     st.markdown('<hr class="ws-rule">', unsafe_allow_html=True)
 
