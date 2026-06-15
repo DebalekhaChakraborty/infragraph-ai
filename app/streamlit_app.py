@@ -9086,10 +9086,13 @@ def _sidebar_v3() -> None:
         sub_color   = _col("#64748b", "#64748b")
 
         st.markdown(
-            f'<div style="padding:10px 0 6px">'
+            f'<div style="padding:10px 0 2px">'
             f'<span style="font-size:1.08rem;font-weight:800;color:{title_color}">InfraGraph AI</span>'
             f'</div>'
-            f'',
+            f'<div style="font-size:0.68rem;color:{sub_color};line-height:1.4;padding-bottom:8px">'
+            f'One diagram enters the system, becomes graph memory, then gets absorbed into the '
+            f'enterprise graph brain for cross-diagram root-cause analysis.'
+            f'</div>',
             unsafe_allow_html=True,
         )
 
@@ -9206,24 +9209,6 @@ def _main_cockpit() -> None:
         st.markdown(_LIGHT_OVERRIDES, unsafe_allow_html=True)
 
     _sidebar_v3()
-
-    st.markdown(
-        '<div class="hero-title">InfraGraph AI</div>'
-        '<div class="hero-tagline">'
-        "One diagram enters the system, becomes graph memory, then gets absorbed into the "
-        "enterprise graph brain for cross-diagram root-cause analysis."
-        "</div>"
-        '<div class="stat-pills">'
-        '<div class="stat-pill status"><div class="pill-dot"></div>V3 Diagram Intelligence</div>'
-        '<div class="stat-pill root">Galaxy Graph RCA</div>'
-        '<div class="stat-pill status">RF-DETR ready</div>'
-        "</div>",
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        "<hr style='border:none;border-top:1px solid rgba(255,255,255,0.06);margin:14px 0 20px'>",
-        unsafe_allow_html=True,
-    )
 
     _nav = st.session_state.get("main_nav", "Diagram Intelligence")
     if _nav == "Diagram Intelligence":
