@@ -1,0 +1,258 @@
+{
+  "status": "completed",
+  "split": "val",
+  "num_images_in_split": 33,
+  "num_images_evaluated": 30,
+  "num_images_processed": 0,
+  "num_images_skipped": 0,
+  "num_inference_errors": 30,
+  "iou_threshold": 0.5,
+  "confidence_threshold": 0.25,
+  "summary_note": "RF-DETR detector evaluated against V3 verified annotations on 0 diagrams. Metrics are prototype benchmark metrics, not production accuracy.",
+  "metrics": {
+    "precision": NaN,
+    "recall": 0.0,
+    "f1": NaN,
+    "mean_iou_matched": NaN,
+    "mean_ap_at_50": 0.0,
+    "avg_inference_runtime_ms": NaN,
+    "global_tp": 0,
+    "global_fp": 0,
+    "global_fn": 265
+  },
+  "per_class_metrics": {
+    "cloud_or_wan": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 23,
+      "gt_count": 23,
+      "precision": NaN,
+      "recall": 0.0,
+      "f1": NaN,
+      "ap_at_50": 0.0
+    },
+    "database": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 12,
+      "gt_count": 12,
+      "precision": NaN,
+      "recall": 0.0,
+      "f1": NaN,
+      "ap_at_50": 0.0
+    },
+    "firewall": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 26,
+      "gt_count": 26,
+      "precision": NaN,
+      "recall": 0.0,
+      "f1": NaN,
+      "ap_at_50": 0.0
+    },
+    "load_balancer": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 6,
+      "gt_count": 6,
+      "precision": NaN,
+      "recall": 0.0,
+      "f1": NaN,
+      "ap_at_50": 0.0
+    },
+    "router": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 36,
+      "gt_count": 36,
+      "precision": NaN,
+      "recall": 0.0,
+      "f1": NaN,
+      "ap_at_50": 0.0
+    },
+    "server": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 84,
+      "gt_count": 84,
+      "precision": NaN,
+      "recall": 0.0,
+      "f1": NaN,
+      "ap_at_50": 0.0
+    },
+    "service": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 39,
+      "gt_count": 39,
+      "precision": NaN,
+      "recall": 0.0,
+      "f1": NaN,
+      "ap_at_50": 0.0
+    },
+    "switch": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 39,
+      "gt_count": 39,
+      "precision": NaN,
+      "recall": 0.0,
+      "f1": NaN,
+      "ap_at_50": 0.0
+    }
+  },
+  "inference_errors": [
+    {
+      "image_id": 265,
+      "file_name": "enterprise_v3_0064__branch_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 266,
+      "file_name": "enterprise_v3_0064__datacenter_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 267,
+      "file_name": "enterprise_v3_0064__wan_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 268,
+      "file_name": "enterprise_v3_0065__app_db_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 269,
+      "file_name": "enterprise_v3_0065__branch_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 270,
+      "file_name": "enterprise_v3_0065__datacenter_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 271,
+      "file_name": "enterprise_v3_0065__shared_services_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 272,
+      "file_name": "enterprise_v3_0065__wan_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 273,
+      "file_name": "enterprise_v3_0066__app_db_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 274,
+      "file_name": "enterprise_v3_0066__branch_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 275,
+      "file_name": "enterprise_v3_0066__datacenter_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 276,
+      "file_name": "enterprise_v3_0066__shared_services_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 277,
+      "file_name": "enterprise_v3_0066__wan_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 278,
+      "file_name": "enterprise_v3_0067__app_db_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 279,
+      "file_name": "enterprise_v3_0067__branch_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 280,
+      "file_name": "enterprise_v3_0067__datacenter_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 281,
+      "file_name": "enterprise_v3_0067__shared_services_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 282,
+      "file_name": "enterprise_v3_0068__app_db_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 283,
+      "file_name": "enterprise_v3_0068__datacenter_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 284,
+      "file_name": "enterprise_v3_0068__wan_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 285,
+      "file_name": "enterprise_v3_0069__app_db_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 286,
+      "file_name": "enterprise_v3_0069__branch_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 287,
+      "file_name": "enterprise_v3_0069__datacenter_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 288,
+      "file_name": "enterprise_v3_0069__shared_services_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 289,
+      "file_name": "enterprise_v3_0069__wan_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 290,
+      "file_name": "enterprise_v3_0070__branch_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 291,
+      "file_name": "enterprise_v3_0070__datacenter_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 292,
+      "file_name": "enterprise_v3_0070__shared_services_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 293,
+      "file_name": "enterprise_v3_0070__wan_topology.png",
+      "error": "Non-zero exit code 5: "
+    },
+    {
+      "image_id": 294,
+      "file_name": "enterprise_v3_0071__app_db_topology.png",
+      "error": "Non-zero exit code 5: "
+    }
+  ],
+  "sample_predictions_dir": null
+}

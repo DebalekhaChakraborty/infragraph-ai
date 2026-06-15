@@ -1,0 +1,157 @@
+{
+  "generated_at": "2026-06-15T20:14:29.660999+00:00",
+  "gnn_v2_training": {
+    "status": "ok",
+    "source_file": "D:\\My Folders\\Hackathons\\infragraph-ai\\model_artifacts\\enterprise_gnn_rca_v2\\training_report.json",
+    "model_type": "EnterpriseRcaTemporalRelGNN",
+    "gnn_architecture": "RelationAwareTemporalGraphSAGE",
+    "uses_edge_type": true,
+    "uses_temporal_features": true,
+    "num_graphs": 80,
+    "train_count": 64,
+    "val_count": 8,
+    "test_count": 8,
+    "epochs": 80,
+    "best_epoch": 5,
+    "best_val_mrr": 1.0,
+    "test_metrics": {
+      "mrr": 1.0
+    }
+  },
+  "gnn_v2_inference_latency": {
+    "status": "inference_error",
+    "runs_attempted": 3,
+    "errors": [
+      "Run 1: exit code 1: ",
+      "Run 2: exit code 1: ",
+      "Run 3: exit code 1: "
+    ],
+    "command": "D:\\My Folders\\Hackathons\\venv\\debalekha\\Scripts\\python.exe D:\\My Folders\\Hackathons\\infragraph-ai\\scripts\\run_enterprise_gnn_v2_inference.py --scenario-id enterprise_v3_0079 --split test"
+  },
+  "gnn_training_benchmark": {
+    "status": "not_run",
+    "note": "Pass --run-training-benchmark to enable."
+  },
+  "qwen_latency": {
+    "status": "ok",
+    "live_latency": "unavailable",
+    "note": "INFRAGRAPH_QWEN_BASE_URL not set. Committed GRPO training evidence included below.",
+    "committed_grpo_evidence_path": "D:\\My Folders\\Hackathons\\infragraph-ai\\training\\verl_grpo\\runs\\qwen3_4b_grpo_lora_amd\\completion_evidence.md",
+    "committed_grpo_evidence": "# InfraGraph AI - Qwen3-4B GRPO/vERL Training Completion Evidence\n\nStatus: Completed\n\nModel:\n- Qwen/Qwen3-4B\n\nTraining:\n- LoRA rank: 16\n- GRPO via vERL main_ppo\n- vLLM rollout backend\n- Total training steps: 32/32\n- Training completed successfully\n\nHardware:\n- AMD ROCm GPU\n- GPU utilization observed at 100%\n- VRAM observed around 42%\n- Power observed around 278W\n\nKey runtime notes:\n- vLLM sleep mode disabled for ROCm compatibility\n- vERL dataset reader patched to parse extra_info JSON strings\n- agent.num_workers reduced to 1 for single-GPU batch chunking stability\n\nPrimary summary:\ntraining/verl_grpo/runs/qwen3_4b_grpo_lora_amd/training_summary.md\n",
+    "model": "Qwen/Qwen3-4B",
+    "alignment": "LoRA rank 16 + GRPO/vERL (32/32 steps)"
+  },
+  "amd_gpu_telemetry": {
+    "status": "unavailable",
+    "available": false,
+    "command_used": null,
+    "note": "AMD telemetry command unavailable in this environment; see committed AMD evidence files.",
+    "committed_evidence_paths": [
+      "docs/evidence/amd_qwen3_grpo_run/training_summary.md",
+      "docs/evidence/amd_mi300x_enterprise_gnn_v2_run/training_summary.md",
+      "training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/completion_evidence.md"
+    ],
+    "timestamp": "2026-06-15T20:14:57.464625+00:00"
+  },
+  "rfdetr_evidence": {
+    "status": "eval_report_present",
+    "source_file": "D:\\My Folders\\Hackathons\\infragraph-ai\\reports\\rfdetr_v3_eval\\rfdetr_v3_eval_report.json",
+    "metrics": {
+      "precision": NaN,
+      "recall": 0.0,
+      "f1": NaN,
+      "mean_iou_matched": NaN,
+      "mean_ap_at_50": 0.0,
+      "avg_inference_runtime_ms": NaN,
+      "global_tp": 0,
+      "global_fp": 0,
+      "global_fn": 265
+    },
+    "summary_note": "RF-DETR detector evaluated against V3 verified annotations on 0 diagrams. Metrics are prototype benchmark metrics, not production accuracy.",
+    "split": "val",
+    "num_images_processed": 0,
+    "per_class_metrics": {
+      "cloud_or_wan": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 23,
+        "gt_count": 23,
+        "precision": NaN,
+        "recall": 0.0,
+        "f1": NaN,
+        "ap_at_50": 0.0
+      },
+      "database": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 12,
+        "gt_count": 12,
+        "precision": NaN,
+        "recall": 0.0,
+        "f1": NaN,
+        "ap_at_50": 0.0
+      },
+      "firewall": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 26,
+        "gt_count": 26,
+        "precision": NaN,
+        "recall": 0.0,
+        "f1": NaN,
+        "ap_at_50": 0.0
+      },
+      "load_balancer": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 6,
+        "gt_count": 6,
+        "precision": NaN,
+        "recall": 0.0,
+        "f1": NaN,
+        "ap_at_50": 0.0
+      },
+      "router": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 36,
+        "gt_count": 36,
+        "precision": NaN,
+        "recall": 0.0,
+        "f1": NaN,
+        "ap_at_50": 0.0
+      },
+      "server": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 84,
+        "gt_count": 84,
+        "precision": NaN,
+        "recall": 0.0,
+        "f1": NaN,
+        "ap_at_50": 0.0
+      },
+      "service": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 39,
+        "gt_count": 39,
+        "precision": NaN,
+        "recall": 0.0,
+        "f1": NaN,
+        "ap_at_50": 0.0
+      },
+      "switch": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 39,
+        "gt_count": 39,
+        "precision": NaN,
+        "recall": 0.0,
+        "f1": NaN,
+        "ap_at_50": 0.0
+      }
+    }
+  },
+  "slide4_markdown_table": "| Category | Evidence |\n|----------|----------|\n| Diagram model | RF-DETR-supported detector + verified fallback + vision connector extraction |\n| RCA model | EnterpriseRcaTemporalRelGNN / Temporal Relation-Aware GraphSAGE |\n| RCA dataset | 80 generated enterprise RCA scenarios |\n| Split | 64 train / 8 val / 8 test |\n| GNN feature dim | 54 |\n| GNN V2 best epoch | 5 |\n| GNN V2 test top-1 | N/A (synthetic/generated enterprise benchmark) |\n| GNN V2 inference latency | not measured |\n| Qwen model | Qwen/Qwen3-4B |\n| Alignment | LoRA rank 16 + GRPO/vERL (32/32 steps) |\n| Qwen tokens | not measured live |\n| Qwen latency | unavailable |\n| AMD GPU evidence | MI300X / ROCm \u2014 GPU 100% utilization, VRAM ~42%, Power ~278W (training evidence) |\n| Detector metrics | precision=N/A, recall=0.0000, F1=N/A (prototype benchmark) |\n"
+}
