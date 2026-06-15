@@ -8590,7 +8590,7 @@ def _sidebar_v3() -> None:
             f'<div style="padding:10px 0 6px">'
             f'<span style="font-size:1.08rem;font-weight:800;color:{title_color}">InfraGraph AI</span>'
             f'</div>'
-            f'<p style="font-size:0.72rem;color:{sub_color};margin:-2px 0 0">Diagram Intelligence V3</p>',
+            f'',
             unsafe_allow_html=True,
         )
 
