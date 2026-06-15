@@ -667,6 +667,13 @@ section[data-testid="stSidebar"] [data-testid="stBaseButton-primary"]:focus-visi
 section[data-testid="stSidebar"] [data-testid="stBaseButton-secondary"]:focus-visible {
     box-shadow: none !important; outline: none !important;
 }
+/* ── Pipeline nav: align badge column vertically with button ── */
+section[data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] {
+    align-items: center !important; gap: 4px !important;
+}
+section[data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] div[data-testid="stColumn"] {
+    align-self: center !important; min-height: unset !important;
+}
 </style>
 """
 
@@ -9430,15 +9437,28 @@ def _sidebar_v3() -> None:
         }
         _PIPELINE_NAV = [p for p in _NAV_PAGES if p != "Agentic Ops Orchestrator"]
         for _pg in _PIPELINE_NAV:
-            _tick = " ✅" if _PAGE_DONE.get(_pg) else ""
-            if st.button(
-                f"{_pg}{_tick}",
-                key=f"sb_nav_{_pg.replace(' ', '_')}",
-                use_container_width=True,
-                type="primary" if _cur_nav == _pg else "secondary",
-            ):
-                st.session_state["main_nav"] = _pg
-                st.rerun()
+            _done      = _PAGE_DONE.get(_pg, False)
+            _is_active = (_cur_nav == _pg)
+            _bcol, _tcol = st.columns([5, 1], gap="small")
+            with _bcol:
+                if st.button(
+                    _pg,
+                    key=f"sb_nav_{_pg.replace(' ', '_')}",
+                    use_container_width=True,
+                    type="primary" if _is_active else "secondary",
+                ):
+                    st.session_state["main_nav"] = _pg
+                    st.rerun()
+            with _tcol:
+                if _done:
+                    st.markdown(
+                        '<div style="display:flex;align-items:center;justify-content:center;'
+                        'width:26px;height:26px;background:rgba(16,185,129,0.15);'
+                        'border:1.5px solid #10b981;border-radius:50%;'
+                        'color:#10b981;font-size:0.72rem;font-weight:800;'
+                        'margin:4px auto 0">✓</div>',
+                        unsafe_allow_html=True,
+                    )
         st.markdown(
             '<div style="border-top:1px solid rgba(168,85,247,0.35);margin:14px 2px 8px"></div>'
             '<div class="sb-label" style="color:#a78bfa;font-size:0.58rem;letter-spacing:0.10em">'
