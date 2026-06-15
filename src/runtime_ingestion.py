@@ -863,7 +863,7 @@ def run_live_v3_ingestion(
     except Exception:
         pass  # cv2 missing or other error — fall through to annotation/local_graph
 
-    # 2. Annotation connectors (fallback / supplement when vision misses edges)
+    # 2. Annotation connectors — skip any pair already captured by vision
     _ann_added = 0
     for conn in annotation.get("connectors", []):
         _s = conn.get("source", conn.get("from_node", ""))
@@ -871,6 +871,8 @@ def run_live_v3_ingestion(
         if not _s or not _t:
             continue
         _fp = frozenset({_s, _t})
+        if _fp in _seen_pairs:
+            continue  # already extracted by vision — skip duplicate
         _seen_pairs.add(_fp)
         detected_edges.append({
             "source":       _s,
@@ -924,7 +926,13 @@ def run_live_v3_ingestion(
         }
         for n in graph_nodes
     ]
-    graph_edges = local_graph.get("edges") or detected_edges
+    # When vision succeeded, detected_edges is authoritative (vision + deduped annotation
+    # + deduped local_graph); otherwise fall back to local_graph then detected_edges.
+    graph_edges = (
+        detected_edges
+        if _vision_meta["edge_extraction_source"] == "vision_connector_extraction"
+        else (local_graph.get("edges") or detected_edges)
+    )
     edge_table_rows: list[dict] = [
         {
             "source":       e.get("source", ""),
@@ -1287,7 +1295,7 @@ def run_ingestion(
     except Exception:
         pass
 
-    # 2. Annotation connectors
+    # 2. Annotation connectors — skip any pair already captured by vision
     _ann_added2 = 0
     for conn in annotation.get("connectors", []):
         _s = conn.get("source", conn.get("from_node", ""))
@@ -1295,6 +1303,8 @@ def run_ingestion(
         if not _s or not _t:
             continue
         _fp = frozenset({_s, _t})
+        if _fp in _seen_pairs2:
+            continue  # already extracted by vision — skip duplicate
         _seen_pairs2.add(_fp)
         detected_edges.append({
             "source":       _s,
@@ -1347,7 +1357,12 @@ def run_ingestion(
         }
         for n in graph_nodes
     ]
-    graph_edges = local_graph.get("edges") or detected_edges
+    # When vision succeeded, detected_edges is authoritative; otherwise local_graph first.
+    graph_edges = (
+        detected_edges
+        if _vision_meta2["edge_extraction_source"] == "vision_connector_extraction"
+        else (local_graph.get("edges") or detected_edges)
+    )
     edge_table_rows: list[dict] = [
         {
             "source":       e.get("source", ""),
