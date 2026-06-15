@@ -669,10 +669,17 @@ section[data-testid="stSidebar"] [data-testid="stBaseButton-secondary"]:focus-vi
 }
 /* ── Pipeline nav: align badge column vertically with button ── */
 section[data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] {
-    align-items: center !important; gap: 4px !important;
+    align-items: stretch !important; gap: 4px !important;
 }
 section[data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] div[data-testid="stColumn"] {
-    align-self: center !important; min-height: unset !important;
+    align-self: stretch !important; min-height: unset !important;
+    display: flex !important; flex-direction: column !important; justify-content: center !important;
+}
+section[data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] div[data-testid="stColumn"] div[data-testid="stVerticalBlock"],
+section[data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] div[data-testid="stColumn"] div[data-testid="element-container"] {
+    display: flex !important; flex-direction: column !important;
+    justify-content: center !important; flex: 1 !important;
+    padding: 0 !important; margin: 0 !important;
 }
 </style>
 """
@@ -9459,7 +9466,7 @@ def _sidebar_v3() -> None:
                         'width:26px;height:26px;background:rgba(16,185,129,0.15);'
                         'border:1.5px solid #10b981;border-radius:50%;'
                         'color:#10b981;font-size:0.72rem;font-weight:800;'
-                        'margin:4px auto 0">✓</div>',
+                        'margin:0 auto">✓</div>',
                         unsafe_allow_html=True,
                     )
         st.markdown(
