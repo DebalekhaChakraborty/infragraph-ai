@@ -8670,24 +8670,23 @@ def _sidebar_v3() -> None:
             st.session_state["main_nav"] = "Agentic Ops Orchestrator"
             st.rerun()
 
-        # ── InfraGraph Copilot widget (Ops page only) ────────────────────────
-        if _cur_nav == "Agentic Ops Orchestrator":
-            st.markdown(
-                '<div style="border-top:1px solid rgba(139,92,246,0.35);margin:18px 2px 10px"></div>'
-                '<div style="font-size:0.58rem;color:#a78bfa;font-weight:700;'
-                'letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px">'
-                '🤖 InfraGraph Copilot</div>',
-                unsafe_allow_html=True,
-            )
-            if st.button(
-                "💬 Open Chat",
-                key="sidebar_copilot_btn",
-                use_container_width=True,
-                type="primary",
-                help="Ask InfraGraph Copilot anything — graph memory, RCA, remediation.",
-            ):
-                st.session_state.ops_copilot_open = True
-                st.rerun()
+        # ── InfraGraph Copilot widget (always visible) ───────────────────────
+        st.markdown(
+            '<div style="border-top:1px solid rgba(139,92,246,0.35);margin:18px 2px 10px"></div>'
+            '<div style="font-size:0.58rem;color:#a78bfa;font-weight:700;'
+            'letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px">'
+            '🤖 InfraGraph Copilot</div>',
+            unsafe_allow_html=True,
+        )
+        if st.button(
+            "💬 Open Chat",
+            key="sidebar_copilot_btn",
+            use_container_width=True,
+            type="primary",
+            help="Ask InfraGraph Copilot anything — graph memory, RCA, remediation.",
+        ):
+            st.session_state.ops_copilot_open = True
+            st.rerun()
 
         st.markdown('<div class="sb-label" style="margin-top:22px">Appearance</div>',
                     unsafe_allow_html=True)
