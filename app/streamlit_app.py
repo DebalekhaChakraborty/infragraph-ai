@@ -628,6 +628,12 @@ div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] p { color: #9
 [data-testid="stBaseButton-primary"]:disabled,
 [data-testid="stBaseButton-primary"][disabled] { background: #93c5fd !important; color: #ffffff !important; opacity: 0.6 !important; }
 
+/* ── Global: strip stButton wrapper — prevents box-inside-box on all buttons ── */
+div.stButton,
+[data-testid="stButton"] {
+    border: none !important; box-shadow: none !important;
+    background: transparent !important; padding: 0 !important;
+}
 /* ── Sidebar nav buttons — remove "button inside button" appearance ── */
 section[data-testid="stSidebar"] div.stButton,
 section[data-testid="stSidebar"] [data-testid="stButton"] {
@@ -696,6 +702,8 @@ label, [data-testid="stWidgetLabel"] p, [data-testid="stWidgetLabel"] span { col
 [data-testid="stBaseButton-primary"]:active { background: #1e40af !important; color: #ffffff !important; }
 [data-testid="stBaseButton-primary"]:disabled,
 [data-testid="stBaseButton-primary"][disabled] { background: #93c5fd !important; color: #ffffff !important; opacity: 0.6 !important; }
+div.stButton,
+[data-testid="stButton"] { border: none !important; box-shadow: none !important; background: transparent !important; padding: 0 !important; }
 [data-testid="stBaseButton-secondary"],
 .stButton button { background: #ffffff !important; color: #334155 !important; border: 1px solid rgba(0,0,0,0.14) !important; }
 div[data-testid="stTabs"] div[role="tablist"] { background: rgba(0,0,0,0.05) !important; border-color: rgba(0,0,0,0.09) !important; }
@@ -9462,7 +9470,10 @@ def _sidebar_v3() -> None:
             value=(st.session_state.get("theme") == "light"),
             key="theme_toggle",
         )
+        _prev_theme = st.session_state.get("theme", "dark")
         st.session_state.theme = "light" if is_light else "dark"
+        if st.session_state.theme != _prev_theme:
+            st.rerun()
 
 
 # ══════════════════════════════════════════════════════════════════════════════
