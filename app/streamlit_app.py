@@ -254,6 +254,49 @@ except Exception:
     _calibrate_confidence = None  # type: ignore
     _CALIB_OK             = False
 
+# ── Agentic Ops demo presets ──────────────────────────────────────────────────
+_OPS_DEMO_PRESETS: dict = {
+    "random": {
+        "label": "Random enterprise alert storm",
+        "description": "Exploratory mode. Dynamically samples available enterprise scenarios.",
+        "mode": "random",
+        "anchor_scenario_id": "",
+        "scenario_ids": [],
+        "max_random_fillers": 0,
+    },
+    "curated_pitch_pack": {
+        "label": "Curated pitch pack: multi-cluster enterprise incident",
+        "description": (
+            "Repeatable final-demo mode. Guarantees the cross-diagram firewall RCA "
+            "scenario and adds supporting WAN/app/database scenarios so correlation "
+            "still produces multiple alert clusters."
+        ),
+        "mode": "fixed_pack",
+        "anchor_scenario_id": "enterprise_v3_0079",
+        "scenario_ids": [
+            "enterprise_v3_0079",
+            "enterprise_v3_0077",
+            "enterprise_v3_0078",
+            "enterprise_v3_0073",
+        ],
+        "expected_root": "DC-FW-01",
+        "expected_diagram": "datacenter_topology",
+    },
+    "hybrid_anchor_plus_random": {
+        "label": "Hybrid: 0079 anchor + random noise",
+        "description": (
+            "Guarantees the strongest V2 RCA scenario, then adds random available "
+            "scenarios to simulate live enterprise noise."
+        ),
+        "mode": "anchor_plus_random",
+        "anchor_scenario_id": "enterprise_v3_0079",
+        "scenario_ids": ["enterprise_v3_0079"],
+        "max_random_fillers": 3,
+        "expected_root": "DC-FW-01",
+        "expected_diagram": "datacenter_topology",
+    },
+}
+
 # ── Runbook Retrieval (optional) ──────────────────────────────────────────────
 try:
     from runbook_retrieval import (                                               # type: ignore
@@ -7534,6 +7577,7 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
         ("ops_correlation_result",   None),
         ("ops_corr_warnings",        []),
         ("ops_governance_reviews",   {}),
+        ("ops_demo_story_mode",      "random"),
         ("agent_approval_status",    "pending"),
         ("agent_copilot_answer",     ""),
         ("agent_copilot_question",   ""),
@@ -7687,6 +7731,33 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
             "raw":         al_raw,
         }
 
+    def _select_ops_scenarios_for_demo(
+        all_scens: list,
+        with_gnn:  set,
+        preset:    dict,
+        max_total: int = 5,
+    ) -> list:
+        mode   = preset.get("mode", "random")
+        av_set = set(all_scens)
+        if mode == "fixed_pack":
+            ids = [s for s in preset.get("scenario_ids", []) if s in av_set]
+            if len(ids) < 2:
+                fillers = [s for s in all_scens if s not in set(ids)]
+                ids += fillers[:max_total - len(ids)]
+            return ids[:max_total]
+        if mode == "anchor_plus_random":
+            import random as _rnd
+            anchor = preset.get("anchor_scenario_id", "")
+            ids    = [anchor] if anchor in av_set else []
+            others = [s for s in all_scens if s != anchor]
+            _rnd.shuffle(others)
+            ids += others[:preset.get("max_random_fillers", 3)]
+            return ids[:max_total]
+        return (
+            [s for s in all_scens if s in with_gnn]
+            + [s for s in all_scens if s not in with_gnn]
+        )[:max_total]
+
     # ── discover scenarios ─────────────────────────────────────────────────────
     _sc_base = V3_DATASET_ROOT / "scenarios"
     _all_scenarios: list[str] = []
@@ -7709,10 +7780,11 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                     if _sid in _gf.stem:
                         _scenarios_with_gnn.add(_sid)
 
-    _ordered = (
-        [s for s in _all_scenarios if s in _scenarios_with_gnn]
-        + [s for s in _all_scenarios if s not in _scenarios_with_gnn]
-    )[:5]
+    _demo_mode_key = st.session_state.get("ops_demo_story_mode", "random")
+    _preset        = _OPS_DEMO_PRESETS.get(_demo_mode_key, _OPS_DEMO_PRESETS["random"])
+    _ordered       = _select_ops_scenarios_for_demo(
+        _all_scenarios, _scenarios_with_gnn, _preset, max_total=5
+    )
 
     _incidents: list[dict] = []
     for _i, _sid in enumerate(_ordered):
@@ -7753,19 +7825,139 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
             st.toast("Incident acknowledged.", icon="✅")
     with _ph4:
         if st.button("Reset Flow", use_container_width=True, key="ops_reset_btn"):
-            for _rk in ("ops_phase", "ops_alert_stream", "ops_scenario_colors",
-                        "ops_clusters", "ops_selected_cluster_id",
-                        "ops_selected_alert_id",
-                        "ops_cluster_runs", "ops_rem_plans",
-                        "ops_graph_show_cluster", "ops_copilot_open",
-                        "agent_copilot_answer", "agent_copilot_question",
-                        "agent_approval_status"):
+            for _rk in (
+                "ops_phase", "ops_alert_stream", "ops_scenario_colors",
+                "ops_clusters", "ops_selected_cluster_id", "ops_selected_alert_id",
+                "ops_cluster_runs", "ops_rem_plans", "ops_graph_show_cluster",
+                "ops_copilot_open", "agent_copilot_answer", "agent_copilot_question",
+                "agent_approval_status", "ops_correlation_result", "ops_corr_warnings",
+            ):
                 if _rk in st.session_state:
                     del st.session_state[_rk]
             st.rerun()
 
     st.markdown(
         '<hr style="border:none;border-top:1px solid rgba(255,255,255,0.06);margin:8px 0 10px">',
+        unsafe_allow_html=True,
+    )
+
+    # ── Demo Story Mode selector ──────────────────────────────────────────────
+    _dm_col1, _dm_col2 = st.columns([3, 1])
+    with _dm_col1:
+        _demo_sel_key = st.selectbox(
+            "Demo Story Mode",
+            options=list(_OPS_DEMO_PRESETS.keys()),
+            format_func=lambda k: _OPS_DEMO_PRESETS[k]["label"],
+            index=list(_OPS_DEMO_PRESETS.keys()).index(
+                st.session_state.get("ops_demo_story_mode", "random")
+            ),
+            key="ops_demo_story_mode",
+            help="Change mode then click 'Reset Demo' to rebuild the alert stream.",
+        )
+        _preset = _OPS_DEMO_PRESETS[_demo_sel_key]
+        st.caption(_preset["description"])
+    with _dm_col2:
+        if st.button("Reset Demo", use_container_width=True, key="ops_reset_demo_btn"):
+            for _rk2 in (
+                "ops_phase", "ops_alert_stream", "ops_scenario_colors",
+                "ops_clusters", "ops_selected_cluster_id", "ops_selected_alert_id",
+                "ops_cluster_runs", "ops_rem_plans", "ops_graph_show_cluster",
+                "ops_copilot_open", "agent_copilot_answer", "agent_copilot_question",
+                "agent_approval_status", "ops_correlation_result", "ops_corr_warnings",
+            ):
+                if _rk2 in st.session_state:
+                    del st.session_state[_rk2]
+            st.rerun()
+
+    # ── Demo evidence panel (non-random modes only) ───────────────────────────
+    _anchor_sid = _preset.get("anchor_scenario_id", "")
+    if _preset.get("mode") != "random" and _anchor_sid:
+        _v2_out = (
+            REPO_ROOT / "outputs" / "enterprise_gnn_rca_v2"
+            / f"{_anchor_sid}_enterprise_gnn_v2_rca_result.json"
+        )
+        _v2_data: dict = {}
+        if _v2_out.exists():
+            try:
+                _v2_data = json.loads(_v2_out.read_text(encoding="utf-8"))
+            except Exception:
+                pass
+        _v2_ok = bool(_v2_data)
+
+        with st.expander("Demo Evidence — Scenario Pack", expanded=False):
+            _ev1, _ev2 = st.columns(2)
+            with _ev1:
+                st.markdown(
+                    f'<div style="font-size:0.62rem;color:#64748b;text-transform:uppercase;'
+                    f'letter-spacing:.08em;margin-bottom:4px">Mode</div>'
+                    f'<div style="font-size:0.75rem;font-weight:700;color:#f1f5f9">'
+                    f'{html.escape(_preset["label"])}</div>'
+                    f'<div style="font-size:0.63rem;color:#64748b;margin-top:6px">'
+                    f'<b>Anchor:</b> <code style="color:#38bdf8">{_anchor_sid}</code></div>'
+                    f'<div style="font-size:0.63rem;color:#64748b">'
+                    f'<b>Expected root:</b> <code style="color:#34d399">'
+                    f'{_preset.get("expected_root","—")}</code></div>'
+                    f'<div style="font-size:0.63rem;color:#64748b">'
+                    f'<b>Expected diagram:</b> <code style="color:#34d399">'
+                    f'{_preset.get("expected_diagram","—")}</code></div>',
+                    unsafe_allow_html=True,
+                )
+                st.markdown(
+                    '<div style="font-size:0.62rem;color:#64748b;margin-top:6px">'
+                    '<b>Scenario pack:</b></div>',
+                    unsafe_allow_html=True,
+                )
+                for _sp_sid in _preset.get("scenario_ids", []):
+                    _sp_exists = any(
+                        (V3_DATASET_ROOT / "scenarios" / _sp / _sp_sid).exists()
+                        for _sp in ("train", "val", "test")
+                    )
+                    _sp_tag = "✓" if _sp_exists else "✗ missing"
+                    _sp_col = "#22c55e" if _sp_exists else "#ef4444"
+                    st.markdown(
+                        f'<div style="font-size:0.62rem;padding:1px 0">'
+                        f'<code style="color:#94a3b8">{_sp_sid}</code> '
+                        f'<span style="color:{_sp_col}">{_sp_tag}</span></div>',
+                        unsafe_allow_html=True,
+                    )
+            with _ev2:
+                if _v2_ok:
+                    _mn_ev = _v2_data.get("model_notes", {})
+                    st.markdown(
+                        '<div style="font-size:0.62rem;color:#64748b;text-transform:uppercase;'
+                        'letter-spacing:.08em;margin-bottom:4px">V2 RCA Output ✓</div>',
+                        unsafe_allow_html=True,
+                    )
+                    _ev_rows = []
+                    for _ek, _ev_val in [
+                        ("rca_source",             _v2_data.get("rca_source", "—")),
+                        ("model_type",             _v2_data.get("model_type", "—")),
+                        ("uses_edge_type",         str(_mn_ev.get("uses_edge_type", "—"))),
+                        ("uses_temporal_features", str(_mn_ev.get("uses_temporal_features", "—"))),
+                        ("local_edges",            str(_mn_ev.get("local_edges", "—"))),
+                        ("cross_diagram_edges",    str(_mn_ev.get("cross_diagram_edges", "—"))),
+                        ("vision_edges",           str(_mn_ev.get("vision_edges", "—"))),
+                        ("impacted_diagrams",
+                         ", ".join(_v2_data.get("impacted_diagrams", [])) or "—"),
+                    ]:
+                        _ev_rows.append({"Field": _ek, "Value": str(_ev_val)})
+                    st.dataframe(pd.DataFrame(_ev_rows),
+                                 use_container_width=True, hide_index=True)
+                else:
+                    st.markdown(
+                        '<div style="font-size:0.62rem;color:#f59e0b;margin-bottom:6px">'
+                        '⚠ V2 RCA output not found for anchor scenario.</div>'
+                        '<div style="font-size:0.60rem;color:#64748b;">Run:</div>',
+                        unsafe_allow_html=True,
+                    )
+                    st.code(
+                        f"python scripts/run_enterprise_gnn_v2_inference.py"
+                        f" --scenario-id {_anchor_sid} --split test",
+                        language="bash",
+                    )
+
+    st.markdown(
+        '<hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:6px 0 10px">',
         unsafe_allow_html=True,
     )
 
@@ -8130,7 +8322,20 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                 st.session_state.ops_clusters      = _new_clusters
                 st.session_state.ops_alert_stream  = _alert_stream
                 st.session_state.ops_phase         = "clustered"
-                if _new_clusters:
+                # Auto-select anchor cluster in curated/hybrid modes
+                _anchor_auto = _preset.get("anchor_scenario_id", "")
+                _anchor_cl   = None
+                if _anchor_auto and _new_clusters:
+                    _anchor_cl = next(
+                        (c for c in _new_clusters
+                         if any(a.get("scenario_id") == _anchor_auto
+                                for a in _alert_stream
+                                if a.get("cluster_id") == c["cluster_id"])),
+                        None,
+                    )
+                if _anchor_cl:
+                    st.session_state.ops_selected_cluster_id = _anchor_cl["cluster_id"]
+                elif _new_clusters:
                     st.session_state.ops_selected_cluster_id = _new_clusters[0]["cluster_id"]
                 st.rerun()
 
@@ -8303,6 +8508,8 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                                     if not _result.get("impacted_diagrams"):
                                         _result["impacted_diagrams"] = _gnn_enr.get("impacted_diagrams", [])
                                     _result["rca_source"] = _gnn_enr.get("mode") or _gnn_enr.get("rca_source", _result.get("rca_source", ""))
+                                    if _gnn_enr.get("model_notes"):
+                                        _result["model_notes"] = _gnn_enr["model_notes"]
                                 _cl_runs[_sel_cid] = _result
                                 st.session_state.ops_cluster_runs     = _cl_runs
                                 st.session_state.agent_approval_status = "pending"
@@ -8419,6 +8626,24 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                         for _ev in _bullets:
                             st.markdown(f"&emsp;• {_ev}")
                     st.markdown("</div>", unsafe_allow_html=True)
+
+                    # V2 model details expander
+                    _mn_ops = _run.get("model_notes", {})
+                    if _mn_ops and _is_v2_ops:
+                        with st.expander("Model details", expanded=False):
+                            _mn_rows = []
+                            for _mk, _mv in [
+                                ("uses_temporal_features", _mn_ops.get("uses_temporal_features", "—")),
+                                ("uses_edge_type",         _mn_ops.get("uses_edge_type", "—")),
+                                ("local_edges",            _mn_ops.get("local_edges", "—")),
+                                ("cross_diagram_edges",    _mn_ops.get("cross_diagram_edges", "—")),
+                                ("vision_edges",           _mn_ops.get("vision_edges", "—")),
+                                ("relations", ", ".join(_mn_ops.get("relations", [])) or "—"),
+                                ("note",                   _mn_ops.get("note", "—")),
+                            ]:
+                                _mn_rows.append({"Field": _mk, "Value": str(_mv)})
+                            st.dataframe(pd.DataFrame(_mn_rows),
+                                         use_container_width=True, hide_index=True)
 
                     # Blast Radius card
                     _br_c = "#ef4444" if len(_imp_diag) >= 3 else "#f59e0b" if _imp_diag else "#22c55e"
