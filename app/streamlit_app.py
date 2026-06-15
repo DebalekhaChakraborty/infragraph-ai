@@ -7303,6 +7303,89 @@ def _ops_graph_popup(title: str, g_sid: str, popup_rca: "dict | None", eg_data: 
         })
 
 
+@st.dialog("🤖 InfraGraph Copilot", width="large")
+def _ops_copilot_dialog(ic_run: dict, ic_step5: dict) -> None:
+    st.markdown(
+        '<div style="font-size:0.78rem;color:#94a3b8;margin-bottom:12px">'
+        'Ask about the active cluster — root cause, blast radius, evidence, or remediation steps.'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+    # Quick-prompt chips
+    _IC_PROMPTS = [
+        "Why is this the root cause?",
+        "Show impacted diagrams",
+        "Explain the blast radius",
+        "Explain the remediation plan",
+        "What evidence supports the RCA?",
+    ]
+    _ic_clicked: "str | None" = None
+    _r1, _r2, _r3 = st.columns(3), st.columns(3), st.columns(2)  # noqa: F841
+    _all_cols = list(_r1) + [_r2[0], _r2[1]] + [_r3[0]]
+    for _qi, _qp in enumerate(_IC_PROMPTS):
+        with _all_cols[_qi]:
+            if st.button(_qp, key=f"cop_dlg_qp_{_qi}", use_container_width=True):
+                _ic_clicked = _qp
+    st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
+    # Chat history display
+    if st.session_state.get("agent_copilot_answer"):
+        with st.container():
+            st.markdown(
+                f'<div style="background:rgba(139,92,246,0.08);border-left:3px solid #8b5cf6;'
+                f'border-radius:6px;padding:8px 12px;margin-bottom:8px;font-size:0.72rem;color:#94a3b8">'
+                f'Q: {html.escape(str(st.session_state.get("agent_copilot_question", "")))}'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+            st.markdown(st.session_state["agent_copilot_answer"])
+            _ic_src_s = st.session_state.get("agent_copilot_response_source", "—")
+            _ic_vec_r = st.session_state.get("agent_copilot_vector_evidence") or []
+            _det_chk  = "✓" if _ic_src_s in ("deterministic_fallback", "qwen_vllm") else "○"
+            _vec_chk  = "✓" if _ic_vec_r else "○"
+            _qwn_chk  = "✓" if _ic_src_s == "qwen_vllm" else "○"
+            st.markdown(
+                f'<div style="font-size:0.63rem;color:#475569;margin-top:8px;padding-top:6px;'
+                f'border-top:1px solid rgba(255,255,255,0.06)">'
+                f'{_det_chk} Graph tools &nbsp;·&nbsp; '
+                f'{_vec_chk} Vector ({len(_ic_vec_r)} docs) &nbsp;·&nbsp; '
+                f'{_qwn_chk} Qwen</div>',
+                unsafe_allow_html=True,
+            )
+    st.divider()
+    # Input row
+    _ic_q   = st.text_input("Ask InfraGraph Copilot", key="agent_copilot_dlg_input",
+                             label_visibility="collapsed",
+                             placeholder="Ask about this incident…")
+    _ic_sub = st.button("Ask ↵", key="agent_copilot_dlg_submit", type="primary",
+                        use_container_width=True)
+    _active_q: "str | None" = _ic_clicked or (_ic_q.strip() if _ic_sub and _ic_q.strip() else None)
+    if _active_q:
+        _ic_ctx = _copilot_context()
+        _ic_ctx["enterprise_rca_result"] = {
+            "root_cause":         ic_run.get("root_cause", ""),
+            "root_cause_diagram": ic_run.get("root_cause_diagram", ""),
+            "confidence":         ic_run.get("confidence", 0),
+            "impacted_diagrams":  ic_run.get("impacted_diagrams", []),
+            "rca_source":         ic_run.get("rca_source", ""),
+            "impact_path":        [],
+        }
+        _ic_ctx["active_run_evidence"] = (ic_step5.get("evidence") or [])
+        _ic_vec, _ = _retrieve_vector_evidence_global(_active_q, k=6)
+        if not _ic_vec:
+            _ic_vec, _ = _retrieve_vector_evidence(_active_q, k=6)
+        if _ic_vec:
+            _ic_ctx["retrieved_graph_memory_evidence"] = _ic_vec
+        st.session_state["agent_copilot_vector_evidence"] = _ic_vec
+        with st.spinner("Thinking…"):
+            _ic_ans = _qwen_or_deterministic(_active_q, _ic_ctx)
+        st.session_state["agent_copilot_answer"]          = _ic_ans
+        st.session_state["agent_copilot_question"]        = _active_q
+        st.session_state["agent_copilot_response_source"] = (
+            st.session_state.get("last_copilot_response_source", "—")
+        )
+        st.rerun()
+
+
 def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
     """
     Agentic Ops Orchestrator — multi-phase alert-stream console.
@@ -7322,6 +7405,7 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
         ("ops_cluster_runs",         {}),
         ("ops_rem_plans",            {}),
         ("ops_graph_show_cluster",   None),
+        ("ops_copilot_open",         False),
         ("agent_approval_status",    "pending"),
         ("agent_copilot_answer",     ""),
         ("agent_copilot_question",   ""),
@@ -7545,7 +7629,9 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                         "ops_clusters", "ops_selected_cluster_id",
                         "ops_selected_alert_id",
                         "ops_cluster_runs", "ops_rem_plans",
-                        "ops_graph_show_cluster", "agent_approval_status"):
+                        "ops_graph_show_cluster", "ops_copilot_open",
+                        "agent_copilot_answer", "agent_copilot_question",
+                        "agent_approval_status"):
                 if _rk in st.session_state:
                     del st.session_state[_rk]
             st.rerun()
@@ -8271,85 +8357,12 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
             else:
                 st.warning(f"Enterprise graph data not found for scenario `{_g_sid}`.")
 
-    # ── Incident Copilot (available once a cluster has been analyzed) ──────────
-    if _phase == "clustered" and _sel_cid and _cl_runs.get(_sel_cid):
-        _ic_run  = _cl_runs[_sel_cid]
-        _ic_step5 = next((s for s in _ic_run.get("steps", []) if s.get("step_id") == 5), {})
-
-        st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
-        with st.expander("Incident Copilot", expanded=False):
-            st.markdown(
-                '<div style="font-size:0.78rem;color:#94a3b8;margin-bottom:10px">'
-                'Ask about the active cluster, RCA evidence, blast radius, or remediation plan.'
-                '</div>',
-                unsafe_allow_html=True,
-            )
-            _IC_PROMPTS = [
-                "Why is this the root cause?",
-                "Show impacted diagrams",
-                "Explain the blast radius",
-                "Explain the remediation plan",
-                "What evidence supports the RCA?",
-            ]
-            _ic_clicked: str | None = None
-            _ic_r1 = st.columns(3)
-            _ic_r2 = st.columns(2)
-            for _qi, _qp in enumerate(_IC_PROMPTS):
-                with (_ic_r1 + _ic_r2)[_qi]:
-                    if st.button(_qp, key=f"ic_qp_{_qi}", use_container_width=True):
-                        _ic_clicked = _qp
-            st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
-            _ic_q  = st.text_input(
-                "Question", key="agent_copilot_input",
-                label_visibility="collapsed", placeholder="Ask about this incident…"
-            )
-            _ic_sub = st.button("Ask Copilot", key="agent_copilot_submit", type="primary")
-            _active_q: str | None = _ic_clicked or (
-                _ic_q.strip() if _ic_sub and _ic_q.strip() else None
-            )
-            if _active_q:
-                _ic_ctx = _copilot_context()
-                _ic_ctx["enterprise_rca_result"] = {
-                    "root_cause":         _ic_run.get("root_cause", ""),
-                    "root_cause_diagram": _ic_run.get("root_cause_diagram", ""),
-                    "confidence":         _ic_run.get("confidence", 0),
-                    "impacted_diagrams":  _ic_run.get("impacted_diagrams", []),
-                    "mode":               _ic_run.get("rca_source", ""),
-                    "rca_source":         _ic_run.get("rca_source", ""),
-                    "impact_path":        [],
-                }
-                _ic_ctx["active_run_evidence"] = (_ic_step5.get("evidence") or [])
-                _ic_vec, _ = _retrieve_vector_evidence_global(_active_q, k=6)
-                if not _ic_vec:
-                    _ic_vec, _ = _retrieve_vector_evidence(_active_q, k=6)
-                if _ic_vec:
-                    _ic_ctx["retrieved_graph_memory_evidence"] = _ic_vec
-                st.session_state["agent_copilot_vector_evidence"] = _ic_vec
-                with st.spinner("Thinking…"):
-                    _ic_ans = _qwen_or_deterministic(_active_q, _ic_ctx)
-                st.session_state["agent_copilot_answer"]          = _ic_ans
-                st.session_state["agent_copilot_question"]        = _active_q
-                st.session_state["agent_copilot_response_source"] = (
-                    st.session_state.get("last_copilot_response_source", "—")
-                )
-            if st.session_state.get("agent_copilot_answer"):
-                st.divider()
-                if st.session_state.get("agent_copilot_question"):
-                    st.caption(f"Q: {st.session_state['agent_copilot_question']}")
-                st.markdown(st.session_state["agent_copilot_answer"])
-                _ic_src_s = st.session_state.get("agent_copilot_response_source", "—")
-                _ic_vec_r = st.session_state.get("agent_copilot_vector_evidence") or []
-                _det_chk  = "✓" if _ic_src_s in ("deterministic_fallback", "qwen_vllm") else "○"
-                _vec_chk  = "✓" if _ic_vec_r else "○"
-                _qwn_chk  = "✓" if _ic_src_s == "qwen_vllm" else "○"
-                st.markdown(
-                    f'<div style="font-size:0.64rem;color:#475569;margin-top:6px;padding-top:6px;'
-                    f'border-top:1px solid rgba(255,255,255,0.06)">'
-                    f'{_det_chk} Deterministic graph tools &nbsp;·&nbsp; '
-                    f'{_vec_chk} Vector retrieval ({len(_ic_vec_r)} docs) &nbsp;·&nbsp; '
-                    f'{_qwn_chk} Qwen enrichment</div>',
-                    unsafe_allow_html=True,
-                )
+    # ── InfraGraph Copilot dialog ─────────────────────────────────────────────
+    if st.session_state.get("ops_copilot_open"):
+        _ic_run_d  = _cl_runs.get(_sel_cid or "") or {}
+        _ic_step5d = next((s for s in _ic_run_d.get("steps", []) if s.get("step_id") == 5), {})
+        st.session_state.ops_copilot_open = False
+        _ops_copilot_dialog(_ic_run_d, _ic_step5d)
 
 
 def _tab_graph_copilot() -> None:
@@ -8631,6 +8644,28 @@ def _sidebar_v3() -> None:
                 f'</div>',
                 unsafe_allow_html=True,
             )
+
+        # ── InfraGraph Copilot widget (Ops page only) ────────────────────────
+        if _cur_nav == "Agentic Ops Orchestrator":
+            _cop_runs = st.session_state.get("ops_cluster_runs", {})
+            _cop_avail = bool(_cop_runs)
+            st.markdown(
+                '<div style="border-top:1px solid rgba(139,92,246,0.35);margin:18px 2px 10px"></div>'
+                '<div style="font-size:0.58rem;color:#a78bfa;font-weight:700;'
+                'letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px">'
+                '🤖 InfraGraph Copilot</div>',
+                unsafe_allow_html=True,
+            )
+            if st.button(
+                "💬 Open Chat" if _cop_avail else "💬 Chat (run AI Findings first)",
+                key="sidebar_copilot_btn",
+                use_container_width=True,
+                type="primary" if _cop_avail else "secondary",
+                disabled=not _cop_avail,
+                help="Ask about root cause, blast radius, evidence, and remediation for the active cluster.",
+            ):
+                st.session_state.ops_copilot_open = True
+                st.rerun()
 
         st.markdown('<div class="sb-label" style="margin-top:22px">Appearance</div>',
                     unsafe_allow_html=True)
