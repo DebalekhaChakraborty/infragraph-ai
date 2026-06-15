@@ -8038,6 +8038,27 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                                     prefer_qwen=st.session_state.get("agent_prefer_qwen", True),
                                     mode="demo",
                                 )
+                                # Enrich with GNN result when available so root cause +
+                                # confidence reflect graph reasoning, not just fallback
+                                _gnn_enr = _load_gnn_rca_result(_sel_cl["scenario_id"])
+                                if _gnn_enr is None:
+                                    _eg_enr  = _load_enterprise_graph_for(_sel_cl["scenario_id"])
+                                    _al_enr  = _load_alerts_for_scenario(_sel_cl["scenario_id"]) or []
+                                    if _eg_enr:
+                                        _gnn_enr = _simulate_enterprise_rca(
+                                            {"alerts": _al_enr, "scenario_id": _sel_cl["scenario_id"]},
+                                            _eg_enr,
+                                        )
+                                if _gnn_enr:
+                                    _result.setdefault("root_cause",
+                                        _gnn_enr.get("predicted_root_cause") or _gnn_enr.get("root_cause", ""))
+                                    _result.setdefault("root_cause_diagram",
+                                        _gnn_enr.get("root_cause_diagram", ""))
+                                    if not _result.get("confidence"):
+                                        _result["confidence"] = float(_gnn_enr.get("confidence", 0) or 0)
+                                    if not _result.get("impacted_diagrams"):
+                                        _result["impacted_diagrams"] = _gnn_enr.get("impacted_diagrams", [])
+                                    _result["rca_source"] = _gnn_enr.get("mode") or _gnn_enr.get("rca_source", _result.get("rca_source", ""))
                                 _cl_runs[_sel_cid] = _result
                                 st.session_state.ops_cluster_runs     = _cl_runs
                                 st.session_state.agent_approval_status = "pending"
@@ -8221,15 +8242,28 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                     if st.button("⚡ Generate Remediation Plan", use_container_width=True,
                                  key="ops_gen_rem_btn", type="primary"):
                         with st.spinner("Calling Qwen remediation agent…"):
-                            _eg_rem  = _load_enterprise_graph_for(_sel_cl["scenario_id"])
-                            _als_rem = _load_alerts_for_scenario(_sel_cl["scenario_id"]) or []
+                            _eg_rem   = _load_enterprise_graph_for(_sel_cl["scenario_id"])
+                            _als_rem  = _load_alerts_for_scenario(_sel_cl["scenario_id"]) or []
+
+                            # Try pre-computed GNN result, fall back to on-the-fly simulation
+                            _gnn_rem = _load_gnn_rca_result(_sel_cl["scenario_id"])
+                            if _gnn_rem is None and _eg_rem:
+                                _als_dict = {"alerts": _als_rem, "scenario_id": _sel_cl["scenario_id"]}
+                                _gnn_rem = _simulate_enterprise_rca(_als_dict, _eg_rem)
+
+                            # Build RCA dict — prefer GNN result when available
+                            _gnn_root  = (_gnn_rem or {}).get("predicted_root_cause") or (_gnn_rem or {}).get("root_cause", "")
+                            _gnn_diag  = (_gnn_rem or {}).get("root_cause_diagram", "")
+                            _gnn_conf  = float((_gnn_rem or {}).get("confidence", 0) or 0)
+                            _gnn_src   = (_gnn_rem or {}).get("mode") or (_gnn_rem or {}).get("rca_source", "")
                             _rca_rem = {
-                                "root_cause":         _run_rgt.get("root_cause", ""),
-                                "root_cause_diagram": _run_rgt.get("root_cause_diagram", ""),
-                                "confidence":         _run_rgt.get("confidence", 0.5),
-                                "impacted_diagrams":  _run_rgt.get("impacted_diagrams", []),
-                                "impacted_nodes":     _run_rgt.get("impacted_nodes", []),
-                                "rca_source":         _run_rgt.get("rca_source", ""),
+                                "root_cause":         _gnn_root  or _run_rgt.get("root_cause", ""),
+                                "root_cause_diagram": _gnn_diag  or _run_rgt.get("root_cause_diagram", ""),
+                                "confidence":         _gnn_conf  or _run_rgt.get("confidence", 0.5),
+                                "impacted_diagrams":  (_gnn_rem or {}).get("impacted_diagrams") or _run_rgt.get("impacted_diagrams", []),
+                                "impacted_nodes":     (_gnn_rem or {}).get("impacted_nodes")    or _run_rgt.get("impacted_nodes", []),
+                                "rca_source":         _gnn_src   or _run_rgt.get("rca_source", ""),
+                                "ranking":            (_gnn_rem or {}).get("ranking", []),
                             }
                             _inc_rem = {
                                 "incident_id":  f"OPS-{_sel_cid}",
@@ -8237,10 +8271,10 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                                 "description":  f"Multi-cluster ops incident: {_sel_cl['title']}",
                                 "severity":     _sel_cl.get("severity", "high"),
                             }
-                            _diag_rem = _run_rgt.get("root_cause_diagram", "")
+                            _diag_rem = _rca_rem["root_cause_diagram"] or _run_rgt.get("root_cause_diagram", "")
                             _rem_ctx = _build_remediation_context(
                                 _rca_rem, _inc_rem, _eg_rem,
-                                _als_rem, _diag_rem, None,
+                                _als_rem, _diag_rem, _gnn_rem,
                             )
                             if _rem_ctx:
                                 _root_q = _run_rgt.get("root_cause", "")
