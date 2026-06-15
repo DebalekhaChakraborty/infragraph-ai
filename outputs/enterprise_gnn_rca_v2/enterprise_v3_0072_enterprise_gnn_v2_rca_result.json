@@ -1,0 +1,91 @@
+{
+  "scenario_id": "enterprise_v3_0072",
+  "case_id": "ent_enterprise_v3_0072",
+  "mode": "enterprise_gnn_v2_temporal_relation_aware",
+  "rca_source": "Enterprise GNN RCA V2 — Temporal Relation-Aware GraphSAGE",
+  "predicted_root_cause": "APP-LB-01",
+  "root_cause_diagram": "app_db_topology",
+  "confidence": 1.0,
+  "top_candidates": [
+    {
+      "rank": 1,
+      "node_id": "APP-LB-01",
+      "diagram_id": "app_db_topology",
+      "node_observed_in_diagrams": [
+        "app_db_topology"
+      ],
+      "node_type": "load_balancer",
+      "score": 1.0,
+      "evidence": [
+        "alert_count=1.0",
+        "cross_diagram_degree=0.071",
+        "propagation_consistency=0.887",
+        "sequence_position=0.0",
+        "shared_entity=False"
+      ]
+    },
+    {
+      "rank": 2,
+      "node_id": "APP-01",
+      "diagram_id": "app_db_topology",
+      "node_observed_in_diagrams": [
+        "app_db_topology"
+      ],
+      "node_type": "server",
+      "score": 0.0,
+      "evidence": [
+        "alert_count=1.0",
+        "cross_diagram_degree=0.0",
+        "propagation_consistency=0.525",
+        "sequence_position=0.333",
+        "shared_entity=False"
+      ]
+    },
+    {
+      "rank": 3,
+      "node_id": "APP-02",
+      "diagram_id": "app_db_topology",
+      "node_observed_in_diagrams": [
+        "app_db_topology"
+      ],
+      "node_type": "server",
+      "score": 0.0,
+      "evidence": [
+        "alert_count=1.0",
+        "cross_diagram_degree=0.0",
+        "propagation_consistency=0.438",
+        "sequence_position=0.667",
+        "shared_entity=False"
+      ]
+    }
+  ],
+  "impacted_diagrams": [
+    "app_db_topology"
+  ],
+  "alert_count": 4,
+  "model_notes": {
+    "uses_temporal_features": true,
+    "uses_edge_type": true,
+    "relations": [
+      "local",
+      "cross_diagram",
+      "vision_connector_extraction"
+    ],
+    "local_edges": 64,
+    "cross_diagram_edges": 2,
+    "vision_edges": 0,
+    "note": "Temporal-aware relation-aware GraphSAGE. Not a fully dynamic temporal heterogeneous graph transformer."
+  },
+  "evaluation": {
+    "ground_truth_node": "APP-LB-01",
+    "correct_top1": true,
+    "correct_top_k": true,
+    "reciprocal_rank": 1.0,
+    "rank": 1
+  },
+  "model_type": "EnterpriseRcaTemporalRelGNN",
+  "backend": "torch_geometric_relation_aware_graphsage",
+  "inference_source": "trained_enterprise_gnn_v2",
+  "gnn_result_available": true,
+  "model_path": "/workspace/shared/infragraph-ai/model_artifacts/enterprise_gnn_rca_v2/enterprise_gnn_v2_rca.pt"
+}

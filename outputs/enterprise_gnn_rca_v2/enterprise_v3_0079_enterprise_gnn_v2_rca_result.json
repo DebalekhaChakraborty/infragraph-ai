@@ -1,0 +1,92 @@
+{
+  "scenario_id": "enterprise_v3_0079",
+  "case_id": "ent_enterprise_v3_0079",
+  "mode": "enterprise_gnn_v2_temporal_relation_aware",
+  "rca_source": "Enterprise GNN RCA V2 — Temporal Relation-Aware GraphSAGE",
+  "predicted_root_cause": "DC-FW-01",
+  "root_cause_diagram": "datacenter_topology",
+  "confidence": 1.0,
+  "top_candidates": [
+    {
+      "rank": 1,
+      "node_id": "DC-FW-01",
+      "diagram_id": "datacenter_topology",
+      "node_observed_in_diagrams": [
+        "datacenter_topology"
+      ],
+      "node_type": "firewall",
+      "score": 1.0,
+      "evidence": [
+        "alert_count=1.0",
+        "cross_diagram_degree=0.0",
+        "propagation_consistency=0.91",
+        "sequence_position=0.0",
+        "shared_entity=True"
+      ]
+    },
+    {
+      "rank": 2,
+      "node_id": "DC-CORE-SW-01",
+      "diagram_id": "datacenter_topology",
+      "node_observed_in_diagrams": [
+        "datacenter_topology"
+      ],
+      "node_type": "switch",
+      "score": 0.0,
+      "evidence": [
+        "alert_count=1.0",
+        "cross_diagram_degree=0.027",
+        "propagation_consistency=0.71",
+        "sequence_position=0.25",
+        "shared_entity=True"
+      ]
+    },
+    {
+      "rank": 3,
+      "node_id": "DC-RTR-01",
+      "diagram_id": "wan_topology",
+      "node_observed_in_diagrams": [
+        "wan_topology"
+      ],
+      "node_type": "router",
+      "score": 0.0,
+      "evidence": [
+        "alert_count=0.0",
+        "cross_diagram_degree=0.027",
+        "propagation_consistency=0.79",
+        "sequence_position=1.0",
+        "shared_entity=True"
+      ]
+    }
+  ],
+  "impacted_diagrams": [
+    "datacenter_topology",
+    "app_db_topology"
+  ],
+  "alert_count": 5,
+  "model_notes": {
+    "uses_temporal_features": true,
+    "uses_edge_type": true,
+    "relations": [
+      "local",
+      "cross_diagram",
+      "vision_connector_extraction"
+    ],
+    "local_edges": 92,
+    "cross_diagram_edges": 8,
+    "vision_edges": 0,
+    "note": "Temporal-aware relation-aware GraphSAGE. Not a fully dynamic temporal heterogeneous graph transformer."
+  },
+  "evaluation": {
+    "ground_truth_node": "DC-FW-01",
+    "correct_top1": true,
+    "correct_top_k": true,
+    "reciprocal_rank": 1.0,
+    "rank": 1
+  },
+  "model_type": "EnterpriseRcaTemporalRelGNN",
+  "backend": "torch_geometric_relation_aware_graphsage",
+  "inference_source": "trained_enterprise_gnn_v2",
+  "gnn_result_available": true,
+  "model_path": "/workspace/shared/infragraph-ai/model_artifacts/enterprise_gnn_rca_v2/enterprise_gnn_v2_rca.pt"
+}

@@ -1,0 +1,18 @@
+{
+  "in_channels": 54,
+  "hidden_channels": 64,
+  "num_layers": 2,
+  "dropout": 0.2,
+  "top_k": 3,
+  "model_type": "EnterpriseRcaTemporalRelGNN",
+  "gnn_architecture": "RelationAwareTemporalGraphSAGE",
+  "feature_dim": 54,
+  "uses_edge_type": true,
+  "uses_temporal_features": true,
+  "relations": [
+    "local",
+    "cross_diagram",
+    "vision_connector_extraction"
+  ],
+  "notes": "Relation-aware GraphSAGE with temporal node features. Not a full dynamic temporal heterogeneous graph transformer. V1 EnterpriseRcaGNN remains the safe fallback."
+}

@@ -1,0 +1,55 @@
+{
+  "train": {
+    "case_count": 64,
+    "top1_accuracy": 1.0,
+    "top3_accuracy": 1.0,
+    "mrr": 1.0,
+    "per_split_metrics": {
+      "train": {
+        "case_count": 64,
+        "top1_accuracy": 1.0,
+        "top3_accuracy": 1.0,
+        "mrr": 1.0
+      }
+    },
+    "model_type": "EnterpriseRcaTemporalRelGNN",
+    "uses_edge_type": true,
+    "uses_temporal_features": true
+  },
+  "val": {
+    "case_count": 8,
+    "top1_accuracy": 1.0,
+    "top3_accuracy": 1.0,
+    "mrr": 1.0,
+    "per_split_metrics": {
+      "val": {
+        "case_count": 8,
+        "top1_accuracy": 1.0,
+        "top3_accuracy": 1.0,
+        "mrr": 1.0
+      }
+    },
+    "model_type": "EnterpriseRcaTemporalRelGNN",
+    "uses_edge_type": true,
+    "uses_temporal_features": true
+  },
+  "test": {
+    "case_count": 8,
+    "top1_accuracy": 1.0,
+    "top3_accuracy": 1.0,
+    "mrr": 1.0,
+    "per_split_metrics": {
+      "test": {
+        "case_count": 8,
+        "top1_accuracy": 1.0,
+        "top3_accuracy": 1.0,
+        "mrr": 1.0
+      }
+    },
+    "model_type": "EnterpriseRcaTemporalRelGNN",
+    "uses_edge_type": true,
+    "uses_temporal_features": true
+  },
+  "best_epoch": 5,
+  "best_val_mrr": 1.0
+}

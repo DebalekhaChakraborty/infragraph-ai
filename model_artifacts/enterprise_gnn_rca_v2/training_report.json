@@ -1,0 +1,89 @@
+{
+  "model_type": "EnterpriseRcaTemporalRelGNN",
+  "gnn_architecture": "RelationAwareTemporalGraphSAGE",
+  "uses_edge_type": true,
+  "uses_temporal_features": true,
+  "edge_type_present_in_graphs": true,
+  "num_graphs": 80,
+  "train_count": 64,
+  "val_count": 8,
+  "test_count": 8,
+  "epochs": 80,
+  "best_epoch": 5,
+  "best_val_mrr": 1.0,
+  "train_metrics": {
+    "case_count": 64,
+    "top1_accuracy": 1.0,
+    "top3_accuracy": 1.0,
+    "mrr": 1.0,
+    "per_split_metrics": {
+      "train": {
+        "case_count": 64,
+        "top1_accuracy": 1.0,
+        "top3_accuracy": 1.0,
+        "mrr": 1.0
+      }
+    },
+    "model_type": "EnterpriseRcaTemporalRelGNN",
+    "uses_edge_type": true,
+    "uses_temporal_features": true
+  },
+  "val_metrics": {
+    "case_count": 8,
+    "top1_accuracy": 1.0,
+    "top3_accuracy": 1.0,
+    "mrr": 1.0,
+    "per_split_metrics": {
+      "val": {
+        "case_count": 8,
+        "top1_accuracy": 1.0,
+        "top3_accuracy": 1.0,
+        "mrr": 1.0
+      }
+    },
+    "model_type": "EnterpriseRcaTemporalRelGNN",
+    "uses_edge_type": true,
+    "uses_temporal_features": true
+  },
+  "test_metrics": {
+    "case_count": 8,
+    "top1_accuracy": 1.0,
+    "top3_accuracy": 1.0,
+    "mrr": 1.0,
+    "per_split_metrics": {
+      "test": {
+        "case_count": 8,
+        "top1_accuracy": 1.0,
+        "top3_accuracy": 1.0,
+        "mrr": 1.0
+      }
+    },
+    "model_type": "EnterpriseRcaTemporalRelGNN",
+    "uses_edge_type": true,
+    "uses_temporal_features": true
+  },
+  "primary_metrics": {
+    "case_count": 8,
+    "top1_accuracy": 1.0,
+    "top3_accuracy": 1.0,
+    "mrr": 1.0,
+    "per_split_metrics": {
+      "test": {
+        "case_count": 8,
+        "top1_accuracy": 1.0,
+        "top3_accuracy": 1.0,
+        "mrr": 1.0
+      }
+    },
+    "model_type": "EnterpriseRcaTemporalRelGNN",
+    "uses_edge_type": true,
+    "uses_temporal_features": true
+  },
+  "relations": [
+    "local",
+    "cross_diagram",
+    "vision_connector_extraction"
+  ],
+  "note_remediation": "Remediation is NOT part of this model. Root cause from GNN only.",
+  "note_architecture": "Temporal-aware relation-aware GraphSAGE. Not a fully dynamic temporal heterogeneous graph transformer."
+}
