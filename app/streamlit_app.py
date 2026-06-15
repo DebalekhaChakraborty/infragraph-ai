@@ -2006,7 +2006,7 @@ def _build_remediation_context(
     ranking      = rca.get("ranking", [])                if rca else ent_incident.get("candidate_ranking", [])
     rca_source   = rca.get("mode", "Graph-grounded RCA") if rca else ""
     incident_id  = ent_incident.get("incident_id", "")
-    scenario_id  = ent_incident.get("scenario_id", alerts_data.get("scenario_id", ""))
+    scenario_id  = ent_incident.get("scenario_id", "")
 
     # Load causal_evidence from the main enterprise GNN RCA JSON (plain {scenario_id}.json),
     # which contains CE-* evidence IDs, correlation_reasons, and cluster metadata.
