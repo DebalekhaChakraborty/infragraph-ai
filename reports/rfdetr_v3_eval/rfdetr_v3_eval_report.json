@@ -1,39 +1,567 @@
 {
-  "status": "evaluation_failed",
+  "status": "completed",
   "split": "val",
   "num_images_in_split": 33,
   "num_images_evaluated": 30,
-  "num_images_processed": 0,
+  "num_images_processed": 30,
   "num_images_skipped": 0,
-  "num_inference_errors": 30,
+  "num_inference_errors": 0,
   "iou_threshold": 0.5,
   "confidence_threshold": 0.25,
-  "summary_note": "RF-DETR evaluation did not complete because detector inference failed for all 30 sampled images. Detector accuracy is not claimed from this report.",
-  "first_5_errors": [
+  "avg_inference_runtime_ms": 19752.8,
+  "summary_note": "RF-DETR detector evaluated against V3 verified annotations on 30 diagrams. Metrics are prototype benchmark metrics, not production accuracy.",
+  "strict_metrics": {
+    "global_tp": 0,
+    "global_fp": 265,
+    "global_fn": 265,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": null,
+    "mean_iou_matched": null,
+    "mean_ap_at_50": 0.0,
+    "per_class_metrics": {
+      "cloud_or_wan": {
+        "tp": 0,
+        "fp": 39,
+        "fn": 23,
+        "gt_count": 23,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": null,
+        "ap_at_50": 0.0
+      },
+      "cls0": {
+        "tp": 0,
+        "fp": 36,
+        "fn": 0,
+        "gt_count": 0,
+        "precision": 0.0,
+        "recall": null,
+        "f1": null,
+        "ap_at_50": null
+      },
+      "database": {
+        "tp": 0,
+        "fp": 6,
+        "fn": 12,
+        "gt_count": 12,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": null,
+        "ap_at_50": 0.0
+      },
+      "firewall": {
+        "tp": 0,
+        "fp": 84,
+        "fn": 26,
+        "gt_count": 26,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": null,
+        "ap_at_50": 0.0
+      },
+      "load_balancer": {
+        "tp": 0,
+        "fp": 23,
+        "fn": 6,
+        "gt_count": 6,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": null,
+        "ap_at_50": 0.0
+      },
+      "router": {
+        "tp": 0,
+        "fp": 39,
+        "fn": 36,
+        "gt_count": 36,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": null,
+        "ap_at_50": 0.0
+      },
+      "server": {
+        "tp": 0,
+        "fp": 12,
+        "fn": 84,
+        "gt_count": 84,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": null,
+        "ap_at_50": 0.0
+      },
+      "service": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 39,
+        "gt_count": 39,
+        "precision": null,
+        "recall": 0.0,
+        "f1": null,
+        "ap_at_50": 0.0
+      },
+      "switch": {
+        "tp": 0,
+        "fp": 26,
+        "fn": 39,
+        "gt_count": 39,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": null,
+        "ap_at_50": 0.0
+      }
+    }
+  },
+  "localization_metrics": {
+    "localization_tp": 265,
+    "localization_fp": 0,
+    "localization_fn": 0,
+    "localization_precision": 1.0,
+    "localization_recall": 1.0,
+    "localization_f1": 1.0,
+    "localization_mean_iou": 0.9755733274845161
+  },
+  "class_shift_diagnostic": {
+    "shifts": {
+      "original": {
+        "global_tp": 0,
+        "global_fp": 265,
+        "global_fn": 265,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": null,
+        "mean_ap_at_50": 0.0
+      },
+      "plus1": {
+        "global_tp": 265,
+        "global_fp": 0,
+        "global_fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "mean_ap_at_50": 1.0
+      },
+      "minus1": {
+        "global_tp": 0,
+        "global_fp": 265,
+        "global_fn": 265,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": null,
+        "mean_ap_at_50": 0.0
+      }
+    },
+    "best_shift": "plus1",
+    "note": "RF-DETR runtime appears to return 0-indexed class IDs while COCO annotations are 1-indexed. +1 class-ID shift improves strict metrics significantly. Verify by inspecting per-class detection outputs vs. GT labels before claiming accuracy."
+  },
+  "class_confusion_matrix": {
+    "switch": {
+      "firewall": 26
+    },
+    "cls0": {
+      "router": 36
+    },
+    "load_balancer": {
+      "cloud_or_wan": 23
+    },
+    "firewall": {
+      "server": 84
+    },
+    "router": {
+      "switch": 39
+    },
+    "cloud_or_wan": {
+      "service": 39
+    },
+    "server": {
+      "database": 12
+    },
+    "database": {
+      "load_balancer": 6
+    }
+  },
+  "first_20_matches": [
     {
-      "file_name": "enterprise_v3_0064__branch_topology.png",
-      "error": "Non-zero exit code 4: "
+      "image": "enterprise_v3_0064__branch_topology.png",
+      "predicted_label": "switch",
+      "gt_label": "firewall",
+      "confidence": 0.9631,
+      "iou": 0.9695,
+      "pred_bbox": {
+        "x1": 455.9,
+        "y1": 434.7,
+        "x2": 523.4,
+        "y2": 501.9
+      },
+      "gt_bbox": [
+        455.0,
+        434.0,
+        523.0,
+        502.0
+      ]
     },
     {
-      "file_name": "enterprise_v3_0064__datacenter_topology.png",
-      "error": "Non-zero exit code 4: "
+      "image": "enterprise_v3_0064__branch_topology.png",
+      "predicted_label": "cls0",
+      "gt_label": "router",
+      "confidence": 0.9541,
+      "iou": 0.9682,
+      "pred_bbox": {
+        "x1": 245.8,
+        "y1": 434.8,
+        "x2": 314.5,
+        "y2": 501.3
+      },
+      "gt_bbox": [
+        246.0,
+        434.0,
+        314.0,
+        502.0
+      ]
     },
     {
-      "file_name": "enterprise_v3_0064__wan_topology.png",
-      "error": "Non-zero exit code 4: "
+      "image": "enterprise_v3_0064__branch_topology.png",
+      "predicted_label": "load_balancer",
+      "gt_label": "cloud_or_wan",
+      "confidence": 0.9518,
+      "iou": 0.9631,
+      "pred_bbox": {
+        "x1": 77.4,
+        "y1": 434.5,
+        "x2": 147.4,
+        "y2": 502.1
+      },
+      "gt_bbox": [
+        78.0,
+        434.0,
+        146.0,
+        502.0
+      ]
     },
     {
-      "file_name": "enterprise_v3_0065__app_db_topology.png",
-      "error": "Non-zero exit code 4: "
+      "image": "enterprise_v3_0064__branch_topology.png",
+      "predicted_label": "firewall",
+      "gt_label": "server",
+      "confidence": 0.9504,
+      "iou": 0.9667,
+      "pred_bbox": {
+        "x1": 1170.7,
+        "y1": 568.0,
+        "x2": 1238.5,
+        "y2": 634.9
+      },
+      "gt_bbox": [
+        1170.0,
+        567.0,
+        1238.0,
+        635.0
+      ]
     },
     {
-      "file_name": "enterprise_v3_0065__branch_topology.png",
-      "error": "Non-zero exit code 4: "
+      "image": "enterprise_v3_0064__branch_topology.png",
+      "predicted_label": "firewall",
+      "gt_label": "server",
+      "confidence": 0.9496,
+      "iou": 0.9683,
+      "pred_bbox": {
+        "x1": 1170.6,
+        "y1": 450.9,
+        "x2": 1238.9,
+        "y2": 518.4
+      },
+      "gt_bbox": [
+        1170.0,
+        451.0,
+        1238.0,
+        519.0
+      ]
+    },
+    {
+      "image": "enterprise_v3_0064__branch_topology.png",
+      "predicted_label": "router",
+      "gt_label": "switch",
+      "confidence": 0.9494,
+      "iou": 0.981,
+      "pred_bbox": {
+        "x1": 694.0,
+        "y1": 433.7,
+        "x2": 761.0,
+        "y2": 502.0
+      },
+      "gt_bbox": [
+        694.0,
+        434.0,
+        762.0,
+        502.0
+      ]
+    },
+    {
+      "image": "enterprise_v3_0064__branch_topology.png",
+      "predicted_label": "firewall",
+      "gt_label": "server",
+      "confidence": 0.9484,
+      "iou": 0.9869,
+      "pred_bbox": {
+        "x1": 974.4,
+        "y1": 682.6,
+        "x2": 1042.0,
+        "y2": 750.9
+      },
+      "gt_bbox": [
+        974.0,
+        683.0,
+        1042.0,
+        751.0
+      ]
+    },
+    {
+      "image": "enterprise_v3_0064__branch_topology.png",
+      "predicted_label": "firewall",
+      "gt_label": "server",
+      "confidence": 0.9473,
+      "iou": 0.9628,
+      "pred_bbox": {
+        "x1": 973.3,
+        "y1": 317.0,
+        "x2": 1041.5,
+        "y2": 385.6
+      },
+      "gt_bbox": [
+        974.0,
+        318.0,
+        1042.0,
+        386.0
+      ]
+    },
+    {
+      "image": "enterprise_v3_0064__branch_topology.png",
+      "predicted_label": "firewall",
+      "gt_label": "server",
+      "confidence": 0.9468,
+      "iou": 0.9824,
+      "pred_bbox": {
+        "x1": 974.2,
+        "y1": 268.6,
+        "x2": 1041.8,
+        "y2": 335.8
+      },
+      "gt_bbox": [
+        974.0,
+        268.0,
+        1042.0,
+        336.0
+      ]
+    },
+    {
+      "image": "enterprise_v3_0064__datacenter_topology.png",
+      "predicted_label": "cls0",
+      "gt_label": "router",
+      "confidence": 0.9647,
+      "iou": 0.9766,
+      "pred_bbox": {
+        "x1": 78.1,
+        "y1": 451.2,
+        "x2": 145.2,
+        "y2": 518.5
+      },
+      "gt_bbox": [
+        78.0,
+        451.0,
+        146.0,
+        519.0
+      ]
+    },
+    {
+      "image": "enterprise_v3_0064__datacenter_topology.png",
+      "predicted_label": "switch",
+      "gt_label": "firewall",
+      "confidence": 0.9602,
+      "iou": 0.9708,
+      "pred_bbox": {
+        "x1": 246.6,
+        "y1": 567.8,
+        "x2": 313.5,
+        "y2": 635.1
+      },
+      "gt_bbox": [
+        246.0,
+        567.0,
+        314.0,
+        635.0
+      ]
+    },
+    {
+      "image": "enterprise_v3_0064__datacenter_topology.png",
+      "predicted_label": "switch",
+      "gt_label": "firewall",
+      "confidence": 0.9571,
+      "iou": 0.9769,
+      "pred_bbox": {
+        "x1": 246.3,
+        "y1": 350.0,
+        "x2": 314.3,
+        "y2": 419.0
+      },
+      "gt_bbox": [
+        246.0,
+        351.0,
+        314.0,
+        419.0
+      ]
+    },
+    {
+      "image": "enterprise_v3_0064__datacenter_topology.png",
+      "predicted_label": "router",
+      "gt_label": "switch",
+      "confidence": 0.9548,
+      "iou": 0.9754,
+      "pred_bbox": {
+        "x1": 525.4,
+        "y1": 351.2,
+        "x2": 594.1,
+        "y2": 418.2
+      },
+      "gt_bbox": [
+        526.0,
+        351.0,
+        594.0,
+        419.0
+      ]
+    },
+    {
+      "image": "enterprise_v3_0064__datacenter_topology.png",
+      "predicted_label": "firewall",
+      "gt_label": "server",
+      "confidence": 0.9518,
+      "iou": 0.9643,
+      "pred_bbox": {
+        "x1": 1057.7,
+        "y1": 616.3,
+        "x2": 1127.2,
+        "y2": 684.7
+      },
+      "gt_bbox": [
+        1058.0,
+        617.0,
+        1126.0,
+        685.0
+      ]
+    },
+    {
+      "image": "enterprise_v3_0064__datacenter_topology.png",
+      "predicted_label": "firewall",
+      "gt_label": "server",
+      "confidence": 0.9516,
+      "iou": 0.9741,
+      "pred_bbox": {
+        "x1": 1198.0,
+        "y1": 716.3,
+        "x2": 1267.1,
+        "y2": 783.6
+      },
+      "gt_bbox": [
+        1198.0,
+        716.0,
+        1266.0,
+        784.0
+      ]
+    },
+    {
+      "image": "enterprise_v3_0064__datacenter_topology.png",
+      "predicted_label": "firewall",
+      "gt_label": "server",
+      "confidence": 0.9511,
+      "iou": 0.9728,
+      "pred_bbox": {
+        "x1": 1197.6,
+        "y1": 484.1,
+        "x2": 1267.0,
+        "y2": 551.6
+      },
+      "gt_bbox": [
+        1198.0,
+        484.0,
+        1266.0,
+        552.0
+      ]
+    },
+    {
+      "image": "enterprise_v3_0064__datacenter_topology.png",
+      "predicted_label": "router",
+      "gt_label": "switch",
+      "confidence": 0.9502,
+      "iou": 0.9768,
+      "pred_bbox": {
+        "x1": 525.5,
+        "y1": 567.1,
+        "x2": 594.2,
+        "y2": 634.2
+      },
+      "gt_bbox": [
+        526.0,
+        567.0,
+        594.0,
+        635.0
+      ]
+    },
+    {
+      "image": "enterprise_v3_0064__datacenter_topology.png",
+      "predicted_label": "router",
+      "gt_label": "switch",
+      "confidence": 0.9494,
+      "iou": 0.9766,
+      "pred_bbox": {
+        "x1": 778.4,
+        "y1": 451.8,
+        "x2": 845.8,
+        "y2": 518.8
+      },
+      "gt_bbox": [
+        778.0,
+        451.0,
+        846.0,
+        519.0
+      ]
+    },
+    {
+      "image": "enterprise_v3_0064__datacenter_topology.png",
+      "predicted_label": "firewall",
+      "gt_label": "server",
+      "confidence": 0.9492,
+      "iou": 0.96,
+      "pred_bbox": {
+        "x1": 1057.7,
+        "y1": 351.5,
+        "x2": 1127.0,
+        "y2": 418.0
+      },
+      "gt_bbox": [
+        1058.0,
+        351.0,
+        1126.0,
+        419.0
+      ]
+    },
+    {
+      "image": "enterprise_v3_0064__datacenter_topology.png",
+      "predicted_label": "firewall",
+      "gt_label": "server",
+      "confidence": 0.942,
+      "iou": 0.9602,
+      "pred_bbox": {
+        "x1": 1196.5,
+        "y1": 218.6,
+        "x2": 1266.4,
+        "y2": 286.3
+      },
+      "gt_bbox": [
+        1198.0,
+        218.0,
+        1266.0,
+        286.0
+      ]
     }
   ],
-  "strict_metrics": {},
-  "localization_metrics": {},
-  "class_shift_diagnostic": {},
-  "class_confusion_matrix": {},
-  "first_20_matches": []
+  "inference_errors": [],
+  "sample_predictions_dir": "reports/rfdetr_v3_eval/sample_predictions"
 }
