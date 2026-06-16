@@ -28,8 +28,8 @@ InfraGraph AI is a graph-native Agentic AIOps pipeline that transforms static in
 
 ## Submission Links
 
-- Demo video: `<to be added>`
-- Final presentation: `<to be added>`
+- Demo video: Included in final hackathon submission package
+- Final presentation: Included in final hackathon submission package
 - Code repository: `https://github.com/DebalekhaChakraborty/infragraph-ai`
 
 ## 1. Objective
