@@ -16,8 +16,7 @@ OUT_BASE = OUT_DIR / "InfraGraphAI_Codebase_Submission"
 GITHUB_REPO_URL = "https://github.com/DebalekhaChakraborty/infragraph-ai"
 
 LOGO_CANDIDATES = [
-    REPO_ROOT / "assets" / "submission" / "logo_left.png",
-    REPO_ROOT / "assets" / "submission" / "logo_right.png",
+    REPO_ROOT / "dist" / "logo.png",
 ]
 
 CURATED_INCLUDE_PREFIXES = {
