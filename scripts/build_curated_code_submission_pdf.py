@@ -613,7 +613,7 @@ def markdown_to_html(md_path: Path) -> Path:
 
     logo_html = build_logo_html()
     repo_link = f'<a href="{GITHUB_REPO_URL}" target="_blank">{html.escape(GITHUB_REPO_URL)}</a>'
-    footer_repo_link = f'<a href="{GITHUB_REPO_URL}" target="_blank">Full Repository</a>'
+    footer_repo_link = f'<a href="{GITHUB_REPO_URL}" target="_blank">GitHub Repository</a>'
     html_parts.append(f'''
 <div class="page-footer">
 InfraGraph AI | TCS &amp; AMD AI Hackathon 2026 | Curated Code Appendix | {footer_repo_link}
