@@ -20,6 +20,7 @@ env/
 # AWS CLI installer artifacts
 awscliv2.zip
 .aws/
+aws/
 
 # 8 GB GRPO actor checkpoint — exceeds GitHub LFS 2 GB limit; stored in S3
 # s3://my-hackathons/infragraph-ai/training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/model_world_size_1_rank_0.pt
