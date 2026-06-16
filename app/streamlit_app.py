@@ -4542,9 +4542,9 @@ def _tab_onboard_new_diagram() -> None:
             if st.session_state.use_live_rfdetr and _rfdetr_ckpt and _run_rfdetr_detection is not None:
                 _conf = float(os.environ.get("INFRAGRAPH_RFDETR_CONFIDENCE", "0.25"))
                 try:
-                    _timeout = max(1, int(os.environ.get("INFRAGRAPH_RFDETR_TIMEOUT", "30")))
+                    _timeout = max(1, int(os.environ.get("INFRAGRAPH_RFDETR_TIMEOUT", "180")))
                 except ValueError:
-                    _timeout = 30
+                    _timeout = 180
                 if img_path.exists():
                     _rfdetr_status_placeholder.markdown(
                         '<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;'
