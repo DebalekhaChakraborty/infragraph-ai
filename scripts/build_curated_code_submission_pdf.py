@@ -55,6 +55,36 @@ CURATED_INCLUDE_PREFIXES = {
     "scripts/run_enterprise_gnn_v2_inference.py",
     "scripts/train_enterprise_gnn_v2_rca.py",
 
+    # Dataset building and graph/memory/scenario pipeline scripts
+    "scripts/build_enterprise_gnn_dataset.py",
+    "scripts/build_event_correlation_clusters.py",
+    "scripts/build_global_infragraph_galaxy.py",
+    "scripts/build_graph_copilot_memory.py",
+    "scripts/build_kb_index.py",
+    "scripts/build_scenario_library.py",
+    "scripts/build_topology_rca_dataset.py",
+    "scripts/build_topology_rca_pipeline.py",
+    "scripts/build_vector_memory.py",
+    "scripts/check_rfdetr_runtime.py",
+    "scripts/generate_enterprise_rca_demo_assets.py",
+    "scripts/generate_enterprise_rca_demo_assets.sh",
+    "scripts/generate_enterprise_scenarios.py",
+    "scripts/generate_infragraph_v3_dataset.py",
+    "scripts/generate_infragraph_v3_dataset_impl.py",
+    "scripts/run_rfdetr_inference.py",
+    "scripts/train_qwen_sop_lora.py",
+    "scripts/train_rfdetr_diagram_detector.py",
+    "scripts/train_topology_rca_model.py",
+    "scripts/train_v2_rocm_nms_patch.py",
+    "scripts/train_v2_rocm_safe.py",
+    "scripts/validate_rca_outputs.py",
+    "scripts/validate_remediation_outputs.py",
+    "scripts/inspect_remediation_quality.py",
+    "scripts/verify_repo_state.py",
+    "scripts/build_sop_grounded_qwen_training_data.py",
+    "scripts/build_sop_grounded_remediation_training_data.py",
+    "scripts/expand_sop_grounded_qwen_training_data.py",
+
     # AMD / ROCm / Qwen execution path, excluding S3 upload/offload utilities
     "scripts/amd_rocm/bootstrap_grpo_env.sh",
     "scripts/amd_rocm/bootstrap_rca_gnn_env.sh",
@@ -119,6 +149,18 @@ CURATED_INCLUDE_PREFIXES = {
 
     # Representative final output only
     "outputs/enterprise_gnn_rca_v2/enterprise_v3_0079_enterprise_gnn_v2_rca_result.json",
+
+    # GRPO/vERL source files
+    "training/verl_grpo/README.md",
+    "training/verl_grpo/build_rca_rl_dataset.py",
+    "training/verl_grpo/export_lora_adapter.py",
+    "training/verl_grpo/find_lora_adapter_artifacts.py",
+    "training/verl_grpo/prepare_verl_dataset.py",
+    "training/verl_grpo/reward_functions.py",
+    "training/verl_grpo/sample_config.yaml",
+    "training/verl_grpo/train_qwen3_grpo.sh",
+    "training/verl_grpo/verl_reward.py",
+    "training/verl_grpo/write_training_summary.py",
 
     # GRPO training/eval proof
     "training/verl_grpo/reward_eval_report.json",
@@ -370,8 +412,83 @@ def build_markdown() -> Path:
     lines.append(f"Included files: **{len(included)}**\n")
     lines.append(make_file_index(included))
 
-    # ── 4. Source Code, Training/Evaluation Scripts, and Evidence Appendix ─────
-    lines.append("\n## 4. Source Code, Training/Evaluation Scripts, and Evidence Appendix\n")
+    # ── 4. Judge Review Map ───────────────────────────────────────────────────
+    lines.append("\n## 4. Judge Review Map\n")
+    lines.append(
+        "Use this map to navigate directly to the files most relevant to each evaluation dimension. "
+        "All paths listed here appear as full source sections in the appendix below.\n"
+    )
+    judge_map = [
+        ("Diagram Intelligence", [
+            "src/runtime_ingestion.py",
+            "src/vision/edge_extraction/",
+            "app/rfdetr_subprocess_bridge.py",
+            "scripts/train_rfdetr_diagram_detector.py",
+            "scripts/run_rfdetr_inference.py",
+            "scripts/evaluate_rfdetr_v3_detector.py",
+            "scripts/generate_rfdetr_runtime_evidence.py",
+            "reports/rfdetr_v3_eval/",
+            "reports/rfdetr_runtime_evidence/",
+        ]),
+        ("Topology, Scenario, and Graph Memory", [
+            "scripts/generate_infragraph_v3_dataset_impl.py",
+            "scripts/build_scenario_library.py",
+            "scripts/build_global_infragraph_galaxy.py",
+            "scripts/build_vector_memory.py",
+            "src/topology/",
+            "src/vector_memory/",
+            "reports/kb_index/",
+        ]),
+        ("Enterprise GNN RCA", [
+            "src/rca/",
+            "src/rca_ml/",
+            "scripts/build_enterprise_gnn_dataset.py",
+            "scripts/train_enterprise_gnn_v2_rca.py",
+            "scripts/run_enterprise_gnn_v2_inference.py",
+            "reports/enterprise_gnn_rca/",
+            "reports/enterprise_gnn_rca_v2/",
+            "model_artifacts/enterprise_gnn_rca_v2/training_report.json",
+        ]),
+        ("Event Correlation and Agentic Ops", [
+            "src/event_correlation/",
+            "src/incident_simulation/",
+            "src/agents/",
+            "scripts/build_event_correlation_clusters.py",
+            "scripts/validate_rca_outputs.py",
+        ]),
+        ("Runbook-Grounded Remediation", [
+            "src/ai_remediation/",
+            "src/runbook_retrieval/",
+            "src/kb_retrieval/",
+            "assets/kb/runbooks/",
+            "assets/kb/sops/",
+            "scripts/build_kb_index.py",
+            "scripts/build_sop_grounded_qwen_training_data.py",
+            "scripts/build_sop_grounded_remediation_training_data.py",
+            "scripts/validate_remediation_outputs.py",
+            "scripts/inspect_remediation_quality.py",
+        ]),
+        ("Qwen / GRPO / AMD ROCm", [
+            "training/verl_grpo/",
+            "scripts/amd_rocm/",
+            "docs/evidence/amd_qwen3_grpo_run/",
+            "model_artifacts/qwen3_grpo_lora_adapter/",
+            "training/verl_grpo/reward_eval_report.json",
+        ]),
+        ("Governance and Safety", [
+            "src/governance/",
+            "src/agents/schemas.py",
+            "src/agents/orchestrator.py",
+            "assets/kb/runbooks/RB-ROLLBACK-001-safety-validation.md",
+        ]),
+    ]
+    for category, paths in judge_map:
+        lines.append(f"\n**{category}**\n")
+        for p in paths:
+            lines.append(f"- `{p}`")
+
+    # ── 5. Source Code, Training/Evaluation Scripts, and Evidence Appendix ─────
+    lines.append("\n## 5. Source Code, Training/Evaluation Scripts, and Evidence Appendix\n")
     for path in included:
         r = rel(path)
         lang = language_for(path)
@@ -383,9 +500,9 @@ def build_markdown() -> Path:
         lines.append(text)
         lines.append("```")
 
-    # ── 5. Complete Excluded / Skipped Manifest ────────────────────────────────
+    # ── 6. Complete Excluded / Skipped Manifest ────────────────────────────────
     lines.append("\n---\n")
-    lines.append("\n## 5. Complete Excluded / Skipped Manifest\n")
+    lines.append("\n## 6. Complete Excluded / Skipped Manifest\n")
     lines.append(
         "This final section lists every repository path that was not printed in the PDF. "
         "These files are excluded from this curated appendix because they are binary files, generated artifacts, "
@@ -394,14 +511,14 @@ def build_markdown() -> Path:
     )
     lines.append(f"- Full repository: `{GITHUB_REPO_URL}`\n")
 
-    lines.append("\n### 5.1 Explicitly excluded files and folders\n")
+    lines.append("\n### 6.1 Explicitly excluded files and folders\n")
     lines.append(f"Total explicitly excluded paths: **{len(excluded)}**\n")
     lines.append("| File | Reason |")
     lines.append("|------|--------|")
     for r, reason in excluded:
         lines.append(f"| `{r}` | {reason} |")
 
-    lines.append("\n### 5.2 Skipped files outside curated PDF scope\n")
+    lines.append("\n### 6.2 Skipped files outside curated PDF scope\n")
     lines.append(f"Total skipped paths outside curated scope: **{len(skipped)}**\n")
     lines.append("| File | Reason |")
     lines.append("|------|--------|")
