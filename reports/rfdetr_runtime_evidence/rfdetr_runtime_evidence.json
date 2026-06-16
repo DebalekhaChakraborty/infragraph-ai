@@ -1,88 +1,261 @@
 {
-  "generated_at": "2026-06-16T00:55:28.202318+00:00",
-  "checkpoint_path": "D:\\My Folders\\Hackathons\\infragraph-ai\\model_artifacts\\rfdetr_v3\\checkpoint_best_total.pth",
-  "images_dir": "D:\\My Folders\\Hackathons\\infragraph-ai\\datasets\\infragraph_v3\\rfdetr\\images\\val",
+  "generated_at": "2026-06-16T01:01:22.069685+00:00",
+  "checkpoint_path": "/workspace/shared/infragraph-ai/model_artifacts/rfdetr_v3/checkpoint_best_total.pth",
+  "images_dir": "/workspace/shared/infragraph-ai/datasets/infragraph_v3/rfdetr/images/val",
   "confidence_threshold": 0.25,
   "num_images_attempted": 5,
-  "num_images_succeeded": 0,
-  "avg_inference_runtime_ms": null,
-  "total_detections_across_images": 0,
+  "num_images_succeeded": 5,
+  "avg_inference_runtime_ms": 19759.6,
+  "total_detections_across_images": 45,
   "honest_note": "This is RF-DETR runtime/inference evidence. Detector accuracy/mAP is not claimed here. The production demo uses RF-DETR-supported detection with verified annotation fallback for reliability.",
   "per_image": [
     {
       "image": "enterprise_v3_0064__datacenter_topology.png",
-      "image_path": "D:\\My Folders\\Hackathons\\infragraph-ai\\datasets\\infragraph_v3\\rfdetr\\images\\val\\enterprise_v3_0064__datacenter_topology.png",
-      "success": false,
-      "elapsed_ms": 351.2,
-      "inference_runtime_ms": null,
-      "detection_count": 0,
-      "detections_summary": [],
-      "checkpoint_load_strategy": null,
-      "model_class": null,
-      "inference_strategy": null,
-      "annotated_image": null,
-      "prediction_json": null,
-      "error": "RF-DETR package not installed in detector runtime: rfdetr not installed: No module named 'rfdetr'"
+      "image_path": "/workspace/shared/infragraph-ai/datasets/infragraph_v3/rfdetr/images/val/enterprise_v3_0064__datacenter_topology.png",
+      "success": true,
+      "elapsed_ms": 41385.9,
+      "inference_runtime_ms": 19891,
+      "detection_count": 11,
+      "detections_summary": [
+        {
+          "label": "cls0",
+          "confidence": 0.965
+        },
+        {
+          "label": "switch",
+          "confidence": 0.96
+        },
+        {
+          "label": "switch",
+          "confidence": 0.957
+        },
+        {
+          "label": "router",
+          "confidence": 0.955
+        },
+        {
+          "label": "firewall",
+          "confidence": 0.952
+        },
+        {
+          "label": "firewall",
+          "confidence": 0.952
+        },
+        {
+          "label": "firewall",
+          "confidence": 0.951
+        },
+        {
+          "label": "router",
+          "confidence": 0.95
+        },
+        {
+          "label": "router",
+          "confidence": 0.949
+        },
+        {
+          "label": "firewall",
+          "confidence": 0.949
+        }
+      ],
+      "checkpoint_load_strategy": "constructor_pretrain_weights",
+      "model_class": "RFDETRBase",
+      "inference_strategy": "predict(image)",
+      "annotated_image": "/workspace/shared/infragraph-ai/reports/rfdetr_runtime_evidence/annotated/enterprise_v3_0064__datacenter_topology_annotated.png",
+      "prediction_json": "/workspace/shared/infragraph-ai/reports/rfdetr_runtime_evidence/predictions/enterprise_v3_0064__datacenter_topology.json",
+      "error": null
     },
     {
       "image": "enterprise_v3_0065__app_db_topology.png",
-      "image_path": "D:\\My Folders\\Hackathons\\infragraph-ai\\datasets\\infragraph_v3\\rfdetr\\images\\val\\enterprise_v3_0065__app_db_topology.png",
-      "success": false,
-      "elapsed_ms": 440.3,
-      "inference_runtime_ms": null,
-      "detection_count": 0,
-      "detections_summary": [],
-      "checkpoint_load_strategy": null,
-      "model_class": null,
-      "inference_strategy": null,
-      "annotated_image": null,
-      "prediction_json": null,
-      "error": "RF-DETR package not installed in detector runtime: rfdetr not installed: No module named 'rfdetr'"
+      "image_path": "/workspace/shared/infragraph-ai/datasets/infragraph_v3/rfdetr/images/val/enterprise_v3_0065__app_db_topology.png",
+      "success": true,
+      "elapsed_ms": 44795.1,
+      "inference_runtime_ms": 19617,
+      "detection_count": 12,
+      "detections_summary": [
+        {
+          "label": "cloud_or_wan",
+          "confidence": 0.967
+        },
+        {
+          "label": "server",
+          "confidence": 0.962
+        },
+        {
+          "label": "cloud_or_wan",
+          "confidence": 0.959
+        },
+        {
+          "label": "database",
+          "confidence": 0.957
+        },
+        {
+          "label": "cloud_or_wan",
+          "confidence": 0.957
+        },
+        {
+          "label": "server",
+          "confidence": 0.956
+        },
+        {
+          "label": "firewall",
+          "confidence": 0.954
+        },
+        {
+          "label": "firewall",
+          "confidence": 0.95
+        },
+        {
+          "label": "firewall",
+          "confidence": 0.95
+        },
+        {
+          "label": "router",
+          "confidence": 0.949
+        }
+      ],
+      "checkpoint_load_strategy": "constructor_pretrain_weights",
+      "model_class": "RFDETRBase",
+      "inference_strategy": "predict(image)",
+      "annotated_image": "/workspace/shared/infragraph-ai/reports/rfdetr_runtime_evidence/annotated/enterprise_v3_0065__app_db_topology_annotated.png",
+      "prediction_json": "/workspace/shared/infragraph-ai/reports/rfdetr_runtime_evidence/predictions/enterprise_v3_0065__app_db_topology.json",
+      "error": null
     },
     {
       "image": "enterprise_v3_0066__shared_services_topology.png",
-      "image_path": "D:\\My Folders\\Hackathons\\infragraph-ai\\datasets\\infragraph_v3\\rfdetr\\images\\val\\enterprise_v3_0066__shared_services_topology.png",
-      "success": false,
-      "elapsed_ms": 312.0,
-      "inference_runtime_ms": null,
-      "detection_count": 0,
-      "detections_summary": [],
-      "checkpoint_load_strategy": null,
-      "model_class": null,
-      "inference_strategy": null,
-      "annotated_image": null,
-      "prediction_json": null,
-      "error": "RF-DETR package not installed in detector runtime: rfdetr not installed: No module named 'rfdetr'"
+      "image_path": "/workspace/shared/infragraph-ai/datasets/infragraph_v3/rfdetr/images/val/enterprise_v3_0066__shared_services_topology.png",
+      "success": true,
+      "elapsed_ms": 40379.0,
+      "inference_runtime_ms": 19865,
+      "detection_count": 8,
+      "detections_summary": [
+        {
+          "label": "cloud_or_wan",
+          "confidence": 0.96
+        },
+        {
+          "label": "firewall",
+          "confidence": 0.958
+        },
+        {
+          "label": "cloud_or_wan",
+          "confidence": 0.956
+        },
+        {
+          "label": "cloud_or_wan",
+          "confidence": 0.953
+        },
+        {
+          "label": "firewall",
+          "confidence": 0.952
+        },
+        {
+          "label": "firewall",
+          "confidence": 0.951
+        },
+        {
+          "label": "cloud_or_wan",
+          "confidence": 0.95
+        },
+        {
+          "label": "cloud_or_wan",
+          "confidence": 0.95
+        }
+      ],
+      "checkpoint_load_strategy": "constructor_pretrain_weights",
+      "model_class": "RFDETRBase",
+      "inference_strategy": "predict(image)",
+      "annotated_image": "/workspace/shared/infragraph-ai/reports/rfdetr_runtime_evidence/annotated/enterprise_v3_0066__shared_services_topology_annotated.png",
+      "prediction_json": "/workspace/shared/infragraph-ai/reports/rfdetr_runtime_evidence/predictions/enterprise_v3_0066__shared_services_topology.json",
+      "error": null
     },
     {
       "image": "enterprise_v3_0067__branch_topology.png",
-      "image_path": "D:\\My Folders\\Hackathons\\infragraph-ai\\datasets\\infragraph_v3\\rfdetr\\images\\val\\enterprise_v3_0067__branch_topology.png",
-      "success": false,
-      "elapsed_ms": 337.0,
-      "inference_runtime_ms": null,
-      "detection_count": 0,
-      "detections_summary": [],
-      "checkpoint_load_strategy": null,
-      "model_class": null,
-      "inference_strategy": null,
-      "annotated_image": null,
-      "prediction_json": null,
-      "error": "RF-DETR package not installed in detector runtime: rfdetr not installed: No module named 'rfdetr'"
+      "image_path": "/workspace/shared/infragraph-ai/datasets/infragraph_v3/rfdetr/images/val/enterprise_v3_0067__branch_topology.png",
+      "success": true,
+      "elapsed_ms": 38825.8,
+      "inference_runtime_ms": 19539,
+      "detection_count": 7,
+      "detections_summary": [
+        {
+          "label": "switch",
+          "confidence": 0.963
+        },
+        {
+          "label": "firewall",
+          "confidence": 0.952
+        },
+        {
+          "label": "firewall",
+          "confidence": 0.952
+        },
+        {
+          "label": "firewall",
+          "confidence": 0.951
+        },
+        {
+          "label": "router",
+          "confidence": 0.95
+        },
+        {
+          "label": "firewall",
+          "confidence": 0.949
+        },
+        {
+          "label": "cls0",
+          "confidence": 0.948
+        }
+      ],
+      "checkpoint_load_strategy": "constructor_pretrain_weights",
+      "model_class": "RFDETRBase",
+      "inference_strategy": "predict(image)",
+      "annotated_image": "/workspace/shared/infragraph-ai/reports/rfdetr_runtime_evidence/annotated/enterprise_v3_0067__branch_topology_annotated.png",
+      "prediction_json": "/workspace/shared/infragraph-ai/reports/rfdetr_runtime_evidence/predictions/enterprise_v3_0067__branch_topology.json",
+      "error": null
     },
     {
       "image": "enterprise_v3_0068__wan_topology.png",
-      "image_path": "D:\\My Folders\\Hackathons\\infragraph-ai\\datasets\\infragraph_v3\\rfdetr\\images\\val\\enterprise_v3_0068__wan_topology.png",
-      "success": false,
-      "elapsed_ms": 327.8,
-      "inference_runtime_ms": null,
-      "detection_count": 0,
-      "detections_summary": [],
-      "checkpoint_load_strategy": null,
-      "model_class": null,
-      "inference_strategy": null,
-      "annotated_image": null,
-      "prediction_json": null,
-      "error": "RF-DETR package not installed in detector runtime: rfdetr not installed: No module named 'rfdetr'"
+      "image_path": "/workspace/shared/infragraph-ai/datasets/infragraph_v3/rfdetr/images/val/enterprise_v3_0068__wan_topology.png",
+      "success": true,
+      "elapsed_ms": 43679.3,
+      "inference_runtime_ms": 19886,
+      "detection_count": 7,
+      "detections_summary": [
+        {
+          "label": "cls0",
+          "confidence": 0.963
+        },
+        {
+          "label": "cls0",
+          "confidence": 0.963
+        },
+        {
+          "label": "cls0",
+          "confidence": 0.96
+        },
+        {
+          "label": "load_balancer",
+          "confidence": 0.956
+        },
+        {
+          "label": "switch",
+          "confidence": 0.955
+        },
+        {
+          "label": "load_balancer",
+          "confidence": 0.954
+        },
+        {
+          "label": "load_balancer",
+          "confidence": 0.953
+        }
+      ],
+      "checkpoint_load_strategy": "constructor_pretrain_weights",
+      "model_class": "RFDETRBase",
+      "inference_strategy": "predict(image)",
+      "annotated_image": "/workspace/shared/infragraph-ai/reports/rfdetr_runtime_evidence/annotated/enterprise_v3_0068__wan_topology_annotated.png",
+      "prediction_json": "/workspace/shared/infragraph-ai/reports/rfdetr_runtime_evidence/predictions/enterprise_v3_0068__wan_topology.json",
+      "error": null
     }
   ]
 }

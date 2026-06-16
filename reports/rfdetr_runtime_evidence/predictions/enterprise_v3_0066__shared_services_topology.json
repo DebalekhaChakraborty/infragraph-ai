@@ -1,8 +1,103 @@
 {
-  "ok": false,
+  "ok": true,
   "source": "live_rfdetr_subprocess",
-  "error": "RF-DETR package not installed in detector runtime: rfdetr not installed: No module named 'rfdetr'",
-  "python_executable": "D:\\My Folders\\Hackathons\\venv\\debalekha\\Scripts\\python.exe",
-  "checkpoint_path": "D:\\My Folders\\Hackathons\\infragraph-ai\\model_artifacts\\rfdetr_v3\\checkpoint_best_total.pth",
-  "image_path": "D:\\My Folders\\Hackathons\\infragraph-ai\\datasets\\infragraph_v3\\rfdetr\\images\\val\\enterprise_v3_0066__shared_services_topology.png"
+  "detector": "RF-DETR",
+  "python_executable": "/usr/bin/python",
+  "checkpoint_path": "/workspace/shared/infragraph-ai/model_artifacts/rfdetr_v3/checkpoint_best_total.pth",
+  "checkpoint_load_strategy": "constructor_pretrain_weights",
+  "model_class": "RFDETRBase",
+  "image_path": "/workspace/shared/infragraph-ai/datasets/infragraph_v3/rfdetr/images/val/enterprise_v3_0066__shared_services_topology.png",
+  "inference_runtime_ms": 19865,
+  "inference_strategy": "predict(image)",
+  "detections": [
+    {
+      "label": "cloud_or_wan",
+      "device_type": "cloud_or_wan",
+      "confidence": 0.9602,
+      "bbox": {
+        "x1": 749.0,
+        "y1": 550.2,
+        "x2": 819.5,
+        "y2": 618.2
+      }
+    },
+    {
+      "label": "firewall",
+      "device_type": "firewall",
+      "confidence": 0.9582,
+      "bbox": {
+        "x1": 1030.1,
+        "y1": 582.9,
+        "x2": 1098.5,
+        "y2": 650.9
+      }
+    },
+    {
+      "label": "cloud_or_wan",
+      "device_type": "cloud_or_wan",
+      "confidence": 0.9555,
+      "bbox": {
+        "x1": 749.6,
+        "y1": 285.2,
+        "x2": 819.2,
+        "y2": 352.6
+      }
+    },
+    {
+      "label": "cloud_or_wan",
+      "device_type": "cloud_or_wan",
+      "confidence": 0.9532,
+      "bbox": {
+        "x1": 1029.4,
+        "y1": 350.7,
+        "x2": 1098.6,
+        "y2": 418.2
+      }
+    },
+    {
+      "label": "firewall",
+      "device_type": "firewall",
+      "confidence": 0.9517,
+      "bbox": {
+        "x1": 1254.6,
+        "y1": 267.5,
+        "x2": 1322.2,
+        "y2": 336.8
+      }
+    },
+    {
+      "label": "firewall",
+      "device_type": "firewall",
+      "confidence": 0.9509,
+      "bbox": {
+        "x1": 1254.4,
+        "y1": 549.6,
+        "x2": 1322.8,
+        "y2": 617.8
+      }
+    },
+    {
+      "label": "cloud_or_wan",
+      "device_type": "cloud_or_wan",
+      "confidence": 0.9502,
+      "bbox": {
+        "x1": 469.8,
+        "y1": 384.3,
+        "x2": 538.4,
+        "y2": 451.9
+      }
+    },
+    {
+      "label": "cloud_or_wan",
+      "device_type": "cloud_or_wan",
+      "confidence": 0.9496,
+      "bbox": {
+        "x1": 217.4,
+        "y1": 384.2,
+        "x2": 285.5,
+        "y2": 451.9
+      }
+    }
+  ],
+  "annotated_image_path": "/workspace/shared/infragraph-ai/reports/rfdetr_runtime_evidence/annotated/enterprise_v3_0066__shared_services_topology_annotated.png"
 }

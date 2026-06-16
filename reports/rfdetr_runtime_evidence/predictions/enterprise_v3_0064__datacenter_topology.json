@@ -1,8 +1,136 @@
 {
-  "ok": false,
+  "ok": true,
   "source": "live_rfdetr_subprocess",
-  "error": "RF-DETR package not installed in detector runtime: rfdetr not installed: No module named 'rfdetr'",
-  "python_executable": "D:\\My Folders\\Hackathons\\venv\\debalekha\\Scripts\\python.exe",
-  "checkpoint_path": "D:\\My Folders\\Hackathons\\infragraph-ai\\model_artifacts\\rfdetr_v3\\checkpoint_best_total.pth",
-  "image_path": "D:\\My Folders\\Hackathons\\infragraph-ai\\datasets\\infragraph_v3\\rfdetr\\images\\val\\enterprise_v3_0064__datacenter_topology.png"
+  "detector": "RF-DETR",
+  "python_executable": "/usr/bin/python",
+  "checkpoint_path": "/workspace/shared/infragraph-ai/model_artifacts/rfdetr_v3/checkpoint_best_total.pth",
+  "checkpoint_load_strategy": "constructor_pretrain_weights",
+  "model_class": "RFDETRBase",
+  "image_path": "/workspace/shared/infragraph-ai/datasets/infragraph_v3/rfdetr/images/val/enterprise_v3_0064__datacenter_topology.png",
+  "inference_runtime_ms": 19891,
+  "inference_strategy": "predict(image)",
+  "detections": [
+    {
+      "label": "cls0",
+      "device_type": "server",
+      "confidence": 0.9647,
+      "bbox": {
+        "x1": 78.1,
+        "y1": 451.2,
+        "x2": 145.2,
+        "y2": 518.5
+      }
+    },
+    {
+      "label": "switch",
+      "device_type": "switch",
+      "confidence": 0.9602,
+      "bbox": {
+        "x1": 246.6,
+        "y1": 567.8,
+        "x2": 313.5,
+        "y2": 635.1
+      }
+    },
+    {
+      "label": "switch",
+      "device_type": "switch",
+      "confidence": 0.9571,
+      "bbox": {
+        "x1": 246.3,
+        "y1": 350.0,
+        "x2": 314.3,
+        "y2": 419.0
+      }
+    },
+    {
+      "label": "router",
+      "device_type": "router",
+      "confidence": 0.9548,
+      "bbox": {
+        "x1": 525.4,
+        "y1": 351.2,
+        "x2": 594.1,
+        "y2": 418.2
+      }
+    },
+    {
+      "label": "firewall",
+      "device_type": "firewall",
+      "confidence": 0.9518,
+      "bbox": {
+        "x1": 1057.7,
+        "y1": 616.3,
+        "x2": 1127.2,
+        "y2": 684.7
+      }
+    },
+    {
+      "label": "firewall",
+      "device_type": "firewall",
+      "confidence": 0.9516,
+      "bbox": {
+        "x1": 1198.0,
+        "y1": 716.3,
+        "x2": 1267.1,
+        "y2": 783.6
+      }
+    },
+    {
+      "label": "firewall",
+      "device_type": "firewall",
+      "confidence": 0.9511,
+      "bbox": {
+        "x1": 1197.6,
+        "y1": 484.1,
+        "x2": 1267.0,
+        "y2": 551.6
+      }
+    },
+    {
+      "label": "router",
+      "device_type": "router",
+      "confidence": 0.9502,
+      "bbox": {
+        "x1": 525.5,
+        "y1": 567.1,
+        "x2": 594.2,
+        "y2": 634.2
+      }
+    },
+    {
+      "label": "router",
+      "device_type": "router",
+      "confidence": 0.9494,
+      "bbox": {
+        "x1": 778.4,
+        "y1": 451.8,
+        "x2": 845.8,
+        "y2": 518.8
+      }
+    },
+    {
+      "label": "firewall",
+      "device_type": "firewall",
+      "confidence": 0.9492,
+      "bbox": {
+        "x1": 1057.7,
+        "y1": 351.5,
+        "x2": 1127.0,
+        "y2": 418.0
+      }
+    },
+    {
+      "label": "firewall",
+      "device_type": "firewall",
+      "confidence": 0.942,
+      "bbox": {
+        "x1": 1196.5,
+        "y1": 218.6,
+        "x2": 1266.4,
+        "y2": 286.3
+      }
+    }
+  ],
+  "annotated_image_path": "/workspace/shared/infragraph-ai/reports/rfdetr_runtime_evidence/annotated/enterprise_v3_0064__datacenter_topology_annotated.png"
 }
