@@ -1,5 +1,77 @@
 [
   {
+    "source": "RFDET-003",
+    "target": "RFDET-006",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.54,
+    "connector_id": "SEG-008",
+    "source_type": "vision_connector_extraction"
+  },
+  {
+    "source": "RFDET-006",
+    "target": "RFDET-004",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.446,
+    "connector_id": "SEG-013",
+    "source_type": "vision_connector_extraction"
+  },
+  {
+    "source": "RFDET-006",
+    "target": "RFDET-005",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.483,
+    "connector_id": "SEG-055",
+    "source_type": "vision_connector_extraction"
+  },
+  {
+    "source": "RFDET-006",
+    "target": "RFDET-007",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.407,
+    "connector_id": "SEG-057",
+    "source_type": "vision_connector_extraction"
+  },
+  {
+    "source": "RFDET-006",
+    "target": "RFDET-008",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.401,
+    "connector_id": "SEG-052",
+    "source_type": "vision_connector_extraction"
+  },
+  {
+    "source": "RFDET-006",
+    "target": "RFDET-009",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.393,
+    "connector_id": "SEG-047",
+    "source_type": "vision_connector_extraction"
+  },
+  {
+    "source": "RFDET-003",
+    "target": "RFDET-002",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.392,
+    "connector_id": "SEG-320",
+    "source_type": "vision_connector_extraction"
+  },
+  {
+    "source": "RFDET-008",
+    "target": "RFDET-009",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.377,
+    "connector_id": "SEG-089",
+    "source_type": "vision_connector_extraction"
+  },
+  {
     "source": "WAN-MPLS-CORE",
     "target": "BR-RTR-01",
     "relationship": "connected_to",

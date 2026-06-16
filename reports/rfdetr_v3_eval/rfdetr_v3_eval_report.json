@@ -15,7 +15,7 @@
     "f1": NaN,
     "mean_iou_matched": NaN,
     "mean_ap_at_50": 0.0,
-    "avg_inference_runtime_ms": 19712.366666666665,
+    "avg_inference_runtime_ms": 19798.2,
     "global_tp": 0,
     "global_fp": 265,
     "global_fn": 265

@@ -15,7 +15,7 @@ RF-DETR detector evaluated against V3 verified annotations on 30 diagrams. Metri
 | f1 | N/A |
 | mean_iou_matched | N/A |
 | mean_ap_at_50 | 0.0000 |
-| avg_inference_runtime_ms | 19712.3667 |
+| avg_inference_runtime_ms | 19798.2000 |
 | global_tp | 0 |
 | global_fp | 265 |
 | global_fn | 265 |
