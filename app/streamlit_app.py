@@ -4036,20 +4036,42 @@ def _render_rca_journey_stepper(jctx: dict, slider_key: str = "rca_journey_slide
         unsafe_allow_html=True,
     )
 
-    chips = []
-    for i, step in enumerate(steps):
-        nid  = step["normalized_node_id"]
-        role = step["role"]
-        rc2  = _JOURNEY_ROLE_COLORS.get(role, "#94a3b8")
-        cls  = "current" if i == step_idx - 1 else ("visited" if i < step_idx - 1 else "")
-        label = f'{i+1}:{nid}'
-        chips.append(f'<span class="node-chip {cls}" style="color:{rc2 if cls else "#475569"}">{label}</span>')
+    # Clickable step chips — clicking jumps the slider to that step
+    _chip_colors = [_JOURNEY_ROLE_COLORS.get(s["role"], "#94a3b8") for s in steps]
+    _chip_css = "".join(
+        f'div[data-testid="column"]:nth-child({i+1}) button[kind="secondaryFormSubmit"],'
+        f'div[data-testid="column"]:nth-child({i+1}) button[kind="secondary"]'
+        f'{{border-color:{_chip_colors[i]}!important;color:{_chip_colors[i]}!important}}'
+        for i in range(len(steps))
+    )
+    _cur_chip_css = "".join(
+        f'div[data-testid="column"]:nth-child({i+1}) button[kind="primaryFormSubmit"],'
+        f'div[data-testid="column"]:nth-child({i+1}) button[kind="primary"]'
+        f'{{background:{_chip_colors[i]}22!important;border-color:{_chip_colors[i]}!important;'
+        f'color:{_chip_colors[i]}!important;box-shadow:0 0 8px {_chip_colors[i]}44!important}}'
+        for i in range(len(steps))
+    )
     st.markdown(
-        '<div style="padding:6px 0;line-height:2.6">'
-        + ' <span style="color:#1e293b;font-size:0.75rem">→</span> '.join(chips)
-        + '</div>',
+        f'<style>.journey-chip-row{{margin:4px 0 10px}}'
+        f'.journey-chip-row button{{font-size:0.62rem!important;padding:4px 2px!important;'
+        f'border-radius:8px!important;font-family:monospace!important;font-weight:700!important}}'
+        f'{_chip_css}{_cur_chip_css}</style>'
+        f'<div class="journey-chip-row"></div>',
         unsafe_allow_html=True,
     )
+    _chip_cols = st.columns(len(steps))
+    for _si, (_step, _col_c) in enumerate(zip(steps, _chip_cols)):
+        _nid = _step["normalized_node_id"]
+        _is_cur = _si == step_idx - 1
+        with _col_c:
+            if st.button(
+                f"{_si+1}:{_nid}",
+                key=f"jchip_{slider_key}_{_si}",
+                use_container_width=True,
+                type="primary" if _is_cur else "secondary",
+            ):
+                st.session_state[slider_key] = _si + 1
+                st.rerun()
 
 
 def _render_enterprise_pyvis_rca_journey(
