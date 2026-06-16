@@ -2513,56 +2513,6 @@ def _render_remediation_plan(plan: dict, *, show_source_badge: bool = True) -> N
     _text_card("Escalation Recommendation", resp.get("escalation_recommendation", ""), accent="#a78bfa")
     _runbook_chain_section()
 
-    itsm = resp.get("itsm_ticket_summary")
-    if itsm:
-        _ticket_created = st.session_state.get("itsm_ticket_created", False)
-        with st.container(border=True):
-            st.markdown(
-                '<div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;'
-                'color:#94a3b8;margin-bottom:8px">ITSM Ticket</div>',
-                unsafe_allow_html=True,
-            )
-            if isinstance(itsm, dict):
-                _itsm_pairs = [
-                    ("short_description", "Short description"),
-                    ("description", "Description"),
-                    ("affected_ci", "Affected CI"),
-                    ("priority", "Priority"),
-                    ("assignment_group", "Assignment group"),
-                ]
-                _itsm_items = [
-                    f"{label}: {itsm[key]}"
-                    for key, label in _itsm_pairs
-                    if itsm.get(key)
-                ]
-                body_html = "".join(
-                    f'<li style="margin-bottom:5px;line-height:1.45;color:#e2e8f0;font-size:0.84rem">'
-                    f'{_esc(item)}</li>'
-                    for item in _itsm_items
-                )
-                st.markdown(
-                    f'<ol style="margin:0 0 12px 18px;padding:0">{body_html}</ol>',
-                    unsafe_allow_html=True,
-                )
-            else:
-                st.markdown(
-                    f'<div style="color:#e2e8f0;font-size:0.86rem;line-height:1.5;margin-bottom:12px">'
-                    f'{_esc(str(itsm))}</div>',
-                    unsafe_allow_html=True,
-                )
-            _itsm_sp, _itsm_btn_col = st.columns([3, 1])
-            with _itsm_btn_col:
-                if st.button(
-                    "Ticket Created" if _ticket_created else "Create Ticket",
-                    key="create_itsm_ticket_btn",
-                    type="primary",
-                    use_container_width=True,
-                    disabled=_ticket_created,
-                ):
-                    st.session_state.itsm_ticket_created = True
-                    st.toast("ITSM ticket created successfully", icon="✅")
-                    st.rerun()
-
     _text_card("Audit Summary", resp.get("audit_summary", ""), accent="#94a3b8")
     _text_card("Confidence Notes", resp.get("confidence_notes", ""), accent="#94a3b8")
 
@@ -8081,7 +8031,7 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
     _cl_runs: dict        = st.session_state.ops_cluster_runs or {}
 
     # ── 3-column workspace ────────────────────────────────────────────────────
-    _col_lft, _col_mid, _col_rgt = st.columns([1.1, 2.0, 1.5])
+    _col_lft, _col_mid, _col_rgt = st.columns([1.1, 1.75, 1.75])
 
     # ════════════════════════════════════════════════════════════════════════
     # LEFT — Alert Stream / Clusters
@@ -8133,172 +8083,206 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
             unsafe_allow_html=True,
         )
 
-        _stream_ready = st.session_state.get("ops_stream_ready", False)
-        if not _stream_ready or not _alert_stream:
+        st.markdown(
+            '<style>'
+            '.ops-alert-scroll-marker{display:none!important}'
+            'div[data-testid="stVerticalBlockBorderWrapper"]:has(.ops-alert-scroll-marker){'
+            'border:1px solid rgba(99,102,241,0.34)!important;'
+            'border-radius:14px!important;'
+            'background:linear-gradient(180deg,rgba(15,23,42,0.58),rgba(7,11,22,0.36))!important;'
+            'box-shadow:0 12px 30px rgba(0,0,0,0.18),inset 0 1px 0 rgba(255,255,255,0.045)!important;'
+            'padding:0!important;overflow:hidden!important}'
+            'div[data-testid="stVerticalBlockBorderWrapper"]:has(.ops-alert-scroll-marker) '
+            'div[data-testid="stVerticalBlock"]{gap:0.35rem!important}'
+            'div[data-testid="stVerticalBlockBorderWrapper"]:has(.ops-alert-scroll-marker) *{'
+            'scrollbar-width:thin;scrollbar-color:#38bdf8 rgba(99,102,241,0.10)}'
+            'div[data-testid="stVerticalBlockBorderWrapper"]:has(.ops-alert-scroll-marker) '
+            '::-webkit-scrollbar{width:9px}'
+            'div[data-testid="stVerticalBlockBorderWrapper"]:has(.ops-alert-scroll-marker) '
+            '::-webkit-scrollbar-track{'
+            'background:linear-gradient(180deg,rgba(14,165,233,0.08),rgba(139,92,246,0.10));'
+            'border-radius:999px;margin:10px 0}'
+            'div[data-testid="stVerticalBlockBorderWrapper"]:has(.ops-alert-scroll-marker) '
+            '::-webkit-scrollbar-thumb{'
+            'background:linear-gradient(180deg,#22d3ee 0%,#3b82f6 45%,#8b5cf6 100%);'
+            'border:2px solid rgba(7,11,22,0.88);border-radius:999px;min-height:44px}'
+            'div[data-testid="stVerticalBlockBorderWrapper"]:has(.ops-alert-scroll-marker) '
+            '::-webkit-scrollbar-thumb:hover{'
+            'background:linear-gradient(180deg,#67e8f9 0%,#60a5fa 45%,#c084fc 100%)}'
+            '</style>',
+            unsafe_allow_html=True,
+        )
+        with st.container(height=560, border=False):
             st.markdown(
-                '<div style="text-align:center;padding:48px 8px;color:#475569;font-size:0.74rem">'
-                'Select a scenario mode and click <b style="color:#6366f1">▶ Go</b>'
-                ' to generate the alert stream.</div>',
+                '<div class="ops-alert-scroll-marker"></div>',
                 unsafe_allow_html=True,
             )
-
-        # ── flat alert list (stream / correlated phases) ───────────────────
-        elif _phase in ("stream", "correlated"):
-            import datetime as _dt_ops
-            _stream_base = st.session_state.get("ops_stream_base_time") or _dt_ops.datetime.now()
-            _max_ofs_al  = max((_ax["timestamp_offset"] for _ax in _alert_stream), default=0)
-
-            _SEV_STYLE = {
-                "critical": ("rgba(239,68,68,0.18)",  "#ef4444"),
-                "high":     ("rgba(245,158,11,0.18)", "#f59e0b"),
-                "medium":   ("rgba(234,179,8,0.18)",  "#eab308"),
-                "low":      ("rgba(34,197,94,0.18)",  "#22c55e"),
-            }
-            _SEV_SHORT = {"critical": "CRIT", "high": "HIGH", "medium": "MED", "low": "LOW"}
-
-            # Card overlays button above it; button-first so card covers it cleanly.
-            # margin-top pulls card up to sit on top of the button's occupied space.
-            _card_theme_bdr = "rgba(255,255,255,0.07)" if _is_dark else "#e2e8f0"
-            _page_bg        = "var(--secondary-background-color)"
-            st.markdown(
-                "<style>"
-                ".ops-al-card{"
-                "border-radius:8px;padding:8px 12px;"
-                "margin-top:-46px;margin-bottom:6px;"
-                "position:relative;z-index:2;pointer-events:none;"
-                f"background:{_page_bg}"
-                "}"
-                ".ops-al-r1{display:flex;align-items:center;gap:6px;margin-bottom:4px}"
-                ".ops-al-node{font-size:0.78rem;font-weight:600;color:#f1f5f9;"
-                "flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}"
-                ".ops-al-sev{font-size:0.57rem;font-weight:700;padding:2px 6px;"
-                "border-radius:4px;flex-shrink:0;letter-spacing:0.03em}"
-                ".ops-al-r2{display:flex;align-items:center;gap:5px}"
-                ".ops-al-time{font-size:0.63rem;color:#94a3b8;font-family:monospace;font-weight:600}"
-                ".ops-al-sep{font-size:0.38rem;color:#475569}"
-                ".ops-al-diag{font-size:0.60rem;color:#475569;"
-                "overflow:hidden;text-overflow:ellipsis;white-space:nowrap}"
-                "</style>",
-                unsafe_allow_html=True,
-            )
-
-            _shown = 0
-            for _al in _alert_stream:
-                _sv_c      = _SV_COLOR.get(_al["severity"], "#6b7280")
-                _dot_c     = _al.get("color") or _sv_c
-                _is_sel_al = (_al["alert_id"] == _sel_alert_id)
-
-                # Real clock time anchored to session start
-                _mins_ago = _max_ofs_al - _al["timestamp_offset"]
-                _alert_dt = _stream_base - _dt_ops.timedelta(minutes=_mins_ago)
-                _time_str = _alert_dt.strftime("%H:%M")
-
-                _sev_bg, _sev_fg = _SEV_STYLE.get(_al["severity"], ("#1e293b", "#94a3b8"))
-                _sev_lbl  = _SEV_SHORT.get(_al["severity"], _al["severity"].upper())
-                _diag_raw = _al.get("diagram") or "—"
-                _diag_disp = _diag_raw.replace("_topology", "").replace("_", " ").strip()
-
-                _card_bg  = "rgba(99,102,241,0.10)" if _is_sel_al else "rgba(255,255,255,0.025)" if _is_dark else "#f8fafc"
-                _lft_bdr  = (f"border-left:3px solid {_dot_c}" if _is_sel_al
-                             else "border-left:3px solid transparent")
-
-                _grp_em = ""
-                if _phase == "correlated" and _al.get("correlation_group"):
-                    _grp_em = (
-                        f'<span style="margin-left:auto;font-size:0.72rem">'
-                        f'{_COLOR_EMOJI.get(_dot_c, "⚪")}</span>'
-                    )
-
-                # 1. Button first — click target (card will visually cover it)
-                if st.button(
-                    "​",
-                    key=f"al_sel_{_al['alert_id']}",
-                    use_container_width=True,
-                    help=_al.get("description", ""),
-                ):
-                    st.session_state.ops_selected_alert_id = (
-                        None if _is_sel_al else _al["alert_id"]
-                    )
-                    st.rerun()
-
-                # 2. Card overlay — visual layer on top of the button
+            _stream_ready = st.session_state.get("ops_stream_ready", False)
+            if not _stream_ready or not _alert_stream:
                 st.markdown(
-                    f'<div class="ops-al-card" style="background:{_card_bg};'
-                    f'border:1px solid {_card_theme_bdr};{_lft_bdr}">'
-                    f'<div class="ops-al-r1">'
-                    f'<span style="color:{_dot_c};font-size:0.80rem;flex-shrink:0">⚡</span>'
-                    f'<span class="ops-al-node">{html.escape(_al["node_id"])}</span>'
-                    f'<span class="ops-al-sev" style="background:{_sev_bg};color:{_sev_fg}">'
-                    f'{_sev_lbl}</span>'
-                    f'</div>'
-                    f'<div class="ops-al-r2">'
-                    f'<span class="ops-al-time">{_time_str}</span>'
-                    f'<span class="ops-al-sep">●</span>'
-                    f'<span class="ops-al-diag">{html.escape(_diag_disp)}</span>'
-                    + _grp_em +
-                    f'</div>'
-                    f'</div>',
+                    '<div style="text-align:center;padding:48px 8px;color:#475569;font-size:0.74rem">'
+                    'Select a scenario mode and click <b style="color:#6366f1">▶ Go</b>'
+                    ' to generate the alert stream.</div>',
                     unsafe_allow_html=True,
                 )
-                _shown += 1
-                if _shown >= 20:
-                    _rem = len(_alert_stream) - _shown
-                    if _rem > 0:
-                        st.caption(f"…+{_rem} more alerts")
-                    break
-
-        # ── cluster cards (clustered phase) ────────────────────────────────
-        elif _phase == "clustered":
-            for _cl in _clusters:
-                _is_sel  = (_cl["cluster_id"] == _sel_cid)
-                _has_run = _cl["cluster_id"] in _cl_runs
-                _sv_c    = _SV_COLOR.get(_cl["severity"], "#6b7280")
-                _cl_color = _cl["color"]
-                _bg  = "rgba(99,102,241,0.09)" if _is_sel else "rgba(255,255,255,0.02)"
-                _bdr = (f"border-left:3px solid {_cl_color};border:1px solid {_cl_color}55"
-                        if _is_sel else f"border-left:3px solid {_cl_color};border:1px solid rgba(255,255,255,0.06)")
+    
+            # ── flat alert list (stream / correlated phases) ───────────────────
+            elif _phase in ("stream", "correlated"):
+                import datetime as _dt_ops
+                _stream_base = st.session_state.get("ops_stream_base_time") or _dt_ops.datetime.now()
+                _max_ofs_al  = max((_ax["timestamp_offset"] for _ax in _alert_stream), default=0)
+    
+                _SEV_STYLE = {
+                    "critical": ("rgba(239,68,68,0.18)",  "#ef4444"),
+                    "high":     ("rgba(245,158,11,0.18)", "#f59e0b"),
+                    "medium":   ("rgba(234,179,8,0.18)",  "#eab308"),
+                    "low":      ("rgba(34,197,94,0.18)",  "#22c55e"),
+                }
+                _SEV_SHORT = {"critical": "CRIT", "high": "HIGH", "medium": "MED", "low": "LOW"}
+    
+                # Card overlays button above it; button-first so card covers it cleanly.
+                # margin-top pulls card up to sit on top of the button's occupied space.
+                _card_theme_bdr = "rgba(255,255,255,0.07)" if _is_dark else "#e2e8f0"
+                _page_bg        = "var(--secondary-background-color)"
                 st.markdown(
-                    f'<div style="background:{_bg};{_bdr};border-radius:8px;'
-                    f'padding:10px 12px;margin-bottom:2px">'
-                    f'<div style="font-size:0.74rem;font-weight:700;color:#f1f5f9">'
-                    f'<span style="color:{_cl_color};margin-right:4px">●</span>{_cl["title"]}</div>'
-                    f'<div style="font-size:0.60rem;color:#64748b;margin-top:2px">'
-                    f'<span style="color:{_sv_c};font-weight:700">{_cl["severity"].upper()}</span>'
-                    f' · {len(_cl["alerts"])} alerts · {_cl["service"]}'
-                    + ('&nbsp;<span style="color:#22c55e">✓</span>' if _has_run else '')
-                    + ('&nbsp;<span style="color:#8b5cf6">GNN</span>' if _cl["has_gnn"] else '')
-                    + (f'&nbsp;<span style="color:#a78bfa;font-weight:700">⬡ {_cl["correlation_score"]:.2f}</span>'
-                       if _cl.get("correlation_score") else '')
-                    + ('&nbsp;<span style="color:#38bdf8;font-size:0.58rem">graph-aware</span>'
-                       if st.session_state.get("ops_correlation_result") else '')
-                    + '</div></div>',
+                    "<style>"
+                    ".ops-al-card{"
+                    "border-radius:8px;padding:8px 12px;"
+                    "margin-top:-46px;margin-bottom:6px;"
+                    "position:relative;z-index:2;pointer-events:none;"
+                    f"background:{_page_bg}"
+                    "}"
+                    ".ops-al-r1{display:flex;align-items:center;gap:6px;margin-bottom:4px}"
+                    ".ops-al-node{font-size:0.78rem;font-weight:600;color:#f1f5f9;"
+                    "flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}"
+                    ".ops-al-sev{font-size:0.57rem;font-weight:700;padding:2px 6px;"
+                    "border-radius:4px;flex-shrink:0;letter-spacing:0.03em}"
+                    ".ops-al-r2{display:flex;align-items:center;gap:5px}"
+                    ".ops-al-time{font-size:0.63rem;color:#94a3b8;font-family:monospace;font-weight:600}"
+                    ".ops-al-sep{font-size:0.38rem;color:#475569}"
+                    ".ops-al-diag{font-size:0.60rem;color:#475569;"
+                    "overflow:hidden;text-overflow:ellipsis;white-space:nowrap}"
+                    "</style>",
                     unsafe_allow_html=True,
                 )
-                _cb1, _cb2 = st.columns(2)
-                with _cb1:
+    
+                _shown = 0
+                for _al in _alert_stream:
+                    _sv_c      = _SV_COLOR.get(_al["severity"], "#6b7280")
+                    _dot_c     = _al.get("color") or _sv_c
+                    _is_sel_al = (_al["alert_id"] == _sel_alert_id)
+    
+                    # Real clock time anchored to session start
+                    _mins_ago = _max_ofs_al - _al["timestamp_offset"]
+                    _alert_dt = _stream_base - _dt_ops.timedelta(minutes=_mins_ago)
+                    _time_str = _alert_dt.strftime("%H:%M")
+    
+                    _sev_bg, _sev_fg = _SEV_STYLE.get(_al["severity"], ("#1e293b", "#94a3b8"))
+                    _sev_lbl  = _SEV_SHORT.get(_al["severity"], _al["severity"].upper())
+                    _diag_raw = _al.get("diagram") or "—"
+                    _diag_disp = _diag_raw.replace("_topology", "").replace("_", " ").strip()
+    
+                    _card_bg  = "rgba(99,102,241,0.10)" if _is_sel_al else "rgba(255,255,255,0.025)" if _is_dark else "#f8fafc"
+                    _lft_bdr  = (f"border-left:3px solid {_dot_c}" if _is_sel_al
+                                 else "border-left:3px solid transparent")
+    
+                    _grp_em = ""
+                    if _phase == "correlated" and _al.get("correlation_group"):
+                        _grp_em = (
+                            f'<span style="margin-left:auto;font-size:0.72rem">'
+                            f'{_COLOR_EMOJI.get(_dot_c, "⚪")}</span>'
+                        )
+    
+                    # 1. Button first — click target (card will visually cover it)
                     if st.button(
-                        "⚡ AI Findings",
-                        key=f"ops_findings_{_cl['cluster_id']}",
+                        "​",
+                        key=f"al_sel_{_al['alert_id']}",
                         use_container_width=True,
-                        type="primary" if _is_sel else "secondary",
+                        help=_al.get("description", ""),
                     ):
-                        st.session_state.ops_selected_cluster_id = _cl["cluster_id"]
-                        st.session_state.ops_graph_show_cluster  = None
+                        st.session_state.ops_selected_alert_id = (
+                            None if _is_sel_al else _al["alert_id"]
+                        )
                         st.rerun()
-                with _cb2:
-                    if st.button(
-                        "📊 See Graph",
-                        key=f"ops_graph_{_cl['cluster_id']}",
-                        use_container_width=True,
-                    ):
-                        st.session_state.ops_selected_cluster_id = _cl["cluster_id"]
-                        st.session_state.ops_graph_show_cluster  = _cl["cluster_id"]
-                        st.rerun()
-                st.markdown(
-                    '<div style="height:4px"></div>',
-                    unsafe_allow_html=True,
-                )
-
+    
+                    # 2. Card overlay — visual layer on top of the button
+                    st.markdown(
+                        f'<div class="ops-al-card" style="background:{_card_bg};'
+                        f'border:1px solid {_card_theme_bdr};{_lft_bdr}">'
+                        f'<div class="ops-al-r1">'
+                        f'<span style="color:{_dot_c};font-size:0.80rem;flex-shrink:0">⚡</span>'
+                        f'<span class="ops-al-node">{html.escape(_al["node_id"])}</span>'
+                        f'<span class="ops-al-sev" style="background:{_sev_bg};color:{_sev_fg}">'
+                        f'{_sev_lbl}</span>'
+                        f'</div>'
+                        f'<div class="ops-al-r2">'
+                        f'<span class="ops-al-time">{_time_str}</span>'
+                        f'<span class="ops-al-sep">●</span>'
+                        f'<span class="ops-al-diag">{html.escape(_diag_disp)}</span>'
+                        + _grp_em +
+                        f'</div>'
+                        f'</div>',
+                        unsafe_allow_html=True,
+                    )
+                    _shown += 1
+                    if _shown >= 20:
+                        _rem = len(_alert_stream) - _shown
+                        if _rem > 0:
+                            st.caption(f"…+{_rem} more alerts")
+                        break
+    
+            # ── cluster cards (clustered phase) ────────────────────────────────
+            elif _phase == "clustered":
+                for _cl in _clusters:
+                    _is_sel  = (_cl["cluster_id"] == _sel_cid)
+                    _has_run = _cl["cluster_id"] in _cl_runs
+                    _sv_c    = _SV_COLOR.get(_cl["severity"], "#6b7280")
+                    _cl_color = _cl["color"]
+                    _bg  = "rgba(99,102,241,0.09)" if _is_sel else "rgba(255,255,255,0.02)"
+                    _bdr = (f"border-left:3px solid {_cl_color};border:1px solid {_cl_color}55"
+                            if _is_sel else f"border-left:3px solid {_cl_color};border:1px solid rgba(255,255,255,0.06)")
+                    st.markdown(
+                        f'<div style="background:{_bg};{_bdr};border-radius:8px;'
+                        f'padding:10px 12px;margin-bottom:2px">'
+                        f'<div style="font-size:0.74rem;font-weight:700;color:#f1f5f9">'
+                        f'<span style="color:{_cl_color};margin-right:4px">●</span>{_cl["title"]}</div>'
+                        f'<div style="font-size:0.60rem;color:#64748b;margin-top:2px">'
+                        f'<span style="color:{_sv_c};font-weight:700">{_cl["severity"].upper()}</span>'
+                        f' · {len(_cl["alerts"])} alerts · {_cl["service"]}'
+                        + ('&nbsp;<span style="color:#22c55e">✓</span>' if _has_run else '')
+                        + ('&nbsp;<span style="color:#8b5cf6">GNN</span>' if _cl["has_gnn"] else '')
+                        + (f'&nbsp;<span style="color:#a78bfa;font-weight:700">⬡ {_cl["correlation_score"]:.2f}</span>'
+                           if _cl.get("correlation_score") else '')
+                        + ('&nbsp;<span style="color:#38bdf8;font-size:0.58rem">graph-aware</span>'
+                           if st.session_state.get("ops_correlation_result") else '')
+                        + '</div></div>',
+                        unsafe_allow_html=True,
+                    )
+                    _cb1, _cb2 = st.columns(2)
+                    with _cb1:
+                        if st.button(
+                            "⚡ AI Findings",
+                            key=f"ops_findings_{_cl['cluster_id']}",
+                            use_container_width=True,
+                            type="primary" if _is_sel else "secondary",
+                        ):
+                            st.session_state.ops_selected_cluster_id = _cl["cluster_id"]
+                            st.session_state.ops_graph_show_cluster  = None
+                            st.rerun()
+                    with _cb2:
+                        if st.button(
+                            "📊 See Graph",
+                            key=f"ops_graph_{_cl['cluster_id']}",
+                            use_container_width=True,
+                        ):
+                            st.session_state.ops_selected_cluster_id = _cl["cluster_id"]
+                            st.session_state.ops_graph_show_cluster  = _cl["cluster_id"]
+                            st.rerun()
+                    st.markdown(
+                        '<div style="height:4px"></div>',
+                        unsafe_allow_html=True,
+                    )
+    
     # ════════════════════════════════════════════════════════════════════════
     # MIDDLE — AI Expert Findings
     # ════════════════════════════════════════════════════════════════════════
@@ -8704,18 +8688,42 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                     _al_payload = _step1.get("payload") or {}
 
                     # status banner
+                    _rc_label = html.escape(str(_run.get('root_cause', '—')))
                     if _is_fallback:
-                        st.warning(
-                            "**Partial analysis** — graph-grounded RCA fallback active. "
-                            "Run Enterprise GNN RCA for full AI confidence.",
-                            icon="⚠️",
+                        st.markdown(
+                            '<style>'
+                            '@keyframes _fadeWarn{0%{opacity:1;max-height:120px;margin-bottom:8px}'
+                            '85%{opacity:1;max-height:120px;margin-bottom:8px}'
+                            '100%{opacity:0;max-height:0;margin:0;padding:0;overflow:hidden}}'
+                            '.ops-warn-banner{animation:_fadeWarn 3.8s ease-out forwards;'
+                            'background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.35);'
+                            'border-radius:10px;padding:10px 14px;font-size:0.74rem;color:#fcd34d;'
+                            'display:flex;align-items:flex-start;gap:8px;line-height:1.5}'
+                            '</style>'
+                            '<div class="ops-warn-banner">'
+                            '<span style="flex-shrink:0;font-size:1rem">⚠️</span>'
+                            '<span><strong>Partial analysis</strong> — graph-grounded RCA fallback active. '
+                            'Run Enterprise GNN RCA for full AI confidence.</span></div>',
+                            unsafe_allow_html=True,
                         )
                     else:
-                        st.success(
-                            f"**AI analysis complete.** Root cause "
-                            f"`{_run.get('root_cause', '—')}` identified with "
-                            f"{_conf_pct} confidence.",
-                            icon="✅",
+                        st.markdown(
+                            '<style>'
+                            '@keyframes _fadeOk{0%{opacity:1;max-height:120px;margin-bottom:8px}'
+                            '85%{opacity:1;max-height:120px;margin-bottom:8px}'
+                            '100%{opacity:0;max-height:0;margin:0;padding:0;overflow:hidden}}'
+                            '.ops-ok-banner{animation:_fadeOk 3.8s ease-out forwards;'
+                            'background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.35);'
+                            'border-radius:10px;padding:10px 14px;font-size:0.74rem;color:#86efac;'
+                            'display:flex;align-items:flex-start;gap:8px;line-height:1.5}'
+                            '</style>'
+                            f'<div class="ops-ok-banner">'
+                            f'<span style="flex-shrink:0;font-size:1rem">✅</span>'
+                            f'<span><strong>AI analysis complete.</strong> Root cause '
+                            f'<code style="font-size:0.72rem;background:rgba(255,255,255,0.08);'
+                            f'padding:1px 5px;border-radius:4px">{_rc_label}</code> '
+                            f'identified with {_conf_pct} confidence.</span></div>',
+                            unsafe_allow_html=True,
                         )
 
                     # correlated alerts in this cluster
@@ -8737,133 +8745,250 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                         + _badge(f"Cluster {_sel_cid}", "#475569"),
                         unsafe_allow_html=True,
                     )
-                    st.caption(f"Scenarios covered: {', '.join(_cross_sids[:3])}")
-                    for _a in _this_alerts[:6]:
-                        _sv2 = _SV_COLOR.get(_a["severity"], "#6b7280")
+
+                    _alert_cells = "".join(
+                        f'<div style="display:flex;align-items:baseline;gap:5px;padding:4px 0">'
+                        f'<span style="color:{_SV_COLOR.get(_a["severity"], "#6b7280")};font-size:0.62rem;flex-shrink:0;line-height:1.6">●</span>'
+                        f'<div style="min-width:0">'
+                        f'<div style="font-size:0.66rem;font-family:monospace;color:#cbd5e1;'
+                        f'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4">{html.escape(str(_a["node_id"]))}</div>'
+                        f'<div style="font-size:0.60rem;color:#64748b;line-height:1.3">t+{_a["timestamp_offset"]}m · {_a["severity"]}</div>'
+                        f'</div>'
+                        f'</div>'
+                        for _a in _this_alerts[:9]
+                    )
+                    _overflow_html = (
+                        f'<div style="font-size:0.62rem;color:#475569;margin-top:4px">'
+                        f'…and {len(_this_alerts) - 9} more</div>'
+                    ) if len(_this_alerts) > 9 else ""
+                    st.markdown(
+                        f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 12px;margin-top:8px">'
+                        f'{_alert_cells}</div>{_overflow_html}',
+                        unsafe_allow_html=True,
+                    )
+                    st.markdown("</div>", unsafe_allow_html=True)
+
+                    st.markdown(
+                        '<style>'
+                        '.ai-findings-detail-scroll-marker{display:none!important}'
+                        'div[data-testid="stVerticalBlockBorderWrapper"]:has(.ai-findings-detail-scroll-marker){'
+                        'border:1px solid rgba(99,102,241,0.36)!important;'
+                        'border-radius:14px!important;'
+                        'background:linear-gradient(180deg,rgba(15,23,42,0.72),rgba(7,11,22,0.48))!important;'
+                        'box-shadow:0 14px 34px rgba(0,0,0,0.22),inset 0 1px 0 rgba(255,255,255,0.05)!important;'
+                        'padding:0!important;overflow:hidden!important}'
+                        'div[data-testid="stVerticalBlockBorderWrapper"]:has(.ai-findings-detail-scroll-marker) '
+                        'div[data-testid="stVerticalBlock"]{gap:0.45rem!important}'
+                        'div[data-testid="stVerticalBlockBorderWrapper"]:has(.ai-findings-detail-scroll-marker) *{'
+                        'scrollbar-width:thin;scrollbar-color:#8b5cf6 rgba(14,165,233,0.10)}'
+                        'div[data-testid="stVerticalBlockBorderWrapper"]:has(.ai-findings-detail-scroll-marker) '
+                        '::-webkit-scrollbar{width:9px}'
+                        'div[data-testid="stVerticalBlockBorderWrapper"]:has(.ai-findings-detail-scroll-marker) '
+                        '::-webkit-scrollbar-track{'
+                        'background:linear-gradient(180deg,rgba(14,165,233,0.08),rgba(139,92,246,0.10));'
+                        'border-radius:999px;margin:10px 0}'
+                        'div[data-testid="stVerticalBlockBorderWrapper"]:has(.ai-findings-detail-scroll-marker) '
+                        '::-webkit-scrollbar-thumb{'
+                        'background:linear-gradient(180deg,#22d3ee 0%,#6366f1 48%,#a855f7 100%);'
+                        'border:2px solid rgba(7,11,22,0.88);border-radius:999px;min-height:44px}'
+                        'div[data-testid="stVerticalBlockBorderWrapper"]:has(.ai-findings-detail-scroll-marker) '
+                        '::-webkit-scrollbar-thumb:hover{'
+                        'background:linear-gradient(180deg,#67e8f9 0%,#818cf8 45%,#c084fc 100%)}'
+                        '</style>',
+                        unsafe_allow_html=True,
+                    )
+                    with st.container(height=420, border=False):
                         st.markdown(
-                            f'<div style="font-size:0.68rem;color:#cbd5e1;padding:1px 0">'
-                            f'<span style="color:{_sv2}">●</span> '
-                            f'<code style="font-size:0.64rem">{html.escape(str(_a["node_id"]))}</code>'
-                            f' <span style="color:#475569">· {_a["severity"]} · '
-                            f't+{_a["timestamp_offset"]}m</span></div>',
+                            '<div class="ai-findings-detail-scroll-marker"></div>',
                             unsafe_allow_html=True,
                         )
-                    if len(_this_alerts) > 6:
-                        st.caption(f"…and {len(_this_alerts) - 6} more")
-                    st.markdown("</div>", unsafe_allow_html=True)
-
-                    # KPI strip
-                    _k1, _k2, _k3, _k4 = st.columns(4)
-                    _rl_upper = (_ag.get("risk_level") or "—").upper()
-                    for _kc, _kl, _kv, _kc2 in [
-                        (_k1, "Root Cause",  _run.get("root_cause") or "—",  "#f1f5f9"),
-                        (_k2, "Confidence", _conf_pct,
-                         "#22c55e" if _conf_val >= 0.8 else "#f59e0b"),
-                        (_k3, "Impacted",   f"{len(_imp_diag)} diagrams",
-                         "#ef4444" if len(_imp_diag) >= 3 else "#f59e0b"),
-                        (_k4, "Risk",       _rl_upper,
-                         {"HIGH": "#ef4444", "MEDIUM": "#f59e0b", "LOW": "#22c55e"}.get(
-                             _rl_upper, "#6b7280")),
-                    ]:
-                        with _kc:
-                            st.markdown(
-                                f'<div style="background:rgba(255,255,255,0.03);'
-                                f'border:1px solid rgba(255,255,255,0.07);border-radius:8px;'
-                                f'padding:8px 10px;text-align:center;margin-bottom:8px">'
-                                f'<div style="font-size:0.56rem;color:#64748b;text-transform:uppercase;'
-                                f'letter-spacing:.07em">{_kl}</div>'
-                                f'<div style="font-size:0.76rem;font-weight:700;color:{_kc2};'
-                                f'word-break:break-word;margin-top:3px">{_kv}</div></div>',
-                                unsafe_allow_html=True,
-                            )
-
-                    # RCA Evidence card (merged with calibrated confidence)
-                    _rca_bdr = "#8b5cf6" if _is_gnn else "#f59e0b"
-                    st.markdown(
-                        f'<div style="{_card(f"border-left:4px solid {_rca_bdr}")}">',
-                        unsafe_allow_html=True,
-                    )
-                    _is_v2_ops = "V2" in _rca_src or "Relation-Aware" in _rca_src
-                    st.markdown(
-                        _badge("Temporal Relation-Aware GNN", "#6d28d9") if _is_v2_ops
-                        else _badge("Enterprise GNN RCA", "#8b5cf6") if _is_gnn
-                        else _badge("Graph-grounded RCA", "#f59e0b"),
-                        unsafe_allow_html=True,
-                    )
-                    st.markdown(f"**Root Cause Node:** `{_run.get('root_cause') or '—'}`")
-                    st.markdown(f"**Source Diagram:** `{_run.get('root_cause_diagram') or '—'}`")
-                    _bullets = (_step5.get("evidence") or [])[:5]
-                    if _bullets:
-                        st.markdown("**Evidence:**")
-                        for _ev in _bullets:
-                            st.markdown(f"&emsp;• {_ev}")
-
-                    # Calibrated confidence — shown inline once available
-                    _calib_mid = _run.get("confidence_calibration")
-                    if _calib_mid:
-                        _cm_c   = _calib_mid["calibrated_confidence"]
-                        _cm_pct = f"{_cm_c:.0%}"
-                        _cm_band = _calib_mid.get("confidence_band", "")
-                        _cm_pass = _calib_mid.get("threshold_passed", False)
-                        _cm_expl = _calib_mid.get("explanation", [])
-                        _cm_col  = "#22c55e" if _cm_pass else "#f59e0b" if _cm_c >= 0.5 else "#ef4444"
-                        _cm_lbl  = "✓ RCA confidence gate passed" if _cm_pass else "⚠ Human validation required"
-                        st.markdown(
-                            f'<div style="margin-top:10px;padding-top:8px;'
-                            f'border-top:1px solid rgba(255,255,255,0.08)">'
-                            f'<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">'
-                            f'<span style="font-size:0.60rem;font-weight:700;color:{_cm_col};'
-                            f'text-transform:uppercase;letter-spacing:.08em">Calibrated Confidence</span>'
-                            f'<span style="font-size:1.05rem;font-weight:800;color:{_cm_col}">{_cm_pct}</span>'
-                            f'<span style="font-size:0.58rem;color:#64748b">'
-                            f'raw {_conf_pct} → {_cm_band}</span>'
-                            f'</div>'
-                            f'<div style="font-size:0.65rem;font-weight:600;color:{_cm_col};margin-bottom:5px">'
-                            f'{_cm_lbl}</div>',
-                            unsafe_allow_html=True,
+                        # KPI strip
+                        _k1, _k2, _k3, _k4 = st.columns(4)
+                        _rl_upper = (_ag.get("risk_level") or "—").upper()
+                        for _kc, _kl, _kv, _kc2 in [
+                            (_k1, "Root Cause",  _run.get("root_cause") or "—",  "#f1f5f9"),
+                            (_k2, "Confidence", _conf_pct,
+                             "#22c55e" if _conf_val >= 0.8 else "#f59e0b"),
+                            (_k3, "Impacted",   f"{len(_imp_diag)} diagrams",
+                             "#ef4444" if len(_imp_diag) >= 3 else "#f59e0b"),
+                            (_k4, "Risk",       _rl_upper,
+                             {"HIGH": "#ef4444", "MEDIUM": "#f59e0b", "LOW": "#22c55e"}.get(
+                                 _rl_upper, "#6b7280")),
+                        ]:
+                            with _kc:
+                                st.markdown(
+                                    f'<div style="background:rgba(255,255,255,0.03);'
+                                    f'border:1px solid rgba(255,255,255,0.07);border-radius:8px;'
+                                    f'padding:8px 10px;text-align:center;margin-bottom:8px">'
+                                    f'<div style="font-size:0.56rem;color:#64748b;text-transform:uppercase;'
+                                    f'letter-spacing:.07em">{_kl}</div>'
+                                    f'<div style="font-size:0.76rem;font-weight:700;color:{_kc2};'
+                                    f'word-break:break-word;margin-top:3px">{_kv}</div></div>',
+                                    unsafe_allow_html=True,
+                                )
+    
+                        # ── AI Expert Analysis card ──────────────────────────────
+                        _is_v2_ops = "V2" in _rca_src or "Relation-Aware" in _rca_src
+                        _rca_bdr   = "#6d28d9" if _is_v2_ops else "#8b5cf6" if _is_gnn else "#f59e0b"
+                        _rca_glow  = "rgba(109,40,217,0.18)" if _is_v2_ops else "rgba(139,92,246,0.14)" if _is_gnn else "rgba(245,158,11,0.14)"
+                        _badge_rca = (
+                            _badge("Temporal Relation-Aware GNN", "#6d28d9") if _is_v2_ops
+                            else _badge("Enterprise GNN RCA", "#8b5cf6") if _is_gnn
+                            else _badge("Graph-grounded RCA", "#f59e0b")
                         )
-                        for _cm_e in (_cm_expl or [])[:3]:
-                            st.markdown(
-                                f'<div style="font-size:0.60rem;color:#94a3b8;padding:1px 0">'
-                                f'· {html.escape(str(_cm_e))}</div>',
-                                unsafe_allow_html=True,
+    
+                        # Root cause + source diagram pill row
+                        _rc_node = html.escape(str(_run.get("root_cause") or "—"))
+                        _rc_diag = html.escape(str(_run.get("root_cause_diagram") or "—"))
+                        _bullets = (_step5.get("evidence") or [])[:5]
+    
+                        # Evidence items HTML
+                        _ev_items_html = "".join(
+                            f'<div style="display:flex;align-items:flex-start;gap:8px;'
+                            f'padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'
+                            f'<span style="color:{_rca_bdr};font-size:0.74rem;margin-top:2px;flex-shrink:0">▸</span>'
+                            f'<span style="font-size:0.70rem;color:#cbd5e1;line-height:1.55">'
+                            f'{html.escape(str(_ev))}</span></div>'
+                            for _ev in _bullets
+                        ) if _bullets else (
+                            '<div style="font-size:0.68rem;color:#475569;font-style:italic">No evidence captured.</div>'
+                        )
+    
+                        # Calibrated confidence block
+                        _calib_mid = _run.get("confidence_calibration")
+                        _conf_block_html = ""
+                        if _calib_mid:
+                            _cm_c    = _calib_mid["calibrated_confidence"]
+                            _cm_pct  = f"{_cm_c:.0%}"
+                            _cm_band = _calib_mid.get("confidence_band", "")
+                            _cm_pass = _calib_mid.get("threshold_passed", False)
+                            _cm_expl = _calib_mid.get("explanation", [])
+                            _cm_col  = "#22c55e" if _cm_pass else "#f59e0b" if _cm_c >= 0.5 else "#ef4444"
+                            _cm_icon = "✓" if _cm_pass else "⚠"
+                            _cm_lbl  = "RCA confidence gate passed" if _cm_pass else "Human validation required"
+                            _cm_bg   = "rgba(34,197,94,0.08)" if _cm_pass else "rgba(245,158,11,0.08)" if _cm_c >= 0.5 else "rgba(239,68,68,0.08)"
+                            _cm_expl_html = "".join(
+                                f'<div style="font-size:0.64rem;color:#94a3b8;padding:3px 0 0 10px;'
+                                f'border-left:2px solid rgba(255,255,255,0.1);line-height:1.5">'
+                                f'· {html.escape(str(_cme))}</div>'
+                                for _cme in (_cm_expl or [])[:3]
                             )
-                        st.markdown("</div>", unsafe_allow_html=True)
-                    st.markdown("</div>", unsafe_allow_html=True)
+                            _conf_block_html = f"""
+    <div style="margin-top:16px;padding:12px 14px;border-radius:10px;
+        background:{_cm_bg};border:1px solid {_cm_col}33">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+        <div style="display:flex;flex-direction:column;align-items:center;
+            background:{_cm_col}22;border-radius:8px;padding:7px 12px;min-width:56px">
+          <span style="font-size:1.2rem;font-weight:900;color:{_cm_col};line-height:1">{_cm_pct}</span>
+          <span style="font-size:0.54rem;font-weight:700;color:{_cm_col};
+              text-transform:uppercase;letter-spacing:.08em;margin-top:3px">confidence</span>
+        </div>
+        <div>
+          <div style="font-size:0.66rem;font-weight:700;color:{_cm_col};line-height:1.4">
+            {_cm_icon} {_cm_lbl}</div>
+          <div style="font-size:0.62rem;color:#64748b;margin-top:3px">
+            raw {_conf_pct} → <span style="color:#94a3b8">{html.escape(_cm_band)}</span></div>
+        </div>
+      </div>
+      {_cm_expl_html}
+    </div>"""
+    
+                        # Blast radius HTML
+                        _br_c   = "#ef4444" if len(_imp_diag) >= 3 else "#f59e0b" if _imp_diag else "#22c55e"
+                        _br_bg  = "rgba(239,68,68,0.07)" if len(_imp_diag) >= 3 else "rgba(245,158,11,0.07)" if _imp_diag else "rgba(34,197,94,0.07)"
+                        _br_icon = "🔴" if len(_imp_diag) >= 3 else "🟡" if _imp_diag else "🟢"
+                        _diag_pills = "".join(
+                            f'<span style="display:inline-block;background:rgba(255,255,255,0.05);'
+                            f'border:1px solid rgba(255,255,255,0.1);border-radius:6px;'
+                            f'padding:2px 8px;font-size:0.60rem;color:#cbd5e1;'
+                            f'font-family:monospace;margin:2px 3px 2px 0">{html.escape(str(_d))}</span>'
+                            for _d in _imp_diag[:6]
+                        )
+                        _br_overflow = (
+                            f'<div style="font-size:0.60rem;color:#475569;margin-top:4px">'
+                            f'…and {len(_imp_diag)-6} more</div>'
+                        ) if len(_imp_diag) > 6 else ""
+                        _br_empty = (
+                            '<div style="font-size:0.65rem;color:#475569;font-style:italic">No impacted diagrams identified.</div>'
+                            if not _imp_diag else ""
+                        )
+    
+                        st.markdown(f"""
+    <div style="background:linear-gradient(135deg,rgba(15,23,42,0.90),rgba(7,11,22,0.72));
+        border:1px solid {_rca_bdr}44;border-left:4px solid {_rca_bdr};
+        border-radius:14px;padding:20px 20px 18px;margin:10px 0;
+        box-shadow:0 4px 24px {_rca_glow},inset 0 1px 0 rgba(255,255,255,0.05)">
 
-                    # V2 model details expander
-                    _mn_ops = _run.get("model_notes", {})
-                    if _mn_ops and _is_v2_ops:
-                        with st.expander("Model details", expanded=False):
-                            _mn_rows = []
-                            for _mk, _mv in [
-                                ("uses_temporal_features", _mn_ops.get("uses_temporal_features", "—")),
-                                ("uses_edge_type",         _mn_ops.get("uses_edge_type", "—")),
-                                ("local_edges",            _mn_ops.get("local_edges", "—")),
-                                ("cross_diagram_edges",    _mn_ops.get("cross_diagram_edges", "—")),
-                                ("vision_edges",           _mn_ops.get("vision_edges", "—")),
-                                ("relations", ", ".join(_mn_ops.get("relations", [])) or "—"),
-                                ("note",                   _mn_ops.get("note", "—")),
-                            ]:
-                                _mn_rows.append({"Field": _mk, "Value": str(_mv)})
-                            st.dataframe(pd.DataFrame(_mn_rows),
-                                         use_container_width=True, hide_index=True)
+      <!-- badge row -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        {_badge_rca}
+        <span style="font-size:0.60rem;font-weight:700;color:#334155;
+            text-transform:uppercase;letter-spacing:.1em">AI Expert Analysis</span>
+      </div>
 
-                    # Blast Radius card
-                    _br_c = "#ef4444" if len(_imp_diag) >= 3 else "#f59e0b" if _imp_diag else "#22c55e"
-                    st.markdown(
-                        f'<div style="{_card(f"border-left:4px solid {_br_c}")}">',
-                        unsafe_allow_html=True,
-                    )
-                    st.markdown(f"**Blast Radius — {len(_imp_diag)} diagram(s) impacted**")
-                    for _d in _imp_diag[:6]:
-                        st.markdown(f"&emsp;• `{_d}`")
-                    if len(_imp_diag) > 6:
-                        st.caption(f"…and {len(_imp_diag)-6} more")
-                    if not _imp_diag:
-                        st.caption("No impacted diagrams identified.")
-                    st.markdown("</div>", unsafe_allow_html=True)
+      <!-- root cause + diagram row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);
+            border-radius:10px;padding:12px 14px">
+          <div style="font-size:0.60rem;font-weight:700;color:#64748b;
+              text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Root Cause Node</div>
+          <div style="font-size:0.82rem;font-weight:800;color:#f1f5f9;
+              font-family:monospace;word-break:break-all;line-height:1.3">{_rc_node}</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);
+            border-radius:10px;padding:12px 14px">
+          <div style="font-size:0.60rem;font-weight:700;color:#64748b;
+              text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Source Diagram</div>
+          <div style="font-size:0.76rem;font-weight:700;color:#93c5fd;
+              font-family:monospace;word-break:break-all;line-height:1.3">{_rc_diag}</div>
+        </div>
+      </div>
 
+      <!-- evidence -->
+      <div style="margin-bottom:6px">
+        <div style="font-size:0.62rem;font-weight:700;color:#64748b;
+            text-transform:uppercase;letter-spacing:.09em;margin-bottom:10px">Evidence</div>
+        {_ev_items_html}
+      </div>
+
+      <!-- calibrated confidence -->
+      {_conf_block_html}
+
+      <!-- blast radius -->
+      <div style="margin-top:16px;padding:12px 14px;border-radius:10px;
+          background:{_br_bg};border:1px solid {_br_c}33">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">
+          <span style="font-size:0.88rem">{_br_icon}</span>
+          <span style="font-size:0.62rem;font-weight:700;color:{_br_c};
+              text-transform:uppercase;letter-spacing:.08em">Blast Radius</span>
+          <span style="font-size:0.66rem;font-weight:800;color:{_br_c}">
+            — {len(_imp_diag)} diagram(s) impacted</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">{_diag_pills}</div>
+        {_br_overflow}
+        {_br_empty}
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+                        # V2 model details expander
+                        _mn_ops = _run.get("model_notes", {})
+                        if _mn_ops and _is_v2_ops:
+                            with st.expander("Model details", expanded=False):
+                                _mn_rows = []
+                                for _mk, _mv in [
+                                    ("uses_temporal_features", _mn_ops.get("uses_temporal_features", "—")),
+                                    ("uses_edge_type",         _mn_ops.get("uses_edge_type", "—")),
+                                    ("local_edges",            _mn_ops.get("local_edges", "—")),
+                                    ("cross_diagram_edges",    _mn_ops.get("cross_diagram_edges", "—")),
+                                    ("vision_edges",           _mn_ops.get("vision_edges", "—")),
+                                    ("relations", ", ".join(_mn_ops.get("relations", [])) or "—"),
+                                    ("note",                   _mn_ops.get("note", "—")),
+                                ]:
+                                    _mn_rows.append({"Field": _mk, "Value": str(_mv)})
+                                st.dataframe(pd.DataFrame(_mn_rows),
+                                             use_container_width=True, hide_index=True)
+    
     # ════════════════════════════════════════════════════════════════════════
     # RIGHT — Remediation Pipeline
     # ════════════════════════════════════════════════════════════════════════
@@ -9069,7 +9194,7 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                     '</style>',
                     unsafe_allow_html=True,
                 )
-                with st.container(height=560, border=False):
+                with st.container(height=540, border=False):
                     st.markdown(
                         '<div class="rem-scroll-pane-marker"></div>',
                         unsafe_allow_html=True,
@@ -9077,122 +9202,179 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                     _render_remediation_plan(_rem_plan_cached, show_source_badge=False)
                     _render_qwen_runtime_proof(_rem_plan_cached)
 
-                    # ── Evidence Critic / Governance review ──────────────────
-                    # Use backend-persisted review first; recompute if cache key changed
-                    _gov_reviews = st.session_state.get("ops_governance_reviews", {})
-                    _gov_rev_backend = _run_rgt.get("governance_review") or {}
-                    _gov_is_persisted = bool(_gov_rev_backend.get("status") and
-                                             _gov_rev_backend.get("status") != "skipped")
-                    _gov_cache_key = "|".join([
-                        _run_rgt.get("root_cause", ""),
-                        _run_rgt.get("rca_source", ""),
-                        f"{_run_rgt.get('calibrated_confidence') or _conf_r:.4f}",
-                        (_rem_plan_cached or {}).get("source", ""),
-                    ])
-                    _stored_entry = _gov_reviews.get(_sel_cid, {})
-                    if isinstance(_stored_entry, dict) and _stored_entry.get("cache_key") == _gov_cache_key:
-                        _gov_rev = _stored_entry.get("review")
-                        _gov_disp_label = _stored_entry.get("source_label", "UI computed")
-                    elif _gov_is_persisted:
-                        _gov_rev        = _gov_rev_backend
-                        _gov_disp_label = "persisted"
-                        _gov_reviews[_sel_cid] = {"cache_key": _gov_cache_key,
-                                                   "review": _gov_rev,
-                                                   "source_label": "persisted"}
-                        st.session_state.ops_governance_reviews = _gov_reviews
-                    elif _GOVERNANCE_OK and _validate_governance:
-                        try:
-                            _gov_rev = _validate_governance(
-                                agent_run={
-                                    "root_cause":            _run_rgt.get("root_cause", ""),
-                                    "rca_source":            _run_rgt.get("rca_source", ""),
-                                    "confidence":            _conf_r,
-                                    "calibrated_confidence": _run_rgt.get("calibrated_confidence"),
-                                    "impacted_diagrams":     _run_rgt.get("impacted_diagrams", []),
-                                    "steps":                 _run_rgt.get("steps", []),
-                                    "approval_gate":         _run_rgt.get("approval_gate", {}),
-                                },
-                                remediation_plan=_rem_plan_cached,
-                                graph_context=_load_enterprise_graph_for(
-                                    _sel_cl.get("scenario_id", "")
-                                ),
-                            )
-                            _gov_disp_label = "UI computed"
-                        except Exception:
-                            _gov_rev        = None
-                            _gov_disp_label = ""
-                        if _gov_rev:
-                            _gov_reviews[_sel_cid] = {"cache_key": _gov_cache_key,
-                                                       "review": _gov_rev,
-                                                       "source_label": "UI computed"}
-                            st.session_state.ops_governance_reviews = _gov_reviews
+                    # ── Remediation Quality card ─────────────────────────────
+                    # Derived from the remediation plan, NOT from RCA governance
+                    _rq_resp        = (_rem_plan_cached.get("response") or {})
+                    _rq_src         = _rem_plan_cached.get("source", "")
+                    _rq_ok          = bool(_rem_plan_cached.get("ok", False))
+                    _rq_runbooks    = _rq_resp.get("runbook_chain", []) or []
+                    _rq_auto        = str(_rq_resp.get("automation_eligibility") or "unknown").lower()
+                    _rq_risk        = str(_rq_resp.get("risk_level") or "unknown").upper()
+                    _rq_steps       = _rq_resp.get("remediation_steps", []) or []
+                    _sop_adapter_env= _os.environ.get("INFRAGRAPH_LORA_ADAPTER_PATH") or ""
+                    _sop_adapter_ok = bool(_sop_adapter_env and Path(_sop_adapter_env).exists())
+                    _vllm_live      = _rq_src == "qwen_vllm" and _rq_ok
+
+                    # Score: source quality (40) + runbook coverage (30) + step depth (20) + sop (10)
+                    _rq_score  = 0
+                    _rq_score += 40 if _vllm_live else 15
+                    _rq_score += min(len(_rq_runbooks) * 10, 30)
+                    _rq_score += min(len(_rq_steps) * 4, 20)
+                    _rq_score += 10 if _sop_adapter_ok else 0
+                    _rq_score  = min(_rq_score, 100)
+
+                    _rq_col   = "#22c55e" if _rq_score >= 70 else "#f59e0b" if _rq_score >= 40 else "#ef4444"
+                    _rq_bg    = ("rgba(34,197,94,0.07)" if _rq_score >= 70
+                                 else "rgba(245,158,11,0.07)" if _rq_score >= 40
+                                 else "rgba(239,68,68,0.07)")
+                    _rq_status = "READY" if _rq_score >= 70 else "PARTIAL" if _rq_score >= 40 else "INCOMPLETE"
+
+                    _rq_src_label = (
+                        "Live Qwen/vLLM — model-generated" if _vllm_live
+                        else "Template/fallback — deterministic, not model-generated"
+                    )
+                    _rq_src_col   = "#10b981" if _vllm_live else "#f59e0b"
+
+                    _rq_auto_col  = {"full": "#22c55e", "partial": "#f59e0b", "manual": "#ef4444"}.get(_rq_auto, "#6b7280")
+                    _rq_risk_col  = {"HIGH": "#ef4444", "MEDIUM": "#f59e0b", "LOW": "#22c55e"}.get(_rq_risk, "#6b7280")
+
+                    _rq_findings = [
+                        f"Response source: {_rq_src_label}",
+                        f"Runbook chain matched: {len(_rq_runbooks)} SOP runbook(s)",
+                        f"Remediation steps generated: {len(_rq_steps)}",
+                        f"Automation eligibility: {_rq_auto}",
+                        f"Risk level assessed: {_rq_risk}",
+                        f"SOP-grounded LoRA adapter: {'loaded' if _sop_adapter_ok else 'not found — using base weights'}",
+                    ]
+
+                    _rq_findings_html = "".join(
+                        f'<div style="font-size:0.62rem;color:#94a3b8;padding:2px 0">'
+                        f'· {html.escape(f)}</div>'
+                        for f in _rq_findings
+                    )
+
+                    st.markdown(f"""
+<div style="background:linear-gradient(135deg,rgba(15,23,42,0.90),rgba(7,11,22,0.72));
+    border:1px solid {_rq_col}33;border-left:4px solid {_rq_col};
+    border-radius:12px;padding:14px 16px;margin-top:12px;
+    box-shadow:0 4px 20px {_rq_bg},inset 0 1px 0 rgba(255,255,255,0.04)">
+  <div style="font-size:0.54rem;font-weight:700;color:{_rq_col};
+      text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px">
+    ⚙ Remediation Plan Quality</div>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+    <div style="display:flex;flex-direction:column;align-items:center;
+        background:{_rq_col}1a;border-radius:10px;padding:7px 14px;min-width:56px">
+      <span style="font-size:1.3rem;font-weight:900;color:{_rq_col};line-height:1">{_rq_score}</span>
+      <span style="font-size:0.46rem;font-weight:700;color:{_rq_col};
+          text-transform:uppercase;letter-spacing:.08em;margin-top:2px">/ 100</span>
+    </div>
+    <div>
+      <div style="font-size:0.68rem;font-weight:800;color:{_rq_col};margin-bottom:3px">
+        {_rq_status}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span style="font-size:0.58rem;font-weight:700;color:{_rq_src_col};
+            background:{_rq_src_col}18;border-radius:4px;padding:1px 6px">
+          {'Qwen Live' if _vllm_live else 'Template'}</span>
+        <span style="font-size:0.58rem;font-weight:700;color:{_rq_auto_col};
+            background:{_rq_auto_col}18;border-radius:4px;padding:1px 6px">
+          {_rq_auto.upper()}</span>
+        <span style="font-size:0.58rem;font-weight:700;color:{_rq_risk_col};
+            background:{_rq_risk_col}18;border-radius:4px;padding:1px 6px">
+          {_rq_risk} risk</span>
+      </div>
+    </div>
+  </div>
+  <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:8px">
+    {_rq_findings_html}
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+                    # (scroll ends here)
+
+                # ── Below scroll: always-visible actions + ITSM Draft ────────
+                st.markdown('<div style="height:4px"></div>', unsafe_allow_html=True)
+                _gov_reviews_ap = st.session_state.get("ops_governance_reviews", {})
+                _gov_entry_ap   = _gov_reviews_ap.get(_sel_cid, {})
+                _gov_rev_ap     = (_gov_entry_ap.get("review") if isinstance(_gov_entry_ap, dict)
+                                   else _gov_entry_ap)
+                if _gov_rev_ap and _gov_rev_ap.get("score", 100) < 70:
+                    st.warning(
+                        f"Governance score {_gov_rev_ap['score']}/100 "
+                        f"({_gov_rev_ap.get('status','').upper()}) — review before applying.",
+                        icon="⚠️",
+                    )
+                _mr1, _mr2 = st.columns(2)
+                with _mr1:
+                    st.button("Manual Review", use_container_width=True, key="ops_manual_btn")
+                with _mr2:
+                    if st.button("Apply Remediation", use_container_width=True,
+                                 key="ops_apply_btn", type="primary",
+                                 help="Demo only — no real actions taken."):
+                        st.toast("Demo: remediation would execute here. No real actions taken.",
+                                 icon="⚡")
+                # ITSM Ticket — moved out of scroll, always visible below
+                _plan_resp = _rem_plan_cached.get("response") or _rem_plan_cached
+                _itsm_data = _plan_resp.get("itsm_ticket_summary")
+                _ticket_created = st.session_state.get("itsm_ticket_created", False)
+                if _itsm_data:
+                    st.markdown(
+                        f'<div style="{_card("border-left:4px solid #22c55e;margin-top:10px")}">',
+                        unsafe_allow_html=True,
+                    )
+                    st.markdown(
+                        '<div style="font-size:0.62rem;font-weight:700;color:#22c55e;'
+                        'text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">'
+                        'ITSM Ticket</div>',
+                        unsafe_allow_html=True,
+                    )
+                    if isinstance(_itsm_data, dict):
+                        _itsm_pairs = [
+                            ("short_description", "Short description"),
+                            ("description",       "Description"),
+                            ("affected_ci",       "Affected CI"),
+                            ("priority",          "Priority"),
+                            ("assignment_group",  "Assignment group"),
+                        ]
+                        _itsm_items = [
+                            f"{lbl}: {_itsm_data[k]}"
+                            for k, lbl in _itsm_pairs
+                            if _itsm_data.get(k)
+                        ]
+                        body_html = "".join(
+                            f'<li style="margin-bottom:5px;line-height:1.45;'
+                            f'color:#e2e8f0;font-size:0.80rem">{html.escape(item)}</li>'
+                            for item in _itsm_items
+                        )
+                        st.markdown(
+                            f'<ol style="margin:0 0 10px 18px;padding:0">{body_html}</ol>',
+                            unsafe_allow_html=True,
+                        )
                     else:
-                        _gov_rev        = None
-                        _gov_disp_label = ""
-
-                    if _gov_rev:
-                        _gscore  = _gov_rev.get("score", 0)
-                        _gstatus = _gov_rev.get("status", "")
-                        _gsc     = {"passed": "#22c55e", "warning": "#f59e0b",
-                                    "failed": "#ef4444"}.get(_gstatus, "#6b7280")
-                        _grec    = _gov_rev.get("approval_recommendation", "")
-                        _glabel  = f"⚖ Governance Review — {_gov_disp_label}" if _gov_disp_label else "⚖ Governance Review"
                         st.markdown(
-                            f'<div style="{_card(f"border-left:4px solid {_gsc}")}">',
+                            f'<div style="color:#e2e8f0;font-size:0.82rem;line-height:1.5;'
+                            f'margin-bottom:10px">{html.escape(str(_itsm_data))}</div>',
                             unsafe_allow_html=True,
                         )
-                        st.markdown(
-                            f'<div style="font-size:0.60rem;font-weight:700;color:{_gsc};'
-                            f'text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px">'
-                            f'{_glabel}</div>'
-                            f'<div style="font-size:1.25rem;font-weight:800;color:{_gsc}">'
-                            f'{_gscore}/100</div>'
-                            f'<div style="font-size:0.62rem;color:#64748b;margin-bottom:5px">'
-                            f'{_gstatus.upper()} · {_grec.replace("_", " ")}</div>',
-                            unsafe_allow_html=True,
-                        )
-                        for _gf in _gov_rev.get("findings", [])[:5]:
-                            st.markdown(
-                                f'<div style="font-size:0.63rem;color:#94a3b8;padding:1px 0">'
-                                f'· {html.escape(str(_gf))}</div>',
-                                unsafe_allow_html=True,
-                            )
-                        for _bi in _gov_rev.get("blocking_issues", []):
-                            st.markdown(
-                                f'<div style="font-size:0.63rem;color:#ef4444;margin-top:4px;'
-                                f'font-weight:600">⛔ {html.escape(str(_bi))}</div>',
-                                unsafe_allow_html=True,
-                            )
-                        st.markdown("</div>", unsafe_allow_html=True)
-
-                    # Human Approval + Apply + ITSM Draft.
-                    # These live inside the scroll pane with the remediation details.
-                    _gov_reviews_ap = st.session_state.get("ops_governance_reviews", {})
-                    _gov_entry_ap   = _gov_reviews_ap.get(_sel_cid, {})
-                    _gov_rev_ap     = (_gov_entry_ap.get("review") if isinstance(_gov_entry_ap, dict)
-                                       else _gov_entry_ap)
-                    if _gov_rev_ap and _gov_rev_ap.get("score", 100) < 70:
-                        st.warning(
-                            f"Governance score {_gov_rev_ap['score']}/100 "
-                            f"({_gov_rev_ap.get('status','').upper()}) — review before applying.",
-                            icon="⚠️",
-                        )
-
-                    _mr1, _mr2 = st.columns(2)
-                    with _mr1:
-                        st.button("Manual Review", use_container_width=True, key="ops_manual_btn")
-                    with _mr2:
+                    _itsm_sp, _itsm_btn_col = st.columns([3, 1])
+                    with _itsm_btn_col:
                         if st.button(
-                            "Apply Remediation",
-                            use_container_width=True,
-                            key="ops_apply_btn",
+                            "Ticket Created" if _ticket_created else "Create Ticket",
+                            key="create_itsm_ticket_btn",
                             type="primary",
-                            help="Demo only — no real actions taken.",
+                            use_container_width=True,
+                            disabled=_ticket_created,
                         ):
-                            st.toast("Demo: remediation would execute here. No real actions taken.",
-                                     icon="⚡")
-
-                    st.markdown(f'<div style="{_card("border-left:4px solid #22c55e")}">', unsafe_allow_html=True)
+                            st.session_state.itsm_ticket_created = True
+                            st.toast("ITSM ticket created successfully", icon="✅")
+                            st.rerun()
+                    st.markdown("</div>", unsafe_allow_html=True)
+                else:
+                    # Fallback: show simple ticket info from agent run
+                    st.markdown(
+                        f'<div style="{_card("border-left:4px solid #22c55e;margin-top:10px")}">',
+                        unsafe_allow_html=True,
+                    )
                     st.markdown(_badge("Demo ITSM Draft", "#22c55e"), unsafe_allow_html=True)
                     for _fk, _fv in [
                         ("Ticket",   _ticket.get("ticket_id", "—")),
@@ -9202,8 +9384,8 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                     ]:
                         st.markdown(
                             f'<div style="font-size:0.70rem;color:#94a3b8">{_fk}: '
-                            f'<span style="color:#f1f5f9;font-weight:600">{html.escape(str(_fv))}</span>'
-                            f'</div>',
+                            f'<span style="color:#f1f5f9;font-weight:600">'
+                            f'{html.escape(str(_fv))}</span></div>',
                             unsafe_allow_html=True,
                         )
                     st.markdown("</div>", unsafe_allow_html=True)
