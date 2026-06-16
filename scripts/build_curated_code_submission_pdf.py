@@ -270,6 +270,36 @@ def collect_files() -> tuple[list[Path], list[tuple[str, str]], list[tuple[str, 
     return included, excluded_manifest, skipped_manifest
 
 
+def sort_included_files(files: list[Path]) -> list[Path]:
+    def priority(path: Path) -> tuple[int, str]:
+        r = rel(path)
+        if r == "README.md":
+            return (0, r)
+        if r.startswith("app/"):
+            return (1, r)
+        if r.startswith("requirements/"):
+            return (2, r)
+        if r.startswith("src/"):
+            return (3, r)
+        if r.startswith("scripts/"):
+            return (4, r)
+        if r.startswith("assets/kb/"):
+            return (5, r)
+        if r.startswith("docs/"):
+            return (6, r)
+        if r.startswith("reports/"):
+            return (7, r)
+        if r.startswith("model_artifacts/"):
+            return (8, r)
+        if r.startswith("outputs/"):
+            return (9, r)
+        if r.startswith("training/"):
+            return (10, r)
+        return (99, r)
+
+    return sorted(files, key=priority)
+
+
 def make_file_index(files: list[Path]) -> str:
     lines = []
     last_parent = None
@@ -286,6 +316,10 @@ def make_file_index(files: list[Path]) -> str:
 def build_markdown() -> Path:
     included, excluded, skipped = collect_files()
 
+    included = sort_included_files(included)
+    excluded = sorted(excluded, key=lambda x: x[0])
+    skipped = sorted(skipped, key=lambda x: x[0])
+
     md_path = OUT_BASE.with_suffix(".md")
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -294,14 +328,20 @@ def build_markdown() -> Path:
     lines.append(f"Generated: {datetime.utcnow().isoformat()}Z\n")
     lines.append(f"Repository: {GITHUB_REPO_URL}\n")
 
+    # ── 1. Submission Scope ────────────────────────────────────────────────────
     lines.append("\n## 1. Submission Scope\n")
     lines.append(
         "This PDF is a curated source-code and evidence appendix generated from the InfraGraph AI repository. "
         "It includes active application code, training scripts, inference scripts, evaluation scripts, GNN/RCA logic, "
         "RF-DETR runtime/evaluation logic, Qwen GRPO/vERL execution path, orchestrator code, governance/remediation modules, "
-        "requirements, runbooks/SOPs, and final evidence reports.\n"
+        "requirements, runbooks/SOPs, and final evidence reports. "
+        "It excludes raw datasets, binary model weights, tokenizer binaries, generated runtime state, repeated scenario samples, "
+        "generated images, cache/build folders, vendored JS libraries, S3/offload utility artifacts, and optional experimental "
+        "renderers to keep the submission reviewable. "
+        f"The full repository can be reviewed at: {GITHUB_REPO_URL}\n"
     )
 
+    # ── 2. What Is Excluded From This PDF ─────────────────────────────────────
     lines.append("\n## 2. What Is Excluded From This PDF\n")
     lines.append(
         "To keep the portal submission reviewable and within upload constraints, this PDF excludes raw datasets, binary model weights, "
@@ -320,28 +360,18 @@ def build_markdown() -> Path:
         "Large repeated JSON previews and onboarding samples",
         "Vendor libraries, node modules, cache folders, and build outputs",
         "S3 upload/offload helper scripts and offload manifests",
+        "Optional experimental renderers (e.g. 3D WebGL visualisers)",
     ]
     for item in excluded_categories:
         lines.append(f"- {item}")
 
+    # ── 3. Included File Index ─────────────────────────────────────────────────
     lines.append("\n## 3. Included File Index\n")
     lines.append(f"Included files: **{len(included)}**\n")
     lines.append(make_file_index(included))
 
-    lines.append("\n## 4. Excluded / Skipped Manifest\n")
-    lines.append(
-        "This section lists files not printed in the PDF. They are excluded either because they are binary/generated/noisy, "
-        "or because they are outside the curated submission scope. Full paths can be inspected in the GitHub repository where available.\n"
-    )
-    lines.append("| File | Reason |")
-    lines.append("|------|--------|")
-    for r, reason in excluded[:1000]:
-        lines.append(f"| `{r}` | {reason} |")
-    if len(excluded) > 1000:
-        lines.append(f"| ... | {len(excluded) - 1000} more excluded files |")
-    lines.append(f"\nSkipped outside curated scope: **{len(skipped)}** files. Not printed to keep the appendix readable.\n")
-
-    lines.append("\n## 5. Source Code, Training/Evaluation Scripts, and Evidence Appendix\n")
+    # ── 4. Source Code, Training/Evaluation Scripts, and Evidence Appendix ─────
+    lines.append("\n## 4. Source Code, Training/Evaluation Scripts, and Evidence Appendix\n")
     for path in included:
         r = rel(path)
         lang = language_for(path)
@@ -352,6 +382,31 @@ def build_markdown() -> Path:
         lines.append(f"```{lang}")
         lines.append(text)
         lines.append("```")
+
+    # ── 5. Complete Excluded / Skipped Manifest ────────────────────────────────
+    lines.append("\n---\n")
+    lines.append("\n## 5. Complete Excluded / Skipped Manifest\n")
+    lines.append(
+        "This final section lists every repository path that was not printed in the PDF. "
+        "These files are excluded from this curated appendix because they are binary files, generated artifacts, "
+        "runtime state, repeated data samples, image/model artifacts, vendor libraries, optional experimental renderers, "
+        "or outside the selected submission-review scope. Where available, these files can still be reviewed in the GitHub repository:\n"
+    )
+    lines.append(f"- Full repository: `{GITHUB_REPO_URL}`\n")
+
+    lines.append("\n### 5.1 Explicitly excluded files and folders\n")
+    lines.append(f"Total explicitly excluded paths: **{len(excluded)}**\n")
+    lines.append("| File | Reason |")
+    lines.append("|------|--------|")
+    for r, reason in excluded:
+        lines.append(f"| `{r}` | {reason} |")
+
+    lines.append("\n### 5.2 Skipped files outside curated PDF scope\n")
+    lines.append(f"Total skipped paths outside curated scope: **{len(skipped)}**\n")
+    lines.append("| File | Reason |")
+    lines.append("|------|--------|")
+    for r, reason in skipped:
+        lines.append(f"| `{r}` | {reason} |")
 
     md_path.write_text("\n".join(lines), encoding="utf-8")
     return md_path
