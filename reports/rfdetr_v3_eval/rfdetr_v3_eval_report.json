@@ -1,117 +1,39 @@
 {
-  "status": "completed",
+  "status": "evaluation_failed",
   "split": "val",
   "num_images_in_split": 33,
   "num_images_evaluated": 30,
-  "num_images_processed": 30,
+  "num_images_processed": 0,
   "num_images_skipped": 0,
-  "num_inference_errors": 0,
+  "num_inference_errors": 30,
   "iou_threshold": 0.5,
   "confidence_threshold": 0.25,
-  "summary_note": "RF-DETR detector evaluated against V3 verified annotations on 30 diagrams. Metrics are prototype benchmark metrics, not production accuracy.",
-  "metrics": {
-    "precision": 0.0,
-    "recall": 0.0,
-    "f1": NaN,
-    "mean_iou_matched": NaN,
-    "mean_ap_at_50": 0.0,
-    "avg_inference_runtime_ms": 19798.2,
-    "global_tp": 0,
-    "global_fp": 265,
-    "global_fn": 265
-  },
-  "per_class_metrics": {
-    "cloud_or_wan": {
-      "tp": 0,
-      "fp": 39,
-      "fn": 23,
-      "gt_count": 23,
-      "precision": 0.0,
-      "recall": 0.0,
-      "f1": NaN,
-      "ap_at_50": 0.0
+  "summary_note": "RF-DETR evaluation did not complete because detector inference failed for all 30 sampled images. Detector accuracy is not claimed from this report.",
+  "first_5_errors": [
+    {
+      "file_name": "enterprise_v3_0064__branch_topology.png",
+      "error": "Non-zero exit code 4: "
     },
-    "cls0": {
-      "tp": 0,
-      "fp": 36,
-      "fn": 0,
-      "gt_count": 0,
-      "precision": 0.0,
-      "recall": NaN,
-      "f1": NaN,
-      "ap_at_50": NaN
+    {
+      "file_name": "enterprise_v3_0064__datacenter_topology.png",
+      "error": "Non-zero exit code 4: "
     },
-    "database": {
-      "tp": 0,
-      "fp": 6,
-      "fn": 12,
-      "gt_count": 12,
-      "precision": 0.0,
-      "recall": 0.0,
-      "f1": NaN,
-      "ap_at_50": 0.0
+    {
+      "file_name": "enterprise_v3_0064__wan_topology.png",
+      "error": "Non-zero exit code 4: "
     },
-    "firewall": {
-      "tp": 0,
-      "fp": 84,
-      "fn": 26,
-      "gt_count": 26,
-      "precision": 0.0,
-      "recall": 0.0,
-      "f1": NaN,
-      "ap_at_50": 0.0
+    {
+      "file_name": "enterprise_v3_0065__app_db_topology.png",
+      "error": "Non-zero exit code 4: "
     },
-    "load_balancer": {
-      "tp": 0,
-      "fp": 23,
-      "fn": 6,
-      "gt_count": 6,
-      "precision": 0.0,
-      "recall": 0.0,
-      "f1": NaN,
-      "ap_at_50": 0.0
-    },
-    "router": {
-      "tp": 0,
-      "fp": 39,
-      "fn": 36,
-      "gt_count": 36,
-      "precision": 0.0,
-      "recall": 0.0,
-      "f1": NaN,
-      "ap_at_50": 0.0
-    },
-    "server": {
-      "tp": 0,
-      "fp": 12,
-      "fn": 84,
-      "gt_count": 84,
-      "precision": 0.0,
-      "recall": 0.0,
-      "f1": NaN,
-      "ap_at_50": 0.0
-    },
-    "service": {
-      "tp": 0,
-      "fp": 0,
-      "fn": 39,
-      "gt_count": 39,
-      "precision": NaN,
-      "recall": 0.0,
-      "f1": NaN,
-      "ap_at_50": 0.0
-    },
-    "switch": {
-      "tp": 0,
-      "fp": 26,
-      "fn": 39,
-      "gt_count": 39,
-      "precision": 0.0,
-      "recall": 0.0,
-      "f1": NaN,
-      "ap_at_50": 0.0
+    {
+      "file_name": "enterprise_v3_0065__branch_topology.png",
+      "error": "Non-zero exit code 4: "
     }
-  },
-  "inference_errors": [],
-  "sample_predictions_dir": "reports/rfdetr_v3_eval/sample_predictions"
+  ],
+  "strict_metrics": {},
+  "localization_metrics": {},
+  "class_shift_diagnostic": {},
+  "class_confusion_matrix": {},
+  "first_20_matches": []
 }

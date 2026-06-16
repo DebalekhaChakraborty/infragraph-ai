@@ -470,23 +470,64 @@ def collect_rfdetr_evidence() -> dict:
     if RFDETR_EVAL_REPORT.exists():
         try:
             data = json.loads(RFDETR_EVAL_REPORT.read_text(encoding="utf-8"))
-            return {
-                "status": "eval_report_present",
-                "report_status": data.get("status", ""),   # e.g. "completed" / "evaluation_failed"
-                "source_file": str(RFDETR_EVAL_REPORT),
-                "metrics": data.get("metrics", {}),
-                "summary_note": data.get("summary_note", ""),
-                "split": data.get("split", ""),
-                "num_images_processed": data.get("num_images_processed") or 0,
-                "per_class_metrics": data.get("per_class_metrics", {}),
-                "first_5_errors": data.get("first_5_errors", []),
-            }
         except Exception as exc:
             return {
                 "status": "eval_report_read_error",
                 "source_file": str(RFDETR_EVAL_REPORT),
                 "error": str(exc),
             }
+
+        report_status = data.get("status", "")
+        num_processed = data.get("num_images_processed") or 0
+
+        # Support both old format (flat "metrics") and new format (strict_metrics / localization_metrics)
+        strict = data.get("strict_metrics") or data.get("metrics") or {}
+        localization = data.get("localization_metrics") or {}
+        shift_diag = data.get("class_shift_diagnostic") or {}
+
+        # Claim guidance: honest interpretation of what the metrics mean
+        strict_f1 = strict.get("f1")  # may be None (was NaN in old reports)
+        loc_f1 = localization.get("localization_f1")
+        best_shift = shift_diag.get("best_shift", "original")
+
+        def _is_positive(v) -> bool:
+            if v is None:
+                return False
+            try:
+                return float(v) > 0.0 and not math.isnan(float(v))
+            except (TypeError, ValueError):
+                return False
+
+        if _is_positive(strict_f1):
+            claim_guidance = (
+                f"Strict class-aware F1={strict_f1:.4f} (class mapping validated). "
+                "Detector accuracy may be cited as a prototype benchmark metric."
+            )
+        elif _is_positive(loc_f1):
+            claim_guidance = (
+                f"RF-DETR localization evidence available (localization F1={loc_f1:.4f}); "
+                f"class mapping calibration pending (best shift: {best_shift}). "
+                "Do not cite strict accuracy/mAP until class mapping is verified."
+            )
+        else:
+            claim_guidance = (
+                "No usable metrics — strict accuracy not claimed. "
+                "Run eval on AMD/ROCm env with rfdetr installed."
+            )
+
+        return {
+            "status": "eval_report_present",
+            "report_status": report_status,
+            "source_file": str(RFDETR_EVAL_REPORT),
+            "strict_metrics": strict,
+            "localization_metrics": localization,
+            "class_shift_diagnostic": shift_diag,
+            "summary_note": data.get("summary_note", ""),
+            "split": data.get("split", ""),
+            "num_images_processed": num_processed,
+            "claim_guidance": claim_guidance,
+            "first_5_errors": data.get("first_5_errors", []),
+        }
 
     return {
         "status": "eval_report_absent",
@@ -498,6 +539,7 @@ def collect_rfdetr_evidence() -> dict:
         "checkpoint_path": "model_artifacts/rfdetr_v3/checkpoint_best_total.pth",
         "inference_script": "scripts/run_rfdetr_inference.py",
         "eval_script": "scripts/evaluate_rfdetr_v3_detector.py",
+        "claim_guidance": "Detector accuracy not claimed — eval report absent.",
     }
 
 
@@ -565,16 +607,40 @@ def build_slide4_table(
     else:
         amd_evidence_str = "MI300X / ROCm — GPU 100% utilization, VRAM ~42%, Power ~278W (training evidence)"
 
-    # RF-DETR detector — only claim metrics when eval completed with processed images
+    # RF-DETR detector — honest claim based on which metrics are valid
     if rfdetr.get("status") == "eval_report_present":
         report_status = rfdetr.get("report_status", "")
         num_processed = rfdetr.get("num_images_processed") or 0
         if report_status == "completed" and num_processed > 0:
-            metrics = rfdetr.get("metrics", {})
-            p = _safe_fmt_float(metrics.get("precision"), ".4f")
-            r = _safe_fmt_float(metrics.get("recall"), ".4f")
-            f1 = _safe_fmt_float(metrics.get("f1"), ".4f")
-            detector_str = f"precision={p}, recall={r}, F1={f1} (prototype benchmark)"
+            strict = rfdetr.get("strict_metrics", {})
+            loc = rfdetr.get("localization_metrics", {})
+            shift_diag = rfdetr.get("class_shift_diagnostic", {})
+            strict_f1 = strict.get("f1")
+            loc_f1 = loc.get("localization_f1")
+            best_shift = shift_diag.get("best_shift", "original")
+
+            def _pos(v):
+                try:
+                    return v is not None and not math.isnan(float(v)) and float(v) > 0
+                except (TypeError, ValueError):
+                    return False
+
+            if _pos(strict_f1):
+                detector_str = (
+                    f"strict F1={_safe_fmt_float(strict_f1, '.4f')}, "
+                    f"mAP@0.5={_safe_fmt_float(strict.get('mean_ap_at_50'), '.4f')} "
+                    "(prototype benchmark, class mapping validated)"
+                )
+            elif _pos(loc_f1):
+                detector_str = (
+                    f"localization F1={_safe_fmt_float(loc_f1, '.4f')} "
+                    f"(boxes localized correctly; class mapping calibration pending — best shift: {best_shift})"
+                )
+            else:
+                detector_str = (
+                    f"not claimed — eval report present but status={report_status!r}, "
+                    f"processed={num_processed}, no usable metrics"
+                )
         else:
             detector_str = (
                 f"not claimed — eval report present but status={report_status!r}, "
@@ -710,20 +776,50 @@ def write_markdown_report(
     if rfdetr.get("status") == "eval_report_present":
         report_status = rfdetr.get("report_status", "")
         num_processed = rfdetr.get("num_images_processed") or 0
-        m = rfdetr.get("metrics", {})
+        strict = rfdetr.get("strict_metrics", {})
+        loc = rfdetr.get("localization_metrics", {})
+        shift_diag = rfdetr.get("class_shift_diagnostic", {})
+        best_shift = shift_diag.get("best_shift", "original")
         lines += [
             f"- Source: `{rfdetr.get('source_file', 'N/A')}`\n",
             f"- Report status: `{report_status}`\n",
             f"- Split: {rfdetr.get('split', 'N/A')}\n",
             f"- Processed images: {num_processed}\n",
+            f"- **Claim guidance:** {rfdetr.get('claim_guidance', 'N/A')}\n",
         ]
         if report_status == "completed" and num_processed > 0:
             lines += [
-                f"- Precision: {_safe_fmt_float(m.get('precision'), '.4f')}\n",
-                f"- Recall: {_safe_fmt_float(m.get('recall'), '.4f')}\n",
-                f"- F1: {_safe_fmt_float(m.get('f1'), '.4f')}\n",
-                f"- mAP@0.5: {_safe_fmt_float(m.get('mean_ap_at_50'), '.4f')}\n",
+                "\n### Strict Class-Aware Metrics\n",
+                f"- Precision: {_safe_fmt_float(strict.get('precision'), '.4f')}\n",
+                f"- Recall: {_safe_fmt_float(strict.get('recall'), '.4f')}\n",
+                f"- F1: {_safe_fmt_float(strict.get('f1'), '.4f')}\n",
+                f"- mAP@0.5: {_safe_fmt_float(strict.get('mean_ap_at_50'), '.4f')}\n",
+                f"- Global TP/FP/FN: {strict.get('global_tp',0)} / {strict.get('global_fp',0)} / {strict.get('global_fn',0)}\n",
+                "\n### Class-Agnostic Localization Metrics\n",
+                f"- Localization Precision: {_safe_fmt_float(loc.get('localization_precision'), '.4f')}\n",
+                f"- Localization Recall: {_safe_fmt_float(loc.get('localization_recall'), '.4f')}\n",
+                f"- Localization F1: {_safe_fmt_float(loc.get('localization_f1'), '.4f')}\n",
+                f"- Localization Mean IoU: {_safe_fmt_float(loc.get('localization_mean_iou'), '.4f')}\n",
+                "\n### Class-ID Shift Diagnostic\n",
+                f"- Best shift: **{best_shift}**\n",
+                f"- Note: {shift_diag.get('note', 'N/A')}\n",
             ]
+            # Per-shift summary table
+            shifts = shift_diag.get("shifts", {})
+            if shifts:
+                lines.append(
+                    "\n| Shift | TP | FP | FN | F1 | mAP@0.5 |\n"
+                    "|-------|----|----|----|----|----------|\n"
+                )
+                for key, lbl in (("original", "0 (original)"), ("plus1", "+1"), ("minus1", "-1")):
+                    m = shifts.get(key, {})
+                    marker = " **(best)**" if key == best_shift else ""
+                    lines.append(
+                        f"| {lbl}{marker} | {m.get('global_tp',0)} | {m.get('global_fp',0)} "
+                        f"| {m.get('global_fn',0)} "
+                        f"| {_safe_fmt_float(m.get('f1'), '.4f')} "
+                        f"| {_safe_fmt_float(m.get('mean_ap_at_50'), '.4f')} |\n"
+                    )
         else:
             errors = rfdetr.get("first_5_errors", [])
             lines.append(
