@@ -627,7 +627,7 @@ InfraGraph AI | TCS &amp; AMD AI Hackathon 2026 | Curated Code Appendix | {foote
     Multimodal Diagram Intelligence &middot; Enterprise Graph RCA &middot; GNN Root Cause Analysis &middot; Governed Qwen/vLLM Remediation
   </div>
   <div class="submitted-by">
-    Submitted By: Team 220 | Debalekha Chakraborty | AI &amp; Automation CoE | BFSI CBO
+    Submitted By: Team 220 | Debalekha Chakraborty (1798283) | AI &amp; Automation CoE | BFSI CBO
   </div>
   <div class="badge-row">
     <span class="badge core">Core Code</span>
