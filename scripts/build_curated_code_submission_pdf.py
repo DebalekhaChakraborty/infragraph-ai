@@ -21,7 +21,6 @@ CURATED_INCLUDE_PREFIXES = {
     "requirements/",
 
     # Application / cockpit
-    "app/README.md",
     "app/rfdetr_subprocess_bridge.py",
     "app/streamlit_app.py",
 
@@ -49,6 +48,8 @@ CURATED_INCLUDE_PREFIXES = {
     "data_generator/generate_infragraph_dataset.py",
 
     # Training, inference, evaluation, and evidence scripts
+    "scripts/train_enterprise_gnn_rca.py",
+    "scripts/run_enterprise_gnn_inference.py",
     "scripts/collect_final_submission_metrics.py",
     "scripts/evaluate_rfdetr_v3_detector.py",
     "scripts/generate_rfdetr_runtime_evidence.py",
