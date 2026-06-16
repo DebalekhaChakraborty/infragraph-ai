@@ -1,0 +1,191 @@
+[
+  {
+    "source": "RFDET-001",
+    "target": "RFDET-006",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.415,
+    "connector_id": "SEG-252",
+    "source_type": "vision_connector_extraction"
+  },
+  {
+    "source": "RFDET-006",
+    "target": "RFDET-005",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.429,
+    "connector_id": "SEG-062",
+    "source_type": "vision_connector_extraction"
+  },
+  {
+    "source": "RFDET-001",
+    "target": "RFDET-008",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.474,
+    "connector_id": "SEG-047",
+    "source_type": "vision_connector_extraction"
+  },
+  {
+    "source": "RFDET-004",
+    "target": "RFDET-006",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.463,
+    "connector_id": "SEG-031",
+    "source_type": "vision_connector_extraction"
+  },
+  {
+    "source": "RFDET-008",
+    "target": "RFDET-005",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.416,
+    "connector_id": "SEG-052",
+    "source_type": "vision_connector_extraction"
+  },
+  {
+    "source": "RFDET-009",
+    "target": "RFDET-001",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.409,
+    "connector_id": "SEG-069",
+    "source_type": "vision_connector_extraction"
+  },
+  {
+    "source": "RFDET-003",
+    "target": "RFDET-002",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.406,
+    "connector_id": "SEG-053",
+    "source_type": "vision_connector_extraction"
+  },
+  {
+    "source": "RFDET-006",
+    "target": "RFDET-003",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.396,
+    "connector_id": "SEG-051",
+    "source_type": "vision_connector_extraction"
+  },
+  {
+    "source": "RFDET-008",
+    "target": "RFDET-003",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.394,
+    "connector_id": "SEG-055",
+    "source_type": "vision_connector_extraction"
+  },
+  {
+    "source": "RFDET-007",
+    "target": "RFDET-001",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.392,
+    "connector_id": "SEG-174",
+    "source_type": "vision_connector_extraction"
+  },
+  {
+    "source": "DC-CORE-SW-01",
+    "target": "APP-LB-01",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_000",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "DC-AGG-SW-01",
+    "target": "APP-LB-01",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_001",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "APP-LB-01",
+    "target": "APP-01",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_002",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "APP-01",
+    "target": "DB-MASTER",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_003",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "APP-01",
+    "target": "DB-CACHE-01",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_004",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "APP-01",
+    "target": "SERVICE-API-01",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_005",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "APP-LB-01",
+    "target": "APP-02",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_006",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "APP-02",
+    "target": "DB-MASTER",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_007",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "APP-02",
+    "target": "DB-CACHE-01",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_008",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "APP-02",
+    "target": "SERVICE-API-01",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_009",
+    "source_type": "annotation_connector"
+  },
+  {
+    "source": "DB-MASTER",
+    "target": "DB-REPLICA-01",
+    "relationship": "connected_to",
+    "label": "",
+    "confidence": 0.91,
+    "connector_id": "edge_012",
+    "source_type": "annotation_connector"
+  }
+]

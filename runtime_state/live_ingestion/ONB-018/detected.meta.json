@@ -1,0 +1,14 @@
+{
+  "rendered": true,
+  "boxes_rendered": 10,
+  "boxes_skipped": 1,
+  "boxes_skipped_large": 0,
+  "connectors_rendered": 0,
+  "connectors_skipped": 16,
+  "connectors_skipped_long": 0,
+  "overlay_mode": "clean",
+  "draw_connectors": false,
+  "renderer_version": "v3_clean_overlay_v1",
+  "out_path": "/workspace/shared/infragraph-ai/runtime_state/live_ingestion/ONB-018/detected.png",
+  "meta_path": "/workspace/shared/infragraph-ai/runtime_state/live_ingestion/ONB-018/detected.meta.json"
+}

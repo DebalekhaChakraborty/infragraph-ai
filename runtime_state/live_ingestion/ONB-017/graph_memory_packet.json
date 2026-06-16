@@ -1,0 +1,1595 @@
+{
+  "diagram_id": "branch_topology",
+  "run_id": "ONB-017",
+  "source": "verified training annotation / safe curated sample",
+  "original_image": "/workspace/shared/infragraph-ai/runtime_state/live_ingestion/ONB-017/original.png",
+  "detected_image": "/workspace/shared/infragraph-ai/runtime_state/live_ingestion/ONB-017/detected.png",
+  "detection_source": "Verified Annotation Overlay",
+  "evidence_source": "verified_metadata",
+  "annotation_path": "/workspace/shared/infragraph-ai/assets/onboarding/ONB-017/annotation.json",
+  "local_graph_path": "/workspace/shared/infragraph-ai/assets/onboarding/ONB-017/local_graph.json",
+  "node_count": 9,
+  "edge_count": 8,
+  "ocr_text_block_count": 45,
+  "connector_count": 8,
+  "devices": [
+    {
+      "node_id": "BR-RTR-01",
+      "device_type": "router",
+      "display_label": "BR-RTR-01",
+      "canonical_id": "BR-RTR-01",
+      "ip_address": "10.76.1.1",
+      "zone": "Branch Edge",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "True",
+      "evidence_source": "verified_metadata",
+      "confidence": "",
+      "bbox": "[254, 442, 306, 494]",
+      "x1": "254",
+      "y1": "442",
+      "x2": "306",
+      "y2": "494"
+    },
+    {
+      "node_id": "BR-FW-01",
+      "device_type": "firewall",
+      "display_label": "BR-FW-01",
+      "canonical_id": "BR-FW-01",
+      "ip_address": "10.76.1.2",
+      "zone": "Branch Edge",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "verified_metadata",
+      "confidence": "",
+      "bbox": "[463, 442, 515, 494]",
+      "x1": "463",
+      "y1": "442",
+      "x2": "515",
+      "y2": "494"
+    },
+    {
+      "node_id": "BR-SW-01",
+      "device_type": "switch",
+      "display_label": "BR-SW-01",
+      "canonical_id": "BR-SW-01",
+      "ip_address": "10.76.1.3",
+      "zone": "Branch LAN",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "verified_metadata",
+      "confidence": "",
+      "bbox": "[702, 442, 754, 494]",
+      "x1": "702",
+      "y1": "442",
+      "x2": "754",
+      "y2": "494"
+    },
+    {
+      "node_id": "BR-APP-01",
+      "device_type": "server",
+      "display_label": "BR-APP-01",
+      "canonical_id": "BR-APP-01",
+      "ip_address": "10.76.1.4",
+      "zone": "Branch Apps",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "verified_metadata",
+      "confidence": "",
+      "bbox": "[982, 326, 1034, 378]",
+      "x1": "982",
+      "y1": "326",
+      "x2": "1034",
+      "y2": "378"
+    },
+    {
+      "node_id": "BR-WRK-01",
+      "device_type": "server",
+      "display_label": "BR-WRK-01",
+      "canonical_id": "BR-WRK-01",
+      "ip_address": "10.76.1.5",
+      "zone": "Branch LAN",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "verified_metadata",
+      "confidence": "",
+      "bbox": "[1178, 575, 1230, 627]",
+      "x1": "1178",
+      "y1": "575",
+      "x2": "1230",
+      "y2": "627"
+    },
+    {
+      "node_id": "BR-WRK-02",
+      "device_type": "server",
+      "display_label": "BR-WRK-02",
+      "canonical_id": "BR-WRK-02",
+      "ip_address": "10.76.1.6",
+      "zone": "Branch LAN",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "verified_metadata",
+      "confidence": "",
+      "bbox": "[982, 691, 1034, 743]",
+      "x1": "982",
+      "y1": "691",
+      "x2": "1034",
+      "y2": "743"
+    },
+    {
+      "node_id": "BR-WRK-03",
+      "device_type": "server",
+      "display_label": "BR-WRK-03",
+      "canonical_id": "BR-WRK-03",
+      "ip_address": "10.76.1.7",
+      "zone": "Branch LAN",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "verified_metadata",
+      "confidence": "",
+      "bbox": "[1178, 459, 1230, 511]",
+      "x1": "1178",
+      "y1": "459",
+      "x2": "1230",
+      "y2": "511"
+    },
+    {
+      "node_id": "BR-WRK-04",
+      "device_type": "server",
+      "display_label": "BR-WRK-04",
+      "canonical_id": "BR-WRK-04",
+      "ip_address": "10.76.1.8",
+      "zone": "Branch LAN",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "verified_metadata",
+      "confidence": "",
+      "bbox": "[982, 276, 1034, 328]",
+      "x1": "982",
+      "y1": "276",
+      "x2": "1034",
+      "y2": "328"
+    },
+    {
+      "node_id": "WAN-MPLS-CORE",
+      "device_type": "cloud_or_wan",
+      "display_label": "WAN-MPLS-CORE",
+      "canonical_id": "WAN-MPLS-CORE",
+      "ip_address": "",
+      "zone": "WAN",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "True",
+      "evidence_source": "verified_metadata",
+      "confidence": "",
+      "bbox": "[86, 442, 138, 494]",
+      "x1": "86",
+      "y1": "442",
+      "x2": "138",
+      "y2": "494"
+    }
+  ],
+  "connectors": [
+    {
+      "edge_id": "WAN-MPLS-CORE\u2192BR-RTR-01",
+      "source": "WAN-MPLS-CORE",
+      "target": "BR-RTR-01",
+      "relationship": "wan_dependency",
+      "protocol": "",
+      "label": "MPLS",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "verified_metadata",
+      "confidence": ""
+    },
+    {
+      "edge_id": "BR-RTR-01\u2192BR-FW-01",
+      "source": "BR-RTR-01",
+      "target": "BR-FW-01",
+      "relationship": "routes_to",
+      "protocol": "",
+      "label": "VPN",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "verified_metadata",
+      "confidence": ""
+    },
+    {
+      "edge_id": "BR-FW-01\u2192BR-SW-01",
+      "source": "BR-FW-01",
+      "target": "BR-SW-01",
+      "relationship": "secured_by",
+      "protocol": "",
+      "label": "LAN",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "verified_metadata",
+      "confidence": ""
+    },
+    {
+      "edge_id": "BR-SW-01\u2192BR-APP-01",
+      "source": "BR-SW-01",
+      "target": "BR-APP-01",
+      "relationship": "serves",
+      "protocol": "",
+      "label": "HTTPS",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "verified_metadata",
+      "confidence": ""
+    },
+    {
+      "edge_id": "BR-SW-01\u2192BR-WRK-01",
+      "source": "BR-SW-01",
+      "target": "BR-WRK-01",
+      "relationship": "connected_to",
+      "protocol": "",
+      "label": "Access",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "verified_metadata",
+      "confidence": ""
+    },
+    {
+      "edge_id": "BR-SW-01\u2192BR-WRK-02",
+      "source": "BR-SW-01",
+      "target": "BR-WRK-02",
+      "relationship": "connected_to",
+      "protocol": "",
+      "label": "Access",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "verified_metadata",
+      "confidence": ""
+    },
+    {
+      "edge_id": "BR-SW-01\u2192BR-WRK-03",
+      "source": "BR-SW-01",
+      "target": "BR-WRK-03",
+      "relationship": "connected_to",
+      "protocol": "",
+      "label": "Access",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "verified_metadata",
+      "confidence": ""
+    },
+    {
+      "edge_id": "BR-SW-01\u2192BR-WRK-04",
+      "source": "BR-SW-01",
+      "target": "BR-WRK-04",
+      "relationship": "connected_to",
+      "protocol": "",
+      "label": "Access",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "verified_metadata",
+      "confidence": ""
+    }
+  ],
+  "interfaces": [
+    {
+      "node_id": "BR-RTR-01",
+      "device_type": "router",
+      "ip_address": "10.76.1.1",
+      "interface": "",
+      "vlan": "",
+      "zone": "Branch Edge",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "BR-FW-01",
+      "device_type": "firewall",
+      "ip_address": "10.76.1.2",
+      "interface": "",
+      "vlan": "",
+      "zone": "Branch Edge",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "BR-SW-01",
+      "device_type": "switch",
+      "ip_address": "10.76.1.3",
+      "interface": "",
+      "vlan": "",
+      "zone": "Branch LAN",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "BR-APP-01",
+      "device_type": "server",
+      "ip_address": "10.76.1.4",
+      "interface": "",
+      "vlan": "",
+      "zone": "Branch Apps",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "BR-WRK-01",
+      "device_type": "server",
+      "ip_address": "10.76.1.5",
+      "interface": "",
+      "vlan": "",
+      "zone": "Branch LAN",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "BR-WRK-02",
+      "device_type": "server",
+      "ip_address": "10.76.1.6",
+      "interface": "",
+      "vlan": "",
+      "zone": "Branch LAN",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "BR-WRK-03",
+      "device_type": "server",
+      "ip_address": "10.76.1.7",
+      "interface": "",
+      "vlan": "",
+      "zone": "Branch LAN",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "BR-WRK-04",
+      "device_type": "server",
+      "ip_address": "10.76.1.8",
+      "interface": "",
+      "vlan": "",
+      "zone": "Branch LAN",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "WAN-MPLS-CORE",
+      "device_type": "cloud_or_wan",
+      "ip_address": "",
+      "interface": "",
+      "vlan": "",
+      "zone": "WAN",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    }
+  ],
+  "ocr_text": [
+    {
+      "text": "BR-RTR-01",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[235, 498, 325, 512]",
+      "x1": "235",
+      "y1": "498",
+      "x2": "325",
+      "y2": "512",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.76.1.1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[244, 426, 316, 438]",
+      "x1": "244",
+      "y1": "426",
+      "x2": "316",
+      "y2": "438",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "BR-FW-01",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[449, 498, 529, 512]",
+      "x1": "449",
+      "y1": "498",
+      "x2": "529",
+      "y2": "512",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.76.1.2",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[453, 426, 525, 438]",
+      "x1": "453",
+      "y1": "426",
+      "x2": "525",
+      "y2": "438",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "BR-SW-01",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[688, 498, 768, 512]",
+      "x1": "688",
+      "y1": "498",
+      "x2": "768",
+      "y2": "512",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.76.1.3",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[692, 426, 764, 438]",
+      "x1": "692",
+      "y1": "426",
+      "x2": "764",
+      "y2": "438",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "BR-APP-01",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[963, 382, 1053, 396]",
+      "x1": "963",
+      "y1": "382",
+      "x2": "1053",
+      "y2": "396",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.76.1.4",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[972, 310, 1044, 322]",
+      "x1": "972",
+      "y1": "310",
+      "x2": "1044",
+      "y2": "322",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "BR-WRK-01",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1159, 631, 1249, 645]",
+      "x1": "1159",
+      "y1": "631",
+      "x2": "1249",
+      "y2": "645",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.76.1.5",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1168, 559, 1240, 571]",
+      "x1": "1168",
+      "y1": "559",
+      "x2": "1240",
+      "y2": "571",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "BR-WRK-02",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[963, 747, 1053, 761]",
+      "x1": "963",
+      "y1": "747",
+      "x2": "1053",
+      "y2": "761",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.76.1.6",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[972, 675, 1044, 687]",
+      "x1": "972",
+      "y1": "675",
+      "x2": "1044",
+      "y2": "687",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "BR-WRK-03",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1159, 515, 1249, 529]",
+      "x1": "1159",
+      "y1": "515",
+      "x2": "1249",
+      "y2": "529",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.76.1.7",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1168, 443, 1240, 455]",
+      "x1": "1168",
+      "y1": "443",
+      "x2": "1240",
+      "y2": "455",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "BR-WRK-04",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[963, 332, 1053, 346]",
+      "x1": "963",
+      "y1": "332",
+      "x2": "1053",
+      "y2": "346",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.76.1.8",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[972, 260, 1044, 272]",
+      "x1": "972",
+      "y1": "260",
+      "x2": "1044",
+      "y2": "272",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "WAN-MPLS-CORE",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[47, 498, 177, 512]",
+      "x1": "47",
+      "y1": "498",
+      "x2": "177",
+      "y2": "512",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "WAN Handoff",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[52, 268, 118, 284]",
+      "x1": "52",
+      "y1": "268",
+      "x2": "118",
+      "y2": "284",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Branch Edge",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[234, 260, 300, 276]",
+      "x1": "234",
+      "y1": "260",
+      "x2": "300",
+      "y2": "276",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Branch LAN",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[654, 260, 714, 276]",
+      "x1": "654",
+      "y1": "260",
+      "x2": "714",
+      "y2": "276",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Branch Apps",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[906, 210, 972, 226]",
+      "x1": "906",
+      "y1": "210",
+      "x2": "972",
+      "y2": "226",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "MPLS",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[172, 458, 220, 478]",
+      "x1": "172",
+      "y1": "458",
+      "x2": "220",
+      "y2": "478",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[120, 472, 140, 484]",
+      "x1": "120",
+      "y1": "472",
+      "x2": "140",
+      "y2": "484",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "ge-0/0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[240, 452, 272, 464]",
+      "x1": "240",
+      "y1": "452",
+      "x2": "272",
+      "y2": "464",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "VPN",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[360, 458, 408, 478]",
+      "x1": "360",
+      "y1": "458",
+      "x2": "408",
+      "y2": "478",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth0",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[288, 472, 304, 484]",
+      "x1": "288",
+      "y1": "472",
+      "x2": "304",
+      "y2": "484",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/2",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[461, 452, 481, 464]",
+      "x1": "461",
+      "y1": "452",
+      "x2": "481",
+      "y2": "464",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "LAN",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[584, 458, 632, 478]",
+      "x1": "584",
+      "y1": "458",
+      "x2": "632",
+      "y2": "478",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "ge-0/0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[497, 472, 529, 484]",
+      "x1": "497",
+      "y1": "472",
+      "x2": "529",
+      "y2": "484",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[704, 452, 720, 464]",
+      "x1": "704",
+      "y1": "452",
+      "x2": "720",
+      "y2": "464",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "HTTPS",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[843, 400, 893, 420]",
+      "x1": "843",
+      "y1": "400",
+      "x2": "893",
+      "y2": "420",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/2",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[736, 472, 756, 484]",
+      "x1": "736",
+      "y1": "472",
+      "x2": "756",
+      "y2": "484",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[980, 336, 1000, 348]",
+      "x1": "980",
+      "y1": "336",
+      "x2": "1000",
+      "y2": "348",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Access",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[936, 524, 996, 544]",
+      "x1": "936",
+      "y1": "524",
+      "x2": "996",
+      "y2": "544",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[736, 472, 752, 484]",
+      "x1": "736",
+      "y1": "472",
+      "x2": "752",
+      "y2": "484",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth0",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1180, 585, 1196, 597]",
+      "x1": "1180",
+      "y1": "585",
+      "x2": "1196",
+      "y2": "597",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Access",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[838, 582, 898, 602]",
+      "x1": "838",
+      "y1": "582",
+      "x2": "898",
+      "y2": "602",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[736, 472, 756, 484]",
+      "x1": "736",
+      "y1": "472",
+      "x2": "756",
+      "y2": "484",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "ge-0/0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[968, 701, 1000, 713]",
+      "x1": "968",
+      "y1": "701",
+      "x2": "1000",
+      "y2": "713",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Access",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[936, 466, 996, 486]",
+      "x1": "936",
+      "y1": "466",
+      "x2": "996",
+      "y2": "486",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth0",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[736, 472, 752, 484]",
+      "x1": "736",
+      "y1": "472",
+      "x2": "752",
+      "y2": "484",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/2",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1176, 469, 1196, 481]",
+      "x1": "1176",
+      "y1": "469",
+      "x2": "1196",
+      "y2": "481",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Access",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[838, 375, 898, 395]",
+      "x1": "838",
+      "y1": "375",
+      "x2": "898",
+      "y2": "395",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "ge-0/0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[736, 472, 768, 484]",
+      "x1": "736",
+      "y1": "472",
+      "x2": "768",
+      "y2": "484",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[984, 286, 1000, 298]",
+      "x1": "984",
+      "y1": "286",
+      "x2": "1000",
+      "y2": "298",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    }
+  ],
+  "nodes": [
+    {
+      "node_id": "BR-RTR-01",
+      "type": "router",
+      "ip_address": "10.76.1.1",
+      "zone": "Branch Edge",
+      "shared": true,
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "BR-FW-01",
+      "type": "firewall",
+      "ip_address": "10.76.1.2",
+      "zone": "Branch Edge",
+      "shared": false,
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "BR-SW-01",
+      "type": "switch",
+      "ip_address": "10.76.1.3",
+      "zone": "Branch LAN",
+      "shared": false,
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "BR-APP-01",
+      "type": "server",
+      "ip_address": "10.76.1.4",
+      "zone": "Branch Apps",
+      "shared": false,
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "BR-WRK-01",
+      "type": "server",
+      "ip_address": "10.76.1.5",
+      "zone": "Branch LAN",
+      "shared": false,
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "BR-WRK-02",
+      "type": "server",
+      "ip_address": "10.76.1.6",
+      "zone": "Branch LAN",
+      "shared": false,
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "BR-WRK-03",
+      "type": "server",
+      "ip_address": "10.76.1.7",
+      "zone": "Branch LAN",
+      "shared": false,
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "BR-WRK-04",
+      "type": "server",
+      "ip_address": "10.76.1.8",
+      "zone": "Branch LAN",
+      "shared": false,
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "WAN-MPLS-CORE",
+      "type": "cloud_or_wan",
+      "ip_address": "",
+      "zone": "WAN",
+      "shared": true,
+      "evidence_source": "verified_metadata"
+    }
+  ],
+  "edges": [
+    {
+      "source": "WAN-MPLS-CORE",
+      "target": "BR-RTR-01",
+      "relationship": "wan_dependency",
+      "label": "MPLS"
+    },
+    {
+      "source": "BR-RTR-01",
+      "target": "BR-FW-01",
+      "relationship": "routes_to",
+      "label": "VPN"
+    },
+    {
+      "source": "BR-FW-01",
+      "target": "BR-SW-01",
+      "relationship": "secured_by",
+      "label": "LAN"
+    },
+    {
+      "source": "BR-SW-01",
+      "target": "BR-APP-01",
+      "relationship": "serves",
+      "label": "HTTPS"
+    },
+    {
+      "source": "BR-SW-01",
+      "target": "BR-WRK-01",
+      "relationship": "connected_to",
+      "label": "Access"
+    },
+    {
+      "source": "BR-SW-01",
+      "target": "BR-WRK-02",
+      "relationship": "connected_to",
+      "label": "Access"
+    },
+    {
+      "source": "BR-SW-01",
+      "target": "BR-WRK-03",
+      "relationship": "connected_to",
+      "label": "Access"
+    },
+    {
+      "source": "BR-SW-01",
+      "target": "BR-WRK-04",
+      "relationship": "connected_to",
+      "label": "Access"
+    }
+  ],
+  "confidence_summary": {
+    "device_detection_avg": "\u2014",
+    "edge_extraction_avg": "\u2014",
+    "ocr_text_blocks": 45,
+    "connector_count": 8,
+    "low_confidence_items": 0
+  },
+  "text_blocks": [
+    {
+      "text": "BR-RTR-01",
+      "bbox": [
+        235,
+        498,
+        325,
+        512
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.76.1.1",
+      "bbox": [
+        244,
+        426,
+        316,
+        438
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "BR-FW-01",
+      "bbox": [
+        449,
+        498,
+        529,
+        512
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.76.1.2",
+      "bbox": [
+        453,
+        426,
+        525,
+        438
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "BR-SW-01",
+      "bbox": [
+        688,
+        498,
+        768,
+        512
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.76.1.3",
+      "bbox": [
+        692,
+        426,
+        764,
+        438
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "BR-APP-01",
+      "bbox": [
+        963,
+        382,
+        1053,
+        396
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.76.1.4",
+      "bbox": [
+        972,
+        310,
+        1044,
+        322
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "BR-WRK-01",
+      "bbox": [
+        1159,
+        631,
+        1249,
+        645
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.76.1.5",
+      "bbox": [
+        1168,
+        559,
+        1240,
+        571
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "BR-WRK-02",
+      "bbox": [
+        963,
+        747,
+        1053,
+        761
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.76.1.6",
+      "bbox": [
+        972,
+        675,
+        1044,
+        687
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "BR-WRK-03",
+      "bbox": [
+        1159,
+        515,
+        1249,
+        529
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.76.1.7",
+      "bbox": [
+        1168,
+        443,
+        1240,
+        455
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "BR-WRK-04",
+      "bbox": [
+        963,
+        332,
+        1053,
+        346
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.76.1.8",
+      "bbox": [
+        972,
+        260,
+        1044,
+        272
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "WAN-MPLS-CORE",
+      "bbox": [
+        47,
+        498,
+        177,
+        512
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "WAN Handoff",
+      "bbox": [
+        52,
+        268,
+        118,
+        284
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "Branch Edge",
+      "bbox": [
+        234,
+        260,
+        300,
+        276
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "Branch LAN",
+      "bbox": [
+        654,
+        260,
+        714,
+        276
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "Branch Apps",
+      "bbox": [
+        906,
+        210,
+        972,
+        226
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "MPLS",
+      "bbox": [
+        172,
+        458,
+        220,
+        478
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        120,
+        472,
+        140,
+        484
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        240,
+        452,
+        272,
+        464
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "VPN",
+      "bbox": [
+        360,
+        458,
+        408,
+        478
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        288,
+        472,
+        304,
+        484
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        461,
+        452,
+        481,
+        464
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "LAN",
+      "bbox": [
+        584,
+        458,
+        632,
+        478
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        497,
+        472,
+        529,
+        484
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        704,
+        452,
+        720,
+        464
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "HTTPS",
+      "bbox": [
+        843,
+        400,
+        893,
+        420
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        736,
+        472,
+        756,
+        484
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        980,
+        336,
+        1000,
+        348
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Access",
+      "bbox": [
+        936,
+        524,
+        996,
+        544
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        736,
+        472,
+        752,
+        484
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        1180,
+        585,
+        1196,
+        597
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Access",
+      "bbox": [
+        838,
+        582,
+        898,
+        602
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        736,
+        472,
+        756,
+        484
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        968,
+        701,
+        1000,
+        713
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Access",
+      "bbox": [
+        936,
+        466,
+        996,
+        486
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        736,
+        472,
+        752,
+        484
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        1176,
+        469,
+        1196,
+        481
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Access",
+      "bbox": [
+        838,
+        375,
+        898,
+        395
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        736,
+        472,
+        768,
+        484
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        984,
+        286,
+        1000,
+        298
+      ],
+      "text_type": "interface_label"
+    }
+  ],
+  "source_label": "Source: Verified Annotation Overlay",
+  "annotation_preview": {
+    "rendered": true,
+    "boxes_rendered": 9,
+    "boxes_skipped": 0,
+    "boxes_skipped_large": 0,
+    "connectors_rendered": 0,
+    "connectors_skipped": 8,
+    "connectors_skipped_long": 0,
+    "overlay_mode": "clean",
+    "draw_connectors": false,
+    "renderer_version": "v3_clean_overlay_v1",
+    "out_path": "/workspace/shared/infragraph-ai/runtime_state/live_ingestion/ONB-017/detected.png",
+    "meta_path": "/workspace/shared/infragraph-ai/runtime_state/live_ingestion/ONB-017/detected.meta.json"
+  },
+  "runtime_mode": "VERIFIED_ANNOTATION_FALLBACK",
+  "absorption_mode": "SESSION_MEMORY_ABSORPTION",
+  "rfdetr_subprocess": {
+    "ok": false,
+    "source": "live_rfdetr_subprocess",
+    "error": "RF-DETR inference exception: All inference strategies failed:\npredict(image): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\npredict(image, threshold): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\npredict(image, conf): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx",
+    "python_executable": "/usr/bin/python",
+    "checkpoint_path": "/workspace/shared/infragraph-ai/model_artifacts/rfdetr_v3/checkpoint_best_total.pth",
+    "image_path": "/workspace/shared/infragraph-ai/assets/onboarding/ONB-017/original.png",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspace/shared/infragraph-ai/scripts/run_rfdetr_inference.py\", line 97, in main\n    raw_detections, strategy = live._run_rfdetr_inference(model, image, args.confidence)  # type: ignore[attr-defined]\n                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/shared/infragraph-ai/src/live_rfdetr_detector.py\", line 371, in _run_rfdetr_inference\n    raise RuntimeError(\"All inference strategies failed:\\n\" + \"\\n\".join(errors))\nRuntimeError: All inference strategies failed:\npredict(image): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\npredict(image, threshold): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\npredict(image, conf): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\n",
+    "detector_runtime_mode": "live_rfdetr_subprocess",
+    "python_resolution": {
+      "python_resolution_mode": "common_candidate",
+      "python_executable": "/usr/bin/python",
+      "requested_detector_python": "common detector candidates",
+      "resolved_detector_python": "/usr/bin/python",
+      "resolved_from_env": false,
+      "resolved_from_path": false,
+      "streamlit_python": "/workspace/shared/venvs/infragraph-app/bin/python",
+      "fallback_reason": "INFRAGRAPH_RFDETR_PYTHON unset and INFRAGRAPH_RFDETR_USE_PATH_PYTHON is not 1",
+      "runtime": {
+        "ok": true,
+        "import_ok": true,
+        "requested_python": "/usr/bin/python",
+        "python_executable": "/usr/bin/python",
+        "returncode": 0,
+        "stdout": "/usr/bin/python\nTrue\n",
+        "stderr_preview": "",
+        "error": ""
+      }
+    },
+    "returncode": 6,
+    "stdout_preview": "",
+    "stderr_preview": "/usr/local/lib/python3.12/dist-packages/deprecate/proxy.py:168: FutureWarning: The `RFDETRBase` was deprecated since v1.7.0. It will be removed in v2.0.0.\n  stream(msg)\n[2026-06-14 19:46:59] [WARNING] rf-detr - Checkpoint has 8 classes but model is configured for 90. Using checkpoint class count (8). Pass num_classes=8 to suppress this warning.\n[2026-06-14 19:46:59] [WARNING] rf-detr - load_pretrain_weights: args.num_queries absent; inferred ckpt_num_queries=300 from tensor rows 3900 \u00f7 ckpt_group_detr=13.\n",
+    "fallback_reason": "HTTP RF-DETR service unavailable: HTTP 500: {\n  \"ok\": false,\n  \"source\": \"live_rfdetr_http_service\",\n  \"error\": \"RF-DETR inference exception: All inference strategies failed:\\npredict(image): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\\npredict(image, threshold): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\\npredict(image, conf): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\",\n  \"python_executable\": \"/usr/bin/python\",\n  \"checkpoint_path\": \"/workspace/shared/infragraph-ai/model_artifacts/rfdetr_v3/checkpoint_best_total.pth\",\n  \"image_path\": \"/workspace/shared/infragraph-ai/assets/onboarding/ONB-017/original.png\",\n  \"traceback\": \"Traceback (most recent call last):\\n  File \\\"/workspace/shared/infragraph-ai/scripts/run_rfdetr_inference.py\\\", line 97, in main\\n    raw_detections, strategy = live._run_rfdetr_inference(model, image, args.confidence)  # type: ignore[attr-defined]\\n                               ^^^^^^^^^^^^; subprocess unavailable: RF-DETR inference exception: All inference strategies failed:\npredict(image): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\npredict(image, threshold): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\npredict(image, conf): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx",
+    "http_attempt": {
+      "ok": false,
+      "source": "live_rfdetr_http_service",
+      "service_url": "http://127.0.0.1:8010",
+      "error": "HTTP 500: {\n  \"ok\": false,\n  \"source\": \"live_rfdetr_http_service\",\n  \"error\": \"RF-DETR inference exception: All inference strategies failed:\\npredict(image): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\\npredict(image, threshold): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\\npredict(image, conf): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\",\n  \"python_executable\": \"/usr/bin/python\",\n  \"checkpoint_path\": \"/workspace/shared/infragraph-ai/model_artifacts/rfdetr_v3/checkpoint_best_total.pth\",\n  \"image_path\": \"/workspace/shared/infragraph-ai/assets/onboarding/ONB-017/original.png\",\n  \"traceback\": \"Traceback (most recent call last):\\n  File \\\"/workspace/shared/infragraph-ai/scripts/run_rfdetr_inference.py\\\", line 97, in main\\n    raw_detections, strategy = live._run_rfdetr_inference(model, image, args.confidence)  # type: ignore[attr-defined]\\n                               ^^^^^^^^^^^^",
+      "checkpoint_path": "/workspace/shared/infragraph-ai/model_artifacts/rfdetr_v3/checkpoint_best_total.pth",
+      "image_path": "/workspace/shared/infragraph-ai/assets/onboarding/ONB-017/original.png"
+    }
+  }
+}

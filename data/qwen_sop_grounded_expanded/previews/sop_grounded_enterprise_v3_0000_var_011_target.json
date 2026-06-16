@@ -1,0 +1,103 @@
+{
+  "executive_summary": "Cross-diagram incident affecting 4 topology domain(s) (branch_topology, datacenter_topology, app_db_topology, shared_services_topology). 7 alert event(s) detected. Primary suspected root cause: DC-FW-01 in datacenter_topology. Immediate triage recommended to validate and restore service.",
+  "probable_root_cause": "DC-FW-01 (in datacenter_topology)",
+  "scope": "enterprise",
+  "risk_level": "critical",
+  "automation_eligibility": "manual_only",
+  "blast_radius": "enterprise_wide",
+  "evidence_ids_used": [
+    "KB-SOP-DC-FW-001-001",
+    "KB-SOP-DC-FW-001-006",
+    "KB-RUNBOOK-ENT-XDIAG-001-006",
+    "KB-RUNBOOK-ENT-XDIAG-001-002",
+    "CE-001",
+    "CE-002",
+    "CE-003",
+    "CE-004",
+    "CE-005"
+  ],
+  "evidence_from_graph": [
+    "Alert propagation path: DC-FW-01 → DC-CORE-SW-01 → APP-LB-01 → APP-01 → DB-MASTER → IAM-01",
+    "Top GNN candidate: DC-FW-01",
+    "Incident spans diagrams: branch_topology, datacenter_topology, app_db_topology, shared_services_topology",
+    "Alert events observed: 7",
+    "Impacted nodes: DC-FW-01, DC-CORE-SW-01, APP-LB-01, APP-01, DB-MASTER",
+    "Retrieved SOP evidence: KB-SOP-DC-FW-001-001 — Datacenter Firewall Packet Drop and Link Error Response (Trigger Symptoms)",
+    "Retrieved SOP evidence: KB-SOP-DC-FW-001-006 — Datacenter Firewall Packet Drop and Link Error Response (Validation Steps)",
+    "Retrieved SOP evidence: KB-RUNBOOK-ENT-XDIAG-001-006 — Enterprise Cross-Diagram Incident Validation Runbook (Validation Steps)",
+    "Retrieved SOP evidence: KB-RUNBOOK-ENT-XDIAG-001-002 — Enterprise Cross-Diagram Incident Validation Runbook (Applicable RCA Patterns)",
+    "CE-001 (temporal_correlation, confidence=0.85): 7 alert(s) within a 18-minute window (t=0..18 min), consistent with a propagating fault.",
+    "CE-002 (alert_sequence, confidence=1.0): Alert type sequence matches propagation chain: link_errors -> latency. This ordering is consistent with fault propagation from the initiating node.",
+    "CE-003 (topology_proximity, confidence=0.7571): Alerted nodes (DC-FW-01, DC-CORE-SW-01, APP-LB-01, APP-01...) are topologically proximate (topology score 0.76), suggesting fault propagation through connected infrastructure.",
+    "CE-004 (cross_diagram_correlation, confidence=1.0): Events span 4 diagrams (app_db_topology, branch_topology, datacenter_topology, shared_services_topology). Cross-diagram correlation score 1.00 indicates the fault may have propagated across topology boundaries.",
+    "CE-005 (propagation_hypothesis, confidence=0.8036): Hypothesis: fault originated at the cluster seed node and may have propagated downstream through connected infrastructure.",
+    "Correlation reason: 7 event(s) span 18 min (t=0..18)",
+    "Correlation reason: Propagation pattern detected: link_errors -> latency",
+    "Correlation reason: Events span 4 diagrams: app_db_topology, branch_topology, datacenter_topology, shared_services_topology",
+    "Correlation reason: Alerted nodes are topologically proximate (2-3 hops)"
+  ],
+  "pre_checks": [
+    "Confirm root-cause candidate DC-FW-01 is present in enterprise graph memory.",
+    "Validate impacted diagrams before any change: branch_topology, datacenter_topology, app_db_topology, shared_services_topology.",
+    "Confirm RCA source and alert timeline freshness before remediation.",
+    "Run read-only reachability checks across diagram boundaries first."
+  ],
+  "triage_steps": [
+    "Focus initial investigation on node 'DC-FW-01' in datacenter_topology.",
+    "Inspect core switch interface error counters and spanning-tree topology.",
+    "Verify inter-service communication across fabric via traceroute.",
+    "Check data-centre firewall deny logs for new ACL hits.",
+    "Confirm power and cooling alarms are not contributing to device instability."
+  ],
+  "validation_steps": [
+    "Confirm packet-drop counters on the affected firewall interface have stopped incrementing.",
+    "Verify traffic flows that were blocked are now passing the firewall policy.",
+    "Check the firewall deny log to confirm no residual ACL hits on legitimate traffic.",
+    "Confirm the security team has reviewed and approved the policy change before closure.",
+    "Confirm health of all impacted nodes: DC-FW-01, DC-CORE-SW-01, APP-LB-01, APP-01, DB-MASTER, IAM-01….",
+    "Validate according to SOP-DC-FW-001 (Datacenter Firewall Packet Drop and Link Error Response) validation section [KB-SOP-DC-FW-001-006].",
+    "Validate according to RUNBOOK-ENT-XDIAG-001 (Enterprise Cross-Diagram Incident Validation Runbook) validation section [KB-RUNBOOK-ENT-XDIAG-001-006]."
+  ],
+  "remediation_steps": [
+    "Restore 'DC-FW-01' (datacenter_topology) following domain-specific steps below.",
+    "Review the firewall policy change log for any recently added or modified deny rules.",
+    "Identify affected traffic flows from packet-drop counters on the suspect interface.",
+    "Confirm the ACL or policy rule causing drops — do not remove rules without change approval.",
+    "Apply firewall policy correction only within an approved maintenance window.",
+    "After policy update, confirm packet-drop counters stop incrementing and traffic restores.",
+    "Document the change and update the CMDB record for the affected firewall.",
+    "Coordinate recovery across all affected diagrams in order: branch_topology → datacenter_topology → app_db_topology → shared_services_topology."
+  ],
+  "post_checks": [
+    "Confirm packet-drop counters on the affected firewall interface have stopped incrementing.",
+    "Verify traffic flows that were blocked are now passing the firewall policy.",
+    "Check the firewall deny log to confirm no residual ACL hits on legitimate traffic.",
+    "Confirm the security team has reviewed and approved the policy change before closure.",
+    "Confirm health of all impacted nodes: DC-FW-01, DC-CORE-SW-01, APP-LB-01, APP-01, DB-MASTER, IAM-01….",
+    "Validate according to SOP-DC-FW-001 (Datacenter Firewall Packet Drop and Link Error Response) validation section [KB-SOP-DC-FW-001-006].",
+    "Validate according to RUNBOOK-ENT-XDIAG-001 (Enterprise Cross-Diagram Incident Validation Runbook) validation section [KB-RUNBOOK-ENT-XDIAG-001-006]."
+  ],
+  "do_not_execute_if": [
+    "Do not execute changes if root cause DC-FW-01 is not confirmed by graph evidence.",
+    "Do not execute if a rollback owner and maintenance window are not approved.",
+    "Do not execute if alert timestamps are stale or no longer match the active incident.",
+    "Do not execute cross-domain changes without NOC and owning team approval."
+  ],
+  "rollback_or_safety_notes": [
+    "Capture running configs on all affected devices before any change.",
+    "Coordinate maintenance windows across affected sites — changes here have cross-domain blast radius.",
+    "Confirm a rollback plan is in place for each affected diagram domain.",
+    "Notify NOC before modifying WAN or shared-services components.",
+    "Stage changes in the least-critical diagram first; validate before proceeding."
+  ],
+  "escalation_recommendation": "This incident spans 4 topology domains — immediate escalation to senior network engineering is recommended. Escalate to network engineering team if root-cause node cannot be restored within 30 minutes, or if the incident spans more than 3 topology domains. Notify on-call SRE if customer-facing services remain impacted.",
+  "servicenow_incident_summary": {
+    "short_description": "[ENTERPRISE] Cross-diagram network incident — scenario enterprise_v3_0000_var_011; root cause: DC-FW-01",
+    "description": "Cross-diagram incident on scenario enterprise_v3_0000_var_011. Root cause: DC-FW-01 (datacenter_topology). Impact: 4 diagram(s), 7 alert event(s). Impact path: DC-FW-01 → DC-CORE-SW-01 → APP-LB-01 → APP-01 → DB-MASTER → IAM-01. Impacted nodes: DC-FW-01, DC-CORE-SW-01, APP-LB-01, APP-01, DB-MASTER…. RCA source: Enterprise GNN RCA. Status: Under investigation.",
+    "affected_ci": "DC-FW-01",
+    "priority": "1-Critical",
+    "assignment_group": "Network Engineering — Enterprise Operations"
+  },
+  "audit_summary": "Template remediation plan for scenario enterprise_v3_0000_var_011; risk=critical, blast_radius=enterprise_wide, automation=manual_only, rca_source=Enterprise GNN RCA. Evidence IDs used: KB-SOP-DC-FW-001-001, KB-SOP-DC-FW-001-006, KB-RUNBOOK-ENT-XDIAG-001-006, KB-RUNBOOK-ENT-XDIAG-001-002, CE-001, CE-002, CE-003, CE-004, CE-005. Event correlation cluster: CLU-ent_enterprise_v3_0000-001-var_011 (score=0.8131). KB chunks retrieved: 4.",
+  "confidence_notes": "RCA source: Enterprise GNN RCA. GNN inference result was used — candidate ranking is model-derived. Event correlation cluster: CLU-ent_enterprise_v3_0000-001-var_011 (score=0.8131). SOP/KB evidence retrieved: 4 chunk(s). Template mode: output is deterministic and not model-generated."
+}

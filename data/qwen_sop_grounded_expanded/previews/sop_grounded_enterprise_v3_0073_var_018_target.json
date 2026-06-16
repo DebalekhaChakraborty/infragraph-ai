@@ -1,0 +1,96 @@
+{
+  "executive_summary": "Cross-diagram incident affecting 1 topology domain(s) (app_db_topology). 4 alert event(s) detected. Primary suspected root cause: DB-MASTER in app_db_topology. Immediate triage recommended to validate and restore service.",
+  "probable_root_cause": "DB-MASTER (in app_db_topology)",
+  "scope": "enterprise",
+  "risk_level": "critical",
+  "automation_eligibility": "manual_only",
+  "blast_radius": "single_diagram",
+  "evidence_ids_used": [
+    "KB-SOP-DB-001-001",
+    "KB-SOP-DB-001-000",
+    "KB-SOP-DB-001-009",
+    "KB-SOP-DB-001-010",
+    "CE-001",
+    "CE-002",
+    "CE-003",
+    "CE-004"
+  ],
+  "evidence_from_graph": [
+    "Alert propagation path: DB-MASTER → APP-01 → APP-02 → DB-REPLICA-01",
+    "Top GNN candidate: DB-MASTER",
+    "Incident spans diagrams: app_db_topology",
+    "Alert events observed: 4",
+    "Impacted nodes: DB-MASTER, APP-01, APP-02, DB-REPLICA-01",
+    "Retrieved SOP evidence: KB-SOP-DB-001-001 — Database Master Node Latency and Connection Timeout Response (Trigger Symptoms)",
+    "Retrieved SOP evidence: KB-SOP-DB-001-000 — Database Master Node Latency and Connection Timeout Response (Purpose)",
+    "Retrieved SOP evidence: KB-SOP-DB-001-009 — Database Master Node Latency and Connection Timeout Response (ServiceNow Routing)",
+    "Retrieved SOP evidence: KB-SOP-DB-001-010 — Database Master Node Latency and Connection Timeout Response (Evidence Tags)",
+    "CE-001 (temporal_correlation, confidence=1.0): 4 alert(s) within a 12-minute window (t=0..12 min), consistent with a propagating fault.",
+    "CE-002 (alert_sequence, confidence=0.85): Alert type sequence matches propagation chain: cpu -> latency. This ordering is consistent with fault propagation from the initiating node.",
+    "CE-003 (topology_proximity, confidence=0.925): Alerted nodes (DB-MASTER, APP-01, APP-02, DB-REPLICA-01) are topologically proximate (topology score 0.92), suggesting fault propagation through connected infrastructure.",
+    "CE-004 (propagation_hypothesis, confidence=0.9625): Hypothesis: fault initiated at DB-MASTER (alert: cpu_spike) and propagated to 1 downstream node(s) matching known propagation patterns.",
+    "Correlation reason: 4 event(s) span 12 min (t=0..12)",
+    "Correlation reason: Propagation pattern detected: cpu -> latency",
+    "Correlation reason: Alerted nodes are directly adjacent (1-2 hops)"
+  ],
+  "pre_checks": [
+    "Confirm root-cause candidate DB-MASTER is present in enterprise graph memory.",
+    "Validate impacted diagrams before any change: app_db_topology.",
+    "Confirm RCA source and alert timeline freshness before remediation.",
+    "Run read-only reachability checks across diagram boundaries first."
+  ],
+  "triage_steps": [
+    "Focus initial investigation on node 'DB-MASTER' in app_db_topology.",
+    "Check application server error logs for connection-refused or timeout patterns.",
+    "Verify database connection pool utilisation and active session count.",
+    "Confirm load balancer backend health checks are passing.",
+    "Review recent application deployments or configuration changes."
+  ],
+  "validation_steps": [
+    "Confirm active connection count is below the configured connection-pool limit.",
+    "Verify no new slow-query alerts are firing after remediation.",
+    "Confirm replication lag has returned to near-zero on all replica nodes.",
+    "Check database latency metrics in the monitoring platform show return to baseline.",
+    "Confirm health of all impacted nodes: DB-MASTER, APP-01, APP-02, DB-REPLICA-01."
+  ],
+  "remediation_steps": [
+    "Restore 'DB-MASTER' (app_db_topology) following domain-specific steps below.",
+    "Check active connection count and connection-pool exhaustion on the database master node.",
+    "Review the slow query log for queries holding locks or consuming excessive resources.",
+    "Verify replication lag between master and replica — do not failover without DBA approval.",
+    "Coordinate with the DBA team before applying schema changes or restarting the database.",
+    "After restoration, confirm connection-pool recovery metrics return to baseline.",
+    "Document the change and update the CMDB record for the affected database node.",
+    "Follow SOP-DB-001 (Database Master Node Latency and Connection Timeout Response) remediation section [KB-SOP-DB-001-000]."
+  ],
+  "post_checks": [
+    "Confirm active connection count is below the configured connection-pool limit.",
+    "Verify no new slow-query alerts are firing after remediation.",
+    "Confirm replication lag has returned to near-zero on all replica nodes.",
+    "Check database latency metrics in the monitoring platform show return to baseline.",
+    "Confirm health of all impacted nodes: DB-MASTER, APP-01, APP-02, DB-REPLICA-01."
+  ],
+  "do_not_execute_if": [
+    "Do not execute changes if root cause DB-MASTER is not confirmed by graph evidence.",
+    "Do not execute if a rollback owner and maintenance window are not approved.",
+    "Do not execute if alert timestamps are stale or no longer match the active incident.",
+    "Do not execute cross-domain changes without NOC and owning team approval."
+  ],
+  "rollback_or_safety_notes": [
+    "Capture running configs on all affected devices before any change.",
+    "Coordinate maintenance windows across affected sites — changes here have cross-domain blast radius.",
+    "Confirm a rollback plan is in place for each affected diagram domain.",
+    "Notify NOC before modifying WAN or shared-services components.",
+    "Stage changes in the least-critical diagram first; validate before proceeding."
+  ],
+  "escalation_recommendation": "Escalate to network engineering team if root-cause node cannot be restored within 30 minutes, or if the incident spans more than 3 topology domains. Notify on-call SRE if customer-facing services remain impacted.",
+  "servicenow_incident_summary": {
+    "short_description": "[ENTERPRISE] Cross-diagram network incident — scenario enterprise_v3_0073_var_018; root cause: DB-MASTER",
+    "description": "Cross-diagram incident on scenario enterprise_v3_0073_var_018. Root cause: DB-MASTER (app_db_topology). Impact: 1 diagram(s), 4 alert event(s). Impact path: DB-MASTER → APP-01 → APP-02 → DB-REPLICA-01. Impacted nodes: DB-MASTER, APP-01, APP-02, DB-REPLICA-01. RCA source: Enterprise GNN RCA. Status: Under investigation.",
+    "affected_ci": "DB-MASTER",
+    "priority": "2-High",
+    "assignment_group": "Network Engineering — Enterprise Operations"
+  },
+  "audit_summary": "Template remediation plan for scenario enterprise_v3_0073_var_018; risk=critical, blast_radius=single_diagram, automation=manual_only, rca_source=Enterprise GNN RCA. Evidence IDs used: KB-SOP-DB-001-001, KB-SOP-DB-001-000, KB-SOP-DB-001-009, KB-SOP-DB-001-010, CE-001, CE-002, CE-003, CE-004. Event correlation cluster: CLU-ent_enterprise_v3_0073-001-var_018 (score=0.7921). KB chunks retrieved: 4.",
+  "confidence_notes": "RCA source: Enterprise GNN RCA. GNN inference result was used — candidate ranking is model-derived. Event correlation cluster: CLU-ent_enterprise_v3_0073-001-var_018 (score=0.7921). SOP/KB evidence retrieved: 4 chunk(s). Template mode: output is deterministic and not model-generated."
+}

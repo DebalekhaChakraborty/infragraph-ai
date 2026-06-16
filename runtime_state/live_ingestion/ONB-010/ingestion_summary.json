@@ -1,0 +1,66 @@
+{
+  "diagram_id": "wan_topology",
+  "run_id": "ONB-010",
+  "source": "verified training annotation / safe curated sample",
+  "detection_source": "Verified Annotation Overlay",
+  "runtime_mode": "VERIFIED_ANNOTATION_FALLBACK",
+  "node_count": 7,
+  "edge_count": 6,
+  "annotation_preview": {
+    "rendered": false,
+    "boxes_rendered": 0,
+    "boxes_skipped": 0,
+    "boxes_skipped_large": 0,
+    "connectors_rendered": 0,
+    "connectors_skipped": 0,
+    "connectors_skipped_long": 0,
+    "overlay_mode": "clean",
+    "draw_connectors": false,
+    "renderer_version": "v3_clean_overlay_v1"
+  },
+  "rfdetr_inference_time_s": 0.0,
+  "rfdetr_error": "RF-DETR inference exception: All inference strategies failed:\npredict(image): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\npredict(image, threshold): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\npredict(image, conf): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx",
+  "use_live_rfdetr": false,
+  "rfdetr_subprocess": {
+    "ok": false,
+    "source": "live_rfdetr_subprocess",
+    "error": "RF-DETR inference exception: All inference strategies failed:\npredict(image): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\npredict(image, threshold): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\npredict(image, conf): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx",
+    "python_executable": "/usr/bin/python",
+    "checkpoint_path": "/workspace/shared/infragraph-ai/model_artifacts/rfdetr_v3/checkpoint_best_total.pth",
+    "image_path": "/workspace/shared/infragraph-ai/assets/onboarding/ONB-010/original.png",
+    "traceback": "Traceback (most recent call last):\n  File \"/workspace/shared/infragraph-ai/scripts/run_rfdetr_inference.py\", line 97, in main\n    raw_detections, strategy = live._run_rfdetr_inference(model, image, args.confidence)  # type: ignore[attr-defined]\n                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/shared/infragraph-ai/src/live_rfdetr_detector.py\", line 371, in _run_rfdetr_inference\n    raise RuntimeError(\"All inference strategies failed:\\n\" + \"\\n\".join(errors))\nRuntimeError: All inference strategies failed:\npredict(image): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\npredict(image, threshold): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\npredict(image, conf): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\n",
+    "detector_runtime_mode": "live_rfdetr_subprocess",
+    "python_resolution": {
+      "python_resolution_mode": "common_candidate",
+      "python_executable": "/usr/bin/python",
+      "requested_detector_python": "common detector candidates",
+      "resolved_detector_python": "/usr/bin/python",
+      "resolved_from_env": false,
+      "resolved_from_path": false,
+      "streamlit_python": "/workspace/shared/venvs/infragraph-app/bin/python",
+      "fallback_reason": "INFRAGRAPH_RFDETR_PYTHON unset and INFRAGRAPH_RFDETR_USE_PATH_PYTHON is not 1",
+      "runtime": {
+        "ok": true,
+        "import_ok": true,
+        "requested_python": "/usr/bin/python",
+        "python_executable": "/usr/bin/python",
+        "returncode": 0,
+        "stdout": "/usr/bin/python\nTrue\n",
+        "stderr_preview": "",
+        "error": ""
+      }
+    },
+    "returncode": 6,
+    "stdout_preview": "",
+    "stderr_preview": "/usr/local/lib/python3.12/dist-packages/deprecate/proxy.py:168: FutureWarning: The `RFDETRBase` was deprecated since v1.7.0. It will be removed in v2.0.0.\n  stream(msg)\n[2026-06-14 19:44:37] [WARNING] rf-detr - Checkpoint has 8 classes but model is configured for 90. Using checkpoint class count (8). Pass num_classes=8 to suppress this warning.\n[2026-06-14 19:44:37] [WARNING] rf-detr - load_pretrain_weights: args.num_queries absent; inferred ckpt_num_queries=300 from tensor rows 3900 \u00f7 ckpt_group_detr=13.\n",
+    "fallback_reason": "HTTP RF-DETR service unavailable: HTTP 500: {\n  \"ok\": false,\n  \"source\": \"live_rfdetr_http_service\",\n  \"error\": \"RF-DETR inference exception: All inference strategies failed:\\npredict(image): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\\npredict(image, threshold): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\\npredict(image, conf): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\",\n  \"python_executable\": \"/usr/bin/python\",\n  \"checkpoint_path\": \"/workspace/shared/infragraph-ai/model_artifacts/rfdetr_v3/checkpoint_best_total.pth\",\n  \"image_path\": \"/workspace/shared/infragraph-ai/assets/onboarding/ONB-010/original.png\",\n  \"traceback\": \"Traceback (most recent call last):\\n  File \\\"/workspace/shared/infragraph-ai/scripts/run_rfdetr_inference.py\\\", line 97, in main\\n    raw_detections, strategy = live._run_rfdetr_inference(model, image, args.confidence)  # type: ignore[attr-defined]\\n                               ^^^^^^^^^^^^; subprocess unavailable: RF-DETR inference exception: All inference strategies failed:\npredict(image): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\npredict(image, threshold): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\npredict(image, conf): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx",
+    "http_attempt": {
+      "ok": false,
+      "source": "live_rfdetr_http_service",
+      "service_url": "http://127.0.0.1:8010",
+      "error": "HTTP 500: {\n  \"ok\": false,\n  \"source\": \"live_rfdetr_http_service\",\n  \"error\": \"RF-DETR inference exception: All inference strategies failed:\\npredict(image): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\\npredict(image, threshold): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\\npredict(image, conf): Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx\",\n  \"python_executable\": \"/usr/bin/python\",\n  \"checkpoint_path\": \"/workspace/shared/infragraph-ai/model_artifacts/rfdetr_v3/checkpoint_best_total.pth\",\n  \"image_path\": \"/workspace/shared/infragraph-ai/assets/onboarding/ONB-010/original.png\",\n  \"traceback\": \"Traceback (most recent call last):\\n  File \\\"/workspace/shared/infragraph-ai/scripts/run_rfdetr_inference.py\\\", line 97, in main\\n    raw_detections, strategy = live._run_rfdetr_inference(model, image, args.confidence)  # type: ignore[attr-defined]\\n                               ^^^^^^^^^^^^",
+      "checkpoint_path": "/workspace/shared/infragraph-ai/model_artifacts/rfdetr_v3/checkpoint_best_total.pth",
+      "image_path": "/workspace/shared/infragraph-ai/assets/onboarding/ONB-010/original.png"
+    }
+  }
+}

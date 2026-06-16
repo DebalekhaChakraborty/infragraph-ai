@@ -1,0 +1,2450 @@
+{
+  "diagram_id": "app_db_topology",
+  "run_id": "ONB-018",
+  "source": "verified training annotation / safe curated sample",
+  "original_image": "/workspace/shared/infragraph-ai/runtime_state/live_ingestion/ONB-018/original.png",
+  "detected_image": "/workspace/shared/infragraph-ai/runtime_state/live_ingestion/ONB-018/detected.png",
+  "detection_source": "Verified Annotation Overlay",
+  "evidence_source": "verified_metadata",
+  "annotation_path": "/workspace/shared/infragraph-ai/assets/onboarding/ONB-018/annotation.json",
+  "local_graph_path": "/workspace/shared/infragraph-ai/assets/onboarding/ONB-018/local_graph.json",
+  "node_count": 11,
+  "edge_count": 16,
+  "ocr_text_block_count": 73,
+  "connector_count": 16,
+  "devices": [
+    {
+      "node_id": "APP-LB-01",
+      "device_type": "load_balancer",
+      "display_label": "APP-LB-01",
+      "canonical_id": "APP-LB-01",
+      "ip_address": "10.21.1.2",
+      "zone": "App Ingress",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "verified_metadata",
+      "confidence": "",
+      "bbox": "[422, 442, 474, 494]",
+      "x1": "422",
+      "y1": "442",
+      "x2": "474",
+      "y2": "494"
+    },
+    {
+      "node_id": "APP-01",
+      "device_type": "server",
+      "display_label": "APP-01",
+      "canonical_id": "APP-01",
+      "ip_address": "10.21.1.3",
+      "zone": "App Tier",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "verified_metadata",
+      "confidence": "",
+      "bbox": "[744, 293, 796, 345]",
+      "x1": "744",
+      "y1": "293",
+      "x2": "796",
+      "y2": "345"
+    },
+    {
+      "node_id": "APP-02",
+      "device_type": "server",
+      "display_label": "APP-02",
+      "canonical_id": "APP-02",
+      "ip_address": "10.21.1.4",
+      "zone": "App Tier",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "verified_metadata",
+      "confidence": "",
+      "bbox": "[744, 459, 796, 511]",
+      "x1": "744",
+      "y1": "459",
+      "x2": "796",
+      "y2": "511"
+    },
+    {
+      "node_id": "APP-03",
+      "device_type": "server",
+      "display_label": "APP-03",
+      "canonical_id": "APP-03",
+      "ip_address": "10.21.1.5",
+      "zone": "App Tier",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "verified_metadata",
+      "confidence": "",
+      "bbox": "[744, 558, 796, 610]",
+      "x1": "744",
+      "y1": "558",
+      "x2": "796",
+      "y2": "610"
+    },
+    {
+      "node_id": "SERVICE-API-01",
+      "device_type": "service",
+      "display_label": "SERVICE-API-01",
+      "canonical_id": "SERVICE-API-01",
+      "ip_address": "10.21.1.6",
+      "zone": "App Tier",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "verified_metadata",
+      "confidence": "",
+      "bbox": "[744, 625, 796, 677]",
+      "x1": "744",
+      "y1": "625",
+      "x2": "796",
+      "y2": "677"
+    },
+    {
+      "node_id": "DB-MASTER",
+      "device_type": "database",
+      "display_label": "DB-MASTER",
+      "canonical_id": "DB-MASTER",
+      "ip_address": "10.21.1.7",
+      "zone": "DB Tier",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "verified_metadata",
+      "confidence": "",
+      "bbox": "[1066, 392, 1118, 444]",
+      "x1": "1066",
+      "y1": "392",
+      "x2": "1118",
+      "y2": "444"
+    },
+    {
+      "node_id": "DB-CACHE-01",
+      "device_type": "server",
+      "display_label": "DB-CACHE-01",
+      "canonical_id": "DB-CACHE-01",
+      "ip_address": "10.21.1.8",
+      "zone": "DB Tier",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "verified_metadata",
+      "confidence": "",
+      "bbox": "[1066, 591, 1118, 643]",
+      "x1": "1066",
+      "y1": "591",
+      "x2": "1118",
+      "y2": "643"
+    },
+    {
+      "node_id": "DB-REPLICA-01",
+      "device_type": "database",
+      "display_label": "DB-REPLICA-01",
+      "canonical_id": "DB-REPLICA-01",
+      "ip_address": "10.21.1.9",
+      "zone": "DB Tier",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "verified_metadata",
+      "confidence": "",
+      "bbox": "[1248, 691, 1300, 743]",
+      "x1": "1248",
+      "y1": "691",
+      "x2": "1300",
+      "y2": "743"
+    },
+    {
+      "node_id": "DB-REPLICA-02",
+      "device_type": "database",
+      "display_label": "DB-REPLICA-02",
+      "canonical_id": "DB-REPLICA-02",
+      "ip_address": "10.21.1.10",
+      "zone": "DB Tier",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "False",
+      "evidence_source": "verified_metadata",
+      "confidence": "",
+      "bbox": "[1248, 1172, 1300, 1224]",
+      "x1": "1248",
+      "y1": "1172",
+      "x2": "1300",
+      "y2": "1224"
+    },
+    {
+      "node_id": "DC-CORE-SW-01",
+      "device_type": "switch",
+      "display_label": "DC-CORE-SW-01",
+      "canonical_id": "DC-CORE-SW-01",
+      "ip_address": "",
+      "zone": "Network",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "True",
+      "evidence_source": "verified_metadata",
+      "confidence": "",
+      "bbox": "[114, 326, 166, 378]",
+      "x1": "114",
+      "y1": "326",
+      "x2": "166",
+      "y2": "378"
+    },
+    {
+      "node_id": "DC-AGG-SW-01",
+      "device_type": "switch",
+      "display_label": "DC-AGG-SW-01",
+      "canonical_id": "DC-AGG-SW-01",
+      "ip_address": "",
+      "zone": "Network",
+      "interface": "",
+      "vlan": "",
+      "is_shared_entity": "True",
+      "evidence_source": "verified_metadata",
+      "confidence": "",
+      "bbox": "[114, 558, 166, 610]",
+      "x1": "114",
+      "y1": "558",
+      "x2": "166",
+      "y2": "610"
+    }
+  ],
+  "connectors": [
+    {
+      "edge_id": "DC-CORE-SW-01\u2192APP-LB-01",
+      "source": "DC-CORE-SW-01",
+      "target": "APP-LB-01",
+      "relationship": "routes_to",
+      "protocol": "",
+      "label": "HTTPS",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "verified_metadata",
+      "confidence": ""
+    },
+    {
+      "edge_id": "DC-AGG-SW-01\u2192APP-LB-01",
+      "source": "DC-AGG-SW-01",
+      "target": "APP-LB-01",
+      "relationship": "routes_to",
+      "protocol": "",
+      "label": "10G",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "verified_metadata",
+      "confidence": ""
+    },
+    {
+      "edge_id": "APP-LB-01\u2192APP-01",
+      "source": "APP-LB-01",
+      "target": "APP-01",
+      "relationship": "serves",
+      "protocol": "",
+      "label": "HTTPS",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "verified_metadata",
+      "confidence": ""
+    },
+    {
+      "edge_id": "APP-01\u2192DB-MASTER",
+      "source": "APP-01",
+      "target": "DB-MASTER",
+      "relationship": "depends_on",
+      "protocol": "",
+      "label": "JDBC",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "verified_metadata",
+      "confidence": ""
+    },
+    {
+      "edge_id": "APP-01\u2192DB-CACHE-01",
+      "source": "APP-01",
+      "target": "DB-CACHE-01",
+      "relationship": "depends_on",
+      "protocol": "",
+      "label": "API",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "verified_metadata",
+      "confidence": ""
+    },
+    {
+      "edge_id": "APP-01\u2192SERVICE-API-01",
+      "source": "APP-01",
+      "target": "SERVICE-API-01",
+      "relationship": "depends_on",
+      "protocol": "",
+      "label": "API",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "verified_metadata",
+      "confidence": ""
+    },
+    {
+      "edge_id": "APP-LB-01\u2192APP-02",
+      "source": "APP-LB-01",
+      "target": "APP-02",
+      "relationship": "serves",
+      "protocol": "",
+      "label": "HTTPS",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "verified_metadata",
+      "confidence": ""
+    },
+    {
+      "edge_id": "APP-02\u2192DB-MASTER",
+      "source": "APP-02",
+      "target": "DB-MASTER",
+      "relationship": "depends_on",
+      "protocol": "",
+      "label": "JDBC",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "verified_metadata",
+      "confidence": ""
+    },
+    {
+      "edge_id": "APP-02\u2192DB-CACHE-01",
+      "source": "APP-02",
+      "target": "DB-CACHE-01",
+      "relationship": "depends_on",
+      "protocol": "",
+      "label": "API",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "verified_metadata",
+      "confidence": ""
+    },
+    {
+      "edge_id": "APP-02\u2192SERVICE-API-01",
+      "source": "APP-02",
+      "target": "SERVICE-API-01",
+      "relationship": "depends_on",
+      "protocol": "",
+      "label": "API",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "verified_metadata",
+      "confidence": ""
+    },
+    {
+      "edge_id": "APP-LB-01\u2192APP-03",
+      "source": "APP-LB-01",
+      "target": "APP-03",
+      "relationship": "serves",
+      "protocol": "",
+      "label": "HTTPS",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "verified_metadata",
+      "confidence": ""
+    },
+    {
+      "edge_id": "APP-03\u2192DB-MASTER",
+      "source": "APP-03",
+      "target": "DB-MASTER",
+      "relationship": "depends_on",
+      "protocol": "",
+      "label": "JDBC",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "verified_metadata",
+      "confidence": ""
+    },
+    {
+      "edge_id": "APP-03\u2192DB-CACHE-01",
+      "source": "APP-03",
+      "target": "DB-CACHE-01",
+      "relationship": "depends_on",
+      "protocol": "",
+      "label": "API",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "verified_metadata",
+      "confidence": ""
+    },
+    {
+      "edge_id": "APP-03\u2192SERVICE-API-01",
+      "source": "APP-03",
+      "target": "SERVICE-API-01",
+      "relationship": "depends_on",
+      "protocol": "",
+      "label": "API",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "verified_metadata",
+      "confidence": ""
+    },
+    {
+      "edge_id": "DB-MASTER\u2192DB-REPLICA-01",
+      "source": "DB-MASTER",
+      "target": "DB-REPLICA-01",
+      "relationship": "connected_to",
+      "protocol": "",
+      "label": "DB Link",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "verified_metadata",
+      "confidence": ""
+    },
+    {
+      "edge_id": "DB-MASTER\u2192DB-REPLICA-02",
+      "source": "DB-MASTER",
+      "target": "DB-REPLICA-02",
+      "relationship": "connected_to",
+      "protocol": "",
+      "label": "DB Link",
+      "source_interface": "",
+      "target_interface": "",
+      "vlan": "",
+      "scope": "local",
+      "direction": "directed",
+      "evidence_source": "verified_metadata",
+      "confidence": ""
+    }
+  ],
+  "interfaces": [
+    {
+      "node_id": "APP-LB-01",
+      "device_type": "load_balancer",
+      "ip_address": "10.21.1.2",
+      "interface": "",
+      "vlan": "",
+      "zone": "App Ingress",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "APP-01",
+      "device_type": "server",
+      "ip_address": "10.21.1.3",
+      "interface": "",
+      "vlan": "",
+      "zone": "App Tier",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "APP-02",
+      "device_type": "server",
+      "ip_address": "10.21.1.4",
+      "interface": "",
+      "vlan": "",
+      "zone": "App Tier",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "APP-03",
+      "device_type": "server",
+      "ip_address": "10.21.1.5",
+      "interface": "",
+      "vlan": "",
+      "zone": "App Tier",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "SERVICE-API-01",
+      "device_type": "service",
+      "ip_address": "10.21.1.6",
+      "interface": "",
+      "vlan": "",
+      "zone": "App Tier",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "DB-MASTER",
+      "device_type": "database",
+      "ip_address": "10.21.1.7",
+      "interface": "",
+      "vlan": "",
+      "zone": "DB Tier",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "DB-CACHE-01",
+      "device_type": "server",
+      "ip_address": "10.21.1.8",
+      "interface": "",
+      "vlan": "",
+      "zone": "DB Tier",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "DB-REPLICA-01",
+      "device_type": "database",
+      "ip_address": "10.21.1.9",
+      "interface": "",
+      "vlan": "",
+      "zone": "DB Tier",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "DB-REPLICA-02",
+      "device_type": "database",
+      "ip_address": "10.21.1.10",
+      "interface": "",
+      "vlan": "",
+      "zone": "DB Tier",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "DC-CORE-SW-01",
+      "device_type": "switch",
+      "ip_address": "",
+      "interface": "",
+      "vlan": "",
+      "zone": "Network",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "DC-AGG-SW-01",
+      "device_type": "switch",
+      "ip_address": "",
+      "interface": "",
+      "vlan": "",
+      "zone": "Network",
+      "connected_to": "",
+      "protocol": "",
+      "port": "",
+      "evidence_source": "verified_metadata"
+    }
+  ],
+  "ocr_text": [
+    {
+      "text": "APP-LB-01",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[403, 498, 493, 512]",
+      "x1": "403",
+      "y1": "498",
+      "x2": "493",
+      "y2": "512",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.21.1.2",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[412, 426, 484, 438]",
+      "x1": "412",
+      "y1": "426",
+      "x2": "484",
+      "y2": "438",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "APP-01",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[740, 349, 800, 363]",
+      "x1": "740",
+      "y1": "349",
+      "x2": "800",
+      "y2": "363",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.21.1.3",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[734, 277, 806, 289]",
+      "x1": "734",
+      "y1": "277",
+      "x2": "806",
+      "y2": "289",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "APP-02",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[740, 515, 800, 529]",
+      "x1": "740",
+      "y1": "515",
+      "x2": "800",
+      "y2": "529",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.21.1.4",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[734, 443, 806, 455]",
+      "x1": "734",
+      "y1": "443",
+      "x2": "806",
+      "y2": "455",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "APP-03",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[740, 614, 800, 628]",
+      "x1": "740",
+      "y1": "614",
+      "x2": "800",
+      "y2": "628",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.21.1.5",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[734, 542, 806, 554]",
+      "x1": "734",
+      "y1": "542",
+      "x2": "806",
+      "y2": "554",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "SERVICE-API-01",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[700, 681, 840, 695]",
+      "x1": "700",
+      "y1": "681",
+      "x2": "840",
+      "y2": "695",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.21.1.6",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[734, 609, 806, 621]",
+      "x1": "734",
+      "y1": "609",
+      "x2": "806",
+      "y2": "621",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DB-MASTER",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1047, 448, 1137, 462]",
+      "x1": "1047",
+      "y1": "448",
+      "x2": "1137",
+      "y2": "462",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.21.1.7",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1056, 376, 1128, 388]",
+      "x1": "1056",
+      "y1": "376",
+      "x2": "1128",
+      "y2": "388",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DB-CACHE-01",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1037, 647, 1147, 661]",
+      "x1": "1037",
+      "y1": "647",
+      "x2": "1147",
+      "y2": "661",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.21.1.8",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1056, 575, 1128, 587]",
+      "x1": "1056",
+      "y1": "575",
+      "x2": "1128",
+      "y2": "587",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DB-REPLICA-01",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1209, 747, 1339, 761]",
+      "x1": "1209",
+      "y1": "747",
+      "x2": "1339",
+      "y2": "761",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.21.1.9",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1238, 675, 1310, 687]",
+      "x1": "1238",
+      "y1": "675",
+      "x2": "1310",
+      "y2": "687",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DB-REPLICA-02",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1209, 1228, 1339, 1242]",
+      "x1": "1209",
+      "y1": "1228",
+      "x2": "1339",
+      "y2": "1242",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10.21.1.10",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1234, 1156, 1314, 1168]",
+      "x1": "1234",
+      "y1": "1156",
+      "x2": "1314",
+      "y2": "1168",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DC-CORE-SW-01",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[75, 382, 205, 396]",
+      "x1": "75",
+      "y1": "382",
+      "x2": "205",
+      "y2": "396",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DC-AGG-SW-01",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[80, 614, 200, 628]",
+      "x1": "80",
+      "y1": "614",
+      "x2": "200",
+      "y2": "628",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Network",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[66, 277, 108, 293]",
+      "x1": "66",
+      "y1": "277",
+      "x2": "108",
+      "y2": "293",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "App Ingress",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[346, 277, 412, 293]",
+      "x1": "346",
+      "y1": "277",
+      "x2": "412",
+      "y2": "293",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "App Tier",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[626, 210, 674, 226]",
+      "x1": "626",
+      "y1": "210",
+      "x2": "674",
+      "y2": "226",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DB Tier",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[962, 194, 1004, 210]",
+      "x1": "962",
+      "y1": "194",
+      "x2": "1004",
+      "y2": "210",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Shared Services Ref",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1242, 244, 1356, 260]",
+      "x1": "1242",
+      "y1": "244",
+      "x2": "1356",
+      "y2": "260",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "HTTPS",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[269, 400, 319, 420]",
+      "x1": "269",
+      "y1": "400",
+      "x2": "319",
+      "y2": "420",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[148, 356, 168, 368]",
+      "x1": "148",
+      "y1": "356",
+      "x2": "168",
+      "y2": "368",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "ge-0/0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[408, 452, 440, 464]",
+      "x1": "408",
+      "y1": "452",
+      "x2": "440",
+      "y2": "464",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "10G",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[270, 516, 318, 536]",
+      "x1": "270",
+      "y1": "516",
+      "x2": "318",
+      "y2": "536",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth0",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[148, 588, 164, 600]",
+      "x1": "148",
+      "y1": "588",
+      "x2": "164",
+      "y2": "600",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/2",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[420, 452, 440, 464]",
+      "x1": "420",
+      "y1": "452",
+      "x2": "440",
+      "y2": "464",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "HTTPS",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[584, 383, 634, 403]",
+      "x1": "584",
+      "y1": "383",
+      "x2": "634",
+      "y2": "403",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "ge-0/0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[456, 472, 488, 484]",
+      "x1": "456",
+      "y1": "472",
+      "x2": "488",
+      "y2": "484",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[746, 303, 762, 315]",
+      "x1": "746",
+      "y1": "303",
+      "x2": "762",
+      "y2": "315",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "JDBC",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[907, 358, 955, 378]",
+      "x1": "907",
+      "y1": "358",
+      "x2": "955",
+      "y2": "378",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/2",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[778, 323, 798, 335]",
+      "x1": "778",
+      "y1": "323",
+      "x2": "798",
+      "y2": "335",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1064, 402, 1084, 414]",
+      "x1": "1064",
+      "y1": "402",
+      "x2": "1084",
+      "y2": "414",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "API",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[907, 458, 955, 478]",
+      "x1": "907",
+      "y1": "458",
+      "x2": "955",
+      "y2": "478",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[778, 323, 794, 335]",
+      "x1": "778",
+      "y1": "323",
+      "x2": "794",
+      "y2": "335",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth0",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1068, 601, 1084, 613]",
+      "x1": "1068",
+      "y1": "601",
+      "x2": "1084",
+      "y2": "613",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "API",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[746, 475, 794, 495]",
+      "x1": "746",
+      "y1": "475",
+      "x2": "794",
+      "y2": "495",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[778, 323, 798, 335]",
+      "x1": "778",
+      "y1": "323",
+      "x2": "798",
+      "y2": "335",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "ge-0/0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[730, 635, 762, 647]",
+      "x1": "730",
+      "y1": "635",
+      "x2": "762",
+      "y2": "647",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "HTTPS",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[584, 466, 634, 486]",
+      "x1": "584",
+      "y1": "466",
+      "x2": "634",
+      "y2": "486",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth0",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[456, 472, 472, 484]",
+      "x1": "456",
+      "y1": "472",
+      "x2": "472",
+      "y2": "484",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/2",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[742, 469, 762, 481]",
+      "x1": "742",
+      "y1": "469",
+      "x2": "762",
+      "y2": "481",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "JDBC",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[907, 441, 955, 461]",
+      "x1": "907",
+      "y1": "441",
+      "x2": "955",
+      "y2": "461",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "ge-0/0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[778, 489, 810, 501]",
+      "x1": "778",
+      "y1": "489",
+      "x2": "810",
+      "y2": "501",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1068, 402, 1084, 414]",
+      "x1": "1068",
+      "y1": "402",
+      "x2": "1084",
+      "y2": "414",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "API",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[907, 541, 955, 561]",
+      "x1": "907",
+      "y1": "541",
+      "x2": "955",
+      "y2": "561",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/2",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[778, 489, 798, 501]",
+      "x1": "778",
+      "y1": "489",
+      "x2": "798",
+      "y2": "501",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1064, 601, 1084, 613]",
+      "x1": "1064",
+      "y1": "601",
+      "x2": "1084",
+      "y2": "613",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "API",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[746, 558, 794, 578]",
+      "x1": "746",
+      "y1": "558",
+      "x2": "794",
+      "y2": "578",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[778, 489, 794, 501]",
+      "x1": "778",
+      "y1": "489",
+      "x2": "794",
+      "y2": "501",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth0",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[746, 635, 762, 647]",
+      "x1": "746",
+      "y1": "635",
+      "x2": "762",
+      "y2": "647",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "HTTPS",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[584, 516, 634, 536]",
+      "x1": "584",
+      "y1": "516",
+      "x2": "634",
+      "y2": "536",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[456, 472, 476, 484]",
+      "x1": "456",
+      "y1": "472",
+      "x2": "476",
+      "y2": "484",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "ge-0/0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[730, 568, 762, 580]",
+      "x1": "730",
+      "y1": "568",
+      "x2": "762",
+      "y2": "580",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "JDBC",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[907, 491, 955, 511]",
+      "x1": "907",
+      "y1": "491",
+      "x2": "955",
+      "y2": "511",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth0",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[778, 588, 794, 600]",
+      "x1": "778",
+      "y1": "588",
+      "x2": "794",
+      "y2": "600",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/2",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1064, 402, 1084, 414]",
+      "x1": "1064",
+      "y1": "402",
+      "x2": "1084",
+      "y2": "414",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "API",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[907, 590, 955, 610]",
+      "x1": "907",
+      "y1": "590",
+      "x2": "955",
+      "y2": "610",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "ge-0/0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[778, 588, 810, 600]",
+      "x1": "778",
+      "y1": "588",
+      "x2": "810",
+      "y2": "600",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1068, 601, 1084, 613]",
+      "x1": "1068",
+      "y1": "601",
+      "x2": "1084",
+      "y2": "613",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "API",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[746, 607, 794, 627]",
+      "x1": "746",
+      "y1": "607",
+      "x2": "794",
+      "y2": "627",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/2",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[778, 588, 798, 600]",
+      "x1": "778",
+      "y1": "588",
+      "x2": "798",
+      "y2": "600",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[742, 635, 762, 647]",
+      "x1": "742",
+      "y1": "635",
+      "x2": "762",
+      "y2": "647",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DB Link",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1148, 557, 1218, 577]",
+      "x1": "1148",
+      "y1": "557",
+      "x2": "1218",
+      "y2": "577",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth0",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1100, 422, 1116, 434]",
+      "x1": "1100",
+      "y1": "422",
+      "x2": "1116",
+      "y2": "434",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "Gi0/2",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1246, 701, 1266, 713]",
+      "x1": "1246",
+      "y1": "701",
+      "x2": "1266",
+      "y2": "713",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "DB Link",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1148, 798, 1218, 818]",
+      "x1": "1148",
+      "y1": "798",
+      "x2": "1218",
+      "y2": "818",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "ge-0/0/1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1100, 422, 1132, 434]",
+      "x1": "1100",
+      "y1": "422",
+      "x2": "1132",
+      "y2": "434",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    },
+    {
+      "text": "eth1",
+      "text_type": "",
+      "linked_node": "",
+      "bbox": "[1250, 1182, 1266, 1194]",
+      "x1": "1250",
+      "y1": "1182",
+      "x2": "1266",
+      "y2": "1194",
+      "confidence": "",
+      "evidence_source": "verified_text_metadata"
+    }
+  ],
+  "nodes": [
+    {
+      "node_id": "APP-LB-01",
+      "type": "load_balancer",
+      "ip_address": "10.21.1.2",
+      "zone": "App Ingress",
+      "shared": false,
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "APP-01",
+      "type": "server",
+      "ip_address": "10.21.1.3",
+      "zone": "App Tier",
+      "shared": false,
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "APP-02",
+      "type": "server",
+      "ip_address": "10.21.1.4",
+      "zone": "App Tier",
+      "shared": false,
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "APP-03",
+      "type": "server",
+      "ip_address": "10.21.1.5",
+      "zone": "App Tier",
+      "shared": false,
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "SERVICE-API-01",
+      "type": "service",
+      "ip_address": "10.21.1.6",
+      "zone": "App Tier",
+      "shared": false,
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "DB-MASTER",
+      "type": "database",
+      "ip_address": "10.21.1.7",
+      "zone": "DB Tier",
+      "shared": false,
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "DB-CACHE-01",
+      "type": "server",
+      "ip_address": "10.21.1.8",
+      "zone": "DB Tier",
+      "shared": false,
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "DB-REPLICA-01",
+      "type": "database",
+      "ip_address": "10.21.1.9",
+      "zone": "DB Tier",
+      "shared": false,
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "DB-REPLICA-02",
+      "type": "database",
+      "ip_address": "10.21.1.10",
+      "zone": "DB Tier",
+      "shared": false,
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "DC-CORE-SW-01",
+      "type": "switch",
+      "ip_address": "",
+      "zone": "Network",
+      "shared": true,
+      "evidence_source": "verified_metadata"
+    },
+    {
+      "node_id": "DC-AGG-SW-01",
+      "type": "switch",
+      "ip_address": "",
+      "zone": "Network",
+      "shared": true,
+      "evidence_source": "verified_metadata"
+    }
+  ],
+  "edges": [
+    {
+      "source": "DC-CORE-SW-01",
+      "target": "APP-03",
+      "relationship": "connected_to",
+      "label": ""
+    },
+    {
+      "source": "APP-LB-01",
+      "target": "APP-03",
+      "relationship": "connected_to",
+      "label": ""
+    },
+    {
+      "source": "APP-01",
+      "target": "DB-CACHE-01",
+      "relationship": "connected_to",
+      "label": ""
+    },
+    {
+      "source": "APP-LB-01",
+      "target": "APP-02",
+      "relationship": "connected_to",
+      "label": ""
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "target": "APP-LB-01",
+      "relationship": "connected_to",
+      "label": ""
+    },
+    {
+      "source": "SERVICE-API-01",
+      "target": "APP-01",
+      "relationship": "connected_to",
+      "label": ""
+    },
+    {
+      "source": "APP-03",
+      "target": "DB-MASTER",
+      "relationship": "connected_to",
+      "label": ""
+    },
+    {
+      "source": "APP-02",
+      "target": "DB-MASTER",
+      "relationship": "connected_to",
+      "label": ""
+    },
+    {
+      "source": "APP-LB-01",
+      "target": "APP-01",
+      "relationship": "connected_to",
+      "label": ""
+    },
+    {
+      "source": "DB-MASTER",
+      "target": "DB-REPLICA-01",
+      "relationship": "connected_to",
+      "label": ""
+    },
+    {
+      "source": "APP-02",
+      "target": "DB-CACHE-01",
+      "relationship": "connected_to",
+      "label": ""
+    },
+    {
+      "source": "APP-01",
+      "target": "DB-MASTER",
+      "relationship": "connected_to",
+      "label": ""
+    },
+    {
+      "source": "APP-03",
+      "target": "DB-CACHE-01",
+      "relationship": "connected_to",
+      "label": ""
+    },
+    {
+      "source": "APP-03",
+      "target": "APP-01",
+      "relationship": "connected_to",
+      "label": ""
+    },
+    {
+      "source": "APP-02",
+      "target": "APP-03",
+      "relationship": "connected_to",
+      "label": ""
+    },
+    {
+      "source": "APP-03",
+      "target": "SERVICE-API-01",
+      "relationship": "connected_to",
+      "label": ""
+    },
+    {
+      "source": "DC-CORE-SW-01",
+      "target": "APP-LB-01",
+      "relationship": "connected_to",
+      "label": ""
+    },
+    {
+      "source": "APP-02",
+      "target": "SERVICE-API-01",
+      "relationship": "connected_to",
+      "label": ""
+    },
+    {
+      "source": "DB-MASTER",
+      "target": "DB-REPLICA-02",
+      "relationship": "connected_to",
+      "label": ""
+    }
+  ],
+  "confidence_summary": {
+    "device_detection_avg": 0.88,
+    "edge_extraction_avg": 0.478,
+    "ocr_text_blocks": 73,
+    "connector_count": 16,
+    "low_confidence_items": 11,
+    "device_confidence_count": 11,
+    "edge_confidence_count": 19,
+    "confidence_source": "detected_nodes"
+  },
+  "text_blocks": [
+    {
+      "text": "APP-LB-01",
+      "bbox": [
+        403,
+        498,
+        493,
+        512
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.21.1.2",
+      "bbox": [
+        412,
+        426,
+        484,
+        438
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "APP-01",
+      "bbox": [
+        740,
+        349,
+        800,
+        363
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.21.1.3",
+      "bbox": [
+        734,
+        277,
+        806,
+        289
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "APP-02",
+      "bbox": [
+        740,
+        515,
+        800,
+        529
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.21.1.4",
+      "bbox": [
+        734,
+        443,
+        806,
+        455
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "APP-03",
+      "bbox": [
+        740,
+        614,
+        800,
+        628
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.21.1.5",
+      "bbox": [
+        734,
+        542,
+        806,
+        554
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "SERVICE-API-01",
+      "bbox": [
+        700,
+        681,
+        840,
+        695
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.21.1.6",
+      "bbox": [
+        734,
+        609,
+        806,
+        621
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "DB-MASTER",
+      "bbox": [
+        1047,
+        448,
+        1137,
+        462
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.21.1.7",
+      "bbox": [
+        1056,
+        376,
+        1128,
+        388
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "DB-CACHE-01",
+      "bbox": [
+        1037,
+        647,
+        1147,
+        661
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.21.1.8",
+      "bbox": [
+        1056,
+        575,
+        1128,
+        587
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "DB-REPLICA-01",
+      "bbox": [
+        1209,
+        747,
+        1339,
+        761
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.21.1.9",
+      "bbox": [
+        1238,
+        675,
+        1310,
+        687
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "DB-REPLICA-02",
+      "bbox": [
+        1209,
+        1228,
+        1339,
+        1242
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "10.21.1.10",
+      "bbox": [
+        1234,
+        1156,
+        1314,
+        1168
+      ],
+      "text_type": "ip_address"
+    },
+    {
+      "text": "DC-CORE-SW-01",
+      "bbox": [
+        75,
+        382,
+        205,
+        396
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "DC-AGG-SW-01",
+      "bbox": [
+        80,
+        614,
+        200,
+        628
+      ],
+      "text_type": "node_label"
+    },
+    {
+      "text": "Network",
+      "bbox": [
+        66,
+        277,
+        108,
+        293
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "App Ingress",
+      "bbox": [
+        346,
+        277,
+        412,
+        293
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "App Tier",
+      "bbox": [
+        626,
+        210,
+        674,
+        226
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "DB Tier",
+      "bbox": [
+        962,
+        194,
+        1004,
+        210
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "Shared Services Ref",
+      "bbox": [
+        1242,
+        244,
+        1356,
+        260
+      ],
+      "text_type": "zone_label"
+    },
+    {
+      "text": "HTTPS",
+      "bbox": [
+        269,
+        400,
+        319,
+        420
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        148,
+        356,
+        168,
+        368
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        408,
+        452,
+        440,
+        464
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "10G",
+      "bbox": [
+        270,
+        516,
+        318,
+        536
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        148,
+        588,
+        164,
+        600
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        420,
+        452,
+        440,
+        464
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "HTTPS",
+      "bbox": [
+        584,
+        383,
+        634,
+        403
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        456,
+        472,
+        488,
+        484
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        746,
+        303,
+        762,
+        315
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "JDBC",
+      "bbox": [
+        907,
+        358,
+        955,
+        378
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        778,
+        323,
+        798,
+        335
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        1064,
+        402,
+        1084,
+        414
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "API",
+      "bbox": [
+        907,
+        458,
+        955,
+        478
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        778,
+        323,
+        794,
+        335
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        1068,
+        601,
+        1084,
+        613
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "API",
+      "bbox": [
+        746,
+        475,
+        794,
+        495
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        778,
+        323,
+        798,
+        335
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        730,
+        635,
+        762,
+        647
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "HTTPS",
+      "bbox": [
+        584,
+        466,
+        634,
+        486
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        456,
+        472,
+        472,
+        484
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        742,
+        469,
+        762,
+        481
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "JDBC",
+      "bbox": [
+        907,
+        441,
+        955,
+        461
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        778,
+        489,
+        810,
+        501
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        1068,
+        402,
+        1084,
+        414
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "API",
+      "bbox": [
+        907,
+        541,
+        955,
+        561
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        778,
+        489,
+        798,
+        501
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        1064,
+        601,
+        1084,
+        613
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "API",
+      "bbox": [
+        746,
+        558,
+        794,
+        578
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        778,
+        489,
+        794,
+        501
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        746,
+        635,
+        762,
+        647
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "HTTPS",
+      "bbox": [
+        584,
+        516,
+        634,
+        536
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        456,
+        472,
+        476,
+        484
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        730,
+        568,
+        762,
+        580
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "JDBC",
+      "bbox": [
+        907,
+        491,
+        955,
+        511
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        778,
+        588,
+        794,
+        600
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        1064,
+        402,
+        1084,
+        414
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "API",
+      "bbox": [
+        907,
+        590,
+        955,
+        610
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        778,
+        588,
+        810,
+        600
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        1068,
+        601,
+        1084,
+        613
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "API",
+      "bbox": [
+        746,
+        607,
+        794,
+        627
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        778,
+        588,
+        798,
+        600
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/1",
+      "bbox": [
+        742,
+        635,
+        762,
+        647
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "DB Link",
+      "bbox": [
+        1148,
+        557,
+        1218,
+        577
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "eth0",
+      "bbox": [
+        1100,
+        422,
+        1116,
+        434
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "Gi0/2",
+      "bbox": [
+        1246,
+        701,
+        1266,
+        713
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "DB Link",
+      "bbox": [
+        1148,
+        798,
+        1218,
+        818
+      ],
+      "text_type": "connector_label"
+    },
+    {
+      "text": "ge-0/0/1",
+      "bbox": [
+        1100,
+        422,
+        1132,
+        434
+      ],
+      "text_type": "interface_label"
+    },
+    {
+      "text": "eth1",
+      "bbox": [
+        1250,
+        1182,
+        1266,
+        1194
+      ],
+      "text_type": "interface_label"
+    }
+  ],
+  "source_label": "Source: Verified Annotation Overlay",
+  "annotation_preview": {
+    "rendered": true,
+    "boxes_rendered": 10,
+    "boxes_skipped": 1,
+    "boxes_skipped_large": 0,
+    "connectors_rendered": 0,
+    "connectors_skipped": 16,
+    "connectors_skipped_long": 0,
+    "overlay_mode": "clean",
+    "draw_connectors": false,
+    "renderer_version": "v3_clean_overlay_v1",
+    "out_path": "/workspace/shared/infragraph-ai/runtime_state/live_ingestion/ONB-018/detected.png",
+    "meta_path": "/workspace/shared/infragraph-ai/runtime_state/live_ingestion/ONB-018/detected.meta.json"
+  },
+  "runtime_mode": "VERIFIED_ANNOTATION_FALLBACK",
+  "absorption_mode": "SESSION_MEMORY_ABSORPTION",
+  "rfdetr_subprocess": {
+    "ok": false,
+    "source": "live_rfdetr_http_service",
+    "service_url": "http://127.0.0.1:8010",
+    "detector_runtime_mode": "verified_annotation_fallback",
+    "timed_out": true,
+    "error": "RF-DETR HTTP timeout after 30s: timed out",
+    "fallback_reason": "Live RF-DETR timed out; using verified annotation fallback for demo continuity.",
+    "checkpoint_path": "/workspace/shared/infragraph-ai/model_artifacts/rfdetr_v3/checkpoint_best_total.pth",
+    "image_path": "/workspace/shared/infragraph-ai/assets/onboarding/ONB-018/original.png"
+  },
+  "edge_extraction_source": "vision_connector_extraction",
+  "vision_connector_edge_count": 16,
+  "vision_connector_segment_count": 408,
+  "vision_connector_warning": "",
+  "vision_connector_debug_overlay": "/workspace/shared/infragraph-ai/runtime_state/outputs/connector_extraction_debug/ONB-018_connectors_debug.png"
+}

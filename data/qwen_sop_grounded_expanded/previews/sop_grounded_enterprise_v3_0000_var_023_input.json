@@ -1,0 +1,307 @@
+{
+  "incident_id": "INC-enterprise_v3_0000_var_023",
+  "scenario_id": "enterprise_v3_0000_var_023",
+  "base_scenario_id": "enterprise_v3_0000",
+  "synthetic_variant_id": "var_023",
+  "scope": "enterprise",
+  "root_cause": "DC-FW-01",
+  "root_cause_diagram": "datacenter_topology",
+  "impacted_nodes": [
+    "DC-FW-01",
+    "DC-CORE-SW-01",
+    "APP-LB-01",
+    "APP-01",
+    "DB-MASTER",
+    "IAM-01",
+    "BR-APP-01"
+  ],
+  "impacted_diagrams": [
+    "branch_topology",
+    "datacenter_topology",
+    "app_db_topology",
+    "shared_services_topology"
+  ],
+  "alert_timeline": [
+    {
+      "event_id": "EVT-0001",
+      "time_offset_min": 0,
+      "node": "DC-FW-01",
+      "diagram_id": "datacenter_topology",
+      "alert_type": "packet_drop",
+      "severity": "high"
+    },
+    {
+      "event_id": "EVT-0002",
+      "time_offset_min": 3,
+      "node": "DC-CORE-SW-01",
+      "diagram_id": "datacenter_topology",
+      "alert_type": "link_errors",
+      "severity": "high"
+    },
+    {
+      "event_id": "EVT-0003",
+      "time_offset_min": 6,
+      "node": "APP-LB-01",
+      "diagram_id": "app_db_topology",
+      "alert_type": "backend_pool_unhealthy",
+      "severity": "high"
+    },
+    {
+      "event_id": "EVT-0004",
+      "time_offset_min": 9,
+      "node": "APP-01",
+      "diagram_id": "app_db_topology",
+      "alert_type": "api_latency",
+      "severity": "medium"
+    },
+    {
+      "event_id": "EVT-0005",
+      "time_offset_min": 12,
+      "node": "DB-MASTER",
+      "diagram_id": "app_db_topology",
+      "alert_type": "connection_timeout",
+      "severity": "warning"
+    },
+    {
+      "event_id": "EVT-0006",
+      "time_offset_min": 15,
+      "node": "IAM-01",
+      "diagram_id": "shared_services_topology",
+      "alert_type": "auth_errors",
+      "severity": "medium"
+    },
+    {
+      "event_id": "EVT-0007",
+      "time_offset_min": 18,
+      "node": "BR-APP-01",
+      "diagram_id": "branch_topology",
+      "alert_type": "user_timeout",
+      "severity": "medium"
+    }
+  ],
+  "candidate_ranking": [
+    {
+      "rank": 1,
+      "node_id": "DC-FW-01",
+      "diagram_id": "datacenter_topology",
+      "node_observed_in_diagrams": [
+        "datacenter_topology"
+      ],
+      "node_type": "firewall",
+      "score": 0.99,
+      "evidence": [
+        "alert_count=1.0",
+        "cross_diagram_degree=0.0",
+        "distance_to_alert=0.0",
+        "shared_entity=True"
+      ]
+    },
+    {
+      "rank": 2,
+      "node_id": "DC-CORE-SW-01",
+      "diagram_id": "datacenter_topology",
+      "node_observed_in_diagrams": [
+        "datacenter_topology"
+      ],
+      "node_type": "switch",
+      "score": 0.0467,
+      "evidence": [
+        "alert_count=1.0",
+        "cross_diagram_degree=0.028",
+        "distance_to_alert=0.0",
+        "shared_entity=True"
+      ]
+    },
+    {
+      "rank": 3,
+      "node_id": "APP-LB-01",
+      "diagram_id": "app_db_topology",
+      "node_observed_in_diagrams": [
+        "app_db_topology"
+      ],
+      "node_type": "load_balancer",
+      "score": 0.01,
+      "evidence": [
+        "alert_count=1.0",
+        "cross_diagram_degree=0.083",
+        "distance_to_alert=0.0",
+        "shared_entity=False"
+      ]
+    }
+  ],
+  "cluster_id": "CLU-ent_enterprise_v3_0000-001-var_023",
+  "cluster_score": 0.8175,
+  "correlation_reasons": [
+    "7 event(s) span 18 min (t=0..18)",
+    "Propagation pattern detected: link_errors -> latency",
+    "Events span 4 diagrams: app_db_topology, branch_topology, datacenter_topology, shared_services_topology",
+    "Alerted nodes are topologically proximate (2-3 hops)"
+  ],
+  "causal_evidence": [
+    {
+      "evidence_id": "CE-001",
+      "stage": "temporal_correlation",
+      "summary": "7 alert(s) within a 18-minute window (t=0..18 min), consistent with a propagating fault.",
+      "supporting_events": [
+        "EVT-0001",
+        "EVT-0002",
+        "EVT-0003",
+        "EVT-0004",
+        "EVT-0005",
+        "EVT-0006",
+        "EVT-0007"
+      ],
+      "supporting_nodes": [
+        "DC-FW-01",
+        "DC-CORE-SW-01",
+        "APP-LB-01",
+        "APP-01",
+        "DB-MASTER",
+        "IAM-01",
+        "BR-APP-01"
+      ],
+      "confidence": 0.85
+    },
+    {
+      "evidence_id": "CE-002",
+      "stage": "alert_sequence",
+      "summary": "Alert type sequence matches propagation chain: link_errors -> latency. This ordering is consistent with fault propagation from the initiating node.",
+      "supporting_events": [
+        "EVT-0001",
+        "EVT-0002",
+        "EVT-0003",
+        "EVT-0004",
+        "EVT-0005",
+        "EVT-0006",
+        "EVT-0007"
+      ],
+      "supporting_nodes": [
+        "DC-FW-01",
+        "DC-CORE-SW-01",
+        "APP-LB-01",
+        "APP-01",
+        "DB-MASTER",
+        "IAM-01",
+        "BR-APP-01"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "evidence_id": "CE-003",
+      "stage": "topology_proximity",
+      "summary": "Alerted nodes (DC-FW-01, DC-CORE-SW-01, APP-LB-01, APP-01...) are topologically proximate (topology score 0.76), suggesting fault propagation through connected infrastructure.",
+      "supporting_events": [
+        "EVT-0001",
+        "EVT-0002",
+        "EVT-0003",
+        "EVT-0004",
+        "EVT-0005",
+        "EVT-0006",
+        "EVT-0007"
+      ],
+      "supporting_nodes": [
+        "DC-FW-01",
+        "DC-CORE-SW-01",
+        "APP-LB-01",
+        "APP-01",
+        "DB-MASTER",
+        "IAM-01",
+        "BR-APP-01"
+      ],
+      "confidence": 0.7571
+    },
+    {
+      "evidence_id": "CE-004",
+      "stage": "cross_diagram_correlation",
+      "summary": "Events span 4 diagrams (app_db_topology, branch_topology, datacenter_topology, shared_services_topology). Cross-diagram correlation score 1.00 indicates the fault may have propagated across topology boundaries.",
+      "supporting_events": [
+        "EVT-0001",
+        "EVT-0002",
+        "EVT-0003",
+        "EVT-0004",
+        "EVT-0005",
+        "EVT-0006",
+        "EVT-0007"
+      ],
+      "supporting_nodes": [
+        "DC-FW-01",
+        "DC-CORE-SW-01",
+        "APP-LB-01",
+        "APP-01",
+        "DB-MASTER",
+        "IAM-01",
+        "BR-APP-01"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "evidence_id": "CE-005",
+      "stage": "propagation_hypothesis",
+      "summary": "Hypothesis: fault originated at the cluster seed node and may have propagated downstream through connected infrastructure.",
+      "supporting_events": [
+        "EVT-0001"
+      ],
+      "supporting_nodes": [
+        "DC-FW-01"
+      ],
+      "confidence": 0.8036
+    }
+  ],
+  "retrieved_kb_evidence": [
+    {
+      "evidence_id": "KB-SOP-DC-FW-001-001",
+      "score": 1.0,
+      "metadata": {
+        "kb_id": "SOP-DC-FW-001",
+        "title": "Datacenter Firewall Packet Drop and Link Error Response",
+        "doc_type": "sop",
+        "section": "Trigger Symptoms"
+      },
+      "text": "[Datacenter Firewall Packet Drop and Link Error Response] Trigger Symptoms\n- Alerts of type `packet_drop`, `link_errors`, or `high_error_rate` originating on or upstream of the datacenter firewall.\n- Cross-diagram alert correlation: datacenter_topology alerts reflected in app_db_topology and/or branch_topology within the same correlation window.\n- Spike in denied connections in firewall deny logs without a corresponding approved change ticket.\n- RCA candidate ranking places the datacenter firewall node at rank 1 with GNN confidence above 0.50.\n- Session table utilisation on the firewall exceeds 80% concurrent with alert onset."
+    },
+    {
+      "evidence_id": "KB-SOP-DC-FW-001-006",
+      "score": 1.0,
+      "metadata": {
+        "kb_id": "SOP-DC-FW-001",
+        "title": "Datacenter Firewall Packet Drop and Link Error Response",
+        "doc_type": "sop",
+        "section": "Validation Steps"
+      },
+      "text": "[Datacenter Firewall Packet Drop and Link Error Response] Validation Steps\n1. Confirm `packet_drop` and `link_errors` alerts on the firewall node have cleared.\n2. Verify app_db_topology: database connection pools should return to normal utilisation within 5 minutes.\n3. Verify branch_topology: branch uplink connectivity to datacenter services should be restored.\n4. Run traceroute from at least one host in each affected diagram to the datacenter services VLAN.\n5. Confirm monitoring shows green health on the datacenter firewall node.\n6. Verify no new firewall deny-log entries matching the incident pattern appear for 10 minutes after the fix."
+    },
+    {
+      "evidence_id": "KB-RUNBOOK-ENT-XDIAG-001-006",
+      "score": 0.9823,
+      "metadata": {
+        "kb_id": "RUNBOOK-ENT-XDIAG-001",
+        "title": "Enterprise Cross-Diagram Incident Validation Runbook",
+        "doc_type": "runbook",
+        "section": "Validation Steps"
+      },
+      "text": "[Enterprise Cross-Diagram Incident Validation Runbook] Validation Steps\n1. **Root source diagram**: Confirm all active alerts have cleared (zero active alerts, monitoring shows green).\n2. **Downstream diagrams**: For each affected diagram, confirm alert count is zero and services are returning to baseline metrics.\n3. Run end-to-end connectivity tests across diagram boundaries:\n   - Branch → datacenter: ping/traceroute to datacenter services\n   - App-tier → database: synthetic connection and query health check\n   - All sites → shared services: DNS resolution, NTP synchronisation check\n4. Confirm the event correlation cluster associated with this incident shows no new alerts in the most recent 15-minute window.\n5. Obtain explicit confirmation from the owner of each affected diagram that their domain is healthy.\n6. Verify that GNN model's top-1 candidate (root cause node) shows healthy status in monitoring."
+    },
+    {
+      "evidence_id": "KB-RUNBOOK-ENT-XDIAG-001-002",
+      "score": 0.9553,
+      "metadata": {
+        "kb_id": "RUNBOOK-ENT-XDIAG-001",
+        "title": "Enterprise Cross-Diagram Incident Validation Runbook",
+        "doc_type": "runbook",
+        "section": "Applicable RCA Patterns"
+      },
+      "text": "[Enterprise Cross-Diagram Incident Validation Runbook] Applicable RCA Patterns\n- **cross_diagram_cascade**: An upstream failure (firewall, WAN router, database) propagates alerts into multiple dependent diagrams within the correlation time window.\n- **enterprise_wide_incident**: Shared services (DNS, IAM, NTP) become unavailable, causing simultaneous alerts across all topology domains."
+    },
+    {
+      "evidence_id": "KB-RUNBOOK-ENT-XDIAG-001-004",
+      "score": 0.9531,
+      "metadata": {
+        "kb_id": "RUNBOOK-ENT-XDIAG-001",
+        "title": "Enterprise Cross-Diagram Incident Validation Runbook",
+        "doc_type": "runbook",
+        "section": "Triage Steps"
+      },
+      "text": "[Enterprise Cross-Diagram Incident Validation Runbook] Triage Steps\n1. For each affected diagram, pull the current active alert count and timestamp of the most recent alert.\n2. Determine the alert propagation order from the correlation cluster evidence — identify the diagram that received the first alert (root source diagram).\n3. Confirm the inter-diagram connectivity path from root source to each affected diagram (e.g., datacenter_topology → app_db_topology → branch_topology).\n4. For each diagram: confirm whether the local diagram-level SOP has been initiated or completed.\n5. Identify any diagram that is NOT yet in remediation — escalate ownership and initiate that diagram's SOP.\n6. Check shared services (DNS, NTP, IAM) — if shared services are affected, their SOP takes priority over diagram-specific SOPs."
+    }
+  ]
+}

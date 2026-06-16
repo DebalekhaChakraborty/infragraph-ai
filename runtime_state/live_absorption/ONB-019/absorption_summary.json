@@ -1,0 +1,63 @@
+{
+  "absorbed_diagram_id": "shared_services_topology",
+  "run_id": "ONB-019",
+  "nodes_absorbed": 8,
+  "edges_absorbed": 6,
+  "shared_entities_matched": 8,
+  "cross_diagram_links_created": 5,
+  "matched_entities": [
+    "AD-01",
+    "APP-01",
+    "BR-APP-01",
+    "DNS-01",
+    "IAM-01",
+    "MON-01",
+    "NTP-01",
+    "SYSLOG-01"
+  ],
+  "cross_diagram_links": [
+    {
+      "source": "BR-RTR-01",
+      "source_diagram": "branch_topology",
+      "target": "DNS-01",
+      "target_diagram": "shared_services_topology",
+      "relationship": "depends_on",
+      "label": "DNS"
+    },
+    {
+      "source": "APP-LB-01",
+      "source_diagram": "app_db_topology",
+      "target": "IAM-01",
+      "target_diagram": "shared_services_topology",
+      "relationship": "depends_on",
+      "label": "Auth"
+    },
+    {
+      "source": "APP-01",
+      "source_diagram": "app_db_topology",
+      "target": "IAM-01",
+      "target_diagram": "shared_services_topology",
+      "relationship": "depends_on",
+      "label": "LDAP/IAM"
+    },
+    {
+      "source": "APP-01",
+      "source_diagram": "app_db_topology",
+      "target": "DNS-01",
+      "target_diagram": "shared_services_topology",
+      "relationship": "depends_on",
+      "label": "DNS"
+    },
+    {
+      "source": "DB-MASTER",
+      "source_diagram": "app_db_topology",
+      "target": "MON-01",
+      "target_diagram": "shared_services_topology",
+      "relationship": "depends_on",
+      "label": "Monitor"
+    }
+  ],
+  "before_node_count": 29,
+  "after_node_count": 37,
+  "status": "absorbed_into_enterprise_graph"
+}

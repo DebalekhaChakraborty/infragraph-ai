@@ -1,0 +1,48 @@
+{
+  "absorbed_diagram_id": "app_db_topology",
+  "run_id": "ONB-012",
+  "nodes_absorbed": 9,
+  "edges_absorbed": 11,
+  "shared_entities_matched": 9,
+  "cross_diagram_links_created": 3,
+  "matched_entities": [
+    "APP-01",
+    "APP-02",
+    "APP-LB-01",
+    "DB-CACHE-01",
+    "DB-MASTER",
+    "DB-REPLICA-01",
+    "DC-AGG-SW-01",
+    "DC-CORE-SW-01",
+    "SERVICE-API-01"
+  ],
+  "cross_diagram_links": [
+    {
+      "source": "DC-CORE-SW-01",
+      "source_diagram": "datacenter_topology",
+      "target": "DC-CORE-SW-01",
+      "target_diagram": "app_db_topology",
+      "relationship": "shared_entity",
+      "label": "same-node"
+    },
+    {
+      "source": "DC-CORE-SW-01",
+      "source_diagram": "datacenter_topology",
+      "target": "APP-LB-01",
+      "target_diagram": "app_db_topology",
+      "relationship": "routes_to",
+      "label": "HTTPS"
+    },
+    {
+      "source": "DC-AGG-SW-01",
+      "source_diagram": "datacenter_topology",
+      "target": "APP-LB-01",
+      "target_diagram": "app_db_topology",
+      "relationship": "routes_to",
+      "label": "10G"
+    }
+  ],
+  "before_node_count": 12,
+  "after_node_count": 22,
+  "status": "absorbed_into_enterprise_graph"
+}

@@ -1,0 +1,149 @@
+{
+  "diagram_id": "app_db_topology",
+  "run_id": "ONB-004",
+  "source": "live_rfdetr_http_service",
+  "detection_source": "LIVE_RFDETR_INFERENCE",
+  "runtime_mode": "LIVE_RFDETR_INFERENCE",
+  "node_count": 9,
+  "edge_count": 11,
+  "annotation_preview": {
+    "rendered": false,
+    "boxes_rendered": 0,
+    "boxes_skipped": 0,
+    "boxes_skipped_large": 0,
+    "connectors_rendered": 0,
+    "connectors_skipped": 0,
+    "connectors_skipped_long": 0,
+    "overlay_mode": "clean",
+    "draw_connectors": false,
+    "renderer_version": "v3_clean_overlay_v1"
+  },
+  "rfdetr_inference_time_s": 19.52,
+  "rfdetr_error": "",
+  "use_live_rfdetr": false,
+  "rfdetr_subprocess": {
+    "ok": true,
+    "source": "live_rfdetr_http_service",
+    "detector": "RF-DETR",
+    "python_executable": "/usr/bin/python",
+    "checkpoint_path": "/workspace/shared/infragraph-ai/model_artifacts/rfdetr_v3/checkpoint_best_total.pth",
+    "checkpoint_load_strategy": "constructor_pretrain_weights",
+    "model_class": "RFDETRBase",
+    "image_path": "/workspace/shared/infragraph-ai/assets/onboarding/ONB-004/original.png",
+    "inference_runtime_ms": 19520,
+    "inference_strategy": "predict(image)",
+    "detections": [
+      {
+        "label": "database",
+        "device_type": "database",
+        "confidence": 0.9637,
+        "bbox": {
+          "x1": 414.6,
+          "y1": 433.9,
+          "x2": 481.8,
+          "y2": 502.0
+        }
+      },
+      {
+        "label": "server",
+        "device_type": "server",
+        "confidence": 0.9631,
+        "bbox": {
+          "x1": 1240.1,
+          "y1": 683.3,
+          "x2": 1308.6,
+          "y2": 750.6
+        }
+      },
+      {
+        "label": "server",
+        "device_type": "server",
+        "confidence": 0.9614,
+        "bbox": {
+          "x1": 1058.8,
+          "y1": 384.1,
+          "x2": 1126.2,
+          "y2": 451.3
+        }
+      },
+      {
+        "label": "cloud_or_wan",
+        "device_type": "cloud_or_wan",
+        "confidence": 0.9578,
+        "bbox": {
+          "x1": 735.3,
+          "y1": 616.3,
+          "x2": 805.1,
+          "y2": 684.6
+        }
+      },
+      {
+        "label": "firewall",
+        "device_type": "firewall",
+        "confidence": 0.9552,
+        "bbox": {
+          "x1": 1058.4,
+          "y1": 582.7,
+          "x2": 1127.3,
+          "y2": 650.6
+        }
+      },
+      {
+        "label": "firewall",
+        "device_type": "firewall",
+        "confidence": 0.9522,
+        "bbox": {
+          "x1": 735.9,
+          "y1": 285.4,
+          "x2": 803.7,
+          "y2": 353.5
+        }
+      },
+      {
+        "label": "router",
+        "device_type": "router",
+        "confidence": 0.9506,
+        "bbox": {
+          "x1": 105.8,
+          "y1": 549.7,
+          "x2": 174.4,
+          "y2": 618.1
+        }
+      },
+      {
+        "label": "firewall",
+        "device_type": "firewall",
+        "confidence": 0.9495,
+        "bbox": {
+          "x1": 736.2,
+          "y1": 451.0,
+          "x2": 804.0,
+          "y2": 519.3
+        }
+      },
+      {
+        "label": "router",
+        "device_type": "router",
+        "confidence": 0.949,
+        "bbox": {
+          "x1": 106.1,
+          "y1": 317.8,
+          "x2": 174.1,
+          "y2": 386.3
+        }
+      }
+    ],
+    "annotated_image_path": "/tmp/infragraph_rfdetr_http_46x0seqb/infragraph_rfdetr_overlay.png",
+    "detector_runtime_mode": "live_rfdetr_http_service",
+    "service_python_executable": "/usr/bin/python",
+    "returncode": 0,
+    "stdout_preview": "",
+    "stderr_preview": "/usr/local/lib/python3.12/dist-packages/deprecate/proxy.py:168: FutureWarning: The `RFDETRBase` was deprecated since v1.7.0. It will be removed in v2.0.0.\n  stream(msg)\n[2026-06-15 16:18:16] [WARNING] rf-detr - Checkpoint has 8 classes but model is configured for 90. Using checkpoint class count (8). Pass num_classes=8 to suppress this warning.\n[2026-06-15 16:18:16] [WARNING] rf-detr - load_pretrain_weights: args.num_queries absent; inferred ckpt_num_queries=300 from tensor rows 3900 \u00f7 ckpt_group_detr=13.\n[2026-06-15 16:18:17] [WARNING] rf-detr - Model is not optimized for inference. Latency may be higher than expected. You can optimize the model for inference by calling model.optimize_for_inference().\n[transformers] `use_return_dict` is deprecated! Use `return_dict` instead!\nUserWarning: Failed validator: ROCBLAS_VERSION (Triggered internally at ../aten/src/ATen/hip/tunable/Tunable.cpp:264.)\n",
+    "service_url": "http://127.0.0.1:8010"
+  },
+  "edge_extraction_source": "vision_connector_extraction",
+  "vision_connector_edge_count": 10,
+  "vision_connector_segment_count": 353,
+  "vision_connector_warning": "",
+  "vision_connector_debug_overlay": "/workspace/shared/infragraph-ai/runtime_state/outputs/connector_extraction_debug/ONB-004_connectors_debug.png"
+}

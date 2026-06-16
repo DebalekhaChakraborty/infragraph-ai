@@ -1,0 +1,197 @@
+{
+  "incident_id": "INC-enterprise_v3_0074_var_004",
+  "scenario_id": "enterprise_v3_0074_var_004",
+  "base_scenario_id": "enterprise_v3_0074",
+  "synthetic_variant_id": "var_004",
+  "scope": "enterprise",
+  "root_cause": "WAN-PE-01",
+  "root_cause_diagram": "wan_topology",
+  "impacted_nodes": [
+    "WAN-PE-01",
+    "WAN-PE-02",
+    "APP-LB-01"
+  ],
+  "impacted_diagrams": [
+    "wan_topology",
+    "app_db_topology"
+  ],
+  "alert_timeline": [
+    {
+      "event_id": "EVT-0001",
+      "time_offset_min": 0,
+      "node": "WAN-PE-01",
+      "diagram_id": "wan_topology",
+      "alert_type": "link_down",
+      "severity": "critical"
+    },
+    {
+      "event_id": "EVT-0002",
+      "time_offset_min": 1,
+      "node": "WAN-PE-02",
+      "diagram_id": "wan_topology",
+      "alert_type": "error_rate",
+      "severity": "high"
+    },
+    {
+      "event_id": "EVT-0003",
+      "time_offset_min": 5,
+      "node": "APP-LB-01",
+      "diagram_id": "app_db_topology",
+      "alert_type": "connection_timeout",
+      "severity": "medium"
+    }
+  ],
+  "candidate_ranking": [
+    {
+      "rank": 1,
+      "node_id": "WAN-PE-01",
+      "diagram_id": "wan_topology",
+      "node_observed_in_diagrams": [
+        "wan_topology"
+      ],
+      "node_type": "router",
+      "score": 0.99,
+      "evidence": [
+        "alert_count=1.0",
+        "cross_diagram_degree=0.0",
+        "distance_to_alert=0.0",
+        "shared_entity=False"
+      ]
+    },
+    {
+      "rank": 2,
+      "node_id": "WAN-PE-02",
+      "diagram_id": "wan_topology",
+      "node_observed_in_diagrams": [
+        "wan_topology"
+      ],
+      "node_type": "router",
+      "score": 0.01,
+      "evidence": [
+        "alert_count=1.0",
+        "cross_diagram_degree=0.045",
+        "distance_to_alert=0.0",
+        "shared_entity=False"
+      ]
+    },
+    {
+      "rank": 3,
+      "node_id": "WAN-MPLS-CORE",
+      "diagram_id": "wan_topology",
+      "node_observed_in_diagrams": [
+        "wan_topology"
+      ],
+      "node_type": "cloud_or_wan",
+      "score": 0.01,
+      "evidence": [
+        "alert_count=0.0",
+        "cross_diagram_degree=0.0",
+        "distance_to_alert=0.045",
+        "shared_entity=False"
+      ]
+    }
+  ],
+  "cluster_id": "CLU-ent_enterprise_v3_0074-001-var_004",
+  "cluster_score": 0.5821,
+  "correlation_reasons": [
+    "3 event(s) span 5 min (t=0..5)",
+    "Events span 2 diagrams: app_db_topology, wan_topology"
+  ],
+  "causal_evidence": [
+    {
+      "evidence_id": "CE-001",
+      "stage": "temporal_correlation",
+      "summary": "3 alert(s) within a 5-minute window (t=0..5 min), consistent with a propagating fault.",
+      "supporting_events": [
+        "EVT-0001",
+        "EVT-0002",
+        "EVT-0003"
+      ],
+      "supporting_nodes": [
+        "WAN-PE-01",
+        "WAN-PE-02",
+        "APP-LB-01"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "evidence_id": "CE-002",
+      "stage": "topology_proximity",
+      "summary": "Alerted nodes (WAN-PE-01, WAN-PE-02, APP-LB-01) are topologically proximate (topology score 0.43), suggesting fault propagation through connected infrastructure.",
+      "supporting_events": [
+        "EVT-0001",
+        "EVT-0002",
+        "EVT-0003"
+      ],
+      "supporting_nodes": [
+        "WAN-PE-01",
+        "WAN-PE-02",
+        "APP-LB-01"
+      ],
+      "confidence": 0.4333
+    },
+    {
+      "evidence_id": "CE-003",
+      "stage": "cross_diagram_correlation",
+      "summary": "Events span 2 diagrams (app_db_topology, wan_topology). Cross-diagram correlation score 0.60 indicates the fault may have propagated across topology boundaries.",
+      "supporting_events": [
+        "EVT-0001",
+        "EVT-0002",
+        "EVT-0003"
+      ],
+      "supporting_nodes": [
+        "WAN-PE-01",
+        "WAN-PE-02",
+        "APP-LB-01"
+      ],
+      "confidence": 0.6
+    },
+    {
+      "evidence_id": "CE-004",
+      "stage": "propagation_hypothesis",
+      "summary": "Hypothesis: fault originated at the cluster seed node and may have propagated downstream through connected infrastructure.",
+      "supporting_events": [
+        "EVT-0001"
+      ],
+      "supporting_nodes": [
+        "WAN-PE-01"
+      ],
+      "confidence": 0.7167
+    }
+  ],
+  "retrieved_kb_evidence": [
+    {
+      "evidence_id": "KB-SOP-WAN-001-001",
+      "score": 1.0,
+      "metadata": {
+        "kb_id": "SOP-WAN-001",
+        "title": "WAN Provider Edge Link Down and High Error Rate Response",
+        "doc_type": "sop",
+        "section": "Trigger Symptoms"
+      },
+      "text": "[WAN Provider Edge Link Down and High Error Rate Response] Trigger Symptoms\n- `link_down` alert on the WAN-PE-01 interface (physical or logical) with concurrent BGP session drops.\n- `high_error_rate` alert on a WAN-PE-01 interface exceeding the configured threshold (typically > 0.1% error rate sustained for 5 minutes).\n- Branch sites lose connectivity to datacenter services concurrently with PE-router alerts.\n- BGP route withdrawal notifications from the PE-router affecting downstream prefix reachability.\n- Physical layer alarms: LOS (Loss of Signal), LOF (Loss of Frame), or AIS on WAN circuit interfaces."
+    },
+    {
+      "evidence_id": "KB-SOP-WAN-001-000",
+      "score": 1.0,
+      "metadata": {
+        "kb_id": "SOP-WAN-001",
+        "title": "WAN Provider Edge Link Down and High Error Rate Response",
+        "doc_type": "sop",
+        "section": "Purpose"
+      },
+      "text": "[WAN Provider Edge Link Down and High Error Rate Response] Purpose\nProvide structured triage and remediation steps for incidents where the WAN Provider Edge router (WAN-PE-01 or equivalent) is the suspected root cause of link-down events or persistent high error rates causing service degradation across branch sites and interconnected topology domains."
+    },
+    {
+      "evidence_id": "KB-SOP-WAN-001-003",
+      "score": 1.0,
+      "metadata": {
+        "kb_id": "SOP-WAN-001",
+        "title": "WAN Provider Edge Link Down and High Error Rate Response",
+        "doc_type": "sop",
+        "section": "Pre-Checks"
+      },
+      "text": "[WAN Provider Edge Link Down and High Error Rate Response] Pre-Checks\n1. Confirm WAN-PE-01 is the active PE-router for the affected branch/site — verify the redundant PE path state.\n2. Check whether the carrier NOC has an active incident or planned maintenance for this circuit.\n3. Verify whether physical alarms (LOS, LOF, AIS) are present — these indicate a physical/carrier issue, not a configuration issue.\n4. Confirm no configuration change was applied to WAN-PE-01 within 30 minutes of the incident.\n5. Check backup/secondary WAN path state — if the backup path is also degraded, priority escalation is required."
+    }
+  ]
+}

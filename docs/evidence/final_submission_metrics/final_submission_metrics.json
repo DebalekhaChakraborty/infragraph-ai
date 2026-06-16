@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-06-15T23:31:41.336406+00:00",
+  "generated_at": "2026-06-16T00:03:51.626051+00:00",
   "gnn_v2_training": {
     "status": "ok",
-    "source_file": "D:\\My Folders\\Hackathons\\infragraph-ai\\model_artifacts\\enterprise_gnn_rca_v2\\training_report.json",
+    "source_file": "/workspace/shared/infragraph-ai/model_artifacts/enterprise_gnn_rca_v2/training_report.json",
     "model_type": "EnterpriseRcaTemporalRelGNN",
     "gnn_architecture": "RelationAwareTemporalGraphSAGE",
     "uses_edge_type": true,
@@ -21,14 +21,19 @@
     }
   },
   "gnn_v2_inference_latency": {
-    "status": "inference_error",
+    "status": "ok",
     "runs_attempted": 3,
-    "errors": [
-      "Run 1: exit code 1: ",
-      "Run 2: exit code 1: ",
-      "Run 3: exit code 1: "
+    "runs_succeeded": 3,
+    "min_ms": 24932.664944790304,
+    "avg_ms": 25093.89623394236,
+    "max_ms": 25306.331621017307,
+    "all_latencies_ms": [
+      24932.664944790304,
+      25306.331621017307,
+      25042.69213601947
     ],
-    "command": "D:\\My Folders\\Hackathons\\venv\\debalekha\\Scripts\\python.exe D:\\My Folders\\Hackathons\\infragraph-ai\\scripts\\run_enterprise_gnn_v2_inference.py --scenario-id enterprise_v3_0079 --split test"
+    "errors": [],
+    "command": "/usr/bin/python /workspace/shared/infragraph-ai/scripts/run_enterprise_gnn_v2_inference.py --scenario-id enterprise_v3_0079 --split test"
   },
   "gnn_training_benchmark": {
     "status": "not_run",
@@ -38,54 +43,129 @@
     "status": "ok",
     "live_latency": "unavailable",
     "note": "INFRAGRAPH_QWEN_BASE_URL not set. Committed GRPO training evidence included below.",
-    "committed_grpo_evidence_path": "D:\\My Folders\\Hackathons\\infragraph-ai\\training\\verl_grpo\\runs\\qwen3_4b_grpo_lora_amd\\completion_evidence.md",
+    "committed_grpo_evidence_path": "/workspace/shared/infragraph-ai/training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/completion_evidence.md",
     "committed_grpo_evidence": "# InfraGraph AI - Qwen3-4B GRPO/vERL Training Completion Evidence\n\nStatus: Completed\n\nModel:\n- Qwen/Qwen3-4B\n\nTraining:\n- LoRA rank: 16\n- GRPO via vERL main_ppo\n- vLLM rollout backend\n- Total training steps: 32/32\n- Training completed successfully\n\nHardware:\n- AMD ROCm GPU\n- GPU utilization observed at 100%\n- VRAM observed around 42%\n- Power observed around 278W\n\nKey runtime notes:\n- vLLM sleep mode disabled for ROCm compatibility\n- vERL dataset reader patched to parse extra_info JSON strings\n- agent.num_workers reduced to 1 for single-GPU batch chunking stability\n\nPrimary summary:\ntraining/verl_grpo/runs/qwen3_4b_grpo_lora_amd/training_summary.md\n",
     "model": "Qwen/Qwen3-4B",
     "alignment": "LoRA rank 16 + GRPO/vERL (32/32 steps)"
   },
   "amd_gpu_telemetry": {
-    "status": "unavailable",
-    "available": false,
-    "command_used": null,
-    "note": "AMD telemetry command unavailable in this environment; see committed AMD evidence files.",
-    "committed_evidence_paths": [
-      "docs/evidence/amd_qwen3_grpo_run/training_summary.md",
-      "docs/evidence/amd_mi300x_enterprise_gnn_v2_run/training_summary.md",
-      "training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/completion_evidence.md"
-    ],
-    "timestamp": "2026-06-15T23:32:11.442196+00:00"
+    "status": "ok",
+    "available": true,
+    "command_used": "amd-smi",
+    "output_snippet": "+------------------------------------------------------------------------------+\n| AMD-SMI 26.0.0+37d158ab      amdgpu version: 6.16.13  ROCm version: 7.0.0    |\n| Platform: Linux Baremetal                                                    |\n|-------------------------------------+----------------------------------------|\n| BDF                        GPU-Name | Mem-Uti   Temp   UEC       Power-Usage |\n| GPU  HIP-ID  OAM-ID  Partition-Mode | GFX-Uti    Fan               Mem-Usage |\n|=====================================+========================================|\n| 0000:1b:00.0 ...Instinct MI300X OAM | N/A        N/A   0           N/A/750 W |\n|   0       0       1        SPX/NPS1 | N/A        N/A        149820/196592 MB |\n+-------------------------------------+--------------------------------",
+    "timestamp": "2026-06-16T00:05:07.102928+00:00"
   },
   "rfdetr_evidence": {
     "status": "eval_report_present",
-    "report_status": "evaluation_failed",
-    "source_file": "D:\\My Folders\\Hackathons\\infragraph-ai\\reports\\rfdetr_v3_eval\\rfdetr_v3_eval_report.json",
-    "metrics": {},
-    "summary_note": "RF-DETR evaluation did not complete because detector inference failed for all 30 sampled images. Detector accuracy is not claimed from this report.",
+    "report_status": "completed",
+    "source_file": "/workspace/shared/infragraph-ai/reports/rfdetr_v3_eval/rfdetr_v3_eval_report.json",
+    "metrics": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": NaN,
+      "mean_iou_matched": NaN,
+      "mean_ap_at_50": 0.0,
+      "avg_inference_runtime_ms": 19712.366666666665,
+      "global_tp": 0,
+      "global_fp": 265,
+      "global_fn": 265
+    },
+    "summary_note": "RF-DETR detector evaluated against V3 verified annotations on 30 diagrams. Metrics are prototype benchmark metrics, not production accuracy.",
     "split": "val",
-    "num_images_processed": 0,
-    "per_class_metrics": {},
-    "first_5_errors": [
-      {
-        "file_name": "enterprise_v3_0064__branch_topology.png",
-        "error": "Non-zero exit code 5: "
+    "num_images_processed": 30,
+    "per_class_metrics": {
+      "cloud_or_wan": {
+        "tp": 0,
+        "fp": 39,
+        "fn": 23,
+        "gt_count": 23,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": NaN,
+        "ap_at_50": 0.0
       },
-      {
-        "file_name": "enterprise_v3_0064__datacenter_topology.png",
-        "error": "Non-zero exit code 5: "
+      "cls0": {
+        "tp": 0,
+        "fp": 36,
+        "fn": 0,
+        "gt_count": 0,
+        "precision": 0.0,
+        "recall": NaN,
+        "f1": NaN,
+        "ap_at_50": NaN
       },
-      {
-        "file_name": "enterprise_v3_0064__wan_topology.png",
-        "error": "Non-zero exit code 5: "
+      "database": {
+        "tp": 0,
+        "fp": 6,
+        "fn": 12,
+        "gt_count": 12,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": NaN,
+        "ap_at_50": 0.0
       },
-      {
-        "file_name": "enterprise_v3_0065__app_db_topology.png",
-        "error": "Non-zero exit code 5: "
+      "firewall": {
+        "tp": 0,
+        "fp": 84,
+        "fn": 26,
+        "gt_count": 26,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": NaN,
+        "ap_at_50": 0.0
       },
-      {
-        "file_name": "enterprise_v3_0065__branch_topology.png",
-        "error": "Non-zero exit code 5: "
+      "load_balancer": {
+        "tp": 0,
+        "fp": 23,
+        "fn": 6,
+        "gt_count": 6,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": NaN,
+        "ap_at_50": 0.0
+      },
+      "router": {
+        "tp": 0,
+        "fp": 39,
+        "fn": 36,
+        "gt_count": 36,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": NaN,
+        "ap_at_50": 0.0
+      },
+      "server": {
+        "tp": 0,
+        "fp": 12,
+        "fn": 84,
+        "gt_count": 84,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": NaN,
+        "ap_at_50": 0.0
+      },
+      "service": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 39,
+        "gt_count": 39,
+        "precision": NaN,
+        "recall": 0.0,
+        "f1": NaN,
+        "ap_at_50": 0.0
+      },
+      "switch": {
+        "tp": 0,
+        "fp": 26,
+        "fn": 39,
+        "gt_count": 39,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": NaN,
+        "ap_at_50": 0.0
       }
-    ]
+    },
+    "first_5_errors": []
   },
-  "slide4_markdown_table": "| Category | Evidence |\n|----------|----------|\n| Diagram model | RF-DETR-supported detector + verified fallback + vision connector extraction |\n| RCA model | EnterpriseRcaTemporalRelGNN / Temporal Relation-Aware GraphSAGE |\n| RCA dataset | 80 generated enterprise RCA scenarios |\n| Split | 64 train / 8 val / 8 test |\n| GNN feature dim | 54 |\n| GNN V2 best epoch | 5 |\n| GNN V2 test top-1 | 1.0 (synthetic/generated enterprise benchmark) |\n| GNN V2 inference latency | not measured |\n| Qwen model | Qwen/Qwen3-4B |\n| Alignment | LoRA rank 16 + GRPO/vERL (32/32 steps) |\n| Qwen tokens | not measured live |\n| Qwen latency | unavailable |\n| AMD GPU evidence | MI300X / ROCm \u2014 GPU 100% utilization, VRAM ~42%, Power ~278W (training evidence) |\n| Detector metrics | not claimed \u2014 eval report present but status='evaluation_failed', processed images=0 |\n"
+  "slide4_markdown_table": "| Category | Evidence |\n|----------|----------|\n| Diagram model | RF-DETR-supported detector + verified fallback + vision connector extraction |\n| RCA model | EnterpriseRcaTemporalRelGNN / Temporal Relation-Aware GraphSAGE |\n| RCA dataset | 80 generated enterprise RCA scenarios |\n| Split | 64 train / 8 val / 8 test |\n| GNN feature dim | 54 |\n| GNN V2 best epoch | 5 |\n| GNN V2 test top-1 | 1.0 (synthetic/generated enterprise benchmark) |\n| GNN V2 inference latency | 25093.9 ms avg (24932.7\u201325306.3 ms range) |\n| Qwen model | Qwen/Qwen3-4B |\n| Alignment | LoRA rank 16 + GRPO/vERL (32/32 steps) |\n| Qwen tokens | not measured live |\n| Qwen latency | unavailable |\n| AMD GPU evidence | Live telemetry captured via `amd-smi` |\n| Detector metrics | precision=0.0000, recall=0.0000, F1=N/A (prototype benchmark) |\n"
 }

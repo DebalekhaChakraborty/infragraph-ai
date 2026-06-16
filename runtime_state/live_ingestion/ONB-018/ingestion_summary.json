@@ -1,0 +1,42 @@
+{
+  "diagram_id": "app_db_topology",
+  "run_id": "ONB-018",
+  "source": "verified training annotation / safe curated sample",
+  "detection_source": "Verified Annotation Overlay",
+  "runtime_mode": "VERIFIED_ANNOTATION_FALLBACK",
+  "node_count": 11,
+  "edge_count": 16,
+  "annotation_preview": {
+    "rendered": true,
+    "boxes_rendered": 10,
+    "boxes_skipped": 1,
+    "boxes_skipped_large": 0,
+    "connectors_rendered": 0,
+    "connectors_skipped": 16,
+    "connectors_skipped_long": 0,
+    "overlay_mode": "clean",
+    "draw_connectors": false,
+    "renderer_version": "v3_clean_overlay_v1",
+    "out_path": "/workspace/shared/infragraph-ai/runtime_state/live_ingestion/ONB-018/detected.png",
+    "meta_path": "/workspace/shared/infragraph-ai/runtime_state/live_ingestion/ONB-018/detected.meta.json"
+  },
+  "rfdetr_inference_time_s": 0.0,
+  "rfdetr_error": "RF-DETR HTTP timeout after 30s: timed out",
+  "use_live_rfdetr": false,
+  "rfdetr_subprocess": {
+    "ok": false,
+    "source": "live_rfdetr_http_service",
+    "service_url": "http://127.0.0.1:8010",
+    "detector_runtime_mode": "verified_annotation_fallback",
+    "timed_out": true,
+    "error": "RF-DETR HTTP timeout after 30s: timed out",
+    "fallback_reason": "Live RF-DETR timed out; using verified annotation fallback for demo continuity.",
+    "checkpoint_path": "/workspace/shared/infragraph-ai/model_artifacts/rfdetr_v3/checkpoint_best_total.pth",
+    "image_path": "/workspace/shared/infragraph-ai/assets/onboarding/ONB-018/original.png"
+  },
+  "edge_extraction_source": "vision_connector_extraction",
+  "vision_connector_edge_count": 16,
+  "vision_connector_segment_count": 408,
+  "vision_connector_warning": "",
+  "vision_connector_debug_overlay": "/workspace/shared/infragraph-ai/runtime_state/outputs/connector_extraction_debug/ONB-018_connectors_debug.png"
+}
