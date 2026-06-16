@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-16T01:58:19.403783+00:00",
+  "generated_at": "2026-06-16T11:53:37.248483+00:00",
   "gnn_v2_training": {
     "status": "ok",
     "source_file": "/workspace/shared/infragraph-ai/model_artifacts/enterprise_gnn_rca_v2/training_report.json",
@@ -24,38 +24,37 @@
     "status": "ok",
     "runs_attempted": 3,
     "runs_succeeded": 3,
-    "min_ms": 24889.14697803557,
-    "avg_ms": 24966.293569964666,
-    "max_ms": 25051.45715828985,
+    "min_ms": 24946.276964154094,
+    "avg_ms": 25142.96797569841,
+    "max_ms": 25302.944377996027,
     "all_latencies_ms": [
-      25051.45715828985,
-      24958.276573568583,
-      24889.14697803557
+      25179.682584945112,
+      24946.276964154094,
+      25302.944377996027
     ],
     "errors": [],
     "command": "/usr/bin/python /workspace/shared/infragraph-ai/scripts/run_enterprise_gnn_v2_inference.py --scenario-id enterprise_v3_0079 --split test"
   },
   "gnn_training_benchmark": {
-    "status": "not_run",
-    "note": "Pass --run-training-benchmark to enable."
+    "status": "ok",
+    "training_time_seconds": 69.27896218188107,
+    "command": "/usr/bin/python /workspace/shared/infragraph-ai/scripts/train_enterprise_gnn_v2_rca.py --epochs 80 --eval-every 5 --hidden-dim 64 --num-layers 2"
   },
   "qwen_latency": {
     "status": "ok",
-    "live_latency": "available",
-    "endpoint": "http://127.0.0.1:8000/v1/chat/completions",
-    "model": "infragraph",
-    "latency_ms": 3286.7562607862055,
-    "prompt_tokens": 143,
-    "completion_tokens": 512,
-    "total_tokens": 655,
-    "token_count_method": "api_reported"
+    "live_latency": "unavailable",
+    "note": "INFRAGRAPH_QWEN_BASE_URL not set. Committed GRPO training evidence included below.",
+    "committed_grpo_evidence_path": "/workspace/shared/infragraph-ai/training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/completion_evidence.md",
+    "committed_grpo_evidence": "# InfraGraph AI - Qwen3-4B GRPO/vERL Training Completion Evidence\n\nStatus: Completed\n\nModel:\n- Qwen/Qwen3-4B\n\nTraining:\n- LoRA rank: 16\n- GRPO via vERL main_ppo\n- vLLM rollout backend\n- Total training steps: 32/32\n- Training completed successfully\n\nHardware:\n- AMD ROCm GPU\n- GPU utilization observed at 100%\n- VRAM observed around 42%\n- Power observed around 278W\n\nKey runtime notes:\n- vLLM sleep mode disabled for ROCm compatibility\n- vERL dataset reader patched to parse extra_info JSON strings\n- agent.num_workers reduced to 1 for single-GPU batch chunking stability\n\nPrimary summary:\ntraining/verl_grpo/runs/qwen3_4b_grpo_lora_amd/training_summary.md\n",
+    "model": "Qwen/Qwen3-4B",
+    "alignment": "LoRA rank 16 + GRPO/vERL (32/32 steps)"
   },
   "amd_gpu_telemetry": {
     "status": "ok",
     "available": true,
     "command_used": "amd-smi",
     "output_snippet": "+------------------------------------------------------------------------------+\n| AMD-SMI 26.0.0+37d158ab      amdgpu version: 6.16.13  ROCm version: 7.0.0    |\n| Platform: Linux Baremetal                                                    |\n|-------------------------------------+----------------------------------------|\n| BDF                        GPU-Name | Mem-Uti   Temp   UEC       Power-Usage |\n| GPU  HIP-ID  OAM-ID  Partition-Mode | GFX-Uti    Fan               Mem-Usage |\n|=====================================+========================================|\n| 0000:1b:00.0 ...Instinct MI300X OAM | N/A        N/A   0           N/A/750 W |\n|   0       0       1        SPX/NPS1 | N/A        N/A        149820/196592 MB |\n+-------------------------------------+--------------------------------",
-    "timestamp": "2026-06-16T01:59:37.803118+00:00"
+    "timestamp": "2026-06-16T11:56:02.151579+00:00"
   },
   "rfdetr_evidence": {
     "status": "eval_report_present",
@@ -211,5 +210,5 @@
     "claim_guidance": "RF-DETR localization evidence available (localization F1=1.0000); class mapping calibration pending (best shift: plus1). Do not cite strict accuracy/mAP until class mapping is verified.",
     "first_5_errors": []
   },
-  "slide4_markdown_table": "| Category | Evidence |\n|----------|----------|\n| Diagram model | RF-DETR-supported detector + verified fallback + vision connector extraction |\n| RCA model | EnterpriseRcaTemporalRelGNN / Temporal Relation-Aware GraphSAGE |\n| RCA dataset | 80 generated enterprise RCA scenarios |\n| Split | 64 train / 8 val / 8 test |\n| GNN feature dim | 54 |\n| GNN V2 best epoch | 5 |\n| GNN V2 test top-1 | 1.0 (synthetic/generated enterprise benchmark) |\n| GNN V2 inference latency | 24966.3 ms avg (24889.1\u201325051.5 ms range) |\n| Qwen model | Qwen/Qwen3-4B |\n| Alignment | LoRA rank 16 + GRPO/vERL (32/32 steps) |\n| Qwen tokens | 655 (api_reported) |\n| Qwen latency | 3287 ms |\n| AMD GPU evidence | Live telemetry captured via `amd-smi` |\n| Detector metrics | localization F1=1.0000 (boxes localized correctly; class mapping calibration pending \u2014 best shift: plus1) |\n"
+  "slide4_markdown_table": "| Category | Evidence |\n|----------|----------|\n| Diagram model | RF-DETR-supported detector + verified fallback + vision connector extraction |\n| RCA model | EnterpriseRcaTemporalRelGNN / Temporal Relation-Aware GraphSAGE |\n| RCA dataset | 80 generated enterprise RCA scenarios |\n| Split | 64 train / 8 val / 8 test |\n| GNN feature dim | 54 |\n| GNN V2 best epoch | 5 |\n| GNN V2 test top-1 | 1.0 (synthetic/generated enterprise benchmark) |\n| GNN V2 inference latency | 25143.0 ms avg (24946.3\u201325302.9 ms range) |\n| Qwen model | Qwen/Qwen3-4B |\n| Alignment | LoRA rank 16 + GRPO/vERL (32/32 steps) |\n| Qwen tokens | not measured live |\n| Qwen latency | unavailable |\n| AMD GPU evidence | Live telemetry captured via `amd-smi` |\n| Detector metrics | localization F1=1.0000 (boxes localized correctly; class mapping calibration pending \u2014 best shift: plus1) |\n"
 }

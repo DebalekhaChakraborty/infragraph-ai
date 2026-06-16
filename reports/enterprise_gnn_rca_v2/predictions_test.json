@@ -33,7 +33,7 @@
     "correct_top1": true,
     "correct_top3": true,
     "rr": 1.0,
-    "confidence": 0.9998
+    "confidence": 0.9994
   },
   {
     "case_id": "ent_enterprise_v3_0075",
@@ -69,7 +69,7 @@
     "correct_top1": true,
     "correct_top3": true,
     "rr": 1.0,
-    "confidence": 0.9998
+    "confidence": 0.9993
   },
   {
     "case_id": "ent_enterprise_v3_0078",
