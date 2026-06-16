@@ -1,0 +1,8 @@
+{
+  "ok": false,
+  "source": "live_rfdetr_subprocess",
+  "error": "RF-DETR package not installed in detector runtime: rfdetr not installed: No module named 'rfdetr'",
+  "python_executable": "D:\\My Folders\\Hackathons\\venv\\debalekha\\Scripts\\python.exe",
+  "checkpoint_path": "D:\\My Folders\\Hackathons\\infragraph-ai\\model_artifacts\\rfdetr_v3\\checkpoint_best_total.pth",
+  "image_path": "D:\\My Folders\\Hackathons\\infragraph-ai\\datasets\\infragraph_v3\\rfdetr\\images\\val\\enterprise_v3_0066__shared_services_topology.png"
+}

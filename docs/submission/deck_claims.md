@@ -11,8 +11,11 @@ RF-DETR mAP/accuracy/precision/recall = X.
 **Evidence:**
 - Checkpoint: `model_artifacts/rfdetr_v3/checkpoint_best_total.pth`
 - Inference script: `scripts/run_rfdetr_inference.py`
-- Evaluation script: `scripts/evaluate_rfdetr_v3_detector.py`
-- Eval report (when generated): `reports/rfdetr_v3_eval/rfdetr_v3_eval_report.md`
+- **Runtime evidence** (recommended for judges): `reports/rfdetr_runtime_evidence/rfdetr_runtime_evidence.md` — annotated outputs and detection counts per image; generate with `python scripts/generate_rfdetr_runtime_evidence.py`
+- Evaluation script (diagnostic): `scripts/evaluate_rfdetr_v3_detector.py`
+- Eval report (diagnostic, when generated): `reports/rfdetr_v3_eval/rfdetr_v3_eval_report.md`
+
+Use RF-DETR runtime evidence and annotated outputs to demonstrate live detector capability. Do not quote mAP/precision/recall unless a successful eval report with non-zero matched detections is available.
 
 ## 2. Enterprise Graph/GNN RCA
 
