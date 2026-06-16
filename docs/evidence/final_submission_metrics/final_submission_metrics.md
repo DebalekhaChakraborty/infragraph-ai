@@ -1,5 +1,5 @@
 # InfraGraph AI — Final Submission Metrics
-Generated: 2026-06-16T11:53:37.248483+00:00
+Generated: 2026-06-16T12:05:27.156917+00:00
 
 ## Slide-4 Summary Table
 | Category | Evidence |
@@ -11,11 +11,11 @@ Generated: 2026-06-16T11:53:37.248483+00:00
 | GNN feature dim | 54 |
 | GNN V2 best epoch | 5 |
 | GNN V2 test top-1 | 1.0 (synthetic/generated enterprise benchmark) |
-| GNN V2 inference latency | 25143.0 ms avg (24946.3–25302.9 ms range) |
+| GNN V2 inference latency | 25137.4 ms avg (24920.3–25315.8 ms range) |
 | Qwen model | Qwen/Qwen3-4B |
 | Alignment | LoRA rank 16 + GRPO/vERL (32/32 steps) |
-| Qwen tokens | not measured live |
-| Qwen latency | unavailable |
+| Qwen tokens | 655 (api_reported) |
+| Qwen latency | 3283 ms |
 | AMD GPU evidence | Live telemetry captured via `amd-smi` |
 | Detector metrics | localization F1=1.0000 (boxes localized correctly; class mapping calibration pending — best shift: plus1) |
 
@@ -36,25 +36,26 @@ Generated: 2026-06-16T11:53:37.248483+00:00
 ## B. GNN V2 Inference Latency
 - Status: `ok`
 - Runs: 3/3
-- Min: 24946.3 ms
-- Avg: 25143.0 ms
-- Max: 25302.9 ms
+- Min: 24920.3 ms
+- Avg: 25137.4 ms
+- Max: 25315.8 ms
 - Command: `/usr/bin/python /workspace/shared/infragraph-ai/scripts/run_enterprise_gnn_v2_inference.py --scenario-id enterprise_v3_0079 --split test`
 
 ## C. GNN Training Benchmark
 - Status: `ok`
-- Training time: 69.3 s
+- Training time: 70.3 s
 
 ## D. Qwen/vLLM Latency
-- Live latency: unavailable
-- Model: Qwen/Qwen3-4B
-- Note: INFRAGRAPH_QWEN_BASE_URL not set. Committed GRPO training evidence included below.
-- Committed evidence: `/workspace/shared/infragraph-ai/training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/completion_evidence.md`
+- Live latency: available
+- Model: infragraph
+- Endpoint: http://127.0.0.1:8000/v1/chat/completions
+- Latency: 3283 ms
+- Tokens: 655 (api_reported)
 
 ## E. AMD GPU Telemetry
 - Available: True
 - Command used: amd-smi
-- Timestamp: 2026-06-16T11:56:02.151579+00:00
+- Timestamp: 2026-06-16T12:07:56.359668+00:00
 - Output snippet:
 ```
 +------------------------------------------------------------------------------+
