@@ -64,7 +64,7 @@ Relevant use-case alignment:
 - **Graph Copilot:** deterministic graph query engine with vector memory and Qwen answer fallback.
 - **AI Remediation:** Qwen/vLLM remediation planner that produces structured JSON from RCA, graph evidence, alert timelines, runbook/SOP evidence, and guardrails.
 - **Governance Critic:** rule-based validation of RCA evidence, confidence gate, rollback, runbook chain, and approval readiness.
-- **Agentic Ops Orchestrator:** schema-validated multi-step flow from alert intake to approval-gated action, including correlation, RCA, confidence calibration, runbook-grounded remediation, governance review, and ITSM draft generation.
+- **Agentic Ops Orchestrator:** Pydantic-schema-validated multi-step flow from alert intake to approval-gated action, including correlation, RCA, confidence calibration, runbook-grounded remediation, governance review, and ITSM draft generation.
 - **ITSM Draft:** local demo incident ticket generation; no external ITSM call is made by default.
 - **Human Approval:** remediation is not auto-executed without operator approval.
 
@@ -145,6 +145,7 @@ InfraGraph AI combines multimodal computer vision, graph algorithms, traditional
 | GRPO/vERL Alignment | Qwen3 LoRA + GRPO/vERL reward optimization | Reward functions for graph grounding, root-cause match, rollback, escalation, ITSM schema | Aligned adapter and reward evaluation | `training/verl_grpo/`, `docs/evidence/amd_qwen3_grpo_run/` |
 | Governance Critic | Rule/evidence critic | Root-cause graph existence, RCA source, calibrated confidence, Step 5 evidence, validation-before-remediation, rollback, runbook chain, approval gate | Governance score, findings, blocking issues, approval recommendation | `src/governance/evidence_critic.py` |
 | Graph Copilot / RAG | Deterministic graph query + local Chroma vector retrieval + Qwen fallback answer | Topology facts, RCA outputs, paths, impact radius, incident context | Evidence-grounded natural language answers | `src/graph_copilot/`, `src/vector_memory/`, `reports/kb_index/` |
+| Agentic Ops Orchestration | Deterministic Python orchestrator + Pydantic BaseModel schemas | AgentRun, AgentStep, ApprovalGate, TicketDraft validation | Typed, serializable execution trace and approval-ready incident workflow | `src/agents/orchestrator.py`, `src/agents/schemas.py` |
 
 ## 7. RCA Methodology
 

@@ -20,7 +20,7 @@
 #   pip install torch_geometric>=2.5.0
 #   (or use bootstrap_rca_gnn_env.sh which does this safely)
 #
-# The orchestrator itself (src/agents/) uses only Python stdlib.
+# The orchestrator uses Pydantic schemas for validated agent run, step, approval, and ticket payloads.
 # This file covers everything the Streamlit app + RAG + GNN artifacts need.
 # ============================================================
 
@@ -67,3 +67,7 @@ sentence-transformers>=3.0.0
 # --- Config / serialisation ----------------------------------
 pyyaml>=6.0
 protobuf<7.0.0
+
+# --- Schema validation (Agentic Ops Orchestrator) ------------
+# AgentRun, AgentStep, ApprovalGate, TicketDraft in src/agents/schemas.py
+pydantic>=2.0.0
