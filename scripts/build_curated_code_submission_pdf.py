@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import base64
 import fnmatch
 import html
+import mimetypes
+import re
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -11,6 +14,11 @@ OUT_DIR = REPO_ROOT / "dist"
 OUT_BASE = OUT_DIR / "InfraGraphAI_Codebase_Submission"
 
 GITHUB_REPO_URL = "https://github.com/DebalekhaChakraborty/infragraph-ai"
+
+LOGO_CANDIDATES = [
+    REPO_ROOT / "assets" / "submission" / "logo_left.png",
+    REPO_ROOT / "assets" / "submission" / "logo_right.png",
+]
 
 CURATED_INCLUDE_PREFIXES = {
     # Main documentation
@@ -258,6 +266,34 @@ def read_text(path: Path) -> str:
         except Exception:
             pass
     return "[Could not decode this file as text]"
+
+
+def linkify_escaped(text: str) -> str:
+    url_escaped = html.escape(GITHUB_REPO_URL)
+    return text.replace(
+        url_escaped,
+        f'<a href="{GITHUB_REPO_URL}" target="_blank">{url_escaped}</a>',
+    )
+
+
+def image_to_data_uri(path: Path) -> str:
+    if not path.exists() or not path.is_file():
+        return ""
+    mime_type, _ = mimetypes.guess_type(path.name)
+    mime_type = mime_type or "image/png"
+    data = base64.b64encode(path.read_bytes()).decode("ascii")
+    return f"data:{mime_type};base64,{data}"
+
+
+def build_logo_html() -> str:
+    logos = []
+    for path in LOGO_CANDIDATES:
+        uri = image_to_data_uri(path)
+        if uri:
+            logos.append(f'<img src="{uri}" alt="{html.escape(path.stem)} logo">')
+    if not logos:
+        return ""
+    return '<div class="cover-logos">' + "".join(logos) + "</div>"
 
 
 def language_for(path: Path) -> str:
@@ -538,8 +574,10 @@ def markdown_to_html(md_path: Path) -> Path:
         "<!doctype html><html><head><meta charset='utf-8'>",
         "<style>",
         ":root{--black:#080808;--charcoal:#1f2933;--slate:#1e293b;--muted:#64748b;--maroon:#7f1d1d;--maroon2:#991b1b;--red:#dc2626;--green:#059669;--blue:#2563eb;--border:#d7dde8;--soft:#f8fafc;--cream:#fffaf7;}",
-        "body{font-family:Arial, sans-serif; margin:30px 34px 70px 34px; color:var(--slate); background:#ffffff;}",
-        ".cover{background:linear-gradient(135deg,#080808 0%,#3b0a0a 45%,#7f1d1d 100%);color:white;border-radius:16px;padding:28px 32px;margin-bottom:26px;box-shadow:0 8px 26px rgba(15,23,42,.22);border-bottom:5px solid var(--red);}",
+        "body{font-family:Arial, sans-serif; margin:30px 34px 84px 34px; color:var(--slate); background:#ffffff;}",
+        ".cover{position:relative;background:linear-gradient(135deg,#080808 0%,#3b0a0a 45%,#7f1d1d 100%);color:white;border-radius:16px;padding:28px 32px;margin-bottom:26px;box-shadow:0 8px 26px rgba(15,23,42,.22);border-bottom:5px solid var(--red);}",
+        ".cover-logos{position:absolute;top:18px;right:22px;display:flex;gap:10px;align-items:center;}",
+        ".cover-logos img{max-height:42px;max-width:110px;object-fit:contain;background:rgba(255,255,255,.92);border-radius:8px;padding:5px;box-shadow:0 3px 10px rgba(0,0,0,.22);}",
         ".cover-title{font-size:34px;font-weight:900;letter-spacing:.2px;margin-bottom:6px;color:#ffffff;}",
         ".cover-subtitle{font-size:15px;font-weight:800;color:#fecaca;text-transform:uppercase;letter-spacing:.12em;margin-bottom:12px;}",
         ".cover-tagline{font-size:13px;line-height:1.5;color:#fff7ed;margin-bottom:14px;}",
@@ -554,6 +592,10 @@ def markdown_to_html(md_path: Path) -> Path:
         ".badge.qwen{border-color:#93c5fd;color:#dbeafe;}",
         ".badge.gov{border-color:#86efac;color:#bbf7d0;}",
         ".page-footer{position:fixed;bottom:8px;left:30px;right:30px;text-align:center;font-size:8px;color:#475569;border-top:1px solid #d7dde8;padding-top:5px;background:white;}",
+        "a{color:#2563eb;text-decoration:none;font-weight:700;}",
+        "a:hover{text-decoration:underline;}",
+        ".cover a{color:#ffffff;text-decoration:underline;font-weight:700;}",
+        ".page-footer a{color:#7f1d1d;text-decoration:none;font-weight:700;}",
         "h1{font-size:26px;color:var(--black);margin-top:18px;}",
         "h2{font-size:18px;color:var(--black);border-top:2px solid var(--border);padding-top:14px;margin-top:28px;border-left:5px solid var(--maroon);padding-left:10px;background:linear-gradient(90deg,#fff5f5,transparent);}",
         "h3{font-size:12px;color:var(--maroon);margin-top:18px;font-family:Consolas,monospace;}",
@@ -566,16 +608,20 @@ def markdown_to_html(md_path: Path) -> Path:
         "th{background:#7f1d1d;color:#ffffff;font-weight:700;}",
         ".manifest-note{border-left:4px solid var(--red);background:#fff5f5;padding:10px 12px;border-radius:8px;font-size:10px;color:#450a0a;}",
         "@page{size:A4;margin:12mm;}",
-        "@media print{body{margin-bottom:76px;} .cover{break-after:auto;} pre{page-break-inside:auto;} }",
+        "@media print{body{margin-bottom:90px;} .cover{break-after:auto;} pre{page-break-inside:auto;} }",
         "</style></head><body>",
     ]
 
+    logo_html = build_logo_html()
+    repo_link = f'<a href="{GITHUB_REPO_URL}" target="_blank">{html.escape(GITHUB_REPO_URL)}</a>'
+    footer_repo_link = f'<a href="{GITHUB_REPO_URL}" target="_blank">Full Repository</a>'
     html_parts.append(f'''
 <div class="page-footer">
-InfraGraph AI | TCS &amp; AMD AI Hackathon 2026 | Curated Code Appendix | Full Repository github.com/DebalekhaChakraborty/infragraph-ai
+InfraGraph AI | TCS &amp; AMD AI Hackathon 2026 | Curated Code Appendix | {footer_repo_link}
 </div>
 
 <div class="cover">
+  {logo_html}
   <div class="cover-subtitle">Curated Source-Code &amp; Evidence Appendix</div>
   <div class="cover-title">InfraGraph AI</div>
   <div class="cover-tagline">
@@ -593,7 +639,7 @@ InfraGraph AI | TCS &amp; AMD AI Hackathon 2026 | Curated Code Appendix | Full R
     <span class="badge gov">Governance</span>
   </div>
   <div class="cover-meta">
-    Repository: {GITHUB_REPO_URL}<br>
+    Repository: {repo_link}<br>
     Generated: {datetime.utcnow().isoformat()}Z<br>
     Note: This PDF is a curated appendix. Full excluded artifacts and generated files are available in the GitHub repository where committed.
   </div>
@@ -606,7 +652,8 @@ InfraGraph AI | TCS &amp; AMD AI Hackathon 2026 | Curated Code Appendix | Full R
 
     def flush_para():
         if para_buf:
-            html_parts.append("<p>" + html.escape(" ".join(para_buf)) + "</p>")
+            escaped = html.escape(" ".join(para_buf))
+            html_parts.append("<p>" + linkify_escaped(escaped) + "</p>")
             para_buf.clear()
 
     for line in text.splitlines():
@@ -628,16 +675,16 @@ InfraGraph AI | TCS &amp; AMD AI Hackathon 2026 | Curated Code Appendix | Full R
 
         if line.startswith("# "):
             flush_para()
-            html_parts.append(f"<h1>{html.escape(line[2:])}</h1>")
+            html_parts.append(f"<h1>{linkify_escaped(html.escape(line[2:]))}</h1>")
         elif line.startswith("## "):
             flush_para()
-            html_parts.append(f"<h2>{html.escape(line[3:])}</h2>")
+            html_parts.append(f"<h2>{linkify_escaped(html.escape(line[3:]))}</h2>")
         elif line.startswith("### "):
             flush_para()
-            html_parts.append(f"<h3>{html.escape(line[4:])}</h3>")
+            html_parts.append(f"<h3>{linkify_escaped(html.escape(line[4:]))}</h3>")
         elif line.startswith("- "):
             flush_para()
-            html_parts.append(f"<li>{html.escape(line[2:])}</li>")
+            html_parts.append(f"<li>{linkify_escaped(html.escape(line[2:]))}</li>")
         elif line.startswith("|"):
             flush_para()
             html_parts.append(f"<p><code>{html.escape(line)}</code></p>")
@@ -652,10 +699,21 @@ InfraGraph AI | TCS &amp; AMD AI Hackathon 2026 | Curated Code Appendix | Full R
     return html_path
 
 
+# wkhtmltopdf supports reliable Page [page] of [topage]. Chromium headless may not support custom
+# page numbering, so browser fallback users can enable print headers/footers manually if needed.
 def try_pdf(html_path: Path) -> Path | None:
     pdf_path = OUT_BASE.with_suffix(".pdf")
     commands = [
-        ["wkhtmltopdf", str(html_path), str(pdf_path)],
+        [
+            "wkhtmltopdf",
+            "--enable-local-file-access",
+            "--footer-right", "Page [page] of [topage]",
+            "--footer-font-size", "8",
+            "--footer-spacing", "4",
+            "--margin-bottom", "16mm",
+            str(html_path),
+            str(pdf_path),
+        ],
         ["chromium", "--headless", "--disable-gpu", f"--print-to-pdf={pdf_path}", str(html_path)],
         ["chromium-browser", "--headless", "--disable-gpu", f"--print-to-pdf={pdf_path}", str(html_path)],
         ["google-chrome", "--headless", "--disable-gpu", f"--print-to-pdf={pdf_path}", str(html_path)],
