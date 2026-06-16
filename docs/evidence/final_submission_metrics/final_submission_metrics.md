@@ -1,5 +1,5 @@
 # InfraGraph AI — Final Submission Metrics
-Generated: 2026-06-16T01:18:15.010586+00:00
+Generated: 2026-06-16T01:58:19.403783+00:00
 
 ## Slide-4 Summary Table
 | Category | Evidence |
@@ -11,18 +11,18 @@ Generated: 2026-06-16T01:18:15.010586+00:00
 | GNN feature dim | 54 |
 | GNN V2 best epoch | 5 |
 | GNN V2 test top-1 | 1.0 (synthetic/generated enterprise benchmark) |
-| GNN V2 inference latency | not measured |
+| GNN V2 inference latency | 24966.3 ms avg (24889.1–25051.5 ms range) |
 | Qwen model | Qwen/Qwen3-4B |
 | Alignment | LoRA rank 16 + GRPO/vERL (32/32 steps) |
-| Qwen tokens | not measured live |
-| Qwen latency | unavailable |
-| AMD GPU evidence | MI300X / ROCm — GPU 100% utilization, VRAM ~42%, Power ~278W (training evidence) |
-| Detector metrics | not claimed — eval report present but status='evaluation_failed', processed images=0 |
+| Qwen tokens | 655 (api_reported) |
+| Qwen latency | 3287 ms |
+| AMD GPU evidence | Live telemetry captured via `amd-smi` |
+| Detector metrics | localization F1=1.0000 (boxes localized correctly; class mapping calibration pending — best shift: plus1) |
 
 ---
 
 ## A. GNN V2 Training Evidence
-- Source: `D:\My Folders\Hackathons\infragraph-ai\model_artifacts\enterprise_gnn_rca_v2\training_report.json`
+- Source: `/workspace/shared/infragraph-ai/model_artifacts/enterprise_gnn_rca_v2/training_report.json`
 - Status: `ok`
 - Model type: EnterpriseRcaTemporalRelGNN
 - Architecture: RelationAwareTemporalGraphSAGE
@@ -34,36 +34,69 @@ Generated: 2026-06-16T01:18:15.010586+00:00
 - uses_temporal_features: True
 
 ## B. GNN V2 Inference Latency
-- Status: `inference_error`
-- Errors: ['Run 1: exit code 1: ', 'Run 2: exit code 1: ', 'Run 3: exit code 1: ']
+- Status: `ok`
+- Runs: 3/3
+- Min: 24889.1 ms
+- Avg: 24966.3 ms
+- Max: 25051.5 ms
+- Command: `/usr/bin/python /workspace/shared/infragraph-ai/scripts/run_enterprise_gnn_v2_inference.py --scenario-id enterprise_v3_0079 --split test`
 
 ## C. GNN Training Benchmark
 - Status: `not_run`
 - Note: Pass --run-training-benchmark to enable.
 
 ## D. Qwen/vLLM Latency
-- Live latency: unavailable
-- Model: Qwen/Qwen3-4B
-- Note: INFRAGRAPH_QWEN_BASE_URL not set. Committed GRPO training evidence included below.
-- Committed evidence: `D:\My Folders\Hackathons\infragraph-ai\training\verl_grpo\runs\qwen3_4b_grpo_lora_amd\completion_evidence.md`
+- Live latency: available
+- Model: infragraph
+- Endpoint: http://127.0.0.1:8000/v1/chat/completions
+- Latency: 3287 ms
+- Tokens: 655 (api_reported)
 
 ## E. AMD GPU Telemetry
-- Available: False
-- Command used: None
-- Timestamp: 2026-06-16T01:18:17.657992+00:00
-- Note: AMD telemetry command unavailable in this environment; see committed AMD evidence files.
+- Available: True
+- Command used: amd-smi
+- Timestamp: 2026-06-16T01:59:37.803118+00:00
+- Output snippet:
+```
++------------------------------------------------------------------------------+
+| AMD-SMI 26.0.0+37d158ab      amdgpu version: 6.16.13  ROCm version: 7.0.0    |
+| Platform: Linux Baremetal                                                    |
+|-------------------------------------+----------------------------------------|
+| BDF                        GPU-Name | Mem-Uti   Temp   UEC       Power-Usage |
+| GPU  HIP-ID  OAM-ID  Partition-Mode | GFX-Uti    Fan               Mem-Usage |
+|=====================================+========================================|
+| 0000:1b:00.0 ...Instinct MI300X OAM | N/A        N/A   0           N/A/750 W |
+|   0       0       1        SPX/NPS1 | N/A        N/A        149820/196592 MB |
++-------------------------------------+--------------------------------
+```
 
 ## F. RF-DETR Evidence
 - Status: `eval_report_present`
-- Source: `D:\My Folders\Hackathons\infragraph-ai\reports\rfdetr_v3_eval\rfdetr_v3_eval_report.json`
-- Report status: `evaluation_failed`
+- Source: `/workspace/shared/infragraph-ai/reports/rfdetr_v3_eval/rfdetr_v3_eval_report.json`
+- Report status: `completed`
 - Split: val
-- Processed images: 0
-- **Claim guidance:** No usable metrics — strict accuracy not claimed. Run eval on AMD/ROCm env with rfdetr installed.
-- **Detector accuracy is not claimed from this report** — inference unavailable or no images were successfully processed.
-- First inference errors:
-  - `enterprise_v3_0064__branch_topology.png`: Non-zero exit code 4: 
-  - `enterprise_v3_0064__datacenter_topology.png`: Non-zero exit code 4: 
-  - `enterprise_v3_0064__wan_topology.png`: Non-zero exit code 4: 
-  - `enterprise_v3_0065__app_db_topology.png`: Non-zero exit code 4: 
-  - `enterprise_v3_0065__branch_topology.png`: Non-zero exit code 4: 
+- Processed images: 30
+- **Claim guidance:** RF-DETR localization evidence available (localization F1=1.0000); class mapping calibration pending (best shift: plus1). Do not cite strict accuracy/mAP until class mapping is verified.
+
+### Strict Class-Aware Metrics
+- Precision: 0.0000
+- Recall: 0.0000
+- F1: N/A
+- mAP@0.5: 0.0000
+- Global TP/FP/FN: 0 / 265 / 265
+
+### Class-Agnostic Localization Metrics
+- Localization Precision: 1.0000
+- Localization Recall: 1.0000
+- Localization F1: 1.0000
+- Localization Mean IoU: 0.9756
+
+### Class-ID Shift Diagnostic
+- Best shift: **plus1**
+- Note: RF-DETR runtime appears to return 0-indexed class IDs while COCO annotations are 1-indexed. +1 class-ID shift improves strict metrics significantly. Verify by inspecting per-class detection outputs vs. GT labels before claiming accuracy.
+
+| Shift | TP | FP | FN | F1 | mAP@0.5 |
+|-------|----|----|----|----|----------|
+| 0 (original) | 0 | 265 | 265 | N/A | 0.0000 |
+| +1 **(best)** | 265 | 0 | 0 | 1.0000 | 1.0000 |
+| -1 | 0 | 265 | 265 | N/A | 0.0000 |
