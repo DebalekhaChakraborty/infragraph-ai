@@ -419,18 +419,68 @@ def markdown_to_html(md_path: Path) -> Path:
     html_parts = [
         "<!doctype html><html><head><meta charset='utf-8'>",
         "<style>",
-        "body{font-family:Arial, sans-serif; margin:28px; color:#222;}",
-        "h1{font-size:28px; color:#111;}",
-        "h2{border-top:2px solid #ddd; padding-top:14px; margin-top:28px; font-size:20px;}",
-        "h3{font-size:13px; color:#0645ad; margin-top:18px;}",
-        "p,li{font-size:10.5px; line-height:1.35;}",
-        "pre{background:#f8f8f8; border:1px solid #ddd; padding:8px; font-size:7.5px; white-space:pre-wrap; word-break:break-word;}",
-        "code{font-family:Consolas, monospace;}",
-        "table{border-collapse:collapse; width:100%; font-size:7.5px;}",
-        "td,th{border:1px solid #ccc; padding:3px; vertical-align:top;}",
-        "@page{size:A4; margin:12mm;}",
+        ":root{--black:#080808;--charcoal:#1f2933;--slate:#1e293b;--muted:#64748b;--maroon:#7f1d1d;--maroon2:#991b1b;--red:#dc2626;--green:#059669;--blue:#2563eb;--border:#d7dde8;--soft:#f8fafc;--cream:#fffaf7;}",
+        "body{font-family:Arial, sans-serif; margin:30px 34px 70px 34px; color:var(--slate); background:#ffffff;}",
+        ".cover{background:linear-gradient(135deg,#080808 0%,#3b0a0a 45%,#7f1d1d 100%);color:white;border-radius:16px;padding:28px 32px;margin-bottom:26px;box-shadow:0 8px 26px rgba(15,23,42,.22);border-bottom:5px solid var(--red);}",
+        ".cover-title{font-size:34px;font-weight:900;letter-spacing:.2px;margin-bottom:6px;color:#ffffff;}",
+        ".cover-subtitle{font-size:15px;font-weight:800;color:#fecaca;text-transform:uppercase;letter-spacing:.12em;margin-bottom:12px;}",
+        ".cover-tagline{font-size:13px;line-height:1.5;color:#fff7ed;margin-bottom:14px;}",
+        ".cover-meta{font-size:10px;color:#f3f4f6;line-height:1.6;}",
+        ".submitted-by{font-size:10.5px;color:#ffffff;font-weight:700;margin:10px 0 8px 0;padding:7px 10px;border-left:4px solid var(--green);background:rgba(255,255,255,.08);border-radius:6px;}",
+        ".badge-row{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 8px 0;}",
+        ".badge{display:inline-block;border:1px solid rgba(255,255,255,.32);border-radius:999px;padding:4px 10px;font-size:9px;font-weight:800;color:#ffffff;background:rgba(255,255,255,.08);}",
+        ".badge.core{border-color:#fecaca;color:#fecaca;}",
+        ".badge.train{border-color:#93c5fd;color:#bfdbfe;}",
+        ".badge.amd{border-color:#fca5a5;color:#fee2e2;}",
+        ".badge.gnn{border-color:#86efac;color:#dcfce7;}",
+        ".badge.qwen{border-color:#93c5fd;color:#dbeafe;}",
+        ".badge.gov{border-color:#86efac;color:#bbf7d0;}",
+        ".page-footer{position:fixed;bottom:8px;left:30px;right:30px;text-align:center;font-size:8px;color:#475569;border-top:1px solid #d7dde8;padding-top:5px;background:white;}",
+        "h1{font-size:26px;color:var(--black);margin-top:18px;}",
+        "h2{font-size:18px;color:var(--black);border-top:2px solid var(--border);padding-top:14px;margin-top:28px;border-left:5px solid var(--maroon);padding-left:10px;background:linear-gradient(90deg,#fff5f5,transparent);}",
+        "h3{font-size:12px;color:var(--maroon);margin-top:18px;font-family:Consolas,monospace;}",
+        "p,li{font-size:10.2px;line-height:1.38;}",
+        "pre{background:#f8fafc;border:1px solid #d7dde8;border-left:4px solid var(--blue);border-radius:8px;padding:10px;font-size:7.4px;white-space:pre-wrap;word-break:break-word;line-height:1.32;}",
+        "code{font-family:Consolas,monospace;color:#111827;}",
+        "table{border-collapse:collapse;width:100%;font-size:7.2px;page-break-inside:auto;}",
+        "tr{page-break-inside:avoid;page-break-after:auto;}",
+        "td,th{border:1px solid #cbd5e1;padding:3px 4px;vertical-align:top;}",
+        "th{background:#7f1d1d;color:#ffffff;font-weight:700;}",
+        ".manifest-note{border-left:4px solid var(--red);background:#fff5f5;padding:10px 12px;border-radius:8px;font-size:10px;color:#450a0a;}",
+        "@page{size:A4;margin:12mm;}",
+        "@media print{body{margin-bottom:76px;} .cover{break-after:auto;} pre{page-break-inside:auto;} }",
         "</style></head><body>",
     ]
+
+    html_parts.append(f'''
+<div class="page-footer">
+InfraGraph AI | TCS &amp; AMD AI Hackathon 2026 | Curated Code Appendix | Full Repository github.com/DebalekhaChakraborty/infragraph-ai
+</div>
+
+<div class="cover">
+  <div class="cover-subtitle">Curated Source-Code &amp; Evidence Appendix</div>
+  <div class="cover-title">InfraGraph AI</div>
+  <div class="cover-tagline">
+    Multimodal Diagram Intelligence &middot; Enterprise Graph RCA &middot; GNN Root Cause Analysis &middot; Governed Qwen/vLLM Remediation
+  </div>
+  <div class="submitted-by">
+    Submitted By: Team 220 | Debalekha Chakraborty | AI &amp; Automation CoE | BFSI CBO
+  </div>
+  <div class="badge-row">
+    <span class="badge core">Core Code</span>
+    <span class="badge train">Training &amp; Evaluation</span>
+    <span class="badge amd">AMD ROCm Evidence</span>
+    <span class="badge gnn">GNN RCA</span>
+    <span class="badge qwen">Qwen/vLLM Remediation</span>
+    <span class="badge gov">Governance</span>
+  </div>
+  <div class="cover-meta">
+    Repository: {GITHUB_REPO_URL}<br>
+    Generated: {datetime.utcnow().isoformat()}Z<br>
+    Note: This PDF is a curated appendix. Full excluded artifacts and generated files are available in the GitHub repository where committed.
+  </div>
+</div>
+''')
 
     in_code = False
     code_buf = []
