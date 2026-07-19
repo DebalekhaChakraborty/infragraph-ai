@@ -1,8 +1,8 @@
-﻿"""
+"""
 write_training_summary.py — Generate a post-run training summary.
 
 Creates:
-    training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/training_summary.md
+    docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated/training_summary.md
 
 Run after a real vERL training pass, or call with --dry-run to document
 a scaffold/dry-run attempt honestly.
@@ -35,7 +35,7 @@ def _display_path(p: Path) -> str:
         return str(p.resolve().relative_to(REPO_ROOT))
     except ValueError:
         return str(p.resolve())
-DEFAULT_RUN_DIR = SCRIPT_DIR / "runs" / "qwen3_4b_grpo_lora_amd"
+DEFAULT_RUN_DIR = SCRIPT_DIR / "runs" / "qwen3_4b_grpo_lora_accelerated"
 DATA_DIR        = SCRIPT_DIR / "data"
 
 
@@ -53,14 +53,14 @@ def _torch_info() -> dict[str, object]:
             pass
         return {
             "torch_version":    torch.__version__,
-            "torch_hip_version": getattr(torch.version, "hip", None),
+            "torch_accelerator_version": getattr(torch.version, "hip", None),
             "cuda_available":   cuda_avail,
             "device_name":      device_name,
         }
     except ImportError:
         return {
             "torch_version":    "not installed",
-            "torch_hip_version": None,
+            "torch_accelerator_version": None,
             "cuda_available":   False,
             "device_name":      "",
         }
@@ -131,7 +131,7 @@ def write_summary(run_dir: Path, dry_run: bool) -> Path:
     training_claim = (
         "> **Honest status:** This summary documents a scaffold and reward-evaluated alignment "
         "dataset only.  No LoRA adapter checkpoint was produced in this repository.  "
-        "The claim _'LoRA fine-tuned Qwen3-4B with GRPO using vERL on AMD GPUs'_ requires a "
+        "The claim _'LoRA fine-tuned Qwen3-4B with GRPO using vERL on accelerated GPU runtimes'_ requires a "
         "real training run that writes adapter files to this `runs/` directory."
     ) if dry_run else (
         "> **Honest status:** A real training run completed.  "
@@ -185,7 +185,7 @@ Generated: {ts}
 {_md_table([
     ("PyTorch version",  str(hw["torch_version"])),
     ("CUDA available",   str(hw["cuda_available"])),
-    ("HIP version",      str(hw["torch_hip_version"] or "—")),
+    ("Accelerator backend version",      str(hw["torch_accelerator_version"] or "—")),
     ("Device name",      str(hw["device_name"] or "—")),
 ])}
 
@@ -236,7 +236,7 @@ Only make the following claims after the corresponding evidence exists:
 | "Reward-evaluated alignment dataset built" | `verl_train.parquet` + `verl_eval.parquet` exist |
 | "GRPO training scaffold implemented" | `train_qwen3_grpo.sh` runs without error |
 | "LoRA fine-tuned Qwen3-4B with GRPO/vERL" | Adapter checkpoint files in `runs/` |
-| "Tested on AMD GPU (ROCm)" | `torch_hip_version` non-null AND adapter files exist |
+| "Tested on configured accelerated GPU runtime" | `torch_accelerator_version` non-null AND adapter files exist |
 """
 
     out_path = run_dir / "training_summary.md"

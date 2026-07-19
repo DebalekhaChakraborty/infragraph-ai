@@ -1,4 +1,4 @@
-# Topology Graph & RCA Presentation
+# Topology Graph & RCA Pipeline
 
 `scripts/build_topology_rca_demo.py` is the bridge between the YOLO vision
 model and the graph intelligence layer of InfraGraph AI.  Given a single
@@ -215,7 +215,7 @@ from graph structure and temporal alert features.
     outputs/topology_demo/<id>_*.{json,png}
         └─ _detected_nodes.json  ──► future: matcher against ground-truth graph
         └─ _rca_result.json      ──► future: GNN RCA (notebooks/05_rca_graph_demo.ipynb)
-        └─ _topology.png         ──► Presentation / submission visualisation
+        └─ _topology.png         ──► Reference topology visualisation
         └─ _graph_summary.json   ──► aggregate metrics across test set
 
 [Next: Qwen / LLM explanation layer]

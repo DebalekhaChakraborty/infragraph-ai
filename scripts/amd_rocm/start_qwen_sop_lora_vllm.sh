@@ -7,7 +7,7 @@
 # trained with scripts/train_qwen_sop_lora.py.
 #
 # NOT for the old GRPO/vERL adapter. For GRPO adapter serving, see:
-#   docs/evidence/amd_qwen3_grpo_run/s3_lora_adapter_restore.md
+#   docs/hardware/rocm/evidence/qwen3_grpo_run/s3_lora_adapter_restore.md
 #   docs/hardware/rocm/qwen_sop_lora_reset.md  (full reset workflow)
 #
 # Usage:
@@ -133,4 +133,3 @@ exec vllm serve "${INFRAGRAPH_BASE_MODEL:-Qwen/Qwen3-4B}" \
   --port "${INFRAGRAPH_VLLM_PORT:-8000}" \
   --gpu-memory-utilization "${INFRAGRAPH_VLLM_GPU_MEMORY_UTILIZATION:-0.75}" \
   --max-model-len "${INFRAGRAPH_VLLM_MAX_MODEL_LEN:-8192}"
-

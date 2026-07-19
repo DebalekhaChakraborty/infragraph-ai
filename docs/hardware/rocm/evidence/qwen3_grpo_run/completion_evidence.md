@@ -40,7 +40,7 @@ No persisted LoRA adapter checkpoint files (`adapter_model.safetensors`,
 `adapter_config.json`, etc.) were detected in the committed run evidence.
 
 Do NOT claim a reusable fine-tuned adapter is available unless checkpoint files
-are present in `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/` or documented
+are present in `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated/` or documented
 as an external artifact.
 
 The training pass demonstrates that the full AMD ROCm GRPO pipeline is

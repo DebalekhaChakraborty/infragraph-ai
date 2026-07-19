@@ -1,4 +1,4 @@
-﻿# InfraGraph AI — Qwen3-4B LoRA + GRPO/vERL Alignment (AMD ROCm)
+# InfraGraph AI — Qwen3-4B LoRA + GRPO/vERL Alignment (accelerated runtime)
 
 This directory implements the RL alignment pipeline for a graph-grounded
 remediation agent based on Qwen3-4B, LoRA adapters, and GRPO via vERL.
@@ -13,10 +13,10 @@ The project distinguishes four states.  Read this before making any claims.
 |-------|-------------|--------------|
 | **Scaffold / dry-run** | Dataset + reward functions + training script; no real run | "LoRA + GRPO alignment scaffold implemented" |
 | **Reward-evaluated dataset** | `verl_train.parquet` + `verl_eval.parquet` produced; reward scores computed | "Reward-evaluated alignment dataset built" |
-| **Real training pass completed** | 32/32 steps ran on AMD ROCm GPU; no persisted adapter detected in committed evidence | "Real Qwen/Qwen3-4B GRPO training pass completed on AMD ROCm (adapter checkpoint not committed)" |
-| **Persisted adapter available** | `adapter_model.safetensors` / `adapter_config.json` in `runs/` or documented external path | "LoRA fine-tuned Qwen3-4B with GRPO using vERL on AMD GPU — adapter available" |
+| **Real training pass completed** | 32/32 steps ran on accelerated runtime GPU; no persisted adapter detected in committed evidence | "Real Qwen/Qwen3-4B GRPO training pass completed on accelerated runtime (adapter checkpoint not committed)" |
+| **Persisted adapter available** | `adapter_model.safetensors` / `adapter_config.json` in `runs/` or documented external path | "LoRA fine-tuned Qwen3-4B with GRPO using vERL on accelerated GPU runtime — adapter available" |
 
-**Current status: Real training pass completed (32/32 steps, AMD ROCm, HIP 7.0).**
+**Current status: Real training pass completed (32/32 steps on an accelerated runtime).**
 No adapter checkpoint files were detected in the committed run evidence.
 Do not claim a reusable fine-tuned adapter is available unless checkpoint files exist.
 
@@ -33,7 +33,7 @@ pip install -r requirements.txt
 ```
 
 Covers the Streamlit cockpit, graph RCA, topology analysis, and non-GPU usage.
-`pip install -r requirements.txt` alone **cannot** reproduce the AMD training run.
+`pip install -r requirements.txt` alone **cannot** reproduce the accelerated training run.
 
 ### 2. Dataset conversion and reward evaluation
 
@@ -46,23 +46,23 @@ Adds `datasets`, `transformers`, `peft`, `accelerate`, and `pyarrow`.
 Required before running `build_rca_rl_dataset.py`, `prepare_verl_dataset.py`,
 and `reward_functions.py`.
 
-### 3. AMD ROCm vERL/GRPO training
+### 3. Optional GPU vERL/GRPO training
 
 ```bash
-bash scripts/amd_rocm/bootstrap_grpo_env.sh
-bash scripts/amd_rocm/patch_verl_runtime_for_rocm.sh
+# Use the optional helper scripts and notes for your hardware profile.
+# See docs/hardware/ for profile-specific setup.
 ```
 
-The bootstrap script installs ROCm torch, vLLM, and vERL **only if not already
-present** — it does not blindly reinstall a working ROCm environment.
+The bootstrap script installs accelerator-specific torch, vLLM, and vERL **only if not already
+present** — it does not blindly reinstall a working accelerator environment.
 
-The patch script verifies that all known ROCm workarounds are in place:
-- `free_cache_engine=False` — prevents vLLM `--enable_sleep_mode` on ROCm
-- `enforce_eager=True` — skips CUDA graph capture (safe on ROCm)
+The patch script verifies that all known accelerator workarounds are in place:
+- `free_cache_engine=False` — prevents vLLM `--enable_sleep_mode` on that accelerator
+- `enforce_eager=True` — skips CUDA graph capture (safe on that accelerator)
 - `extra_info` written as struct columns, not JSON strings
 
-`requirements-amd-rocm.txt` documents the full stack for reference but should
-not be installed with `pip install -r` directly.
+Hardware-specific requirements files document optional accelerator stacks for reference, but
+should not be installed with `pip install -r` directly unless the matching runtime is active.
 
 ---
 
@@ -160,7 +160,7 @@ python training/verl_grpo/reward_functions.py \
 bash training/verl_grpo/train_qwen3_grpo.sh
 ```
 
-### 5. Real training run with checkpoint persistence (requires vERL + AMD/CUDA GPU)
+### 5. Real training run with checkpoint persistence (requires vERL + GPU)
 
 `SAVE_FREQ` (default 8) controls how often vERL writes actor checkpoints.
 `TEST_FREQ` (default 8) controls validation frequency.
@@ -169,12 +169,12 @@ bash training/verl_grpo/train_qwen3_grpo.sh
 ```bash
 # Install prerequisites
 pip install verl vllm
-pip install torch --index-url https://download.pytorch.org/whl/rocm6.0  # AMD
+pip install torch --index-url <accelerator-specific torch wheel URL>
 # or for NVIDIA:
 pip install torch --index-url https://download.pytorch.org/whl/cu121
 
 SAVE_FREQ=8 TEST_FREQ=8 \
-RUN_DIR=training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved \
+RUN_DIR=docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved \
 INFRAGRAPH_RUN_REAL_VERL=1 \
 bash training/verl_grpo/train_qwen3_grpo.sh
 ```
@@ -183,7 +183,7 @@ bash training/verl_grpo/train_qwen3_grpo.sh
 
 ```bash
 python training/verl_grpo/find_lora_adapter_artifacts.py \
-  --run-dir training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved
+  --run-dir docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved
 ```
 
 Prints a file table and suggests `INFRAGRAPH_LORA_ADAPTER_PATH` if a
@@ -196,7 +196,7 @@ standard PEFT adapter:
 
 ```bash
 python training/verl_grpo/export_lora_adapter.py \
-  --run-dir  training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved \
+  --run-dir  docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved \
   --base-model Qwen/Qwen3-4B \
   --output-dir training/verl_grpo/exported_adapter
 ```
@@ -211,19 +211,19 @@ it never fabricates adapter files.
 ### 8. Write training summary (after a run)
 
 ```bash
-python training/verl_grpo/write_training_summary.py --run-dir training/verl_grpo/runs/qwen3_4b_grpo_lora_amd
+python training/verl_grpo/write_training_summary.py --run-dir docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated
 ```
 
 ---
 
-## AMD GPU Notes
+## accelerated GPU runtime Notes
 
-- Install torch with ROCm wheel (see above).
-- `torch.version.hip` will be non-null on a ROCm build; the training summary
+- Install torch with accelerator-specific wheel (see above).
+- `torch runtime accelerator metadata` will be non-null on a accelerator build; the training summary
   captures this field automatically.
 - Start with `gpu_memory_utilization=0.35` and `max_model_len=1024`; increase
   once rollout is stable.
-- FSDP is preferred over DeepSpeed for ROCm stability.
+- FSDP is preferred over DeepSpeed for accelerator stability.
 - Set `INFRAGRAPH_LORA_ADAPTER_PATH` to the checkpoint path after training
   so the Streamlit app loads the adapter.
 
@@ -235,14 +235,14 @@ python training/verl_grpo/write_training_summary.py --run-dir training/verl_grpo
 
 ```bash
 python training/verl_grpo/find_lora_adapter_artifacts.py \
-  --run-dir training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved
+  --run-dir docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved
 ```
 
 ### Convert to PEFT format if needed
 
 ```bash
 python training/verl_grpo/export_lora_adapter.py \
-  --run-dir  training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved \
+  --run-dir  docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved \
   --base-model Qwen/Qwen3-4B \
   --output-dir training/verl_grpo/exported_adapter
 ```

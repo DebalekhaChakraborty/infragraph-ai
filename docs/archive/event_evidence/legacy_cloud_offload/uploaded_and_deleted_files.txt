@@ -76,4 +76,4 @@ s3://my-hackathons/infragraph-ai/outputs/v2_test_predictions_cpu/diagram_0380.jp
 s3://my-hackathons/infragraph-ai/outputs/v2_test_predictions_cpu/diagram_0385.jpg
 s3://my-hackathons/infragraph-ai/outputs/v2_test_predictions_cpu/diagram_0394.jpg
 s3://my-hackathons/infragraph-ai/outputs/v2_test_predictions_cpu/diagram_0373.jpg
-s3://my-hackathons/infragraph-ai/training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/latest_checkpointed_iteration.txt
+s3://my-hackathons/infragraph-ai/docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/latest_checkpointed_iteration.txt

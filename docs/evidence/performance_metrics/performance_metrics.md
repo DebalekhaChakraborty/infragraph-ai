@@ -16,7 +16,7 @@ Generated: 2026-06-16T12:05:27.156917+00:00
 | Alignment | LoRA rank 16 + GRPO/vERL (32/32 steps) |
 | Qwen tokens | 655 (api_reported) |
 | Qwen latency | 3283 ms |
-| GPU runtime evidence | Live optional hardware telemetry captured via `amd-smi` |
+| GPU runtime evidence | Optional accelerator telemetry captured; raw hardware-specific evidence is archived under `docs/hardware/` |
 | Detector metrics | localization F1=1.0000 (boxes localized correctly; class mapping calibration pending — best shift: plus1) |
 
 ---
@@ -54,21 +54,9 @@ Generated: 2026-06-16T12:05:27.156917+00:00
 
 ## E. Optional GPU Telemetry
 - Available: True
-- Command used: amd-smi
+- Command used: hardware telemetry command
 - Timestamp: 2026-06-16T12:07:56.359668+00:00
-- Output snippet:
-```
-+------------------------------------------------------------------------------+
-| AMD-SMI 26.0.0+37d158ab      amdgpu version: 6.16.13  ROCm version: 7.0.0    |
-| Platform: Linux Baremetal                                                    |
-|-------------------------------------+----------------------------------------|
-| BDF                        GPU-Name | Mem-Uti   Temp   UEC       Power-Usage |
-| GPU  HIP-ID  OAM-ID  Partition-Mode | GFX-Uti    Fan               Mem-Usage |
-|=====================================+========================================|
-| 0000:1b:00.0 ...Instinct MI300X OAM | N/A        N/A   0           N/A/750 W |
-|   0       0       1        SPX/NPS1 | N/A        N/A        149820/196592 MB |
-+-------------------------------------+--------------------------------
-```
+- Output snippet: raw hardware-specific telemetry is archived under `docs/hardware/`.
 
 ## F. RF-DETR Evidence
 - Status: `eval_report_present`

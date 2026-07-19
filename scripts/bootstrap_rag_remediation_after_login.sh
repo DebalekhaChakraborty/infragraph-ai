@@ -15,10 +15,8 @@
 #   INFRAGRAPH_INCLUDE_RAW       Include raw_model_output field (default: 0)
 #   PYTHON                       Python interpreter (default: python)
 #
-# For the full Qwen LoRA reset flow (SOP-grounded adapter), see instead:
-#   docs/hardware/rocm/qwen_sop_lora_reset.md
-#   bash scripts/amd_rocm/start_qwen_sop_lora_vllm.sh
-#   bash scripts/amd_rocm/generate_qwen_sop_remediation_after_reset.sh
+# For the full Qwen LoRA reset flow (SOP-grounded adapter), see the optional
+# hardware runtime notes under docs/hardware/.
 
 set -euo pipefail
 

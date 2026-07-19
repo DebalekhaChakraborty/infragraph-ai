@@ -6,19 +6,19 @@
 - `app/README.md` (2.9 KB)
 - `app/rfdetr_subprocess_bridge.py` (18.3 KB)
 - `app/streamlit_app.py` (474.7 KB)
-- `docs/evidence/amd_mi300x_enterprise_gnn_v2_run/training_summary.md` (0.8 KB)
-- `docs/evidence/amd_qwen3_grpo_run/artifact_inventory.txt` (1.8 KB)
-- `docs/evidence/amd_qwen3_grpo_run/artifact_manifest.txt` (0.1 KB)
-- `docs/evidence/amd_qwen3_grpo_run/completion_evidence.md` (2.2 KB)
-- `docs/evidence/amd_qwen3_grpo_run/fsdp_config.json` (0.0 KB)
-- `docs/evidence/amd_qwen3_grpo_run/live_lora_vllm_verification.md` (0.5 KB)
-- `docs/evidence/amd_qwen3_grpo_run/lora_train_meta.json` (0.1 KB)
-- `docs/evidence/amd_qwen3_grpo_run/pip_freeze_successful_run.txt` (6.5 KB)
-- `docs/evidence/amd_qwen3_grpo_run/python_version.txt` (0.0 KB)
-- `docs/evidence/amd_qwen3_grpo_run/README.md` (1.5 KB)
-- `docs/evidence/amd_qwen3_grpo_run/s3_lora_adapter_restore.md` (2.4 KB)
-- `docs/evidence/amd_qwen3_grpo_run/torch_runtime.txt` (0.1 KB)
-- `docs/evidence/amd_qwen3_grpo_run/training_summary.md` (3.5 KB)
+- `docs/hardware/rocm/evidence/enterprise_gnn_v2_run/training_summary.md` (0.8 KB)
+- `docs/hardware/rocm/evidence/qwen3_grpo_run/artifact_inventory.txt` (1.8 KB)
+- `docs/hardware/rocm/evidence/qwen3_grpo_run/artifact_manifest.txt` (0.1 KB)
+- `docs/hardware/rocm/evidence/qwen3_grpo_run/completion_evidence.md` (2.2 KB)
+- `docs/hardware/rocm/evidence/qwen3_grpo_run/fsdp_config.json` (0.0 KB)
+- `docs/hardware/rocm/evidence/qwen3_grpo_run/live_lora_vllm_verification.md` (0.5 KB)
+- `docs/hardware/rocm/evidence/qwen3_grpo_run/lora_train_meta.json` (0.1 KB)
+- `docs/hardware/rocm/evidence/qwen3_grpo_run/pip_freeze_successful_run.txt` (6.5 KB)
+- `docs/hardware/rocm/evidence/qwen3_grpo_run/python_version.txt` (0.0 KB)
+- `docs/hardware/rocm/evidence/qwen3_grpo_run/README.md` (1.5 KB)
+- `docs/hardware/rocm/evidence/qwen3_grpo_run/s3_lora_adapter_restore.md` (2.4 KB)
+- `docs/hardware/rocm/evidence/qwen3_grpo_run/torch_runtime.txt` (0.1 KB)
+- `docs/hardware/rocm/evidence/qwen3_grpo_run/training_summary.md` (3.5 KB)
 - `docs/evidence/final_submission_metrics/final_submission_metrics.json` (7.6 KB)
 - `docs/evidence/final_submission_metrics/final_submission_metrics.md` (4.0 KB)
 - `README.md` (30.4 KB)
@@ -19921,33 +19921,33 @@
 - `training/verl_grpo/data/rca_remediation_rl_train.jsonl` (614.7 KB) — non-text or unsupported
 - `training/verl_grpo/data/verl_eval.parquet` (21.4 KB) — non-text or unsupported
 - `training/verl_grpo/data/verl_train.parquet` (47.1 KB) — non-text or unsupported
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/completion_evidence.md` (0.6 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/training_summary.md` (3.2 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/extra_state_world_size_1_rank_0.pt` (14.8 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/fsdp_config.json` (0.0 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/huggingface/added_tokens.json` (0.7 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/huggingface/chat_template.jinja` (4.1 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/huggingface/config.json` (1.5 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/huggingface/generation_config.json` (0.2 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/huggingface/merges.txt` (1632.7 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/huggingface/special_tokens_map.json` (0.6 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/huggingface/tokenizer.json` (11154.9 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/huggingface/tokenizer_config.json` (5.3 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/huggingface/vocab.json` (2711.8 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/lora_train_meta.json` (0.1 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/data.pt` (7.1 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/extra_state_world_size_1_rank_0.pt` (0.0 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/fsdp_config.json` (0.0 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/huggingface/added_tokens.json` (0.0 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/huggingface/chat_template.jinja` (0.0 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/huggingface/config.json` (0.0 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/huggingface/generation_config.json` (0.0 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/huggingface/merges.txt` (0.0 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/huggingface/special_tokens_map.json` (0.0 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/huggingface/tokenizer.json` (0.0 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/huggingface/tokenizer_config.json` (0.0 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/huggingface/vocab.json` (0.0 KB) — excluded directory
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/lora_train_meta.json` (0.0 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated/completion_evidence.md` (0.6 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated/training_summary.md` (3.2 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/extra_state_world_size_1_rank_0.pt` (14.8 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/fsdp_config.json` (0.0 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/huggingface/added_tokens.json` (0.7 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/huggingface/chat_template.jinja` (4.1 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/huggingface/config.json` (1.5 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/huggingface/generation_config.json` (0.2 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/huggingface/merges.txt` (1632.7 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/huggingface/special_tokens_map.json` (0.6 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/huggingface/tokenizer.json` (11154.9 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/huggingface/tokenizer_config.json` (5.3 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/huggingface/vocab.json` (2711.8 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/lora_train_meta.json` (0.1 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/data.pt` (7.1 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_8/actor/extra_state_world_size_1_rank_0.pt` (0.0 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_8/actor/fsdp_config.json` (0.0 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_8/actor/huggingface/added_tokens.json` (0.0 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_8/actor/huggingface/chat_template.jinja` (0.0 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_8/actor/huggingface/config.json` (0.0 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_8/actor/huggingface/generation_config.json` (0.0 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_8/actor/huggingface/merges.txt` (0.0 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_8/actor/huggingface/special_tokens_map.json` (0.0 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_8/actor/huggingface/tokenizer.json` (0.0 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_8/actor/huggingface/tokenizer_config.json` (0.0 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_8/actor/huggingface/vocab.json` (0.0 KB) — excluded directory
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_8/actor/lora_train_meta.json` (0.0 KB) — excluded directory
 - `training_runs/infragraph_yolo_v1/labels.jpg` (107.3 KB) — binary/artifact/image
 - `training_runs/infragraph_yolo_v1/train_batch0.jpg` (349.7 KB) — binary/artifact/image
 - `training_runs/infragraph_yolo_v1/train_batch1.jpg` (309.4 KB) — binary/artifact/image

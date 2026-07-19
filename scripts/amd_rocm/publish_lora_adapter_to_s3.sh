@@ -79,7 +79,6 @@ echo "============================================================"
 echo "  aws s3 sync s3://infragraph-artifacts/infragraph-ai/model_artifacts/qwen3_grpo_lora_adapter/ \\"
 echo "    /tmp/infragraph_qwen3_grpo_lora_adapter/ --no-progress"
 echo
-echo "  See docs/evidence/amd_qwen3_grpo_run/s3_lora_adapter_restore.md"
+echo "  See docs/hardware/rocm/evidence/qwen3_grpo_run/s3_lora_adapter_restore.md"
 echo "  for the full restore + vLLM serving + Streamlit env var instructions."
 echo "============================================================"
-

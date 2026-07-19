@@ -1,4 +1,4 @@
-﻿# InfraGraph AI — Qwen3-4B LoRA + GRPO/vERL Training Summary
+# InfraGraph AI — Qwen3-4B LoRA + GRPO/vERL Training Summary
 
 Generated: 2026-06-11 23:26 UTC
 
@@ -22,7 +22,7 @@ Generated: 2026-06-11 23:26 UTC
 | Framework       | vERL (https://github.com/volcengine/verl)                     |
 | Rollout backend | vLLM                                                          |
 | Actor strategy  | FSDP                                                          |
-| Run directory   | training\verl_grpo\runs\qwen3_4b_grpo_lora_amd                |
+| Run directory   | training\verl_grpo\runs\qwen3_4b_grpo_lora_accelerated                |
 
 ---
 

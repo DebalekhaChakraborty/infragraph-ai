@@ -15,7 +15,7 @@ Post-reset procedure for serving the SOP-grounded SFT LoRA adapter and regenerat
 - Published to S3: `s3://model-artifact-storage/infragraph-ai/model_artifacts/qwen3_grpo_lora_adapter/`
 - Served with `--max-model-len 2048` and `--gpu-memory-utilization 0.55` (GRPO adapter settings)
 - `INFRAGRAPH_QWEN_MAX_TOKENS=900` (GRPO adapter setting)
-- Evidence: `docs/evidence/amd_qwen3_grpo_run/`
+- Evidence: `docs/hardware/rocm/evidence/qwen3_grpo_run/`
 
 ### Current SOP-Grounded SFT LoRA
 
@@ -216,5 +216,3 @@ bash scripts/amd_rocm/generate_qwen_sop_remediation_after_reset.sh  # Terminal 2
 - Do NOT use `--max-model-len 2048` with the SOP-grounded adapter
 - Do NOT set `INFRAGRAPH_QWEN_MAX_TOKENS=900` with the SOP-grounded adapter
 - Do NOT use the old GRPO adapter path `/tmp/infragraph_qwen3_grpo_lora_adapter` with the SOP-grounded scripts
-
-

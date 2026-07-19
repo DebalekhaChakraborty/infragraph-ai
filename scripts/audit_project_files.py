@@ -15,15 +15,13 @@ CORE_INCLUDE_PREFIXES = [
     "scripts/generate_rfdetr_runtime_evidence.py",
     "scripts/run_enterprise_gnn_v2_inference.py",
     "scripts/train_enterprise_gnn_v2_rca.py",
-    "scripts/amd_rocm/",
     "docs/evidence/performance_metrics/",
-    "docs/evidence/amd_qwen3_grpo_run/",
-    "docs/evidence/amd_mi300x_enterprise_gnn_v2_run/",
+    "docs/hardware/",
     "reports/rfdetr_v3_eval/",
     "reports/rfdetr_runtime_evidence/",
     "reports/kb_index/",
     "training/verl_grpo/reward_eval_report.json",
-    "training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/completion_evidence.md",
+    "docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated/completion_evidence.md",
 ]
 
 EXCLUDE_DIRS = {

@@ -20,7 +20,7 @@ TRAIN_PARQ="$DATA_DIR/verl_train.parquet"
 EVAL_PARQ="$DATA_DIR/verl_eval.parquet"
 SAVE_FREQ="${SAVE_FREQ:-32}"
 TEST_FREQ="${TEST_FREQ:-32}"
-RUN_DIR="${RUN_DIR:-$SCRIPT_DIR/runs/qwen3_4b_grpo_lora_amd}"
+RUN_DIR="${RUN_DIR:-$SCRIPT_DIR/runs/qwen3_4b_grpo_lora_accelerated}"
 REWARD_MODULE="$SCRIPT_DIR/verl_reward.py"
 MODEL_ID="${MODEL_ID:-Qwen/Qwen3-4B}"
 
@@ -131,8 +131,7 @@ if [ "$RUN_REAL" != "1" ]; then
   if [ "$VERL_AVAILABLE" -eq 0 ]; then
     echo "  vERL is not installed. Install guidance:"
     echo "    pip install verl vllm"
-    echo "    # For AMD ROCm:"
-    echo "    pip install torch --index-url https://download.pytorch.org/whl/rocm6.0"
+    echo "    # For accelerated runtimes, install the torch wheel recommended by your hardware provider."
   fi
   if [ "$TRAINER_AVAILABLE" -eq 0 ] && [ "$VERL_AVAILABLE" -eq 1 ]; then
     echo "  WARNING: verl.trainer.main_ppo was not found in the installed vERL."

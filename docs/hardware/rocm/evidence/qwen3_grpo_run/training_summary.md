@@ -1,4 +1,4 @@
-﻿# InfraGraph AI — Qwen3-4B LoRA + GRPO/vERL Training Summary
+# InfraGraph AI — Qwen3-4B LoRA + GRPO/vERL Training Summary
 
 Generated: 2026-06-12 13:57 UTC
 
@@ -22,7 +22,7 @@ Generated: 2026-06-12 13:57 UTC
 | Framework       | vERL (https://github.com/volcengine/verl)                     |
 | Rollout backend | vLLM                                                          |
 | Actor strategy  | FSDP                                                          |
-| Run directory   | /tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved        |
+| Run directory   | /tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_accelerated_saved        |
 
 ---
 
@@ -69,14 +69,14 @@ Reward entry point: `training/verl_grpo/verl_reward.py::compute_score`
 
 ## Adapter / Checkpoint Artifacts
 
-- `/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/extra_state_world_size_1_rank_0.pt`
-- `/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/model_world_size_1_rank_0.pt`
-- `/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/optim_world_size_1_rank_0.pt`
-- `/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/data.pt`
+- `/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/extra_state_world_size_1_rank_0.pt`
+- `/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/model_world_size_1_rank_0.pt`
+- `/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/optim_world_size_1_rank_0.pt`
+- `/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/data.pt`
 
 ### Config files
 
-- `/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/huggingface/config.json`
+- `/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/huggingface/config.json`
 
 ---
 

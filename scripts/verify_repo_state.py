@@ -1,5 +1,5 @@
 """
-Verify InfraGraph AI repository state before submission.
+Verify InfraGraph AI repository state before packaging.
 Uses only the Python standard library.
 """
 import os

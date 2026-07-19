@@ -263,16 +263,16 @@ InfraGraph AI | TCS &amp; AMD AI Hackathon 2026 | Curated Code Appendix | <a hre
 <li>`docs/enterprise_graph_dataset.md`</li>
 <li>`docs/event_correlation_and_causal_evidence.md`</li>
 <h3>docs\evidence\amd_mi300x_enterprise_gnn_v2_run</h3>
-<li>`docs/evidence/amd_mi300x_enterprise_gnn_v2_run/training_summary.md`</li>
+<li>`docs/hardware/rocm/evidence/enterprise_gnn_v2_run/training_summary.md`</li>
 <h3>docs\evidence\amd_qwen3_grpo_run</h3>
-<li>`docs/evidence/amd_qwen3_grpo_run/README.md`</li>
-<li>`docs/evidence/amd_qwen3_grpo_run/completion_evidence.md`</li>
-<li>`docs/evidence/amd_qwen3_grpo_run/fsdp_config.json`</li>
-<li>`docs/evidence/amd_qwen3_grpo_run/live_lora_vllm_verification.md`</li>
-<li>`docs/evidence/amd_qwen3_grpo_run/lora_train_meta.json`</li>
-<li>`docs/evidence/amd_qwen3_grpo_run/python_version.txt`</li>
-<li>`docs/evidence/amd_qwen3_grpo_run/torch_runtime.txt`</li>
-<li>`docs/evidence/amd_qwen3_grpo_run/training_summary.md`</li>
+<li>`docs/hardware/rocm/evidence/qwen3_grpo_run/README.md`</li>
+<li>`docs/hardware/rocm/evidence/qwen3_grpo_run/completion_evidence.md`</li>
+<li>`docs/hardware/rocm/evidence/qwen3_grpo_run/fsdp_config.json`</li>
+<li>`docs/hardware/rocm/evidence/qwen3_grpo_run/live_lora_vllm_verification.md`</li>
+<li>`docs/hardware/rocm/evidence/qwen3_grpo_run/lora_train_meta.json`</li>
+<li>`docs/hardware/rocm/evidence/qwen3_grpo_run/python_version.txt`</li>
+<li>`docs/hardware/rocm/evidence/qwen3_grpo_run/torch_runtime.txt`</li>
+<li>`docs/hardware/rocm/evidence/qwen3_grpo_run/training_summary.md`</li>
 <h3>docs\evidence\final_submission_metrics</h3>
 <li>`docs/evidence/final_submission_metrics/final_submission_metrics.json`</li>
 <li>`docs/evidence/final_submission_metrics/final_submission_metrics.md`</li>
@@ -323,8 +323,8 @@ InfraGraph AI | TCS &amp; AMD AI Hackathon 2026 | Curated Code Appendix | <a hre
 <li>`training/verl_grpo/prepare_verl_dataset.py`</li>
 <li>`training/verl_grpo/reward_eval_report.json`</li>
 <li>`training/verl_grpo/reward_functions.py`</li>
-<h3>training\verl_grpo\runs\qwen3_4b_grpo_lora_amd</h3>
-<li>`training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/completion_evidence.md`</li>
+<h3>training\verl_grpo\runs\qwen3_4b_grpo_lora_accelerated</h3>
+<li>`docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated/completion_evidence.md`</li>
 <h3>training\verl_grpo</h3>
 <li>`training/verl_grpo/sample_config.yaml`</li>
 <li>`training/verl_grpo/train_qwen3_grpo.sh`</li>
@@ -381,7 +381,7 @@ InfraGraph AI | TCS &amp; AMD AI Hackathon 2026 | Curated Code Appendix | <a hre
 <p>**Qwen / GRPO / AMD ROCm**</p>
 <li>`training/verl_grpo/`</li>
 <li>`scripts/amd_rocm/`</li>
-<li>`docs/evidence/amd_qwen3_grpo_run/`</li>
+<li>`docs/hardware/rocm/evidence/qwen3_grpo_run/`</li>
 <li>`model_artifacts/qwen3_grpo_lora_adapter/`</li>
 <li>`training/verl_grpo/reward_eval_report.json`</li>
 <p>**Governance and Safety**</p>
@@ -537,7 +537,7 @@ InfraGraph AI combines multimodal computer vision, graph algorithms, traditional
 | Confidence Calibration | Heuristic calibration / confidence gate | RCA source quality, candidate margin, evidence density, impacted diagram count | Calibrated confidence, risk band, threshold pass/fail | `src/rca_ml/calibration.py` |
 | Runbook/SOP Retrieval | Root-cause-aware runbook retrieval and reranking | Node type, alert type, root-cause diagram, impacted diagrams, cross-diagram boost | Approved runbook chain for remediation | `src/runbook_retrieval/` |
 | Qwen/vLLM Remediation | Local open-source Qwen model served through vLLM | Structured JSON response, validation steps, remediation steps, rollback notes, escalation, ITSM-ready summary | Grounded remediation plan | `src/ai_remediation/`, `training/verl_grpo/` |
-| GRPO/vERL Alignment | Qwen3 LoRA + GRPO/vERL reward optimization | Reward functions for graph grounding, root-cause match, rollback, escalation, ITSM schema | Aligned adapter and reward evaluation | `training/verl_grpo/`, `docs/evidence/amd_qwen3_grpo_run/` |
+| GRPO/vERL Alignment | Qwen3 LoRA + GRPO/vERL reward optimization | Reward functions for graph grounding, root-cause match, rollback, escalation, ITSM schema | Aligned adapter and reward evaluation | `training/verl_grpo/`, `docs/hardware/rocm/evidence/qwen3_grpo_run/` |
 | Governance Critic | Rule/evidence critic | Root-cause graph existence, RCA source, calibrated confidence, Step 5 evidence, validation-before-remediation, rollback, runbook chain, approval gate | Governance score, findings, blocking issues, approval recommendation | `src/governance/evidence_critic.py` |
 | Graph Copilot / RAG | Deterministic graph query + local Chroma vector retrieval + Qwen fallback answer | Topology facts, RCA outputs, paths, impact radius, incident context | Evidence-grounded natural language answers | `src/graph_copilot/`, `src/vector_memory/`, `reports/kb_index/` |
 | Agentic Ops Orchestration | Deterministic Python orchestrator + Pydantic BaseModel schemas | AgentRun, AgentStep, ApprovalGate, TicketDraft validation | Typed, serializable execution trace and approval-ready incident workflow | `src/agents/orchestrator.py`, `src/agents/schemas.py` |
@@ -562,11 +562,11 @@ InfraGraph AI is designed for AMD GPU cloud and ROCm-compatible workflows:
 - Qwen remediation runs through a local vLLM OpenAI-compatible endpoint.
 - The GRPO/vERL alignment pipeline lives under `training/verl_grpo/`.
 - ROCm setup and run helpers are under `scripts/amd_rocm/`.
-- Enterprise GNN RCA V2 training and inference were run on AMD Instinct MI300X in the hackathon Jupyter / ROCm environment; see `docs/evidence/amd_mi300x_enterprise_gnn_v2_run/training_summary.md`.
+- Enterprise GNN RCA V2 training and inference were run on AMD Instinct MI300X in the hackathon Jupyter / ROCm environment; see `docs/hardware/rocm/evidence/enterprise_gnn_v2_run/training_summary.md`.
 - The V2 GNN run uses AMD-compatible PyTorch workflows for synthetic/generated enterprise benchmark training and inference.
 - AMD MI300X is useful for both Enterprise GNN training/inference and open LLM serving through ROCm-compatible PyTorch/vLLM workflows.
-- Evidence under `docs/evidence/amd_qwen3_grpo_run/` records a completed real vERL training run for Qwen/Qwen3-4B with LoRA rank 16, GRPO, vLLM rollout backend, FSDP actor strategy, and HIP version `7.0.51831-a3e329ad8`.
-- `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/completion_evidence.md` records completed training at 32/32 steps on an AMD ROCm GPU, with observed GPU utilization, VRAM, and power telemetry.
+- Evidence under `docs/hardware/rocm/evidence/qwen3_grpo_run/` records a completed real vERL training run for Qwen/Qwen3-4B with LoRA rank 16, GRPO, vLLM rollout backend, FSDP actor strategy, and HIP version `7.0.51831-a3e329ad8`.
+- `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated/completion_evidence.md` records completed training at 32/32 steps on an AMD ROCm GPU, with observed GPU utilization, VRAM, and power telemetry.
 - `assets/preloaded/enterprise_gnn_rca/enterprise_gnn_metrics.json` records a preloaded enterprise RCA model run with `torch_version` `2.6.0+rocm6.1`, `torch_hip_version` `6.1.40091-a8dbc0c19`, and AMD GPU device metadata.
 - Qwen/vLLM and GRPO/vERL evidence are committed separately from the Enterprise GNN RCA V2 evidence.
 
@@ -652,7 +652,7 @@ Only repository evidence is listed here.
 | V2 learned RCA baselines | `assets/preloaded/mlp_rca/mlp_rca_metrics.json`, `assets/preloaded/gnn_rca/gnn_rca_metrics.json` | MLP test top-1/top-3/MRR `1.0/1.0/1.0`; GNN test top-1/top-3/MRR `1.0/1.0/1.0` | Synthetic V2 benchmark. |
 | KB / vector memory index | `reports/kb_index/build_summary.json` | 8 documents loaded, 73 chunks indexed, collection `infragraph_sop_kb` | Local Chroma/SOP retrieval evidence. |
 | GRPO reward evaluation | `training/verl_grpo/reward_eval_report.json` | 16 eval records; average chosen score `0.8931`; average rejected score `0.2075`; positive margin `16/16` | Reward checks JSON structure, root-cause match, grounding, rollback safety, escalation, and ITSM fields. |
-| GRPO/vERL training run | `docs/evidence/amd_qwen3_grpo_run/training_summary.md` | Real vERL training run completed; Qwen/Qwen3-4B, LoRA rank 16, GRPO, global step 32 evidence | AMD ROCm training evidence. |
+| GRPO/vERL training run | `docs/hardware/rocm/evidence/qwen3_grpo_run/training_summary.md` | Real vERL training run completed; Qwen/Qwen3-4B, LoRA rank 16, GRPO, global step 32 evidence | AMD ROCm training evidence. |
 | Exported Qwen3 GRPO adapter | `model_artifacts/qwen3_grpo_lora_adapter/README.md` | Exported from vERL/FSDP actor checkpoint at `global_step_32`; LoRA rank 16, alpha 32 | Adapter files are present in the folder. |
 | RF-DETR detector artifacts | `model_artifacts/rfdetr_v3/` | Checkpoints committed locally: best total, regular, and EMA | Checkpoints committed locally; detector diagnostic evidence is available in `reports/rfdetr_v3_eval/rfdetr_v3_eval_report.md`. Strict class-aware mAP is not claimed until class mapping is calibrated. |
 | Sample RCA outputs | `assets/preloaded/enterprise_gnn_rca/`, `outputs/enterprise_gnn_rca/` | Per-scenario RCA JSON files are present | Generated demo/inference artifacts. |
@@ -828,10 +828,10 @@ Export/check adapter artifacts:
 
 &#x27;&#x27;&#x27;bash
 python training/verl_grpo/find_lora_adapter_artifacts.py \
-  --run-dir training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved
+  --run-dir docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved
 
 python training/verl_grpo/export_lora_adapter.py \
-  --run-dir training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved \
+  --run-dir docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved \
   --base-model Qwen/Qwen3-4B \
   --output-dir model_artifacts/qwen3_grpo_lora_adapter
 
@@ -28401,7 +28401,7 @@ cd &quot;$ROOT_DIR&quot;
 PYTHON=&quot;${PYTHON:-python}&quot;
 
 # ── Configuration ─────────────────────────────────────────────────────────────
-RUN_DIR=&quot;${RUN_DIR:-/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved}&quot;
+RUN_DIR=&quot;${RUN_DIR:-/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_accelerated_saved}&quot;
 ADAPTER_DIR=&quot;${ADAPTER_DIR:-/tmp/infragraph_qwen3_grpo_lora_adapter}&quot;
 MODEL_ID=&quot;${MODEL_ID:-Qwen/Qwen3-4B}&quot;
 LORA_NAME=&quot;${LORA_NAME:-infragraph}&quot;
@@ -28546,7 +28546,7 @@ echo &quot;------------------------------------------------------------&quot;
 # trained with scripts/train_qwen_sop_lora.py.
 #
 # NOT for the old GRPO/vERL adapter. For GRPO adapter serving, see:
-#   docs/evidence/amd_qwen3_grpo_run/s3_lora_adapter_restore.md
+#   docs/hardware/rocm/evidence/qwen3_grpo_run/s3_lora_adapter_restore.md
 #   docs/amd_rocm_qwen_sop_lora_reset.md  (full reset workflow)
 #
 # Usage:
@@ -31800,7 +31800,7 @@ QWEN_EVIDENCE_FILE = (
     / &quot;training&quot;
     / &quot;verl_grpo&quot;
     / &quot;runs&quot;
-    / &quot;qwen3_4b_grpo_lora_amd&quot;
+    / &quot;qwen3_4b_grpo_lora_accelerated&quot;
     / &quot;completion_evidence.md&quot;
 )
 OUT_DIR = REPO_ROOT / &quot;docs&quot; / &quot;evidence&quot; / &quot;final_submission_metrics&quot;
@@ -32203,9 +32203,9 @@ def collect_amd_gpu_telemetry() -&gt; dict:
             &quot;see committed AMD evidence files.&quot;
         ),
         &quot;committed_evidence_paths&quot;: [
-            &quot;docs/evidence/amd_qwen3_grpo_run/training_summary.md&quot;,
-            &quot;docs/evidence/amd_mi300x_enterprise_gnn_v2_run/training_summary.md&quot;,
-            &quot;training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/completion_evidence.md&quot;,
+            &quot;docs/hardware/rocm/evidence/qwen3_grpo_run/training_summary.md&quot;,
+            &quot;docs/hardware/rocm/evidence/enterprise_gnn_v2_run/training_summary.md&quot;,
+            &quot;docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated/completion_evidence.md&quot;,
         ],
         &quot;timestamp&quot;: datetime.now(timezone.utc).isoformat(),
     }
@@ -44887,7 +44887,7 @@ reports/event_correlation/manual_eval/ (gitignored — evaluation runs)
 
 </code></pre>
 <p>---</p>
-<h3>`docs/evidence/amd_mi300x_enterprise_gnn_v2_run/training_summary.md`</h3>
+<h3>`docs/hardware/rocm/evidence/enterprise_gnn_v2_run/training_summary.md`</h3>
 <pre><code>
 # AMD MI300X Enterprise GNN RCA V2 Run Evidence
 
@@ -44913,7 +44913,7 @@ Honest note: These metrics are from generated/synthetic enterprise RCA benchmark
 
 </code></pre>
 <p>---</p>
-<h3>`docs/evidence/amd_qwen3_grpo_run/README.md`</h3>
+<h3>`docs/hardware/rocm/evidence/qwen3_grpo_run/README.md`</h3>
 <pre><code>
 # Evidence: AMD ROCm Qwen3-4B GRPO Training Run
 
@@ -44957,7 +44957,7 @@ training overrides and runtime patches that were required.
 
 </code></pre>
 <p>---</p>
-<h3>`docs/evidence/amd_qwen3_grpo_run/completion_evidence.md`</h3>
+<h3>`docs/hardware/rocm/evidence/qwen3_grpo_run/completion_evidence.md`</h3>
 <pre><code>
 # AMD ROCm Qwen3-4B GRPO Training — Completion Evidence
 
@@ -45001,7 +45001,7 @@ No persisted LoRA adapter checkpoint files (`adapter_model.safetensors`,
 `adapter_config.json`, etc.) were detected in the committed run evidence.
 
 Do NOT claim a reusable fine-tuned adapter is available unless checkpoint files
-are present in `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/` or documented
+are present in `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated/` or documented
 as an external artifact.
 
 The training pass demonstrates that the full AMD ROCm GRPO pipeline is
@@ -45025,7 +45025,7 @@ sequence used in the successful run.
 
 </code></pre>
 <p>---</p>
-<h3>`docs/evidence/amd_qwen3_grpo_run/fsdp_config.json`</h3>
+<h3>`docs/hardware/rocm/evidence/qwen3_grpo_run/fsdp_config.json`</h3>
 <pre><code>
 {
     &quot;FSDP_version&quot;: 1,
@@ -45033,7 +45033,7 @@ sequence used in the successful run.
 }
 </code></pre>
 <p>---</p>
-<h3>`docs/evidence/amd_qwen3_grpo_run/live_lora_vllm_verification.md`</h3>
+<h3>`docs/hardware/rocm/evidence/qwen3_grpo_run/live_lora_vllm_verification.md`</h3>
 <pre><code>
 # Live LoRA vLLM Verification
 
@@ -45059,7 +45059,7 @@ A `/v1/chat/completions` request was successfully executed with:
 
 </code></pre>
 <p>---</p>
-<h3>`docs/evidence/amd_qwen3_grpo_run/lora_train_meta.json`</h3>
+<h3>`docs/hardware/rocm/evidence/qwen3_grpo_run/lora_train_meta.json`</h3>
 <pre><code>
 {
     &quot;r&quot;: 16,
@@ -45068,13 +45068,13 @@ A `/v1/chat/completions` request was successfully executed with:
 }
 </code></pre>
 <p>---</p>
-<h3>`docs/evidence/amd_qwen3_grpo_run/python_version.txt`</h3>
+<h3>`docs/hardware/rocm/evidence/qwen3_grpo_run/python_version.txt`</h3>
 <pre><code>
 Python 3.12.11
 
 </code></pre>
 <p>---</p>
-<h3>`docs/evidence/amd_qwen3_grpo_run/torch_runtime.txt`</h3>
+<h3>`docs/hardware/rocm/evidence/qwen3_grpo_run/torch_runtime.txt`</h3>
 <pre><code>
 torch: 2.8.0+gitb2fb688
 hip: 7.0.51831-a3e329ad8
@@ -45084,7 +45084,7 @@ device:
 
 </code></pre>
 <p>---</p>
-<h3>`docs/evidence/amd_qwen3_grpo_run/training_summary.md`</h3>
+<h3>`docs/hardware/rocm/evidence/qwen3_grpo_run/training_summary.md`</h3>
 <pre><code>
 ﻿# InfraGraph AI — Qwen3-4B LoRA + GRPO/vERL Training Summary
 
@@ -45110,7 +45110,7 @@ Generated: 2026-06-12 13:57 UTC
 | Framework       | vERL (https://github.com/volcengine/verl)                     |
 | Rollout backend | vLLM                                                          |
 | Actor strategy  | FSDP                                                          |
-| Run directory   | /tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved        |
+| Run directory   | /tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_accelerated_saved        |
 
 ---
 
@@ -45157,14 +45157,14 @@ Reward entry point: `training/verl_grpo/verl_reward.py::compute_score`
 
 ## Adapter / Checkpoint Artifacts
 
-- `/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/extra_state_world_size_1_rank_0.pt`
-- `/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/model_world_size_1_rank_0.pt`
-- `/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/optim_world_size_1_rank_0.pt`
-- `/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/data.pt`
+- `/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/extra_state_world_size_1_rank_0.pt`
+- `/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/model_world_size_1_rank_0.pt`
+- `/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/optim_world_size_1_rank_0.pt`
+- `/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/data.pt`
 
 ### Config files
 
-- `/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/huggingface/config.json`
+- `/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/huggingface/config.json`
 
 ---
 
@@ -46744,7 +46744,7 @@ Qwen/vLLM is used after RCA for RAG/runbook-grounded remediation drafting, valid
 - RAG-grounded against network runbook knowledge base
 
 **Evidence:**
-- GRPO training: `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/completion_evidence.md`
+- GRPO training: `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated/completion_evidence.md`
 - Adapter: `model_artifacts/qwen3_grpo_lora_adapter/`
 - Submission metrics: `docs/evidence/final_submission_metrics/final_submission_metrics.md`
 
@@ -49425,7 +49425,7 @@ pip install torch --index-url https://download.pytorch.org/whl/rocm6.0  # AMD
 pip install torch --index-url https://download.pytorch.org/whl/cu121
 
 SAVE_FREQ=8 TEST_FREQ=8 \
-RUN_DIR=training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved \
+RUN_DIR=docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved \
 INFRAGRAPH_RUN_REAL_VERL=1 \
 bash training/verl_grpo/train_qwen3_grpo.sh
 &#x27;&#x27;&#x27;
@@ -49434,7 +49434,7 @@ bash training/verl_grpo/train_qwen3_grpo.sh
 
 &#x27;&#x27;&#x27;bash
 python training/verl_grpo/find_lora_adapter_artifacts.py \
-  --run-dir training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved
+  --run-dir docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved
 &#x27;&#x27;&#x27;
 
 Prints a file table and suggests `INFRAGRAPH_LORA_ADAPTER_PATH` if a
@@ -49447,7 +49447,7 @@ standard PEFT adapter:
 
 &#x27;&#x27;&#x27;bash
 python training/verl_grpo/export_lora_adapter.py \
-  --run-dir  training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved \
+  --run-dir  docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved \
   --base-model Qwen/Qwen3-4B \
   --output-dir training/verl_grpo/exported_adapter
 &#x27;&#x27;&#x27;
@@ -49462,7 +49462,7 @@ it never fabricates adapter files.
 ### 8. Write training summary (after a run)
 
 &#x27;&#x27;&#x27;bash
-python training/verl_grpo/write_training_summary.py --run-dir training/verl_grpo/runs/qwen3_4b_grpo_lora_amd
+python training/verl_grpo/write_training_summary.py --run-dir docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated
 &#x27;&#x27;&#x27;
 
 ---
@@ -49486,14 +49486,14 @@ python training/verl_grpo/write_training_summary.py --run-dir training/verl_grpo
 
 &#x27;&#x27;&#x27;bash
 python training/verl_grpo/find_lora_adapter_artifacts.py \
-  --run-dir training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved
+  --run-dir docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved
 &#x27;&#x27;&#x27;
 
 ### Convert to PEFT format if needed
 
 &#x27;&#x27;&#x27;bash
 python training/verl_grpo/export_lora_adapter.py \
-  --run-dir  training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved \
+  --run-dir  docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved \
   --base-model Qwen/Qwen3-4B \
   --output-dir training/verl_grpo/exported_adapter
 &#x27;&#x27;&#x27;
@@ -49855,7 +49855,7 @@ adapter files.
 
 Usage:
     python training/verl_grpo/export_lora_adapter.py \\
-        --run-dir  /tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved \\
+        --run-dir  /tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_accelerated_saved \\
         --base-model Qwen/Qwen3-4B \\
         --output-dir /tmp/infragraph_qwen3_grpo_lora_adapter
 
@@ -50131,7 +50131,7 @@ def main() -&gt; None:
     )
     parser.add_argument(
         &quot;--run-dir&quot;,
-        default=&quot;/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved&quot;,
+        default=&quot;/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_accelerated_saved&quot;,
         help=&quot;vERL run/output directory (default: %(default)s)&quot;,
     )
     parser.add_argument(
@@ -50231,7 +50231,7 @@ find_lora_adapter_artifacts.py — Search a vERL run directory for LoRA adapter 
 
 Usage:
     python training/verl_grpo/find_lora_adapter_artifacts.py \\
-        --run-dir training/verl_grpo/runs/qwen3_4b_grpo_lora_amd
+        --run-dir docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated
 
 Prints a table of every adapter-related file found and suggests the
 INFRAGRAPH_LORA_ADAPTER_PATH environment variable if a usable adapter
@@ -50329,7 +50329,7 @@ def main() -&gt; None:
     )
     parser.add_argument(
         &quot;--run-dir&quot;,
-        default=&quot;training/verl_grpo/runs/qwen3_4b_grpo_lora_amd&quot;,
+        default=&quot;docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated&quot;,
         help=&quot;Path to the vERL run/output directory (default: %(default)s)&quot;,
     )
     args = parser.parse_args()
@@ -52053,7 +52053,7 @@ if __name__ == &quot;__main__&quot;:
 
 </code></pre>
 <p>---</p>
-<h3>`training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/completion_evidence.md`</h3>
+<h3>`docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated/completion_evidence.md`</h3>
 <pre><code>
 # InfraGraph AI - Qwen3-4B GRPO/vERL Training Completion Evidence
 
@@ -52081,7 +52081,7 @@ Key runtime notes:
 - agent.num_workers reduced to 1 for single-GPU batch chunking stability
 
 Primary summary:
-training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/training_summary.md
+docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated/training_summary.md
 
 </code></pre>
 <p>---</p>
@@ -52194,7 +52194,7 @@ TRAIN_PARQ=&quot;$DATA_DIR/verl_train.parquet&quot;
 EVAL_PARQ=&quot;$DATA_DIR/verl_eval.parquet&quot;
 SAVE_FREQ=&quot;${SAVE_FREQ:-32}&quot;
 TEST_FREQ=&quot;${TEST_FREQ:-32}&quot;
-RUN_DIR=&quot;${RUN_DIR:-$SCRIPT_DIR/runs/qwen3_4b_grpo_lora_amd}&quot;
+RUN_DIR=&quot;${RUN_DIR:-$SCRIPT_DIR/runs/qwen3_4b_grpo_lora_accelerated}&quot;
 REWARD_MODULE=&quot;$SCRIPT_DIR/verl_reward.py&quot;
 MODEL_ID=&quot;${MODEL_ID:-Qwen/Qwen3-4B}&quot;
 
@@ -52688,7 +52688,7 @@ if __name__ == &quot;__main__&quot;:
 write_training_summary.py — Generate a post-run training summary.
 
 Creates:
-    training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/training_summary.md
+    docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated/training_summary.md
 
 Run after a real vERL training pass, or call with --dry-run to document
 a scaffold/dry-run attempt honestly.
@@ -52721,7 +52721,7 @@ def _display_path(p: Path) -&gt; str:
         return str(p.resolve().relative_to(REPO_ROOT))
     except ValueError:
         return str(p.resolve())
-DEFAULT_RUN_DIR = SCRIPT_DIR / &quot;runs&quot; / &quot;qwen3_4b_grpo_lora_amd&quot;
+DEFAULT_RUN_DIR = SCRIPT_DIR / &quot;runs&quot; / &quot;qwen3_4b_grpo_lora_accelerated&quot;
 DATA_DIR        = SCRIPT_DIR / &quot;data&quot;
 
 
@@ -66474,15 +66474,15 @@ if __name__ == &quot;__main__&quot;:
 <p><code>| `src/vision/edge_extraction/__pycache__/endpoint_matcher.cpython-38.pyc` | Included prefix but non-text/binary file |</code></p>
 <p><code>| `src/vision/edge_extraction/__pycache__/line_detector.cpython-314.pyc` | Included prefix but non-text/binary file |</code></p>
 <p><code>| `src/vision/edge_extraction/__pycache__/line_detector.cpython-38.pyc` | Included prefix but non-text/binary file |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/extra_state_world_size_1_rank_0.pt` | Excluded file pattern: *.pt |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/huggingface/merges.txt` | Excluded file pattern: merges.txt |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/huggingface/tokenizer.json` | Excluded file pattern: tokenizer.json |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/huggingface/vocab.json` | Excluded file pattern: vocab.json |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/data.pt` | Excluded file pattern: *.pt |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/extra_state_world_size_1_rank_0.pt` | Excluded file pattern: *.pt |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/huggingface/merges.txt` | Excluded file pattern: merges.txt |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/huggingface/tokenizer.json` | Excluded file pattern: tokenizer.json |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/huggingface/vocab.json` | Excluded file pattern: vocab.json |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/extra_state_world_size_1_rank_0.pt` | Excluded file pattern: *.pt |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/huggingface/merges.txt` | Excluded file pattern: merges.txt |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/huggingface/tokenizer.json` | Excluded file pattern: tokenizer.json |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/huggingface/vocab.json` | Excluded file pattern: vocab.json |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/data.pt` | Excluded file pattern: *.pt |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_8/actor/extra_state_world_size_1_rank_0.pt` | Excluded file pattern: *.pt |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_8/actor/huggingface/merges.txt` | Excluded file pattern: merges.txt |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_8/actor/huggingface/tokenizer.json` | Excluded file pattern: tokenizer.json |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_8/actor/huggingface/vocab.json` | Excluded file pattern: vocab.json |</code></p>
 <p><code>| `training_runs/infragraph_yolo_v1/labels.jpg` | Excluded file pattern: *.jpg |</code></p>
 <p><code>| `training_runs/infragraph_yolo_v1/train_batch0.jpg` | Excluded file pattern: *.jpg |</code></p>
 <p><code>| `training_runs/infragraph_yolo_v1/train_batch1.jpg` | Excluded file pattern: *.jpg |</code></p>
@@ -74064,10 +74064,10 @@ if __name__ == &quot;__main__&quot;:
 <p><code>| `data/simulated_alerts/enterprise_incident_templates.json` | Not part of curated submission appendix |</code></p>
 <p><code>| `data/simulated_alerts/local_incident_templates.json` | Not part of curated submission appendix |</code></p>
 <p><code>| `docs/amd_rocm_qwen_sop_lora_reset.md` | Not part of curated submission appendix |</code></p>
-<p><code>| `docs/evidence/amd_qwen3_grpo_run/artifact_inventory.txt` | Not part of curated submission appendix |</code></p>
-<p><code>| `docs/evidence/amd_qwen3_grpo_run/artifact_manifest.txt` | Not part of curated submission appendix |</code></p>
-<p><code>| `docs/evidence/amd_qwen3_grpo_run/pip_freeze_successful_run.txt` | Not part of curated submission appendix |</code></p>
-<p><code>| `docs/evidence/amd_qwen3_grpo_run/s3_lora_adapter_restore.md` | Not part of curated submission appendix |</code></p>
+<p><code>| `docs/hardware/rocm/evidence/qwen3_grpo_run/artifact_inventory.txt` | Not part of curated submission appendix |</code></p>
+<p><code>| `docs/hardware/rocm/evidence/qwen3_grpo_run/artifact_manifest.txt` | Not part of curated submission appendix |</code></p>
+<p><code>| `docs/hardware/rocm/evidence/qwen3_grpo_run/pip_freeze_successful_run.txt` | Not part of curated submission appendix |</code></p>
+<p><code>| `docs/hardware/rocm/evidence/qwen3_grpo_run/s3_lora_adapter_restore.md` | Not part of curated submission appendix |</code></p>
 <p><code>| `docs/gnn_rca.md` | Not part of curated submission appendix |</code></p>
 <p><code>| `docs/mlp_rca.md` | Not part of curated submission appendix |</code></p>
 <p><code>| `docs/qwen_explanation_layer.md` | Not part of curated submission appendix |</code></p>
@@ -74355,23 +74355,23 @@ if __name__ == &quot;__main__&quot;:
 <p><code>| `training/verl_grpo/data/rca_remediation_rl_train.jsonl` | Not part of curated submission appendix |</code></p>
 <p><code>| `training/verl_grpo/data/verl_eval.parquet` | Not part of curated submission appendix |</code></p>
 <p><code>| `training/verl_grpo/data/verl_train.parquet` | Not part of curated submission appendix |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/training_summary.md` | Not part of curated submission appendix |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/fsdp_config.json` | Not part of curated submission appendix |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/huggingface/added_tokens.json` | Not part of curated submission appendix |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/huggingface/chat_template.jinja` | Not part of curated submission appendix |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/huggingface/config.json` | Not part of curated submission appendix |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/huggingface/generation_config.json` | Not part of curated submission appendix |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/huggingface/special_tokens_map.json` | Not part of curated submission appendix |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/huggingface/tokenizer_config.json` | Not part of curated submission appendix |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_32/actor/lora_train_meta.json` | Not part of curated submission appendix |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/fsdp_config.json` | Not part of curated submission appendix |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/huggingface/added_tokens.json` | Not part of curated submission appendix |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/huggingface/chat_template.jinja` | Not part of curated submission appendix |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/huggingface/config.json` | Not part of curated submission appendix |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/huggingface/generation_config.json` | Not part of curated submission appendix |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/huggingface/special_tokens_map.json` | Not part of curated submission appendix |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/huggingface/tokenizer_config.json` | Not part of curated submission appendix |</code></p>
-<p><code>| `training/verl_grpo/runs/qwen3_4b_grpo_lora_amd_saved/global_step_8/actor/lora_train_meta.json` | Not part of curated submission appendix |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated/training_summary.md` | Not part of curated submission appendix |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/fsdp_config.json` | Not part of curated submission appendix |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/huggingface/added_tokens.json` | Not part of curated submission appendix |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/huggingface/chat_template.jinja` | Not part of curated submission appendix |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/huggingface/config.json` | Not part of curated submission appendix |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/huggingface/generation_config.json` | Not part of curated submission appendix |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/huggingface/special_tokens_map.json` | Not part of curated submission appendix |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/huggingface/tokenizer_config.json` | Not part of curated submission appendix |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_32/actor/lora_train_meta.json` | Not part of curated submission appendix |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_8/actor/fsdp_config.json` | Not part of curated submission appendix |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_8/actor/huggingface/added_tokens.json` | Not part of curated submission appendix |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_8/actor/huggingface/chat_template.jinja` | Not part of curated submission appendix |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_8/actor/huggingface/config.json` | Not part of curated submission appendix |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_8/actor/huggingface/generation_config.json` | Not part of curated submission appendix |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_8/actor/huggingface/special_tokens_map.json` | Not part of curated submission appendix |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_8/actor/huggingface/tokenizer_config.json` | Not part of curated submission appendix |</code></p>
+<p><code>| `docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated_saved/global_step_8/actor/lora_train_meta.json` | Not part of curated submission appendix |</code></p>
 <p><code>| `training/verl_grpo/sample_records_preview.md` | Not part of curated submission appendix |</code></p>
 <p><code>| `training_runs/infragraph_yolo_v1/args.yaml` | Not part of curated submission appendix |</code></p>
 <p><code>| `training_runs/infragraph_yolo_v1/results.csv` | Not part of curated submission appendix |</code></p>

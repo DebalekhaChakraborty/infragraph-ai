@@ -7,7 +7,7 @@ Gathers:
   B. GNN V2 inference latency (3 timed runs)
   C. Optional GNN training benchmark (--run-training-benchmark flag)
   D. Qwen/vLLM latency (live endpoint or committed GRPO evidence)
-  E. Optional GPU telemetry (amd-smi / rocm-smi)
+  E. Optional GPU telemetry (configured via INFRAGRAPH_GPU_TELEMETRY_COMMANDS)
   F. RF-DETR evaluation evidence (from eval report if present)
   G. performance summary markdown table
 
@@ -46,10 +46,11 @@ RFDETR_EVAL_REPORT = (
 )
 QWEN_EVIDENCE_FILE = (
     REPO_ROOT
-    / "training"
-    / "verl_grpo"
-    / "runs"
-    / "qwen3_4b_grpo_lora_amd"
+    / "docs"
+    / "archive"
+    / "event_evidence"
+    / "training_runs"
+    / "qwen3_4b_grpo_lora_accelerated"
     / "completion_evidence.md"
 )
 OUT_DIR = REPO_ROOT / "docs" / "evidence" / "performance_metrics"
@@ -404,10 +405,15 @@ def collect_qwen_latency() -> dict:
 # Section E: Optional GPU telemetry
 # ---------------------------------------------------------------------------
 
-def collect_amd_gpu_telemetry() -> dict:
+def collect_gpu_telemetry() -> dict:
     print("  [E] Collecting Optional GPU telemetry ...")
 
-    for cmd_name in ("amd-smi", "rocm-smi"):
+    configured = os.environ.get("INFRAGRAPH_GPU_TELEMETRY_COMMANDS", "")
+    commands = [c.strip() for c in configured.split(",") if c.strip()]
+    if not commands:
+        commands = ["nvidia-smi"]
+
+    for cmd_name in commands:
         try:
             proc = subprocess.run(
                 [cmd_name],
@@ -443,6 +449,16 @@ def collect_amd_gpu_telemetry() -> dict:
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
+    hardware_root = REPO_ROOT / "docs" / "hardware"
+    evidence_paths = [
+        p.relative_to(REPO_ROOT).as_posix()
+        for p in sorted(hardware_root.glob("*/evidence/*/training_summary.md"))
+    ]
+    evidence_paths.append(
+        "docs/archive/event_evidence/training_runs/"
+        "qwen3_4b_grpo_lora_accelerated/completion_evidence.md"
+    )
+
     return {
         "status": "unavailable",
         "available": False,
@@ -451,11 +467,7 @@ def collect_amd_gpu_telemetry() -> dict:
             "GPU telemetry command unavailable in this environment; "
             "see committed optional GPU evidence files."
         ),
-        "committed_evidence_paths": [
-            "docs/evidence/amd_qwen3_grpo_run/training_summary.md",
-            "docs/evidence/amd_mi300x_enterprise_gnn_v2_run/training_summary.md",
-            "training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/completion_evidence.md",
-        ],
+        "committed_evidence_paths": evidence_paths,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -563,7 +575,7 @@ def build_performance_table(
     gnn_training: dict,
     gnn_latency: dict,
     qwen: dict,
-    amd_gpu: dict,
+    gpu_telemetry: dict,
     rfdetr: dict,
 ) -> str:
     # GNN training values
@@ -602,10 +614,10 @@ def build_performance_table(
         qwen_latency_str = "unavailable"
 
     # Optional GPU runtime
-    if amd_gpu.get("available"):
-        amd_evidence_str = f"Live telemetry captured via `{amd_gpu.get('command_used')}`"
+    if gpu_telemetry.get("available"):
+        gpu_evidence_str = f"Live telemetry captured via `{gpu_telemetry.get('command_used')}`"
     else:
-        amd_evidence_str = "Optional accelerator telemetry captured in committed training evidence"
+        gpu_evidence_str = "Optional accelerator telemetry captured in committed training evidence"
 
     # RF-DETR detector — honest claim based on which metrics are valid
     if rfdetr.get("status") == "eval_report_present":
@@ -662,7 +674,7 @@ def build_performance_table(
         ("Alignment", "LoRA rank 16 + GRPO/vERL (32/32 steps)"),
         ("Qwen tokens", qwen_tokens_str),
         ("Qwen latency", qwen_latency_str),
-        ("GPU runtime evidence", amd_evidence_str),
+        ("GPU runtime evidence", gpu_evidence_str),
         ("Detector metrics", detector_str),
     ]
 
@@ -684,7 +696,7 @@ def write_markdown_report(
     latency = all_sections.get("gnn_v2_inference_latency", {})
     training_bench = all_sections.get("gnn_training_benchmark", {})
     qwen = all_sections.get("qwen_latency", {})
-    amd = all_sections.get("amd_gpu_telemetry", {})
+    gpu_telemetry = all_sections.get("gpu_telemetry", {})
     rfdetr = all_sections.get("rfdetr_evidence", {})
 
     lines = [
@@ -755,19 +767,19 @@ def write_markdown_report(
 
     lines += [
         "\n## E. Optional GPU telemetry\n",
-        f"- Available: {amd.get('available', False)}\n",
-        f"- Command used: {amd.get('command_used', 'N/A')}\n",
-        f"- Timestamp: {amd.get('timestamp', 'N/A')}\n",
+        f"- Available: {gpu_telemetry.get('available', False)}\n",
+        f"- Command used: {gpu_telemetry.get('command_used', 'N/A')}\n",
+        f"- Timestamp: {gpu_telemetry.get('timestamp', 'N/A')}\n",
     ]
-    if amd.get("output_snippet"):
+    if gpu_telemetry.get("output_snippet"):
         lines += [
             "- Output snippet:\n",
             "```\n",
-            amd.get("output_snippet", "") + "\n",
+            gpu_telemetry.get("output_snippet", "") + "\n",
             "```\n",
         ]
     else:
-        lines.append(f"- Note: {amd.get('note', '')}\n")
+        lines.append(f"- Note: {gpu_telemetry.get('note', '')}\n")
 
     lines += [
         "\n## F. RF-DETR Evidence\n",
@@ -864,7 +876,7 @@ def main() -> None:
     gnn_latency = collect_gnn_v2_inference_latency(num_runs=3)
     training_bench = collect_gnn_training_benchmark(run_it=args.run_training_benchmark)
     qwen = collect_qwen_latency()
-    amd_gpu = collect_amd_gpu_telemetry()
+    gpu_telemetry = collect_gpu_telemetry()
     rfdetr = collect_rfdetr_evidence()
 
     all_sections = {
@@ -873,7 +885,7 @@ def main() -> None:
         "gnn_v2_inference_latency": gnn_latency,
         "gnn_training_benchmark": training_bench,
         "qwen_latency": qwen,
-        "amd_gpu_telemetry": amd_gpu,
+        "gpu_telemetry": gpu_telemetry,
         "rfdetr_evidence": rfdetr,
     }
 
@@ -881,7 +893,7 @@ def main() -> None:
         gnn_training=gnn_training,
         gnn_latency=gnn_latency,
         qwen=qwen,
-        amd_gpu=amd_gpu,
+        gpu_telemetry=gpu_telemetry,
         rfdetr=rfdetr,
     )
     all_sections["performance_markdown_table"] = performance_table
@@ -899,4 +911,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

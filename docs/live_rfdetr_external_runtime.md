@@ -66,11 +66,9 @@ Check the detector runtime:
 python scripts/check_rfdetr_runtime.py
 ```
 
-Start Streamlit while capturing the current detector/base shell Python:
-
-```bash
-scripts/amd_rocm/start_streamlit_with_external_rfdetr.sh
-```
+Start Streamlit while capturing the current detector/base shell Python, or use
+an optional hardware helper under `scripts/` if your runtime profile provides
+one.
 
 Optionally run an image-level check:
 

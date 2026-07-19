@@ -74,7 +74,7 @@ trainer:
   test_freq:          50
   val_before_train:   true
 
-# AMD GPU (ROCm) notes:
-#   - Install torch with ROCm wheel: pip install torch --index-url https://download.pytorch.org/whl/rocm6.0
-#   - Set HSA_OVERRIDE_GFX_VERSION if needed for your GPU generation
-#   - FSDP is preferred over DeepSpeed for ROCm stability
+# accelerated GPU runtime notes:
+#   - Install the torch wheel recommended by your accelerator runtime provider
+#   - Set hardware-specific environment overrides if needed for your GPU generation
+#   - FSDP is preferred over DeepSpeed for accelerator stability

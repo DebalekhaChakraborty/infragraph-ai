@@ -24,4 +24,4 @@ Key runtime notes:
 - agent.num_workers reduced to 1 for single-GPU batch chunking stability
 
 Primary summary:
-training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/training_summary.md
+docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated/training_summary.md

@@ -83,8 +83,6 @@ CURATED_INCLUDE_PREFIXES = {
     "scripts/train_qwen_sop_lora.py",
     "scripts/train_rfdetr_diagram_detector.py",
     "scripts/train_topology_rca_model.py",
-    "scripts/train_v2_rocm_nms_patch.py",
-    "scripts/train_v2_rocm_safe.py",
     "scripts/validate_rca_outputs.py",
     "scripts/validate_remediation_outputs.py",
     "scripts/inspect_remediation_quality.py",
@@ -93,15 +91,6 @@ CURATED_INCLUDE_PREFIXES = {
     "scripts/build_sop_grounded_remediation_training_data.py",
     "scripts/expand_sop_grounded_qwen_training_data.py",
 
-    # Optional GPU / Qwen execution path, excluding S3 upload/offload utilities
-    "scripts/amd_rocm/bootstrap_grpo_env.sh",
-    "scripts/amd_rocm/bootstrap_rca_gnn_env.sh",
-    "scripts/amd_rocm/generate_qwen_sop_remediation_after_reset.sh",
-    "scripts/amd_rocm/patch_verl_runtime_for_rocm.sh",
-    "scripts/amd_rocm/run_qwen3_grpo_success_path.sh",
-    "scripts/amd_rocm/start_qwen_sop_lora_vllm.sh",
-    "scripts/amd_rocm/start_streamlit_with_external_rfdetr.sh",
-
     # Runbook/SOP knowledge base used for RAG grounding
     "assets/kb/runbooks/",
     "assets/kb/sops/",
@@ -109,15 +98,7 @@ CURATED_INCLUDE_PREFIXES = {
 
     # Evidence documents and reports
     "docs/evidence/performance_metrics/",
-    "docs/evidence/amd_mi300x_enterprise_gnn_v2_run/",
-    "docs/evidence/amd_qwen3_grpo_run/README.md",
-    "docs/evidence/amd_qwen3_grpo_run/training_summary.md",
-    "docs/evidence/amd_qwen3_grpo_run/completion_evidence.md",
-    "docs/evidence/amd_qwen3_grpo_run/live_lora_vllm_verification.md",
-    "docs/evidence/amd_qwen3_grpo_run/lora_train_meta.json",
-    "docs/evidence/amd_qwen3_grpo_run/fsdp_config.json",
-    "docs/evidence/amd_qwen3_grpo_run/torch_runtime.txt",
-    "docs/evidence/amd_qwen3_grpo_run/python_version.txt",
+    "docs/hardware/",
 
     # Technical documentation
     "docs/ai_training_and_remediation_story.md",
@@ -131,7 +112,6 @@ CURATED_INCLUDE_PREFIXES = {
     "docs/qwen_sop_lora_training.md",
     "docs/remediation_pipeline.md",
     "docs/rfdetr_v3_detector.md",
-    "docs/hardware/rocm/run_qwen_vllm.md",
     "docs/sop_kb_rag_remediation.md",
     "docs/topology_rca_pipeline.md",
 
@@ -172,7 +152,7 @@ CURATED_INCLUDE_PREFIXES = {
 
     # GRPO training/eval proof
     "training/verl_grpo/reward_eval_report.json",
-    "training/verl_grpo/runs/qwen3_4b_grpo_lora_amd/completion_evidence.md",
+    "docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated/completion_evidence.md",
 }
 
 ALWAYS_EXCLUDE_PREFIXES = {
@@ -196,7 +176,7 @@ ALWAYS_EXCLUDE_PREFIXES = {
     "data/qwen_sop_grounded_expanded/previews/",
     "reports/rfdetr_runtime_evidence/annotated/",
     "reports/rfdetr_runtime_evidence/predictions/",
-    "docs/archive/legacy_cloud_offload/",
+    "docs/archive/event_evidence/legacy_cloud_offload/",
 }
 
 ALWAYS_EXCLUDE_FILE_PATTERNS = {
@@ -506,8 +486,7 @@ def build_markdown() -> Path:
         ]),
         ("Qwen / GRPO / Optional GPU Runtime", [
             "training/verl_grpo/",
-            "scripts/amd_rocm/",
-            "docs/evidence/amd_qwen3_grpo_run/",
+            "docs/hardware/",
             "model_artifacts/qwen3_grpo_lora_adapter/",
             "training/verl_grpo/reward_eval_report.json",
         ]),
@@ -586,7 +565,7 @@ def markdown_to_html(md_path: Path) -> Path:
         ".badge{display:inline-block;border:1px solid rgba(255,255,255,.32);border-radius:999px;padding:4px 10px;font-size:9px;font-weight:800;color:#ffffff;background:rgba(255,255,255,.08);}",
         ".badge.core{border-color:#fecaca;color:#fecaca;}",
         ".badge.train{border-color:#93c5fd;color:#bfdbfe;}",
-        ".badge.amd{border-color:#fca5a5;color:#fee2e2;}",
+        ".badge.gpu{border-color:#fca5a5;color:#fee2e2;}",
         ".badge.gnn{border-color:#86efac;color:#dcfce7;}",
         ".badge.qwen{border-color:#93c5fd;color:#dbeafe;}",
         ".badge.gov{border-color:#86efac;color:#bbf7d0;}",
@@ -632,7 +611,7 @@ InfraGraph AI | Curated Code Appendix | {footer_repo_link}
   <div class="badge-row">
     <span class="badge core">Core Code</span>
     <span class="badge train">Training &amp; Evaluation</span>
-    <span class="badge amd">GPU Runtime Evidence</span>
+    <span class="badge gpu">GPU Runtime Evidence</span>
     <span class="badge gnn">GNN RCA</span>
     <span class="badge qwen">Qwen/vLLM Remediation</span>
     <span class="badge gov">Governance</span>
@@ -745,4 +724,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

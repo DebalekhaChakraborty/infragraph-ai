@@ -3,7 +3,7 @@ find_lora_adapter_artifacts.py — Search a vERL run directory for LoRA adapter 
 
 Usage:
     python training/verl_grpo/find_lora_adapter_artifacts.py \\
-        --run-dir training/verl_grpo/runs/qwen3_4b_grpo_lora_amd
+        --run-dir docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated
 
 Prints a table of every adapter-related file found and suggests the
 INFRAGRAPH_LORA_ADAPTER_PATH environment variable if a usable adapter
@@ -101,7 +101,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--run-dir",
-        default="training/verl_grpo/runs/qwen3_4b_grpo_lora_amd",
+        default="docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated",
         help="Path to the vERL run/output directory (default: %(default)s)",
     )
     args = parser.parse_args()

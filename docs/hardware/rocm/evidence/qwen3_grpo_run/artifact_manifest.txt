@@ -1,0 +1,2 @@
+docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated/completion_evidence.md
+docs/archive/event_evidence/training_runs/qwen3_4b_grpo_lora_accelerated/training_summary.md

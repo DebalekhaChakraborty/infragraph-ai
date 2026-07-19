@@ -8,7 +8,7 @@ cd "$ROOT_DIR"
 PYTHON="${PYTHON:-python}"
 
 # ── Configuration ─────────────────────────────────────────────────────────────
-RUN_DIR="${RUN_DIR:-/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved}"
+RUN_DIR="${RUN_DIR:-/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_accelerated_saved}"
 ADAPTER_DIR="${ADAPTER_DIR:-/tmp/infragraph_qwen3_grpo_lora_adapter}"
 MODEL_ID="${MODEL_ID:-Qwen/Qwen3-4B}"
 LORA_NAME="${LORA_NAME:-infragraph}"
@@ -139,4 +139,3 @@ echo "WARNING: Do not commit RUN_DIR or ADAPTER_DIR artifacts to Git."
 echo "  RUN_DIR     : $RUN_DIR"
 echo "  ADAPTER_DIR : $ADAPTER_DIR"
 echo "------------------------------------------------------------"
-

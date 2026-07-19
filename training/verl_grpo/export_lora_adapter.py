@@ -16,7 +16,7 @@ adapter files.
 
 Usage:
     python training/verl_grpo/export_lora_adapter.py \\
-        --run-dir  /tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved \\
+        --run-dir  /tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_accelerated_saved \\
         --base-model Qwen/Qwen3-4B \\
         --output-dir /tmp/infragraph_qwen3_grpo_lora_adapter
 
@@ -292,7 +292,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--run-dir",
-        default="/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_amd_saved",
+        default="/tmp/infragraph_grpo_runs/qwen3_4b_grpo_lora_accelerated_saved",
         help="vERL run/output directory (default: %(default)s)",
     )
     parser.add_argument(
