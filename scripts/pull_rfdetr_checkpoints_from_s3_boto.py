@@ -11,7 +11,7 @@ except ImportError:
     print("Install with: pip install boto3")
     sys.exit(1)
 
-DEFAULT_S3_PREFIX = "s3://my-hackathon/infragraph-ai/model_artifacts/rfdetr_v3"
+DEFAULT_S3_PREFIX = "s3://infragraph-artifacts/infragraph-ai/model_artifacts/rfdetr_v3"
 DEFAULT_LOCAL_DIR = "/workspace/shared/infragraph-ai/model_artifacts/rfdetr_v3/model"
 
 FILES = [

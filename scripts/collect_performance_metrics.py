@@ -1,22 +1,22 @@
-"""collect_final_submission_metrics.py
+"""collect_performance_metrics.py
 
-Collect Slide-4 style evidence for the InfraGraph AI hackathon submission.
+Collect performance evidence for InfraGraph AI.
 
 Gathers:
   A. GNN V2 training evidence (from training_report.json)
   B. GNN V2 inference latency (3 timed runs)
   C. Optional GNN training benchmark (--run-training-benchmark flag)
   D. Qwen/vLLM latency (live endpoint or committed GRPO evidence)
-  E. AMD GPU telemetry (amd-smi / rocm-smi)
+  E. Optional GPU telemetry (amd-smi / rocm-smi)
   F. RF-DETR evaluation evidence (from eval report if present)
-  G. Slide-4 summary markdown table
+  G. performance summary markdown table
 
 Usage:
-    python scripts/collect_final_submission_metrics.py [--run-training-benchmark]
+    python scripts/collect_performance_metrics.py [--run-training-benchmark]
 
-Outputs to: docs/evidence/final_submission_metrics/
-  - final_submission_metrics.json
-  - final_submission_metrics.md
+Outputs to: docs/evidence/performance_metrics/
+  - performance_metrics.json
+  - performance_metrics.md
 """
 from __future__ import annotations
 
@@ -52,7 +52,7 @@ QWEN_EVIDENCE_FILE = (
     / "qwen3_4b_grpo_lora_amd"
     / "completion_evidence.md"
 )
-OUT_DIR = REPO_ROOT / "docs" / "evidence" / "final_submission_metrics"
+OUT_DIR = REPO_ROOT / "docs" / "evidence" / "performance_metrics"
 INFERENCE_SCRIPT = REPO_ROOT / "scripts" / "run_enterprise_gnn_v2_inference.py"
 TRAINING_SCRIPT = REPO_ROOT / "scripts" / "train_enterprise_gnn_v2_rca.py"
 
@@ -401,11 +401,11 @@ def collect_qwen_latency() -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Section E: AMD GPU telemetry
+# Section E: Optional GPU telemetry
 # ---------------------------------------------------------------------------
 
 def collect_amd_gpu_telemetry() -> dict:
-    print("  [E] Collecting AMD GPU telemetry ...")
+    print("  [E] Collecting Optional GPU telemetry ...")
 
     for cmd_name in ("amd-smi", "rocm-smi"):
         try:
@@ -431,7 +431,7 @@ def collect_amd_gpu_telemetry() -> dict:
                 "status": "timeout",
                 "available": False,
                 "command_used": cmd_name,
-                "note": "AMD telemetry command timed out.",
+                "note": "GPU telemetry command timed out.",
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
         except Exception as exc:
@@ -448,8 +448,8 @@ def collect_amd_gpu_telemetry() -> dict:
         "available": False,
         "command_used": None,
         "note": (
-            "AMD telemetry command unavailable in this environment; "
-            "see committed AMD evidence files."
+            "GPU telemetry command unavailable in this environment; "
+            "see committed optional GPU evidence files."
         ),
         "committed_evidence_paths": [
             "docs/evidence/amd_qwen3_grpo_run/training_summary.md",
@@ -512,7 +512,7 @@ def collect_rfdetr_evidence() -> dict:
         else:
             claim_guidance = (
                 "No usable metrics — strict accuracy not claimed. "
-                "Run eval on AMD/ROCm env with rfdetr installed."
+                "Run eval in an environment with RF-DETR dependencies installed."
             )
 
         return {
@@ -544,7 +544,7 @@ def collect_rfdetr_evidence() -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Section G: Slide-4 summary table
+# Section G: Performance Summary Table
 # ---------------------------------------------------------------------------
 
 def _safe_fmt_float(v: object, fmt: str = ".1f") -> str:
@@ -559,7 +559,7 @@ def _safe_fmt_float(v: object, fmt: str = ".1f") -> str:
         return str(v)
 
 
-def build_slide4_table(
+def build_performance_table(
     gnn_training: dict,
     gnn_latency: dict,
     qwen: dict,
@@ -601,11 +601,11 @@ def build_slide4_table(
         qwen_tokens_str = "not measured live"
         qwen_latency_str = "unavailable"
 
-    # AMD GPU
+    # Optional GPU runtime
     if amd_gpu.get("available"):
         amd_evidence_str = f"Live telemetry captured via `{amd_gpu.get('command_used')}`"
     else:
-        amd_evidence_str = "MI300X / ROCm — GPU 100% utilization, VRAM ~42%, Power ~278W (training evidence)"
+        amd_evidence_str = "Optional accelerator telemetry captured in committed training evidence"
 
     # RF-DETR detector — honest claim based on which metrics are valid
     if rfdetr.get("status") == "eval_report_present":
@@ -662,7 +662,7 @@ def build_slide4_table(
         ("Alignment", "LoRA rank 16 + GRPO/vERL (32/32 steps)"),
         ("Qwen tokens", qwen_tokens_str),
         ("Qwen latency", qwen_latency_str),
-        ("AMD GPU evidence", amd_evidence_str),
+        ("GPU runtime evidence", amd_evidence_str),
         ("Detector metrics", detector_str),
     ]
 
@@ -678,7 +678,7 @@ def build_slide4_table(
 def write_markdown_report(
     out_dir: Path,
     all_sections: dict,
-    slide4_table: str,
+    performance_table: str,
 ) -> None:
     gnn = all_sections.get("gnn_v2_training", {})
     latency = all_sections.get("gnn_v2_inference_latency", {})
@@ -688,10 +688,10 @@ def write_markdown_report(
     rfdetr = all_sections.get("rfdetr_evidence", {})
 
     lines = [
-        "# InfraGraph AI — Final Submission Metrics\n",
+        "# InfraGraph AI — performance metrics\n",
         f"Generated: {all_sections.get('generated_at', 'N/A')}\n",
-        "\n## Slide-4 Summary Table\n",
-        slide4_table,
+        "\n## Performance Summary Table\n",
+        performance_table,
         "\n---\n",
         "\n## A. GNN V2 Training Evidence\n",
         f"- Source: `{gnn.get('source_file', GNN_V2_TRAINING_REPORT)}`\n",
@@ -754,7 +754,7 @@ def write_markdown_report(
         ]
 
     lines += [
-        "\n## E. AMD GPU Telemetry\n",
+        "\n## E. Optional GPU telemetry\n",
         f"- Available: {amd.get('available', False)}\n",
         f"- Command used: {amd.get('command_used', 'N/A')}\n",
         f"- Timestamp: {amd.get('timestamp', 'N/A')}\n",
@@ -835,7 +835,7 @@ def write_markdown_report(
     else:
         lines.append(f"- Note: {rfdetr.get('note', '')}\n")
 
-    md_path = out_dir / "final_submission_metrics.md"
+    md_path = out_dir / "performance_metrics.md"
     md_path.write_text("".join(lines), encoding="utf-8")
     print(f"  Markdown report written to {md_path}")
 
@@ -846,7 +846,7 @@ def write_markdown_report(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Collect Slide-4 style evidence for InfraGraph AI hackathon submission."
+        description="Collect performance evidence for InfraGraph AI."
     )
     parser.add_argument(
         "--run-training-benchmark",
@@ -858,7 +858,7 @@ def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     generated_at = datetime.now(timezone.utc).isoformat()
 
-    print("Collecting final submission metrics ...")
+    print("Collecting performance metrics ...")
 
     gnn_training = collect_gnn_v2_training_evidence()
     gnn_latency = collect_gnn_v2_inference_latency(num_runs=3)
@@ -877,25 +877,26 @@ def main() -> None:
         "rfdetr_evidence": rfdetr,
     }
 
-    slide4_table = build_slide4_table(
+    performance_table = build_performance_table(
         gnn_training=gnn_training,
         gnn_latency=gnn_latency,
         qwen=qwen,
         amd_gpu=amd_gpu,
         rfdetr=rfdetr,
     )
-    all_sections["slide4_markdown_table"] = slide4_table
+    all_sections["performance_markdown_table"] = performance_table
 
-    json_path = OUT_DIR / "final_submission_metrics.json"
+    json_path = OUT_DIR / "performance_metrics.json"
     json_path.write_text(json.dumps(all_sections, indent=2), encoding="utf-8")
     print(f"  JSON report written to {json_path}")
 
-    write_markdown_report(OUT_DIR, all_sections, slide4_table)
+    write_markdown_report(OUT_DIR, all_sections, performance_table)
 
     print("\nDone. Outputs:")
     print(f"  {json_path}")
-    print(f"  {OUT_DIR / 'final_submission_metrics.md'}")
+    print(f"  {OUT_DIR / 'performance_metrics.md'}")
 
 
 if __name__ == "__main__":
     main()
+

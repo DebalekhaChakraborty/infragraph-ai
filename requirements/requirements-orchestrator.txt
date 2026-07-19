@@ -3,16 +3,16 @@
 # ============================================================
 # Purpose:
 #   Run the Agentic Ops Orchestrator tab (src/agents/) and the
-#   full InfraGraph AI Streamlit demo on the AMD MI300X / vLLM node.
+#   full InfraGraph AI Streamlit demo on the GPU/vLLM node.
 #
-# IMPORTANT — what NOT to install from this file on AMD ROCm:
-#   - torch         → already on the node as the ROCm wheel
-#   - vllm          → already on the node as the ROCm wheel
+# IMPORTANT — what NOT to install from this file On GPU-specific runtimes:
+#   - torch         → already on the node as the accelerator-specific wheel
+#   - vllm          → already on the node as the accelerator-specific wheel
 #   - transformers  → already from the training env
 #   - peft          → already from the training env
 #   - verl          → already from the training env
 #
-# Install order on AMD ROCm Jupyter (after torch/vLLM are ready):
+# Install order On GPU-specific runtimes Jupyter (after torch/vLLM are ready):
 #
 #   pip install -r requirements/requirements-orchestrator.txt
 #
@@ -51,17 +51,17 @@ matplotlib>=3.7.0
 
 # --- Vector memory / SOP-grounded RAG retrieval --------------
 # Used by Graph Copilot and remediation context builder.
-# NOTE: sentence-transformers will try to pull torch — if ROCm
+# NOTE: sentence-transformers will try to pull torch — if accelerator-specific runtime
 # torch is already installed, it will reuse it without reinstalling.
 chromadb>=0.5.0
 sentence-transformers>=3.0.0
 
 # --- Enterprise GNN RCA inference ----------------------------
 # torch_geometric needs a matching torch version.
-# On AMD ROCm, install it AFTER torch is confirmed working:
+# On GPU-specific runtimes, install it AFTER torch is confirmed working:
 #   pip install torch_geometric>=2.5.0
 # It is listed here as a comment so the orchestrator install
-# doesn't accidentally clobber the ROCm torch.
+# doesn't accidentally clobber the accelerator-specific torch.
 # torch_geometric>=2.5.0   # install separately — see bootstrap_rca_gnn_env.sh
 
 # --- Config / serialisation ----------------------------------
@@ -71,3 +71,5 @@ protobuf<7.0.0
 # --- Schema validation (Agentic Ops Orchestrator) ------------
 # AgentRun, AgentStep, ApprovalGate, TicketDraft in src/agents/schemas.py
 pydantic>=2.0.0
+
+

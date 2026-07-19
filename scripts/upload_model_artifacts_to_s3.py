@@ -3,7 +3,7 @@
 Upload infragraph-ai/model_artifacts to S3 using boto3.
 
 Target:
-  s3://my-hackathons/infragraph-ai/model_artifacts
+  s3://infragraph-artifacts/infragraph-ai/model_artifacts
 
 Usage:
   python scripts/upload_model_artifacts_to_s3.py
@@ -11,7 +11,7 @@ Usage:
 Optional:
   python scripts/upload_model_artifacts_to_s3.py --dry-run
   python scripts/upload_model_artifacts_to_s3.py --local-dir model_artifacts
-  python scripts/upload_model_artifacts_to_s3.py --bucket my-hackathons --prefix infragraph-ai/model_artifacts
+  python scripts/upload_model_artifacts_to_s3.py --bucket infragraph-artifacts --prefix infragraph-ai/model_artifacts
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ from botocore.exceptions import ClientError, NoCredentialsError
 from boto3.s3.transfer import TransferConfig
 
 
-DEFAULT_BUCKET = "my-hackathons"
+DEFAULT_BUCKET = "infragraph-artifacts"
 DEFAULT_PREFIX = "infragraph-ai/model_artifacts"
 
 

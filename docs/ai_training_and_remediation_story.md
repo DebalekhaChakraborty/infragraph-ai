@@ -10,7 +10,7 @@ InfraGraph AI converts static infrastructure diagrams into graph memory, simulat
 4. Enterprise GNN RCA performs cross-diagram graph reasoning when a trained result file exists for the selected scenario.
 5. Vector memory indexes graph evidence, incident timelines, RCA outputs, GNN rankings, and AI resolution plans in ChromaDB.
 6. Qwen/vLLM generates remediation plans from RCA context plus retrieved graph evidence.
-7. The `training/verl_grpo` scaffold prepares sample LoRA + GRPO/vERL alignment records for Qwen3 on AMD GPUs.
+7. The `training/verl_grpo` scaffold prepares sample LoRA + GRPO/vERL alignment records for Qwen3 in a GPU-enabled training environment.
 
 ## Qwen Remediation
 
@@ -68,6 +68,6 @@ This is not a completed full-scale training run. It is a runnable preparation la
 - CMDB and ITSM integration.
 - Real customer topology validation.
 
-## Exact Hackathon Wording
+## Product-Safe Summary
 
-“InfraGraph AI turns static infrastructure diagrams into graph memory. Topology RCA explains a single diagram. Enterprise GNN RCA reasons across stitched diagrams. Vector memory retrieves evidence, and a Qwen remediation agent produces safe, graph-grounded resolution plans. The LoRA + GRPO/vERL package shows how those RCA records become alignment data for AMD GPU fine-tuning.”
+InfraGraph AI turns static infrastructure diagrams into graph memory. Topology RCA explains a single diagram. Enterprise GNN RCA reasons across stitched diagrams. Vector memory retrieves evidence, and a Qwen remediation agent produces safe, graph-grounded resolution plans. The LoRA + GRPO/vERL package shows how those RCA records can become alignment data for GPU-enabled remediation model training.

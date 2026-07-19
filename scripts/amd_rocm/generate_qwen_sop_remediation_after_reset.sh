@@ -142,3 +142,4 @@ echo "  export INFRAGRAPH_QWEN_BASE_URL=\"${INFRAGRAPH_QWEN_BASE_URL}\""
 echo "  export INFRAGRAPH_QWEN_MODEL=\"${INFRAGRAPH_QWEN_MODEL}\""
 echo "  export INFRAGRAPH_QWEN_MAX_TOKENS=\"${INFRAGRAPH_QWEN_MAX_TOKENS}\""
 echo "  streamlit run app/streamlit_app.py"
+

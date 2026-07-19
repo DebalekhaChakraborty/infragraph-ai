@@ -70,7 +70,7 @@ python scripts/train_rfdetr_diagram_detector.py \
   --epochs 25
 ```
 
-AMD/Jupyter-friendly options:
+GPU/Jupyter-friendly options:
 
 ```bash
 python scripts/train_rfdetr_diagram_detector.py \

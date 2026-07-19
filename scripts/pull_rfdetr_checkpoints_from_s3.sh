@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BUCKET_PREFIX="${1:-s3://my-hackathon/infragraph-ai/model_artifacts/rfdetr_v3}"
+BUCKET_PREFIX="${1:-s3://infragraph-artifacts/infragraph-ai/model_artifacts/rfdetr_v3}"
 REPO_ROOT="${REPO_ROOT:-/workspace/shared/infragraph-ai}"
 LOCAL_DIR="${REPO_ROOT}/model_artifacts/rfdetr_v3/model"
 

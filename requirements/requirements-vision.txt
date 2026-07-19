@@ -9,8 +9,8 @@
 #   pip install -r requirements-vision.txt
 #
 # PyTorch note:
-#   On AMD ROCm, do NOT install torch from PyPI.
-#   Use: pip install torch --index-url https://download.pytorch.org/whl/rocm6.0
+#   On GPU-specific runtimes, do NOT install torch from PyPI.
+#   Install the torch wheel recommended by your accelerator vendor.
 #   On CPU/NVIDIA: pip install torch (or use the appropriate wheel index).
 # ============================================================
 
@@ -24,3 +24,5 @@ ultralytics>=8.0.0
 
 # --- PyTorch (CPU or GPU — see note above) -------------------
 # torch>=2.0.0
+
+

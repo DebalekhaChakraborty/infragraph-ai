@@ -7,7 +7,7 @@
 #   Vision / detector:  pip install -r requirements-vision.txt
 #   Vector memory:      pip install -r requirements-rag.txt
 #   Dataset / training: pip install -r requirements-training.txt
-#   AMD ROCm training:  bash scripts/amd_rocm/bootstrap_grpo_env.sh
+#   Accelerated training: use the hardware-specific bootstrap notes for your environment.
 # ============================================================
 
 # --- Streamlit UI --------------------------------------------
@@ -37,3 +37,5 @@ joblib>=1.3.0
 
 # --- Utilities -----------------------------------------------
 pyyaml>=6.0
+
+

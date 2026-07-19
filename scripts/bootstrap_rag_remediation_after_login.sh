@@ -16,7 +16,7 @@
 #   PYTHON                       Python interpreter (default: python)
 #
 # For the full Qwen LoRA reset flow (SOP-grounded adapter), see instead:
-#   docs/amd_rocm_qwen_sop_lora_reset.md
+#   docs/hardware/rocm/qwen_sop_lora_reset.md
 #   bash scripts/amd_rocm/start_qwen_sop_lora_vllm.sh
 #   bash scripts/amd_rocm/generate_qwen_sop_remediation_after_reset.sh
 

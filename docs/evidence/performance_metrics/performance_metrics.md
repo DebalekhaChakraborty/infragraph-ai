@@ -1,7 +1,7 @@
-# InfraGraph AI — Final Submission Metrics
+# InfraGraph AI — Performance Metrics
 Generated: 2026-06-16T12:05:27.156917+00:00
 
-## Slide-4 Summary Table
+## Performance Summary Table
 | Category | Evidence |
 |----------|----------|
 | Diagram model | RF-DETR-supported detector + verified fallback + vision connector extraction |
@@ -16,7 +16,7 @@ Generated: 2026-06-16T12:05:27.156917+00:00
 | Alignment | LoRA rank 16 + GRPO/vERL (32/32 steps) |
 | Qwen tokens | 655 (api_reported) |
 | Qwen latency | 3283 ms |
-| AMD GPU evidence | Live telemetry captured via `amd-smi` |
+| GPU runtime evidence | Live optional hardware telemetry captured via `amd-smi` |
 | Detector metrics | localization F1=1.0000 (boxes localized correctly; class mapping calibration pending — best shift: plus1) |
 
 ---
@@ -52,7 +52,7 @@ Generated: 2026-06-16T12:05:27.156917+00:00
 - Latency: 3283 ms
 - Tokens: 655 (api_reported)
 
-## E. AMD GPU Telemetry
+## E. Optional GPU Telemetry
 - Available: True
 - Command used: amd-smi
 - Timestamp: 2026-06-16T12:07:56.359668+00:00

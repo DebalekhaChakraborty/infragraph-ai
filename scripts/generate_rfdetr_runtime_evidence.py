@@ -357,7 +357,7 @@ def _write_markdown(evidence: dict, out_dir: Path) -> None:
         lines += [
             "\n## Note\n",
             "No successful inference runs in this environment. "
-            "Run on the AMD/ROCm machine with `rfdetr` installed.\n",
+            "Run in the target inference environment with `rfdetr` installed.\n",
         ]
 
     (out_dir / "rfdetr_runtime_evidence.md").write_text("".join(lines), encoding="utf-8")

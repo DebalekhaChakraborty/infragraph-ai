@@ -3,7 +3,7 @@ Stage 4 of InfraGraph AI: LLM explanation layer.
 
 Generates a human-readable RCA explanation from topology (heuristic) and GNN
 evidence.  Runs locally in --mode mock without any LLM, or calls an
-OpenAI-compatible vLLM endpoint (--mode vllm) when running on AMD Jupyter.
+OpenAI-compatible vLLM endpoint (--mode vllm) when a GPU serving endpoint is available.
 """
 
 import argparse
@@ -591,5 +591,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 

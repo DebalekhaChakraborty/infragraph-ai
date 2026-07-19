@@ -6,7 +6,7 @@ GNN RCA (Stage 3) and generates a human-readable incident report targeted at an
 L1/L2 operations team.
 
 The script runs locally in **mock mode** (no LLM required) and calls
-**Qwen via vLLM** when the AMD Jupyter environment is available.
+**Qwen via vLLM** when a GPU-enabled model-serving environment is available.
 
 ---
 
@@ -42,9 +42,9 @@ to develop, test, and iterate on the prompt structure and output format.
 
 ---
 
-## AMD Jupyter — vLLM mode
+## GPU Server — vLLM mode
 
-On the AMD GPU node, start a Qwen vLLM server first:
+On the GPU model-serving node, start a Qwen vLLM server first:
 
 ```bash
 # Start vLLM with Qwen3-4B (adjust GPU count / model as needed)

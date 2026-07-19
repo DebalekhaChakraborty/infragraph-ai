@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# bootstrap_rca_gnn_env.sh — Install InfraGraph RCA + GNN dependencies on AMD ROCm.
+# bootstrap_rca_gnn_env.sh — Install InfraGraph RCA + GNN dependencies on ROCm.
 #
 # Safe to re-run after an ephemeral Jupyter environment restart.
 # Does NOT reinstall or overwrite a working ROCm torch installation.
@@ -56,7 +56,7 @@ then
     echo
     echo "[ERROR] torch is missing or broken in this environment."
     echo "        Install ROCm-compatible torch first, then re-run this script."
-    echo "        Option A (AMD ROCm full stack):"
+    echo "        Option A (ROCm full stack):"
     echo "          bash scripts/amd_rocm/bootstrap_grpo_env.sh"
     echo "        Option B (platform image already provides torch — nothing to do):"
     echo "          Confirm with: $PYTHON -c 'import torch; print(torch.__version__)'"
@@ -89,3 +89,4 @@ echo
 echo "========================================================"
 echo " RCA / GNN environment ready."
 echo "========================================================"
+

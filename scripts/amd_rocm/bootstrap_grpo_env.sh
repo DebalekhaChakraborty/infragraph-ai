@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# bootstrap_grpo_env.sh — Install the AMD ROCm vERL/GRPO training stack.
+# bootstrap_grpo_env.sh — Install the ROCm vERL/GRPO training stack.
 #
 # PURPOSE: Environment setup for the old GRPO/vERL reinforcement learning
 # training path only. This installs torch (ROCm), vERL, vLLM, and related
@@ -11,7 +11,7 @@
 # For the current SOP-grounded LoRA serving and reset flow, see instead:
 #   bash scripts/amd_rocm/start_qwen_sop_lora_vllm.sh       (Terminal 1)
 #   bash scripts/amd_rocm/generate_qwen_sop_remediation_after_reset.sh  (Terminal 2)
-#   docs/amd_rocm_qwen_sop_lora_reset.md
+#   docs/hardware/rocm/qwen_sop_lora_reset.md
 #
 # Checks what is already present before touching anything.
 # Safe to re-run on an existing environment — will skip already-installed
@@ -27,7 +27,7 @@ set -euo pipefail
 PYTHON="${PYTHON:-python}"
 
 echo "========================================================"
-echo " InfraGraph AI — AMD ROCm GRPO environment bootstrap"
+echo " InfraGraph AI — Optional ROCm GRPO environment bootstrap"
 echo "========================================================"
 echo
 
@@ -59,7 +59,7 @@ fi
 echo
 
 # ── 3. Streamlit + version-pinned base deps ───────────────────────────────────
-# These pins are required on the AMD hackathon environment:
+# These pins are required on the GPU-enabled training environment:
 #   starlette<0.49.0  — compatibility with the installed uvicorn
 #   protobuf<7.0.0    — avoids binary incompatibility with torch/grpc
 #   numpy==2.2.6      — vLLM's numba dependency requires NumPy <= 2.2
@@ -75,7 +75,7 @@ echo "[4/7] Installing vERL training utilities ..."
   tensordict torchdata codetiming hydra-core omegaconf \
   ray pandas pyarrow datasets accelerate peft
 
-# Specific version range for transformers that is stable on the AMD hackathon env
+# Specific version range for transformers that is stable on the AMD training environment
 "$PYTHON" -m pip install --no-cache-dir \
   "transformers>=4.46.0,<4.57.0" \
   "peft>=0.14.0" \
@@ -177,7 +177,7 @@ echo "Bootstrap complete."
 echo
 echo "NOTE: This environment is for GRPO/vERL training only."
 echo "      For SOP-grounded LoRA serving (normal reset flow), see:"
-echo "        docs/amd_rocm_qwen_sop_lora_reset.md"
+echo "        docs/hardware/rocm/qwen_sop_lora_reset.md"
 echo
 echo "Next step — apply runtime patches (GRPO/vERL only):"
 echo "  bash scripts/amd_rocm/patch_verl_runtime_for_rocm.sh"
@@ -187,3 +187,4 @@ echo "  bash training/verl_grpo/train_qwen3_grpo.sh"
 echo
 echo "To launch a real training run:"
 echo "  INFRAGRAPH_RUN_REAL_VERL=1 bash training/verl_grpo/train_qwen3_grpo.sh"
+

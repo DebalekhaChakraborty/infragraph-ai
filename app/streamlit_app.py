@@ -264,10 +264,10 @@ _OPS_DEMO_PRESETS: dict = {
         "scenario_ids": [],
         "max_random_fillers": 0,
     },
-    "curated_pitch_pack": {
-        "label": "Curated pitch pack: multi-cluster enterprise incident",
+    "curated_enterprise_incident": {
+        "label": "Curated enterprise incident scenario",
         "description": (
-            "Repeatable final-demo mode. Guarantees the cross-diagram firewall RCA "
+            "Repeatable demo workflow. Includes a cross-diagram firewall RCA "
             "scenario and adds supporting WAN/app/database scenarios so correlation "
             "still produces multiple alert clusters."
         ),
@@ -7918,6 +7918,8 @@ def _tab_agentic_ops_orchestrator() -> None:  # noqa: C901
                     if _sid in _gf.stem:
                         _scenarios_with_gnn.add(_sid)
 
+    if st.session_state.get("ops_demo_story_mode") == "curated_pitch_pack":
+        st.session_state["ops_demo_story_mode"] = "curated_enterprise_incident"
     _demo_mode_key = st.session_state.get("ops_demo_story_mode", "random")
     _preset        = _OPS_DEMO_PRESETS.get(_demo_mode_key, _OPS_DEMO_PRESETS["random"])
     _ordered       = _select_ops_scenarios_for_demo(

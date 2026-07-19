@@ -19,7 +19,7 @@
 set -euo pipefail
 
 ADAPTER_DIR="${ADAPTER_DIR:-/tmp/infragraph_qwen3_grpo_lora_adapter}"
-S3_URI="${S3_URI:-s3://my-hackathons/infragraph-ai/model_artifacts/qwen3_grpo_lora_adapter/}"
+S3_URI="${S3_URI:-s3://infragraph-artifacts/infragraph-ai/model_artifacts/qwen3_grpo_lora_adapter/}"
 
 echo "============================================================"
 echo " InfraGraph LoRA Adapter — S3 Publish"
@@ -76,9 +76,10 @@ echo
 echo "============================================================"
 echo " To restore this adapter on a new machine:"
 echo "============================================================"
-echo "  aws s3 sync s3://my-hackathons/infragraph-ai/model_artifacts/qwen3_grpo_lora_adapter/ \\"
+echo "  aws s3 sync s3://infragraph-artifacts/infragraph-ai/model_artifacts/qwen3_grpo_lora_adapter/ \\"
 echo "    /tmp/infragraph_qwen3_grpo_lora_adapter/ --no-progress"
 echo
 echo "  See docs/evidence/amd_qwen3_grpo_run/s3_lora_adapter_restore.md"
 echo "  for the full restore + vLLM serving + Streamlit env var instructions."
 echo "============================================================"
+

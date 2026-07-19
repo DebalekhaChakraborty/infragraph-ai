@@ -4,8 +4,8 @@ import torchvision
 from ultralytics import YOLO
 
 # -------------------------------
-# ROCm / AMD workaround:
-# torchvision.ops.nms is failing on the CUDA/ROCm backend.
+# Accelerator workaround:
+# torchvision.ops.nms may be unavailable on some GPU backends.
 # Patch it so NMS runs on CPU, then returns indices to original device.
 # -------------------------------
 _original_nms = torchvision.ops.nms

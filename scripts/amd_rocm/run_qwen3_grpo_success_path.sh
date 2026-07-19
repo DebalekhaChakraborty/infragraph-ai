@@ -139,3 +139,4 @@ echo "WARNING: Do not commit RUN_DIR or ADAPTER_DIR artifacts to Git."
 echo "  RUN_DIR     : $RUN_DIR"
 echo "  ADAPTER_DIR : $ADAPTER_DIR"
 echo "------------------------------------------------------------"
+

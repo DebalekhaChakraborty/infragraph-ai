@@ -11,9 +11,9 @@
 #   pip install -r requirements.txt
 #   pip install -r requirements-training.txt
 #
-# This file does NOT include vERL, vLLM, Ray, or ROCm torch.
-# For the full AMD GRPO training stack:
-#   bash scripts/amd_rocm/bootstrap_grpo_env.sh
+# This file does NOT include vERL, vLLM, Ray, or accelerator-specific torch.
+# For a full accelerated GRPO training stack, use the hardware-specific
+# bootstrap notes for your environment.
 # ============================================================
 
 # --- Parquet / dataset serialisation -------------------------
@@ -37,8 +37,10 @@ hydra-core
 omegaconf
 
 # --- Transformer / LoRA utilities ----------------------------
-# Pinned to the range that was verified on the AMD training run.
+# Pinned to the range that was verified on the accelerated training run.
 # (pip freeze from successful run: transformers==4.57.0, peft==0.17.1, accelerate==1.10.1)
 transformers>=4.46.0,<4.58.0
 peft>=0.14.0
 accelerate>=1.0.0
+
+

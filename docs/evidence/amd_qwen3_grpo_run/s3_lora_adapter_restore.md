@@ -8,7 +8,7 @@
 > adapter.
 >
 > For the current SOP-grounded adapter and reset workflow, see:
-> `docs/amd_rocm_qwen_sop_lora_reset.md`
+> `docs/hardware/rocm/qwen_sop_lora_reset.md`
 
 The exported PEFT LoRA adapter is stored in S3, not in Git.
 Git stores code, evidence documents, and these restore instructions.
@@ -16,7 +16,7 @@ Git stores code, evidence documents, and these restore instructions.
 ## S3 adapter location
 
 ```
-s3://my-hackathons/infragraph-ai/model_artifacts/qwen3_grpo_lora_adapter/
+s3://infragraph-artifacts/infragraph-ai/model_artifacts/qwen3_grpo_lora_adapter/
 ```
 
 Contents:
@@ -30,7 +30,7 @@ Contents:
 ## Restore adapter locally
 
 ```bash
-aws s3 sync s3://my-hackathons/infragraph-ai/model_artifacts/qwen3_grpo_lora_adapter/ \
+aws s3 sync s3://infragraph-artifacts/infragraph-ai/model_artifacts/qwen3_grpo_lora_adapter/ \
     /tmp/infragraph_qwen3_grpo_lora_adapter/ --no-progress
 ```
 
@@ -46,7 +46,7 @@ scripts/amd_rocm/publish_lora_adapter_to_s3.sh
 
 > These settings are for the GRPO adapter. The SOP-grounded SFT adapter
 > requires `--max-model-len 8192` and `INFRAGRAPH_QWEN_MAX_TOKENS=1400`.
-> See `docs/amd_rocm_qwen_sop_lora_reset.md` for the current adapter.
+> See `docs/hardware/rocm/qwen_sop_lora_reset.md` for the current adapter.
 
 ```bash
 VLLM_USE_TRITON_FLASH_ATTN=0 \

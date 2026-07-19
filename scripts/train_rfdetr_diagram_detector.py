@@ -52,7 +52,7 @@ def write_notes(out_root, status, message):
             "",
             "Install options:",
             "- `pip install rfdetr`",
-            "- or follow the upstream RF-DETR installation instructions for your AMD/Jupyter environment.",
+            "- or follow the upstream RF-DETR installation instructions for your GPU/Jupyter environment.",
             "",
             "This script does not train YOLO as an alternate model.",
         ]),
@@ -147,7 +147,7 @@ def main():
             "RF-DETR is not installed. Install it in the active environment, then rerun this script.\n"
             "Suggested commands:\n"
             "  pip install rfdetr\n"
-            "  # or follow the upstream RF-DETR AMD/Jupyter setup instructions"
+            "  # or follow the upstream RF-DETR GPU/Jupyter setup instructions"
         )
         print(message)
         write_notes(out_root, "missing_dependency", message)
@@ -248,4 +248,3 @@ def main():
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

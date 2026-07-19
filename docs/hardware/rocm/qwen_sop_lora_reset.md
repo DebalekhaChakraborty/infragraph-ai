@@ -1,6 +1,8 @@
-# AMD ROCm — Qwen SOP-Grounded LoRA Reset Workflow
+# ROCm — Qwen SOP-Grounded LoRA Reset Workflow
 
-Post-reset procedure for serving the SOP-grounded SFT LoRA adapter and regenerating remediation outputs on AMD ROCm Jupyter.
+> Optional hardware-specific note. The default InfraGraph AI app does not require this runtime.
+
+Post-reset procedure for serving the SOP-grounded SFT LoRA adapter and regenerating remediation outputs on ROCm Jupyter.
 
 ---
 
@@ -10,7 +12,7 @@ Post-reset procedure for serving the SOP-grounded SFT LoRA adapter and regenerat
 
 - Trained with `training/verl_grpo/train_qwen3_grpo.sh` via vERL/GRPO reinforcement learning
 - Adapter exported to `/tmp/infragraph_qwen3_grpo_lora_adapter` (GRPO convention)
-- Published to S3: `s3://my-hackathons/infragraph-ai/model_artifacts/qwen3_grpo_lora_adapter/`
+- Published to S3: `s3://model-artifact-storage/infragraph-ai/model_artifacts/qwen3_grpo_lora_adapter/`
 - Served with `--max-model-len 2048` and `--gpu-memory-utilization 0.55` (GRPO adapter settings)
 - `INFRAGRAPH_QWEN_MAX_TOKENS=900` (GRPO adapter setting)
 - Evidence: `docs/evidence/amd_qwen3_grpo_run/`
@@ -131,7 +133,7 @@ https://<your-jupyter-host>/proxy/8501/
 | `INFRAGRAPH_VLLM_PORT` | `8000` | vLLM bind port |
 | `INFRAGRAPH_VLLM_GPU_MEMORY_UTILIZATION` | `0.75` | GPU memory fraction for vLLM |
 | `INFRAGRAPH_VLLM_MAX_MODEL_LEN` | `8192` | Context length. **Must be 8192 for SOP-grounded adapter** |
-| `VLLM_USE_TRITON_FLASH_ATTN` | `0` | Set to 0 on AMD ROCm to avoid triton flash attention issues |
+| `VLLM_USE_TRITON_FLASH_ATTN` | `0` | Set to 0 on ROCm to avoid triton flash attention issues |
 
 ### Why `INFRAGRAPH_QWEN_MODEL=infragraph`
 
@@ -156,7 +158,7 @@ When `INFRAGRAPH_USE_TMP_ADAPTER_SYMLINK=1` (default), the script creates:
 /tmp/infragraph_sop_grounded_lora -> model_artifacts/qwen_lora/infragraph_sop_grounded
 ```
 
-vLLM on some AMD ROCm setups requires the adapter path to be under `/tmp`. The symlink accommodates this without moving the actual adapter. Set `INFRAGRAPH_USE_TMP_ADAPTER_SYMLINK=0` to use the real path directly.
+vLLM on some ROCm setups requires the adapter path to be under `/tmp`. The symlink accommodates this without moving the actual adapter. Set `INFRAGRAPH_USE_TMP_ADAPTER_SYMLINK=0` to use the real path directly.
 
 ---
 
@@ -192,7 +194,7 @@ The fallback is silent in `--prefer-qwen` mode (logs the error but continues). U
 If the adapter was lost after a session reset:
 
 ```bash
-# On AMD ROCm machine — does not require vERL or GRPO
+# On ROCm machine — does not require vERL or GRPO
 python scripts/build_kb_index.py --reset
 python scripts/expand_sop_grounded_qwen_training_data.py --strict-kb --records-per-scenario 25
 python scripts/train_qwen_sop_lora.py --epochs 3 --bf16
@@ -214,3 +216,5 @@ bash scripts/amd_rocm/generate_qwen_sop_remediation_after_reset.sh  # Terminal 2
 - Do NOT use `--max-model-len 2048` with the SOP-grounded adapter
 - Do NOT set `INFRAGRAPH_QWEN_MAX_TOKENS=900` with the SOP-grounded adapter
 - Do NOT use the old GRPO adapter path `/tmp/infragraph_qwen3_grpo_lora_adapter` with the SOP-grounded scripts
+
+

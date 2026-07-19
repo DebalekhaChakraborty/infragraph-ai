@@ -1,6 +1,6 @@
 # AMD MI300X Enterprise GNN RCA V2 Run Evidence
 
-- Environment: AMD hackathon Jupyter / ROCm
+- Environment: GPU-enabled Jupyter / ROCm
 - GPU: AMD Instinct MI300X
 - Model: EnterpriseRcaTemporalRelGNN
 - Architecture: RelationAwareTemporalGraphSAGE

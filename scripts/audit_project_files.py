@@ -10,13 +10,13 @@ CORE_INCLUDE_PREFIXES = [
     "requirements/",
     "app/",
     "src/",
-    "scripts/collect_final_submission_metrics.py",
+    "scripts/collect_performance_metrics.py",
     "scripts/evaluate_rfdetr_v3_detector.py",
     "scripts/generate_rfdetr_runtime_evidence.py",
     "scripts/run_enterprise_gnn_v2_inference.py",
     "scripts/train_enterprise_gnn_v2_rca.py",
     "scripts/amd_rocm/",
-    "docs/evidence/final_submission_metrics/",
+    "docs/evidence/performance_metrics/",
     "docs/evidence/amd_qwen3_grpo_run/",
     "docs/evidence/amd_mi300x_enterprise_gnn_v2_run/",
     "reports/rfdetr_v3_eval/",
@@ -93,8 +93,8 @@ def main():
             pdf_exclude.append((rel, "non-text or unsupported", size_kb))
 
     out = []
-    out.append("# Submission File Audit\n")
-    out.append("## A. Core files to include in PDF\n")
+    out.append("# Project File Audit\n")
+    out.append("## A. Core files for reference appendix\n")
     for rel, size in core:
         out.append(f"- `{rel}` ({size:.1f} KB)")
 
@@ -107,9 +107,9 @@ def main():
         out.append(f"- `{rel}` ({size:.1f} KB) — {reason}")
 
     Path("dist").mkdir(exist_ok=True)
-    Path("dist/submission_file_audit.md").write_text("\n".join(out), encoding="utf-8")
+    Path("dist/project_file_audit.md").write_text("\n".join(out), encoding="utf-8")
 
-    print("Created: dist/submission_file_audit.md")
+    print("Created: dist/project_file_audit.md")
     print(f"Core include files: {len(core)}")
     print(f"Manual review files: {len(review)}")
     print(f"PDF excluded files: {len(pdf_exclude)}")

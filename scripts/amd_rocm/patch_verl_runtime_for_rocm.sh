@@ -4,14 +4,14 @@
 #
 # PURPOSE: vERL runtime patching for the old GRPO/vERL training path only.
 # This script patches the installed vERL package sources and verifies the
-# training configuration for AMD ROCm compatibility.
+# training configuration for ROCm compatibility.
 #
 # This script does NOT start vLLM, does NOT publish adapters, and is NOT
 # required for serving the SOP-grounded SFT LoRA adapter.
 #
 # For the current SOP-grounded LoRA serving and reset flow, see instead:
 #   bash scripts/amd_rocm/start_qwen_sop_lora_vllm.sh
-#   docs/amd_rocm_qwen_sop_lora_reset.md
+#   docs/hardware/rocm/qwen_sop_lora_reset.md
 #
 # Two modes of protection:
 #   1. Config-level overrides (in train_qwen3_grpo.sh) — verified here.
@@ -182,7 +182,7 @@ echo " Config checks: $PASS passed, $FAIL failed"
 echo "========================================================"
 echo
 if [ "$FAIL" -eq 0 ]; then
-  echo "All config checks passed. Ready for AMD ROCm GRPO training."
+  echo "All config checks passed. Ready for optional ROCm GRPO training."
   echo
   echo "Dry-run (no GPU needed):"
   echo "  bash training/verl_grpo/train_qwen3_grpo.sh"
@@ -197,3 +197,4 @@ else
   echo "Fix the $FAIL config issue(s) above before running training."
   exit 1
 fi
+

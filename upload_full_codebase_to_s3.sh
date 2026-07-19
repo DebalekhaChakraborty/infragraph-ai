@@ -2,7 +2,7 @@
 # upload_full_codebase_to_s3.sh
 #
 # Uploads the entire infragraph-ai codebase to S3, preserving directory
-# structure under s3://my-hackathons/infragraph-ai/.
+# structure under s3://infragraph-artifacts/infragraph-ai/.
 #
 # Safe by design:
 #   - No --delete flag: nothing is removed from S3 or from the local repo.
@@ -21,7 +21,7 @@
 
 set -euo pipefail
 
-BUCKET="my-hackathons"
+BUCKET="infragraph-artifacts"
 S3_PREFIX="infragraph-ai"
 
 # ── Detect repo root ──────────────────────────────────────────────────────────

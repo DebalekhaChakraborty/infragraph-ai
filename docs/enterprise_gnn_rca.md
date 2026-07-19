@@ -155,35 +155,8 @@ networkx    >= 3.0
 If `torch_geometric` is not installed, all scripts exit with:
 ```
 [ERROR] torch_geometric is required for enterprise GNN RCA.
-        Install with the correct torch/ROCm/CUDA wheel.
+        Install with the correct torch wheel for your CPU or accelerator runtime.
 ```
-
----
-
-## Ephemeral AMD GPU setup
-
-When the Jupyter environment resets (pip installs lost), run these two scripts
-in order to restore the full RCA + GNN stack:
-
-```bash
-# Step 1 — restore ROCm torch + vERL/GRPO stack (skips if already present)
-bash scripts/amd_rocm/bootstrap_grpo_env.sh
-
-# Step 2 — restore RCA / GNN dependencies
-bash scripts/amd_rocm/bootstrap_rca_gnn_env.sh
-```
-
-Verify the result:
-
-```bash
-python -c "
-import torch, torch_geometric
-print(torch.__version__, torch.cuda.is_available(), torch_geometric.__version__)
-"
-```
-
-`bootstrap_rca_gnn_env.sh` is safe to re-run and will exit early with a clear
-message if torch is missing rather than silently installing a mismatched wheel.
 
 ---
 
@@ -320,7 +293,7 @@ production and Streamlit use.  Use `scripts/validate_rca_outputs.py` to verify.
 
 All four demo scenarios must produce real Enterprise GNN outputs
 (`rca_source = "Enterprise GNN RCA"`).  Scenario-grounded simulation is not the
-default and must not be used for the final demo unless explicitly labelled.
+default and must not be used for product demos unless explicitly labelled.
 
 Requirements before running:
 - `model_artifacts/enterprise_gnn_rca/enterprise_gnn_rca.pt`
@@ -631,5 +604,3 @@ will require a much larger labelled dataset for production deployment.
 **No line detection or OCR.** Cross-diagram edges in the training data are generated
 from a stitch map, not extracted from diagram images. A production system would need
 an automated pipeline to detect cables, labels, and CMDB references across diagram boundaries.
-
-

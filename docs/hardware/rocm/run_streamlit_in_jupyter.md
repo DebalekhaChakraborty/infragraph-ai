@@ -1,4 +1,6 @@
-# Run InfraGraph AI Streamlit Cockpit in AMD Jupyter
+# Run InfraGraph AI Streamlit Cockpit in ROCm Jupyter
+
+> Optional hardware-specific note. The default InfraGraph AI app does not require this runtime.
 
 ## 1. Go to project folder
 
@@ -14,7 +16,7 @@ cd /workspace/shared/infragraph-ai
 python -m pip install --ignore-installed blinker streamlit pandas plotly requests altair pydeck gitpython --no-cache-dir
 ```
 
-The AMD Jupyter image may ship an old system-installed `blinker` package. `--ignore-installed blinker` skips the uninstall step and avoids the permission conflict that would otherwise abort the install.
+The ROCm Jupyter image may ship an old system-installed `blinker` package. `--ignore-installed blinker` skips the uninstall step and avoids the permission conflict that would otherwise abort the install.
 
 **Step 2 — pin versions known to work on the AMD environment (team-tested):**
 
@@ -161,4 +163,6 @@ Use the sidebar **Workspace** radio to switch between two views:
 - **GNN Propagation** — 5-step slider showing message-passing convergence from SW-CORE → FW-01
 - **Operator Report** — Qwen-generated incident report with download button
 - **Ask InfraGraph** — quick-question chips + free-text chat with deterministic Alternate path
+
+
 

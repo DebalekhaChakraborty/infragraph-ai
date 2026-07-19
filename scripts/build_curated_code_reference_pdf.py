@@ -11,7 +11,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(".").resolve()
 OUT_DIR = REPO_ROOT / "dist"
-OUT_BASE = OUT_DIR / "InfraGraphAI_Codebase_Submission"
+OUT_BASE = OUT_DIR / "InfraGraphAI_Codebase_Reference"
 
 GITHUB_REPO_URL = "https://github.com/DebalekhaChakraborty/infragraph-ai"
 
@@ -22,7 +22,7 @@ LOGO_CANDIDATES = [
 CURATED_INCLUDE_PREFIXES = {
     # Main documentation
     "README.md",
-    "docs/submission/deck_claims.md",
+    "docs/product_claims.md",
 
     # Requirements and runtime setup
     "requirements/",
@@ -57,7 +57,7 @@ CURATED_INCLUDE_PREFIXES = {
     # Training, inference, evaluation, and evidence scripts
     "scripts/train_enterprise_gnn_rca.py",
     "scripts/run_enterprise_gnn_inference.py",
-    "scripts/collect_final_submission_metrics.py",
+    "scripts/collect_performance_metrics.py",
     "scripts/evaluate_rfdetr_v3_detector.py",
     "scripts/generate_rfdetr_runtime_evidence.py",
     "scripts/run_enterprise_gnn_v2_inference.py",
@@ -93,7 +93,7 @@ CURATED_INCLUDE_PREFIXES = {
     "scripts/build_sop_grounded_remediation_training_data.py",
     "scripts/expand_sop_grounded_qwen_training_data.py",
 
-    # AMD / ROCm / Qwen execution path, excluding S3 upload/offload utilities
+    # Optional GPU / Qwen execution path, excluding S3 upload/offload utilities
     "scripts/amd_rocm/bootstrap_grpo_env.sh",
     "scripts/amd_rocm/bootstrap_rca_gnn_env.sh",
     "scripts/amd_rocm/generate_qwen_sop_remediation_after_reset.sh",
@@ -108,7 +108,7 @@ CURATED_INCLUDE_PREFIXES = {
     "assets/kb/known_resolutions/",
 
     # Evidence documents and reports
-    "docs/evidence/final_submission_metrics/",
+    "docs/evidence/performance_metrics/",
     "docs/evidence/amd_mi300x_enterprise_gnn_v2_run/",
     "docs/evidence/amd_qwen3_grpo_run/README.md",
     "docs/evidence/amd_qwen3_grpo_run/training_summary.md",
@@ -131,7 +131,7 @@ CURATED_INCLUDE_PREFIXES = {
     "docs/qwen_sop_lora_training.md",
     "docs/remediation_pipeline.md",
     "docs/rfdetr_v3_detector.md",
-    "docs/run_qwen_vllm_amd.md",
+    "docs/hardware/rocm/run_qwen_vllm.md",
     "docs/sop_kb_rag_remediation.md",
     "docs/topology_rca_pipeline.md",
 
@@ -196,7 +196,7 @@ ALWAYS_EXCLUDE_PREFIXES = {
     "data/qwen_sop_grounded_expanded/previews/",
     "reports/rfdetr_runtime_evidence/annotated/",
     "reports/rfdetr_runtime_evidence/predictions/",
-    "docs/evidence/s3_offload/",
+    "docs/archive/legacy_cloud_offload/",
 }
 
 ALWAYS_EXCLUDE_FILE_PATTERNS = {
@@ -343,7 +343,7 @@ def collect_files() -> tuple[list[Path], list[tuple[str, str]], list[tuple[str, 
                 excluded_manifest.append((r, "Included prefix but non-text/binary file"))
             continue
 
-        skipped_manifest.append((r, "Not part of curated submission appendix"))
+        skipped_manifest.append((r, "Not part of curated reference appendix"))
 
     return included, excluded_manifest, skipped_manifest
 
@@ -402,12 +402,12 @@ def build_markdown() -> Path:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
     lines: list[str] = []
-    lines.append("# InfraGraph AI — Curated Codebase Submission Appendix\n")
+    lines.append("# InfraGraph AI — Curated Codebase Reference Appendix\n")
     lines.append(f"Generated: {datetime.utcnow().isoformat()}Z\n")
     lines.append(f"Repository: {GITHUB_REPO_URL}\n")
 
-    # ── 1. Submission Scope ────────────────────────────────────────────────────
-    lines.append("\n## 1. Submission Scope\n")
+    # ── 1. Reference Scope ────────────────────────────────────────────────────
+    lines.append("\n## 1. Reference Scope\n")
     lines.append(
         "This PDF is a curated source-code and evidence appendix generated from the InfraGraph AI repository. "
         "It includes active application code, training scripts, inference scripts, evaluation scripts, GNN/RCA logic, "
@@ -415,14 +415,14 @@ def build_markdown() -> Path:
         "requirements, runbooks/SOPs, and final evidence reports. "
         "It excludes raw datasets, binary model weights, tokenizer binaries, generated runtime state, repeated scenario samples, "
         "generated images, cache/build folders, vendored JS libraries, S3/offload utility artifacts, and optional experimental "
-        "renderers to keep the submission reviewable. "
+        "renderers to keep the reference reviewable. "
         f"The full repository can be reviewed at: {GITHUB_REPO_URL}\n"
     )
 
     # ── 2. What Is Excluded From This PDF ─────────────────────────────────────
     lines.append("\n## 2. What Is Excluded From This PDF\n")
     lines.append(
-        "To keep the portal submission reviewable and within upload constraints, this PDF excludes raw datasets, binary model weights, "
+        "To keep the portal reference reviewable and within upload constraints, this PDF excludes raw datasets, binary model weights, "
         "tokenizer binaries, generated runtime state, repeated scenario samples, generated images, cache/build folders, vendored JS libraries, "
         "and S3/offload utility artifacts. Where these files are committed or referenced, they can be reviewed in the full GitHub repository:\n"
     )
@@ -448,13 +448,13 @@ def build_markdown() -> Path:
     lines.append(f"Included files: **{len(included)}**\n")
     lines.append(make_file_index(included))
 
-    # ── 4. Judge Review Map ───────────────────────────────────────────────────
-    lines.append("\n## 4. Judge Review Map\n")
+    # ── 4. Reviewer Navigation Map ───────────────────────────────────────────────────
+    lines.append("\n## 4. Reviewer Navigation Map\n")
     lines.append(
         "Use this map to navigate directly to the files most relevant to each evaluation dimension. "
         "All paths listed here appear as full source sections in the appendix below.\n"
     )
-    judge_map = [
+    review_map = [
         ("Diagram Intelligence", [
             "src/runtime_ingestion.py",
             "src/vision/edge_extraction/",
@@ -504,7 +504,7 @@ def build_markdown() -> Path:
             "scripts/validate_remediation_outputs.py",
             "scripts/inspect_remediation_quality.py",
         ]),
-        ("Qwen / GRPO / AMD ROCm", [
+        ("Qwen / GRPO / Optional GPU Runtime", [
             "training/verl_grpo/",
             "scripts/amd_rocm/",
             "docs/evidence/amd_qwen3_grpo_run/",
@@ -518,7 +518,7 @@ def build_markdown() -> Path:
             "assets/kb/runbooks/RB-ROLLBACK-001-safety-validation.md",
         ]),
     ]
-    for category, paths in judge_map:
+    for category, paths in review_map:
         lines.append(f"\n**{category}**\n")
         for p in paths:
             lines.append(f"- `{p}`")
@@ -543,7 +543,7 @@ def build_markdown() -> Path:
         "This final section lists every repository path that was not printed in the PDF. "
         "These files are excluded from this curated appendix because they are binary files, generated artifacts, "
         "runtime state, repeated data samples, image/model artifacts, vendor libraries, optional experimental renderers, "
-        "or outside the selected submission-review scope. Where available, these files can still be reviewed in the GitHub repository:\n"
+        "or outside the selected reference-review scope. Where available, these files can still be reviewed in the GitHub repository:\n"
     )
     lines.append(f"- Full repository: `{GITHUB_REPO_URL}`\n")
 
@@ -616,7 +616,7 @@ def markdown_to_html(md_path: Path) -> Path:
     footer_repo_link = f'<a href="{GITHUB_REPO_URL}" target="_blank">GitHub Repository</a>'
     html_parts.append(f'''
 <div class="page-footer">
-InfraGraph AI | TCS &amp; AMD AI Hackathon 2026 | Curated Code Appendix | {footer_repo_link}
+InfraGraph AI | Curated Code Appendix | {footer_repo_link}
 </div>
 
 <div class="cover">
@@ -627,12 +627,12 @@ InfraGraph AI | TCS &amp; AMD AI Hackathon 2026 | Curated Code Appendix | {foote
     Multimodal Diagram Intelligence &middot; Enterprise Graph RCA &middot; GNN Root Cause Analysis &middot; Governed Qwen/vLLM Remediation
   </div>
   <div class="submitted-by">
-    Submitted By: Team 220 | Debalekha Chakraborty (1798283) | AI &amp; Automation CoE | BFSI CBO
+    Project: InfraGraph AI reference implementation
   </div>
   <div class="badge-row">
     <span class="badge core">Core Code</span>
     <span class="badge train">Training &amp; Evaluation</span>
-    <span class="badge amd">AMD ROCm Evidence</span>
+    <span class="badge amd">GPU Runtime Evidence</span>
     <span class="badge gnn">GNN RCA</span>
     <span class="badge qwen">Qwen/vLLM Remediation</span>
     <span class="badge gov">Governance</span>
@@ -745,3 +745,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

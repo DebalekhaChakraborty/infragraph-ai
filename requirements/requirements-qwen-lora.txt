@@ -3,7 +3,7 @@
 # ============================================================
 # Supervised fine-tuning with LoRA for SOP-grounded Qwen alignment.
 #
-# No bitsandbytes — AMD ROCm environments may not support 4-bit
+# No bitsandbytes — GPU-specific environments may not support 4-bit
 # quantization. All training uses standard float32/bfloat16/float16.
 #
 # Install:
@@ -11,8 +11,7 @@
 #
 # If torch is not installed yet (CUDA):
 #   pip install torch>=2.0.0
-# For AMD ROCm, install the ROCm torch wheel first:
-#   pip install torch --index-url https://download.pytorch.org/whl/rocm6.0
+# For accelerator-specific runtimes, install the matching torch wheel first.
 # ============================================================
 
 # --- Hugging Face core -------------------------------------------
@@ -27,3 +26,5 @@ safetensors>=0.4.0
 # --- Utilities ---------------------------------------------------
 # torch is listed as a comment only — install separately for your hardware
 # torch>=2.0.0
+
+

@@ -71,9 +71,8 @@ To scale up:
 # Install LoRA training dependencies (in addition to base requirements)
 pip install -r requirements/requirements-qwen-lora.txt
 
-# Note: torch must be installed separately for your hardware:
-# CUDA:     pip install torch
-# AMD ROCm: pip install torch --index-url https://download.pytorch.org/whl/rocm6.0
+# Note: torch must be installed separately for your hardware runtime.
+# Use the wheel/index recommended by your accelerator vendor.
 ```
 
 No bitsandbytes. No 4-bit quantization. Standard float32/bfloat16/float16 only.
@@ -239,7 +238,7 @@ outputs = llm.generate(
 )
 ```
 
-**Note:** vLLM requires the ROCm build on AMD hardware. See `requirements/requirements-amd-rocm.txt` and `scripts/amd_rocm/bootstrap_grpo_env.sh`.
+**Note:** vLLM requires a hardware-compatible build for the target accelerator.
 
 ---
 

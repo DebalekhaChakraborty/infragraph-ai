@@ -1,6 +1,6 @@
 # InfraGraph AI Command Center — Streamlit App
 
-Premium presentation UI for the InfraGraph AI hackathon presentation.
+Premium Streamlit UI for the InfraGraph AI product cockpit.
 
 ## How to run
 
@@ -80,4 +80,3 @@ Without these variables the chat uses deterministic pre-built answers.
 4. In the RCA Arena tab, expand the "Model Transparency" expander
 5. In the Chat tab, click each quick-question button, then type a custom question
 6. Optional: set `QWEN_BASE_URL` before recording to show live LLM responses
-

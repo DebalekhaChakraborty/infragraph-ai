@@ -4,12 +4,12 @@
 # Install AFTER base requirements AND after a working torch is
 # present (platform-provided or via bootstrap_grpo_env.sh).
 #
-# torch is NOT listed here — ROCm torch must come from the
-# correct AMD wheel or the preinstalled Jupyter image.
-# Installing it via pip here would overwrite a working ROCm build.
+# torch is NOT listed here — accelerator-specific torch must come from the
+# correct accelerator-compatible wheel or the preinstalled Jupyter image.
+# Installing it via pip here would overwrite a working accelerator-specific build.
 #
-# Usage (AMD ROCm Jupyter after restart):
-#   bash scripts/amd_rocm/bootstrap_rca_gnn_env.sh
+# Usage (GPU-enabled Jupyter after restart):
+#   Use the hardware-specific bootstrap notes for your environment.
 #
 # Usage (CPU / generic):
 #   pip install -r requirements/requirements.txt
@@ -23,3 +23,5 @@ numpy>=1.24.0
 pandas>=2.0.0
 scikit-learn>=1.2.0
 tqdm>=4.65.0
+
+
